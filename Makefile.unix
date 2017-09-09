@@ -1,0 +1,16 @@
+include Makefile.constants
+
+DIRS = libcom daemon
+
+all:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
+
+cscope:
+	/bin/rm cscope.out
+	cscope -b -R -u -Iinclude -slibcom -sdaemon
+
+install:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done
+
+clean: 
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix clean; done
