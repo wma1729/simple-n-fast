@@ -1,5 +1,9 @@
 include ../Makefile.constants
 
+ifndef P
+$(error P is not set)
+endif
+
 OBJS =  ${P}/common.o \
 		${P}/config.o \
 		${P}/dll.o \
@@ -25,5 +29,4 @@ ${P}/%.o: %.cpp
 install:
 
 clean:
-	/bin/rm -rf ${P}/*
-	/bin/rm -rf ${P}
+	@/bin/rm -rf ${OBJS} ${P}/libcom.a

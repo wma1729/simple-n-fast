@@ -1,5 +1,9 @@
 include ../Makefile.constants
 
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
 OBJS =  $(P)\common.obj \
 		$(P)\config.obj \
 		$(P)\dll.obj \
@@ -25,5 +29,4 @@ $(OBJS): $(*B).cpp
 install:
 
 clean:
-	del /q $(P)\*
-	rmdir $(P)
+	@del /q $(OBJS) $(P)\com.lib
