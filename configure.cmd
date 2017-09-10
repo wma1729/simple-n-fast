@@ -1,6 +1,6 @@
-REM Generates Makefile.constants
-
 @ECHO OFF
+
+REM Generates Makefile.constants
 
 SETLOCAL ENABLEEXTENSIONS
 

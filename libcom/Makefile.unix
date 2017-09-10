@@ -1,0 +1,29 @@
+include ../Makefile.constants
+
+OBJS =  ${P}/common.o \
+		${P}/config.o \
+		${P}/dll.o \
+		${P}/file.o \
+		${P}/filesystem.o \
+		${P}/i18n.o \
+		${P}/lock.o \
+		${P}/log.o \
+		${P}/perftimer.o \
+		${P}/util.o
+
+all: platform ${P}/libcom.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/libcom.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	/bin/rm -rf ${P}/*
+	/bin/rm -rf ${P}
