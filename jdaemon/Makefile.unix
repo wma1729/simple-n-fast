@@ -1,0 +1,33 @@
+include ../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS = ${P}/jdaemonizer.o
+LIBS = -lpthread -ldl
+
+JVM_INCL = -I${JAVA_HOME}/include
+ifeq ($(PLAT), Linux)
+	JVM_INCL += -I${JAVA_HOME}/include/linux
+endif
+ifeq ($(PLAT), SunOS)
+	JVM_INCL += -I${JAVA_HOME}/include/solaris
+endif
+	
+
+all: platform ${P}/jdaemonizer
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/jdaemonizer: ${OBJS} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/jdaemonizer.o: jdaemonizer.cpp
+	${CC} ${CFLAGS} ${DBG} ${DEFINES} ${JVM_INCL} ${INCL} jdaemonizer.cpp -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/jdaemonizer

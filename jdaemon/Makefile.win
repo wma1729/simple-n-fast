@@ -1,0 +1,32 @@
+include ..\Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+DOBJS = $(P)\jdaemonizer.obj
+ROBJS = $(P)\accountrights.obj
+
+JVM_INCL = /I"$(JAVA_HOME)\include" /I"$(JAVA_HOME)\include\win32"
+
+all: platform $(P)\jdaemonizer.exe $(P)\accountrights.exe
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\jdaemonizer.exe: $(DOBJS) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** Advapi32.lib /Fe$@
+
+$(P)\accountrights.exe: $(ROBJS) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** Advapi32.lib /Fe$@
+
+$(DOBJS): jdaemonizer.cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(JVM_INCL) $(INCL) jdaemonizer.cpp /Fo$@
+
+$(ROBJS): accountrights.cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) accountrights.cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(DOBJS) $(ROBJS) $(P)\jdaemonizer.exe $(P)\accountrights.exe

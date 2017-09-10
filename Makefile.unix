@@ -1,13 +1,13 @@
 include Makefile.constants
 
-DIRS = libcom daemon
+DIRS = libcom jdaemon
 
 all:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
 
 cscope:
 	/bin/rm cscope.out
-	cscope -b -R -u -Iinclude -slibcom -sdaemon
+	cscope -b -R -u -Iinclude -slibcom -sjdaemon
 
 install:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done
