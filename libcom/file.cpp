@@ -1,5 +1,6 @@
 #include "file.h"
 #include "i18n.h"
+#include "error.h"
 
 /**
  * Opens the file. Before opening the file, the umask

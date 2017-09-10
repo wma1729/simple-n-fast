@@ -87,7 +87,7 @@ GetErrorStr(char *str, size_t len, int err)
 
 #if defined(WINDOWS)
 
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, str, len, NULL);
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, str, (DWORD)len, NULL);
 	if (str[0] == '\0') {
 		char *s = strerror(err);
 		if(s != NULL) {
