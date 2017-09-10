@@ -17,7 +17,7 @@ struct DaemonArgs {
 	std::string             home;           // daemon home
 	std::string             pidPath;        // pid file (useful on UNIXes only)
 	std::string             logPath;        // log path
-	std::string             jreHome;        // JRE to use
+	std::string             jvmLibPath;     // JRE to use
 	std::list<std::string>  jvmOptions;     // JVM options
 	std::string             startClass;     // start class (Java entry point)
 	std::string             startMethod;    // start method in start class
@@ -46,6 +46,7 @@ LogDaemonArgs(void)
 	Log(INF, caller, "home = %s", TheDaemonArgs.home.c_str());
 	Log(INF, caller, "pidPath = %s", TheDaemonArgs.pidPath.c_str());
 	Log(INF, caller, "logPath = %s", TheDaemonArgs.logPath.c_str());
+	Log(INF, caller, "jvmLibPath = %s", TheDaemonArgs.jvmLibPath.c_str());
 
 	std::list<std::string>::const_iterator I;
 	for (I = TheDaemonArgs.jvmOptions.begin(); I != TheDaemonArgs.jvmOptions.end(); ++I) {
@@ -56,44 +57,6 @@ LogDaemonArgs(void)
 	Log(INF, caller, "startMethod = %s", TheDaemonArgs.startMethod.c_str());
 	Log(INF, caller, "stopClass = %s", TheDaemonArgs.stopClass.c_str());
 	Log(INF, caller, "stopMethod = %s", TheDaemonArgs.stopMethod.c_str());
-}
-
-/*
- * Get JVM creator function. Do not unload the shared library.
- */
-static create_jvm_t
-GetJVMCreator(void)
-{
-	char jvmpath[MAXPATHLEN + 1] = { 0 };
-
-#if defined(WINDOWS)
-
-	sprintf(jvmpath, "%s%cbin%cserver%c%s",
-			TheDaemonArgs.jreHome.c_str(),
-			PATH_SEP,
-			PATH_SEP,
-			PATH_SEP,
-			JVMLIB);
-
-#else
-
-	sprintf(jvmpath, "%s%clib%camd64%cserver%c%s",
-			TheDaemonArgs.jreHome.c_str(),
-			PATH_SEP,
-			PATH_SEP,
-			PATH_SEP,
-			PATH_SEP,
-			JVMLIB);
-
-#endif
-
-	Dll dll(jvmpath);
-
-	if (dll.load(true) == E_ok) {
-		return (create_jvm_t)dll.getSymbol("JNI_CreateJavaVM");
-	}
-
-	return 0;
 }
 
 /*
@@ -160,7 +123,12 @@ StartDaemon(void)
 	JNIEnv          *env;
 	JavaVMInitArgs  vmArgs;
 	JavaVMOption    *options;
-	create_jvm_t    pCreateJVM = GetJVMCreator();
+	Dll             dll(TheDaemonArgs.jvmLibPath);
+	create_jvm_t    pCreateJVM = 0;
+
+	if (dll.load(false) == E_ok) {
+		pCreateJVM = (create_jvm_t)dll.getSymbol("JNI_CreateJavaVM");
+	}
 
 	if (pCreateJVM == 0) {
 		return JNI_ERR;
@@ -377,17 +345,13 @@ main(int argc, const char **argv)
 		TheDaemonArgs.logPath = TheDaemonArgs.home;
 	}
 
-	ptr = config->getString("JRE_HOME", &retval);
+	ptr = config->getString("JVM_LIB_PATH", &retval);
 	if ((ptr == 0) || (retval != E_ok)) {
-		ptr = getenv("JRE_HOME");
-	}
-
-	if (ptr == 0) {
-		fprintf(stderr, "%s\n", "failed to find JRE_HOME");
+		fprintf(stderr, "%s\n", "failed to find JVM_LIB_PATH");
 		return 1;
 	}
 
-	TheDaemonArgs.jreHome = ptr;
+	TheDaemonArgs.jvmLibPath = ptr;
 
 	for (int i = 0; i < 128; ++i) {
 		snprintf(buf, MAXPATHLEN, "%s_%d", "JVM_OPTIONS", i);
