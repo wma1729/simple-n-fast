@@ -6,12 +6,6 @@
 #include "filesystem.h"
 #include "log.h"
 
-#if defined(WINDOWS)
-	#define JVMLIB	"jvm.dll"
-#else
-	#define JVMLIB	"libjvm.so"
-#endif
-
 struct DaemonArgs {
 	std::string             name;           // daemon/service name
 	std::string             home;           // daemon home
@@ -134,7 +128,7 @@ StartDaemon(void)
 		return JNI_ERR;
 	}
 
-	Log(DBG, caller, "successfully loaded %s", JVMLIB);
+	Log(DBG, caller, "successfully loaded %s", TheDaemonArgs.jvmLibPath.c_str());
 
 	count = (int) TheDaemonArgs.jvmOptions.size();
 	options = new JavaVMOption[count];
