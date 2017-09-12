@@ -1,0 +1,13 @@
+NAME = TestDaemon
+HOME = C:\simple-n-fast\jdaemon\example\testproduct
+LOG_PATH = C:\simple-n-fast\jdaemon\example\testproduct\log
+PID_PATH= C:\simple-n-fast\jdaemon\example\testproduct\var
+# Setting the class path
+JVM_OPTIONS_0=-Djava.class.path=C:\simple-n-fast\jdaemon\example\testproduct\lib\testdaemon-1.0.jar
+# Passing daemon.logPath to Java code for logging.
+JVM_OPTIONS_1=-Ddaemon.logPath=C:\simple-n-fast\jdaemon\example\testproduct\log
+JVM_LIB_PATH = C:\Program Files\Java\jre1.8.0_144\bin\server\jvm.dll
+START_CLASS = org/simplenfast/testdaemon/DaemonNativeBridge
+START_METHOD = start
+STOP_CLASS = org/simplenfast/testdaemon/DaemonNativeBridge
+STOP_METHOD = stop
