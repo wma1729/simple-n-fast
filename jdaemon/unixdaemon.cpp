@@ -254,7 +254,7 @@ Daemonize(void)
 		Log(INF, caller, "daemon running");
 	} else {
 		Log(ERR, caller, "failed to call Java code");
-		kill(getpid(), SIGTERM);
+		pthread_kill(tid, SIGTERM);
 	}
 
 	retval = pthread_join(tid, 0);
