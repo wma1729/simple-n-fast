@@ -177,6 +177,7 @@ Daemonize(void)
 {
 	const char      *caller = "Daemonize";
 	int             retval = 0;
+	int             fd = -1;
 	bool            alreadyRunning;
 	pid_t           pid;
 	struct rlimit   rl;
@@ -216,6 +217,11 @@ Daemonize(void)
 	for (rlim_t r = 0; r < rl.rlim_max; ++r) {
 		close((int)r);
 	}
+
+	// Attach stdin, stdout, stderr to /dev/null
+	fd = open("/dev/null", O_RDWR);
+	dup2(fd, 1);
+	dup2(fd, 2);
 
 	FileLogger *fileLogger = new FileLogger(TheDaemonArgs.logPath.c_str(), TheVerbosity);
 	fileLogger->makeLogPath();
