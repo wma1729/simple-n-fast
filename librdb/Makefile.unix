@@ -1,0 +1,31 @@
+include ../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/cache.o \
+		${P}/dbfiles.o \
+		${P}/fdpmgr.o \
+		${P}/hashtable.o \
+		${P}/keyrec.o \
+		${P}/prime.o \
+		${P}/rdb.o \
+		${P}/rwlock.o \
+		${P}/unwind.o
+
+all: platform ${P}/librdb.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/librdb.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/librdb.a

@@ -20,5 +20,8 @@
 #define E_syscall_failed        -16
 #define E_load_failed           -17
 #define E_unload_failed         -18
+#define E_eof_detected          -19
+#define E_no_memory             -20
+#define E_insufficient_buffer   -21
 
 #endif // _SNF_ERROR_H_

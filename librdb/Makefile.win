@@ -1,0 +1,31 @@
+include ../Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS =  $(P)\cache.obj \
+		$(P)\dbfiles.obj \
+		$(P)\fdpmgr.obj \
+		$(P)\hashtable.obj \
+		$(P)\keyrec.obj \
+		$(P)\prime.obj \
+		$(P)\rdb.obj \
+		$(P)\rwlock.obj \
+		$(P)\unwind.obj
+
+all: platform $(P)\rdb.lib
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\rdb.lib: $(OBJS)
+	$(AR) $(ARFLAGS) $** /OUT:$@
+
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $(*B).cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\rdb.lib
