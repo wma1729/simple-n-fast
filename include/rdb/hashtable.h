@@ -74,7 +74,10 @@ public:
 	 */
 	~HashTable()
 	{
-		if (ht) {
+		if (ht && htsize) {
+			for (int i = 0; i < htsize; ++i) {
+				freeKeyPageNodeList(i);
+			}
 			::free(ht);
 			ht = 0;
 			htsize = 0;
@@ -98,6 +101,7 @@ public:
 	int addKeyPageNode(int, key_page_node_t *);
 	void removeKeyPageNode(int, key_page_node_t *);
 	key_page_node_t *getKeyPageNodeList(int);
+	void freeKeyPageNodeList(int);
 };
 
 class HTLockGuard

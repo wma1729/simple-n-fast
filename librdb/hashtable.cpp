@@ -283,3 +283,25 @@ HashTable::getKeyPageNodeList(int index)
 	hash_entry_t *hent = ht + index;
 	return hent->head;
 }
+
+/**
+ * Frees key page node list for the hash entry.
+ *
+ * @param [in] index - Hash table entry index.
+ */
+void
+HashTable::freeKeyPageNodeList(int index)
+{
+	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+		"out-of-bound hash table index (%d), range [%d, %d)",
+		index, 0, htsize);
+
+	hash_entry_t *hent = ht + index;
+	if (hent->head) {
+		key_page_node_t *kpn;
+		while ((kpn = hent->head) != 0) {
+			hent->head = hent->head->kpn_next;
+			::free(kpn);
+		}
+	}
+}

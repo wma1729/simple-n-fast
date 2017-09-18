@@ -67,20 +67,22 @@ public:
 	 */
 	~LRUCache()
 	{
-		cnode_t *n;
+		{
+			MutexGuard guard(mutex);
 
-		MutexGuard guard(mutex);
-
-		while ((n = head) != 0) {
-			head = head->c_next;
-			if (head) {
-				head->c_prev = 0;
+			cnode_t *n;
+			while ((n = head) != 0) {
+				head = head->c_next;
+				::free(n);
 			}
-			::free(n);
+
+			tail = 0;
+			num = 0;
 		}
 
-		head = tail = 0;
-		num = 0;
+		if (pageMgr) {
+			delete pageMgr;
+		}
 	}
 
 	int  get(key_page_node_t *&, int64_t offset = -1L);
