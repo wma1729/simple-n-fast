@@ -5,29 +5,6 @@
 #include "rdb/rdb.h"
 #include "rdb/unwind.h"
 
-void
-Rdb::setKeyPageSize(int kpSize)
-{
-	Assert((kpSize > KEY_PAGE_HDR_SIZE), __FILE__, __LINE__,
-		"invalid page size (%d); should at least be > %d",
-		kpSize, KEY_PAGE_HDR_SIZE);
-
-	Assert(((kpSize % KEY_PAGE_HDR_SIZE) == 0), __FILE__, __LINE__,
-		"page size (%d) is not a multiple of %d",
-		kpSize, KEY_PAGE_HDR_SIZE);
-
-	this->kpSize = kpSize;
-}
-
-void
-Rdb::setHashTableSize(int htSize)
-{
-	Assert((htSize > 0), __FILE__, __LINE__,
-		"invalid hash table size (%d)", htSize);
-
-	this->htSize = NextPrime(htSize);
-}
-
 int
 Rdb::populateHashTable()
 {
@@ -184,13 +161,13 @@ Rdb::open()
 	htSize = attrFile->getHashTableSize();
 
 	std::unique_ptr<KeyFile> pKeyFile(new KeyFile(idxPath, 0022));
-	retval = pKeyFile->open();
+	retval = pKeyFile->open(options.syncIndexFile());
 	if (retval != E_ok) {
 		return retval;
 	}
 
 	std::unique_ptr<ValueFile> pValueFile(new ValueFile(dbPath, 0022));
-	retval = pValueFile->open();
+	retval = pValueFile->open(options.syncDataFile());
 	if (retval != E_ok) {
 		return retval;
 	}

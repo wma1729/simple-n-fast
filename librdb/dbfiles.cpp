@@ -7,7 +7,7 @@
  * @return E_ok on success, -ve error code on failure.
  */
 static int
-OpenFile(File *file)
+OpenFile(File *file, bool sync = false)
 {
 	const char      *caller = "OpenFile";
 	int             retval = E_ok;
@@ -17,6 +17,8 @@ OpenFile(File *file)
 	oflags.o_read = true;
 	oflags.o_write = true;
 	oflags.o_create = true;
+	if (sync)
+		oflags.o_sync = true;
 
 	retval = file->open(oflags, 0600, &oserr);
 	if (retval != E_ok) {
@@ -124,9 +126,9 @@ AttrFile::write()
  * @return E_ok on success, -ve error code on failure.
  */
 int
-KeyFile::open()
+KeyFile::open(bool sync)
 {
-	return OpenFile(this);
+	return OpenFile(this, sync);
 }
 
 /**
@@ -327,6 +329,17 @@ int
 KeyFile::freePage(int64_t offset)
 {
 	return fdpMgr->free(offset);
+}
+
+/**
+ * Opens the database value file.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+ValueFile::open(bool sync)
+{
+	return OpenFile(this, sync);
 }
 
 /**

@@ -8,8 +8,12 @@
 #define KEY_PAGE_HDR_SIZE   64
 #endif
 
-#ifndef KP_SIZE
-#define KP_SIZE             4096
+#ifndef MIN_KEY_PAGE_SIZE
+#define MIN_KEY_PAGE_SIZE   512
+#endif
+
+#ifndef KEY_PAGE_SIZE
+#define KEY_PAGE_SIZE       4096
 #endif
 
 #ifndef MAX_KEY_LENGTH

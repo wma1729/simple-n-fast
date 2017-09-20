@@ -117,7 +117,7 @@ public:
 		this->fdpMgr = fdpMgr;
 	}
 
-	int open();
+	int open(bool);
 	int read(int64_t, void *, int);
 	int write(int64_t, const void *, int);
 	int write(int64_t *, const void *, int);
@@ -184,7 +184,7 @@ public:
 		this->fdpMgr = fdpMgr;
 	}
 
-	int open();
+	int open(bool);
 	int read(int64_t, value_page_t *);
 	int readFlags(int64_t, int *);
 	int write(int64_t, const value_page_t *);
