@@ -267,3 +267,85 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 
 	return retval;
 }
+
+/**
+ * Renames a file. On Unix systems, system call rename() is used. On
+ * Windows, MoveFileEx() is used with MOVEFILE_REPLACE_EXISTING flag.
+ *
+ * @param [in]  newName - new file name.
+ * @param [in]  oldName - old file name.
+ * @param [out] oserr   - OS error code.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+FileSystem::rename(const char *newName, const char *oldName, int *oserr)
+{
+	const char	*caller = "FileSystem::rename";
+	int 		retval = E_ok;
+
+	if (oserr) *oserr = 0;
+
+	if ((newName == 0) || (*newName == '\0')) {
+		Log(ERR, caller, "invalid new name specified");
+		return E_invalid_arg;
+	}
+
+	if ((oldName == 0) || (*oldName == '\0')) {
+		Log(ERR, caller, "invalid old name specified");
+		return E_invalid_arg;
+	}
+
+#if defined(WINDOWS)
+
+	DWORD   flags = MOVEFILE_REPLACE_EXISTING;
+	DWORD   attr = 0;
+	wchar_t *oldNameW = 0;
+	wchar_t *newNameW = 0;
+
+	retval = E_rename_failed;
+
+	oldNameW = MbsToWcs(oldName);
+	if (oldNameW) {
+		attr = GetFileAttributesW(oldNameW);
+		if (attr & FILE_ATTRIBUTE_DIRECTORY) {
+			flags = 0;
+		}
+
+		newNameW = MbsToWcs(newName);
+		if (newNameW) {
+			if (flags) {
+				attr = GetFileAttributesW(newNameW);
+				if (attr & FILE_ATTRIBUTE_DIRECTORY) {
+					flags = 0;
+				}
+			}
+
+			if (MoveFileExW(oldNameW, newNameW, flags)) {
+				retval = E_ok;
+			} else {
+				int status = GET_ERRNO;
+				if (oserr) *oserr = status;
+				Log(ERR, caller, status,
+					"MoveFile(%s, %s) failed",
+					oldName, newName);
+			}
+			free(newNameW);
+		}
+		free(oldNameW);
+	}
+
+#else /* !WINDOWS */
+
+	if (::rename(oldName, newName) < 0)
+	{
+		if (oserr) *oserr = errno;
+		Log(ERR, caller, errno, "rename(%s, %s) failed",
+			oldName, newName);
+		retval = E_rename_failed;
+	}
+
+#endif
+
+	return retval;
+}

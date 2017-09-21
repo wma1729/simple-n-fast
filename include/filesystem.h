@@ -11,6 +11,7 @@ public:
 	static bool exists(const char *, int *oserr = 0);
 	static int  isAbsolutePath(const char *);
 	static int  mkdir(const char *, mode_t, int *oserr = 0);
+	static int  rename(const char *, const char *, int *oserr = 0);
 };
 
 #endif // _SNF_FILESYSTEM_H_
