@@ -82,6 +82,8 @@ public:
 			ht = 0;
 			htsize = 0;
 		}
+
+		delete rwlockPool;
 	}
 
 	int size() const

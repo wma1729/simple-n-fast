@@ -17,7 +17,7 @@ private:
 
 
 public:
-	PageMgr(size_t pageSize);
+	PageMgr(size_t pageSize, int memUsage);
 
 	~PageMgr()
 	{

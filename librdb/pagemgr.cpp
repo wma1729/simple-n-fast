@@ -6,7 +6,7 @@
 #include "rdb/pagemgr.h"
 
 /**
- * Get the physical memory size in MB.
+ * Get the physical memory size in bytes.
  */
 static size_t
 GetMemorySize()
@@ -25,14 +25,12 @@ GetMemorySize()
 #endif
 }
 
-PageMgr::PageMgr(size_t pageSize)
+PageMgr::PageMgr(size_t pageSize, int memUsage)
 	: pageSize(pageSize),
 	  mutex()
 {
 	pool = 0;
-
-	// pool size is 75% of total physical memory
-	poolSize = ((GetMemorySize() * 3) / 4);
+	poolSize = GetMemorySize() * (memUsage / 100);
 
 	do {
 		if (poolSize < 0) {

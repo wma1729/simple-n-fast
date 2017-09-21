@@ -120,11 +120,11 @@ Rdb::populateFreePages(const char *fname)
 int
 Rdb::open()
 {
-	int         retval = E_ok;
-	char        idxPath[MAXPATHLEN + 1];
-	char        dbPath[MAXPATHLEN + 1];
-	char        attrPath[MAXPATHLEN + 1];
-	char        fdpPath[MAXPATHLEN + 1];
+	int     retval = E_ok;
+	char    idxPath[MAXPATHLEN + 1];
+	char    dbPath[MAXPATHLEN + 1];
+	char    attrPath[MAXPATHLEN + 1];
+	char    fdpPath[MAXPATHLEN + 1];
 
 	snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), PATH_SEP, name.c_str());
 	strncpy(dbPath, idxPath, MAXPATHLEN);
@@ -181,7 +181,7 @@ Rdb::open()
 	keyFile = pKeyFile.release();
 	valueFile = pValueFile.release();
 
-	cache = new LRUCache(keyFile, kpSize);
+	cache = new LRUCache(keyFile, kpSize, options.getMemoryUsage());
 
 	retval = populateHashTable();
 	if (retval == E_ok) {

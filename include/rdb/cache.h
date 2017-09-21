@@ -47,10 +47,11 @@ public:
 	/**
 	 * Constructs LRU Cache object.
 	 *
-	 * @param [in] keyFile  - Key file.
-	 * @param [in] kpSize   - Key page size.
+	 * @param [in] keyFile    - Key file.
+	 * @param [in] kpSize     - Key page size.
+	 * @param [in] memUsage   - Memory usage in %.
 	 */
-	LRUCache(KeyFile *keyFile, int kpSize)
+	LRUCache(KeyFile *keyFile, int kpSize, int memUsage)
 		: keyFile(keyFile),
 		  kpSize(kpSize),
 		  num(0),
@@ -58,7 +59,7 @@ public:
 		  tail(0),
 		  mutex()
 	{
-		pageMgr = new PageMgr(kpSize);
+		pageMgr = new PageMgr(kpSize, memUsage);
 		max = pageMgr->getNumberOfPages();
 	}
 
