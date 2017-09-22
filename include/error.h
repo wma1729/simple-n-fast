@@ -18,11 +18,13 @@
 #define E_try_again             -14
 #define E_mkdir_failed          -15
 #define E_rename_failed         -16
-#define E_syscall_failed        -17
-#define E_load_failed           -18
-#define E_unload_failed         -19
-#define E_eof_detected          -20
-#define E_no_memory             -21
-#define E_insufficient_buffer   -22
+#define E_remove_failed         -17
+#define E_syscall_failed        -18
+#define E_load_failed           -19
+#define E_unload_failed         -20
+#define E_eof_detected          -21
+#define E_no_memory             -22
+#define E_xlate_failed          -23
+#define E_insufficient_buffer   -23
 
 #endif // _SNF_ERROR_H_

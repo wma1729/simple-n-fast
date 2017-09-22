@@ -1,6 +1,7 @@
 #include <memory>
 #include "common.h"
 #include "util.h"
+#include "filesystem.h"
 #include "rdb/keyrec.h"
 #include "rdb/rdb.h"
 #include "rdb/unwind.h"
@@ -126,6 +127,11 @@ Rdb::open()
 	char    attrPath[MAXPATHLEN + 1];
 	char    fdpPath[MAXPATHLEN + 1];
 
+	MutexGuard guard(openMutex);
+	if (opened) {
+		return E_ok;
+	}
+
 	snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), PATH_SEP, name.c_str());
 	strncpy(dbPath, idxPath, MAXPATHLEN);
 	strncpy(attrPath, idxPath, MAXPATHLEN);
@@ -192,6 +198,8 @@ Rdb::open()
 		delete valueFile;
 		delete keyFile;
 		delete hashTable;
+	} else {
+		opened = true;
 	}
 
 	return retval;
@@ -443,6 +451,11 @@ Rdb::get(
 		return E_invalid_arg;
 	}
 
+	{
+		MutexGuard guard(opMutex);
+		opCount++;
+	}
+
 	hindex = hash(key, klen, htSize);
 	Assert(((hindex >= 0) && (hindex < htSize)), __FILE__, __LINE__,
 		"invalid hash value (%d)", hindex);
@@ -476,6 +489,11 @@ Rdb::get(
 				memcpy(value, vp.vp_value, *vlen);
 			}
 		}
+	}
+
+	{
+		MutexGuard guard(opMutex);
+		opCount--;
 	}
 
 	return retval;
@@ -513,6 +531,11 @@ Rdb::set(
 	if (vlen <= 0) {
 		Log(ERR, caller, "invalid value length specified");
 		return E_invalid_arg;
+	}
+
+	{
+		MutexGuard guard(opMutex);
+		opCount++;
 	}
 
 	hindex = hash(key, klen, htSize);
@@ -557,6 +580,11 @@ Rdb::set(
 
 	ustk.unwind(retval);
 
+	{
+		MutexGuard guard(opMutex);
+		opCount--;
+	}
+
 	return retval;
 }
 
@@ -580,6 +608,11 @@ Rdb::remove(
 	if (klen <= 0) {
 		Log(ERR, caller, "invalid key length specified");
 		return E_invalid_arg;
+	}
+
+	{
+		MutexGuard guard(opMutex);
+		opCount++;
 	}
 
 	hindex = hash(key, klen, htSize);
@@ -714,12 +747,158 @@ Rdb::remove(
 
 	ustk.unwind(retval);
 
+	{
+		MutexGuard guard(opMutex);
+		opCount--;
+	}
+
 	return retval;
 }
 
-void
+int
+Rdb::backupFile(const char *oldName)
+{
+	char    newName[MAXPATHLEN + 1];
+
+	strncpy(newName, oldName, MAXPATHLEN);
+	strncat(newName, ".bkup", MAXPATHLEN);
+
+	return FileSystem::rename(newName, oldName);
+}
+
+int
+Rdb::restoreFile(const char *oldName)
+{
+	char    newName[MAXPATHLEN + 1];
+
+	strncpy(newName, oldName, MAXPATHLEN);
+	strncat(newName, ".bkup", MAXPATHLEN);
+
+	return FileSystem::rename(oldName, newName);
+}
+
+int
+Rdb::removeBackupFile(const char *oldName)
+{
+	char    newName[MAXPATHLEN + 1];
+
+	strncpy(newName, oldName, MAXPATHLEN);
+	strncat(newName, ".bkup", MAXPATHLEN);
+
+	return FileSystem::removeFile(newName);
+}
+
+int
+Rdb::rebuild()
+{
+	const char      *caller = "Rdb::rebuild";
+	int             retval = E_ok;
+	char            idxPath[MAXPATHLEN + 1];
+	char            dbPath[MAXPATHLEN + 1];
+	char            attrPath[MAXPATHLEN + 1];
+	char            fdpPath[MAXPATHLEN + 1];
+	int64_t         offset = 0;
+	value_page_t    vp;
+
+	{
+		MutexGuard guard1(openMutex);
+		if (opened) {
+			Log(ERR, caller, "DB is open; close it before rebuilding");
+			return E_invalid_state;
+		}
+
+		snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), PATH_SEP, name.c_str());
+		strncpy(dbPath, idxPath, MAXPATHLEN);
+		strncpy(attrPath, idxPath, MAXPATHLEN);
+		strncpy(fdpPath, idxPath, MAXPATHLEN);
+
+		strncat(idxPath, ".idx", MAXPATHLEN);
+		strncat(dbPath, ".db", MAXPATHLEN);
+		strncat(attrPath, ".attr", MAXPATHLEN);
+		strncat(fdpPath, ".fdb", MAXPATHLEN);
+
+		if ((retval = backupFile(idxPath)) != E_ok)
+			return retval;
+
+		if ((retval = backupFile(dbPath)) != E_ok) {
+			restoreFile(idxPath);
+			return retval;
+		}
+
+		if ((retval = backupFile(attrPath)) != E_ok) {
+			restoreFile(dbPath);
+			restoreFile(idxPath);
+			return retval;
+		}
+
+		if ((retval = backupFile(fdpPath)) != E_ok) {
+			restoreFile(attrPath);
+			restoreFile(dbPath);
+			restoreFile(idxPath);
+			return retval;
+		}
+	}
+
+	if ((retval = open()) != E_ok) {
+		restoreFile(fdpPath);
+		restoreFile(attrPath);
+		restoreFile(dbPath);
+		restoreFile(idxPath);
+		return retval;
+	}
+
+	strncat(dbPath, ".bkup", MAXPATHLEN);
+	ValueFile vf(dbPath, 0022);
+	retval = vf.open(false);
+	if (retval != E_ok) {
+		restoreFile(fdpPath);
+		restoreFile(attrPath);
+		restoreFile(dbPath);
+		restoreFile(idxPath);
+		return retval;
+	}
+
+	while ((retval = vf.read(offset, &vp)) == E_ok) {
+		if ((vp.vp_flags & VPAGE_DELETED) != VPAGE_DELETED) {
+			retval = set(vp.vp_key, vp.vp_klen, vp.vp_value, vp.vp_vlen);
+			if (retval != E_ok) 
+				break;
+		}
+		offset += (int64_t) sizeof(vp);
+	}
+
+	close();
+
+	if (retval != E_ok) {
+		restoreFile(fdpPath);
+		restoreFile(attrPath);
+		restoreFile(dbPath);
+		restoreFile(idxPath);
+	} else {
+		removeBackupFile(fdpPath);
+		removeBackupFile(attrPath);
+		removeBackupFile(dbPath);
+		removeBackupFile(idxPath);
+	}
+
+	vf.close();
+
+	return retval;
+}
+
+int
 Rdb::close()
 {
+	MutexGuard guard1(openMutex);
+	if (!opened) {
+		return E_ok;
+	}
+
+	MutexGuard guard2(opMutex);
+	if (opCount > 0) {
+		return E_try_again;
+	}
+
 	if (valueFile) {
 		delete valueFile;
 		valueFile = 0;
@@ -739,4 +918,6 @@ Rdb::close()
 		delete hashTable;
 		hashTable = 0;
 	}
+
+	return E_ok;
 }

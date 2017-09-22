@@ -140,6 +140,10 @@ private:
 	KeyFile     *keyFile;
 	ValueFile   *valueFile;
 	LRUCache    *cache;
+	bool        opened;
+	Mutex       openMutex;
+	int         opCount;
+	Mutex       opMutex;
 
 	inline void init(
 		const std::string &path,
@@ -166,12 +170,17 @@ private:
 		this->keyFile = 0;
 		this->valueFile = 0;
 		this->cache = 0;
+		this->opened = false;
+		this->opCount = 0;
 	}
 
 	int populateHashTable();
 	int populateFreePages(const char *);
 	int addNewPage(key_info_t *);
 	int processKeyPages(key_info_t *, op_t);
+	int backupFile(const char *);
+	int restoreFile(const char *);
+	int removeBackupFile(const char *);
 
 public:
 	/**
@@ -186,7 +195,9 @@ public:
 	 */
 	Rdb(const std::string &path,
 		const std::string &name)
-		: options()
+		: options(),
+		  openMutex(),
+		  opMutex()
 	{
 		init(path, name, KEY_PAGE_SIZE, HASH_TABLE_SIZE);
 	}
@@ -203,8 +214,10 @@ public:
 	 */
 	Rdb(const std::string &path,
 		const std::string &name,
-		const RdbOptions &options)
-		: options(options)
+		const RdbOptions &opt)
+		: options(opt),
+		  openMutex(),
+		  opMutex()
 	{
 		init(path, name, KEY_PAGE_SIZE, HASH_TABLE_SIZE);
 	}
@@ -223,7 +236,9 @@ public:
 		const std::string &name,
 		int kpsize,
 		int htsize)
-		: options()
+		: options(),
+		  openMutex(),
+		  opMutex()
 	{
 		init(path, name, kpsize, htsize);
 	}
@@ -242,7 +257,9 @@ public:
 		int kpsize,
 		int htsize,
 		const RdbOptions &opt)
-		: options(opt)
+		: options(opt),
+		  openMutex(),
+		  opMutex()
 	{
 		init(path, name, kpsize, htsize);
 	}
@@ -340,7 +357,8 @@ public:
 	int get(const char *key, int klen, char *value, int *vlen);
 	int set(const char *key, int klen, const char *value, int vlen);
 	int remove(const char *key, int klen);
-	void close();
+	int rebuild();
+	int close();
 };
 
 #endif // _SNF_RDB_RDB_H_

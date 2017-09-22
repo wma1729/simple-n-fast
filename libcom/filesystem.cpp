@@ -239,17 +239,16 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 		wchar_t *pathW = MbsToWcs(buf);
 
 		if (pathW) {
-			status = CreateDirectoryW(pathW, 0);
-			if (status == FALSE) {
+			if (!CreateDirectoryW(pathW, 0)) {
 				int error = GET_ERRNO;
-				Log(ERR, caller, error, "CreateDirectory(%s) failed", buf);
 				if (oserr) *oserr = error;
+				Log(ERR, caller, error, "CreateDirectory(%s) failed", buf);
+				retval = E_mkdir_failed;
 			}
-			free(pathW);
-		}
 
-		if (status == FALSE) {
-			retval = E_mkdir_failed;
+			free(pathW);
+		} else {
+			retval = E_xlate_failed;
 		}
 
 #else
@@ -303,8 +302,6 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 	wchar_t *oldNameW = 0;
 	wchar_t *newNameW = 0;
 
-	retval = E_rename_failed;
-
 	oldNameW = MbsToWcs(oldName);
 	if (oldNameW) {
 		attr = GetFileAttributesW(oldNameW);
@@ -321,18 +318,21 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 				}
 			}
 
-			if (MoveFileExW(oldNameW, newNameW, flags)) {
-				retval = E_ok;
-			} else {
-				int status = GET_ERRNO;
-				if (oserr) *oserr = status;
-				Log(ERR, caller, status,
-					"MoveFile(%s, %s) failed",
+			if (!MoveFileExW(oldNameW, newNameW, flags)) {
+				int error = GET_ERRNO;
+				if (oserr) *oserr = error;
+				Log(ERR, caller, error, "MoveFile(%s, %s) failed",
 					oldName, newName);
+				retval = E_rename_failed;
 			}
 			free(newNameW);
+		} else {
+			retval = E_xlate_failed;
 		}
+
 		free(oldNameW);
+	} else {
+		retval = E_xlate_failed;
 	}
 
 #else /* !WINDOWS */
@@ -343,6 +343,109 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 		Log(ERR, caller, errno, "rename(%s, %s) failed",
 			oldName, newName);
 		retval = E_rename_failed;
+	}
+
+#endif
+
+	return retval;
+}
+
+/**
+ * Removes a file.
+ *
+ * @param [in]  f     - file name.
+ * @param [out] oserr - OS error code.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+FileSystem::removeFile(const char *f, int *oserr)
+{
+	const char  *caller = "FileSystem::removeFile";
+	int			retval = E_ok;
+
+	if (oserr) *oserr = 0;
+
+	if ((f == 0) || (*f == '\0')) {
+		Log(ERR, caller, "invalid file specified");
+		return E_invalid_arg;
+	}
+
+#if defined(WINDOWS)
+
+	wchar_t *fW = MbsToWcs(f);
+
+	if (fW) {
+		int error = GET_ERRNO;
+		if (oserr) *oserr = error;
+
+		if (!DeleteFileW(fW)) {
+			Log(ERR, caller, error, "DeleteFile(%s) failed", f);
+			retval = E_remove_failed;
+		}
+
+		free(fW);
+	} else {
+		retval = E_xlate_failed;
+	}
+
+#else
+
+	if (unlink(f) != 0) {
+		if (*oserr) *oserr = errno;
+		Log(ERR, caller, errno, "unlink(%s) failed", f);
+		retval = E_remove_failed;
+	}
+
+#endif
+
+	return retval;
+}
+
+/**
+ * Removes a directory. It must be empty.
+ *
+ * @param [in]  d     - directory name.
+ * @param [out] oserr - OS error code.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+FileSystem::removeDir(const char *d, int *oserr)
+{
+	const char  *caller = "FileSystem::removeDir";
+	int         retval = E_ok;
+
+	if (oserr) *oserr = 0;
+
+	if ((d == 0) || (*d == '\0')) {
+		Log(ERR, caller, "invalid directory specified");
+		return E_invalid_arg;
+	}
+
+#if defined(WINDOWS)
+
+	wchar_t *dW = MbsToWcs(d);
+
+	if (dW) {
+		if (!RemoveDirectoryW(dW)) {
+			int error = GET_ERRNO;
+			if (oserr) *oserr = error;
+			Log(ERR, caller, error, "RemoveDirectory(%s) failed", d);
+			retval = E_remove_failed;
+		}
+
+		free(dW);
+	} else {
+		retval = E_xlate_failed;
+	}
+
+#else 
+
+	if (rmdir(d) != 0) {
+		if (oserr) *oserr = errno;
+		Log(ERR, caller, errno, "rmdir(%s) failed", d);
+		retval = E_remove_failed;
 	}
 
 #endif
