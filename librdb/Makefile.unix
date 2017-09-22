@@ -9,12 +9,17 @@ OBJS =  ${P}/cache.o \
 		${P}/fdpmgr.o \
 		${P}/hashtable.o \
 		${P}/keyrec.o \
+		${P}/pagemgr.o \
 		${P}/prime.o \
 		${P}/rdb.o \
 		${P}/rwlock.o \
 		${P}/unwind.o
 
-all: platform ${P}/librdb.a
+DRVROBJS = ${P}/rdbdrvr.o
+
+LIBS = -lpthread
+
+all: platform ${P}/librdb.a ${P}/rdbdrvr
 
 platform:
 	@test -d ${P} || mkdir ${P}
@@ -22,10 +27,13 @@ platform:
 ${P}/librdb.a: ${OBJS}
 	${AR} ${ARFLAGS} $@ $^
 
+${P}/rdbdrvr: ${DRVROBJS} ${P}/librdb.a ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
 ${P}/%.o: %.cpp
 	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
 
 install:
 
 clean:
-	@/bin/rm -rf ${OBJS} ${P}/librdb.a
+	@/bin/rm -rf ${OBJS} ${DRVROBJS} ${P}/librdb.a ${P}/rdbdrvr

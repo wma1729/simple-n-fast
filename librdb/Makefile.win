@@ -9,12 +9,15 @@ OBJS =  $(P)\cache.obj \
 		$(P)\fdpmgr.obj \
 		$(P)\hashtable.obj \
 		$(P)\keyrec.obj \
+		$(P)\pagemgr.obj \
 		$(P)\prime.obj \
 		$(P)\rdb.obj \
 		$(P)\rwlock.obj \
 		$(P)\unwind.obj
 
-all: platform $(P)\rdb.lib
+DRVROBJS = $(P)\rdbdrvr.obj
+
+all: platform $(P)\rdb.lib $(P)\rdbdrvr.exe
 
 platform:
 	@if not exist $(P) mkdir $(P)
@@ -22,10 +25,13 @@ platform:
 $(P)\rdb.lib: $(OBJS)
 	$(AR) $(ARFLAGS) $** /OUT:$@
 
-$(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $(*B).cpp /Fo$@
+$(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
+
+{.}.cpp{$(P)}.obj:
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $< /Fo$@
 
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\rdb.lib
+	@del /q $(OBJS) $(DRVROBJS) $(P)\rdb.lib $(P)\rdbdrvr.exe

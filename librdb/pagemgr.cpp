@@ -2,7 +2,6 @@
 #include <sys/mman.h>
 #endif
 
-#include "util.h"
 #include "rdb/pagemgr.h"
 
 /**
@@ -25,7 +24,7 @@ GetMemorySize()
 #endif
 }
 
-PageMgr::PageMgr(size_t pageSize, int memUsage)
+PageMgr::PageMgr(int pageSize, int memUsage)
 	: pageSize(pageSize),
 	  mutex()
 {
@@ -47,7 +46,7 @@ PageMgr::PageMgr(size_t pageSize, int memUsage)
 	Assert((pool != 0), __FILE__, __LINE__, errno,
 		"unable to allocate memory for page pool");
 
-	numOfPages = poolSize / pageSize;
+	numOfPages = (int) (poolSize / pageSize);
 	numOfFreePages = numOfPages;
 
 #if !defined(WINDOWS)
@@ -87,12 +86,12 @@ PageMgr::free(void *addr)
 	char *caddr = (char *)addr;
 	ptrdiff_t diff;
 
-	Assertion(((caddr >= pool) && (caddr < (pool + poolSize))), __FILE__, __LINE__,
+	Assert(((caddr >= pool) && (caddr < (pool + poolSize))), __FILE__, __LINE__,
 		"out-of-bound memory address (0x%x), range [0x%x, 0x%x)",
 		caddr, pool, pool + poolSize);
 
 	diff = caddr - pool;
-	Assertion(((diff % pageSize) == 0), __FILE__, __LINE__,
+	Assert(((diff % pageSize) == 0), __FILE__, __LINE__,
 		"address (%p) is not correctly aligned",
 		addr);
 

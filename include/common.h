@@ -3,10 +3,13 @@
 
 #include <sys/types.h>
 #include <time.h>
+#include <cstddef>
 #include <cstdio>
 #include <cstdarg>
 #include <cstdlib>
 #include <cstring>
+#include <stdint.h>
+#include <inttypes.h>
 #include <string>
 
 #if defined(WINDOWS)
@@ -24,7 +27,6 @@
 
 	#include <Windows.h>
 	#include <io.h>
-	#include <stdint.h>
 
 	typedef int     mode_t;
 	typedef HANDLE  fhandle_t;
@@ -50,11 +52,6 @@
 	#include <fcntl.h>
 	#include <unistd.h>
 	#include <errno.h>
-#if defined(SOLARIS)
-	#include <sys/inttypes.h>
-#else
-	#include <stdint.h>
-#endif
 
 	typedef int             fhandle_t;
 	typedef unsigned int    tid_t;

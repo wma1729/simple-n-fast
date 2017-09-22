@@ -24,7 +24,7 @@ FreeDiskPageMgr::addOffsetToFile(int64_t offset)
 		retval = file->write(&offset, toWrite, &bWritten, &oserr);
 		if (retval != E_ok) {
 			Log(ERR, caller, oserr,
-				"failed to write free disk page offset (%lld) to file %s",
+				"failed to write free disk page offset (%" PRId64 ") to file %s",
 				offset, file->getFileName());
 		} else if (bWritten != toWrite) {
 			Log(ERR, caller, "expected to write %d bytes, written only %d bytes",

@@ -46,10 +46,10 @@ ReadFile(File *file, int64_t offset, void *buf, int toRead)
 	retval = file->read(offset, buf, toRead, &bRead, &oserr);
 	if (retval != E_ok) {
 		Log(ERR, caller, oserr,
-			"failed to read file %s at offset %lld",
+			"failed to read file %s at offset %" PRId64,
 			file->getFileName(), offset);
 	} else if (bRead == 0) {
-		Log(DBG, caller, "end of file detected at offset %lld", offset);
+		Log(DBG, caller, "end of file detected at offset %" PRId64, offset);
 		retval = E_eof_detected;
 	} else if (bRead != toRead) {
 		Log(ERR, caller, "expected to read %d bytes, read only %d byte",
@@ -76,7 +76,7 @@ WriteFile(File *file, int64_t offset, const void *buf, int toWrite)
 	retval = file->write(offset, buf, toWrite, &bWritten, &oserr);
 	if (retval != E_ok) {
 		Log(ERR, caller, oserr,
-			"failed to write file %s at offset %lld",
+			"failed to write file %s at offset %" PRId64,
 			file->getFileName(), offset);
 	} else if (bWritten != toWrite) {
 		Log(ERR, caller, "expected to write %d bytes, wrote only %d byte",

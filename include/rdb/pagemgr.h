@@ -2,6 +2,7 @@
 #define _PAGEMGR_H_
 
 #include <stack>
+#include "common.h"
 #include "util.h"
 
 class PageMgr
@@ -17,7 +18,7 @@ private:
 
 
 public:
-	PageMgr(size_t pageSize, int memUsage);
+	PageMgr(int pageSize, int memUsage);
 
 	~PageMgr()
 	{

@@ -1,18 +1,20 @@
-#include <cstdio>
-#include <cstdlib>
-#include "dbm.h"
+#include "common.h"
+#include "log.h"
 #include "util.h"
 #include "perftimer.h"
+#include "rdb/rdb.h"
 
-Logger *TheLogger = 0;
+extern Logger *TheLogger;
+extern bool   TheVerbosity;
 
 static int
 usage(const char *prog)
 {
-	fprintf(stderr, "%s [-get|-set|-del] -path <db_path> -name <db_name>\n",
-			prog);
+	fprintf(stderr, "%s [-get|-set|-del] -path <db_path> -name <db_name>\n", prog);
 	fprintf(stderr, "        -key <key> [-value <value>]\n");
 	fprintf(stderr, "        [-htsize <hash_table_size>] [-pgsize <page_size>]\n");
+	fprintf(stderr, "        [-memusage <%%_of_memory>] [-syncdf <0|1>]\n");
+	fprintf(stderr, "        [-syncif <0|1>] [-logpath <log_path>]\n");
 	return 1;
 }
 
@@ -54,37 +56,37 @@ gen_key_val(char *key, char *val, int len)
 }
 
 static void
-perform_test(Dbm &dbm, long nkeys, int interval)
+perform_test(Rdb &rdb, int64_t nkeys, int interval)
 {
-	int retval = OK;
-	long j = 0;
+	int retval = E_ok;
+	int j = 0;
 	char key[32];
 	char val[32];
 	PerformanceTimer start, end;
 
-	for (long i = 0; i < nkeys; ++i) {
+	for (int64_t i = 0; i < nkeys; ++i) {
 		if (j == 0) {
 			start.record();
 		}
 
 		gen_key_val(key, val, 32);
-		retval = dbm.set(key, 32, val, 32);
-		if (retval != OK) {
+		retval = rdb.set(key, 32, val, 32);
+		if (retval != E_ok) {
 			break;
 		}
 
 		++j;
 		if (j == interval) {
 			end.record();
-			printf("%ld,%ld\n", j, end - start);
+			fprintf(stdout, "%d,%" PRId64 "\n", j, end - start);
 			j = 0;
 		}
 
 	}
 
-	if ((retval == OK) && (j > 0)) {
+	if ((retval == E_ok) && (j > 0)) {
 		end.record();
-		fprintf(stdout, "%ld,%ld\n", j, end - start);
+		fprintf(stdout, "%d,%" PRId64 "\n", j, end - start);
 		fflush(stdout);
 		j = 0;
 	}
@@ -100,15 +102,16 @@ main(int argc, const char **argv)
 	std::string name;
 	std::string key;
 	std::string value;
+	std::string logPath;
 	int htSize = -1;
 	int pgSize = -1;
+	RdbOptions dbOpt;
 	int vlen;
 	char val[MAX_VALUE_LENGTH + 1];
 	char prog[MAXPATHLEN + 1];
 	bool testing = false;
-	long nkeys = 1000;
+	int64_t nkeys = 1000;
 	int interval = 100;
-	bool verbose = false;
 
 	GetBaseName(prog, MAXPATHLEN + 1, argv[0], true);
 
@@ -119,8 +122,6 @@ main(int argc, const char **argv)
 			cmd = SET;
 		} else if (strcmp("-del", argv[i]) == 0) {
 			cmd = DEL;
-		} else if (strcmp("-test", argv[i]) == 0) {
-			testing = true;
 		} else if (strcmp("-path", argv[i]) == 0) {
 			++i;
 			if (argv[i]) {
@@ -135,22 +136,6 @@ main(int argc, const char **argv)
 				name = argv[i];
 			} else {
 				fprintf(stderr, "missing argument to -name\n");
-				return usage(prog);
-			}
-		} else if (strcmp("-key", argv[i]) == 0) {
-			++i;
-			if (argv[i]) {
-				key = argv[i];
-			} else {
-				fprintf(stderr, "missing argument to -key\n");
-				return usage(prog);
-			}
-		} else if (strcmp("-value", argv[i]) == 0) {
-			++i;
-			if (argv[i]) {
-				value = argv[i];
-			} else {
-				fprintf(stderr, "missing argument to -value\n");
 				return usage(prog);
 			}
 		} else if (strcmp("-htsize", argv[i]) == 0) {
@@ -169,6 +154,76 @@ main(int argc, const char **argv)
 				fprintf(stderr, "missing argument to -pgsize\n");
 				return usage(prog);
 			}
+		} else if (strcmp("-memusage", argv[i]) == 0) {
+			++i;
+			if (argv[i]) {
+				if (dbOpt.setMemoryUsage(atoi(argv[i])) != E_ok) {
+					fprintf(stderr, "invalid memory usage (%s)\n",
+						argv[i]);
+					return 1;
+				}
+			} else {
+				fprintf(stderr, "missing argument to -memusage\n");
+				return usage(prog);
+			}
+		} else if (strcmp("-syncdf", argv[i]) == 0) {
+			++i;
+			if (argv[i]) {
+				if (atoi(argv[i]) == 0) {
+					dbOpt.syncDataFile(false);
+				} else {
+					dbOpt.syncDataFile(true);
+				}
+			} else {
+				fprintf(stderr, "missing argument to -syncdf\n");
+				return usage(prog);
+			}
+		} else if (strcmp("-syncif", argv[i]) == 0) {
+			++i;
+			if (argv[i]) {
+				if (atoi(argv[i]) == 1) {
+					dbOpt.syncIndexFile(true);
+				} else {
+					dbOpt.syncIndexFile(false);
+				}
+			} else {
+				fprintf(stderr, "missing argument to -syncif\n");
+				return usage(prog);
+			}
+		} else if (strcmp("-pgsize", argv[i]) == 0) {
+			++i;
+			if (argv[i]) {
+				pgSize = atoi(argv[i]);
+			} else {
+				fprintf(stderr, "missing argument to -pgsize\n");
+				return usage(prog);
+			}
+		} else if (strcmp("-key", argv[i]) == 0) {
+			++i;
+			if (argv[i]) {
+				key = argv[i];
+			} else {
+				fprintf(stderr, "missing argument to -key\n");
+				return usage(prog);
+			}
+		} else if (strcmp("-value", argv[i]) == 0) {
+			++i;
+			if (argv[i]) {
+				value = argv[i];
+			} else {
+				fprintf(stderr, "missing argument to -value\n");
+				return usage(prog);
+			}
+		} else if (strcmp("-logpath", argv[i]) == 0) {
+			++i;
+			if (argv[i]) {
+				logPath = argv[i];
+			} else {
+				fprintf(stderr, "missing argument to -logpath\n");
+				return usage(prog);
+			}
+		} else if (strcmp("-test", argv[i]) == 0) {
+			testing = true;
 		} else if (strcmp("-n", argv[i]) == 0) {
 			++i;
 			if (argv[i]) {
@@ -186,32 +241,31 @@ main(int argc, const char **argv)
 				return usage(prog);
 			}
 		} else if (strcmp("-v", argv[i]) == 0) {
-			verbose = true;
+			TheVerbosity = true;
 		} else {
 			return usage(prog);
 		}
 	}
 
-	TheLogger = new Logger(path.c_str(), prog, verbose);
-	TheLogger->open();
+	if (!logPath.empty()) {
+		TheLogger = new FileLogger(logPath.c_str(), TheVerbosity);
+	}
 
 	if (testing) {
-		Dbm dbm(path, name);
+		Rdb rdb(path, name, dbOpt);
 
 		if (pgSize != -1)
-			dbm.setKeyPageSize(pgSize);
+			rdb.setKeyPageSize(pgSize);
 
 		if (htSize != -1)
-			dbm.setHashTableSize(htSize);
+			rdb.setHashTableSize(htSize);
 
-		dbm.setMemorySizeInGB(6);
+		int retval = rdb.open();
+		if (retval == E_ok) {
 
-		int retval = dbm.open();
-		if (retval == OK) {
+			perform_test(rdb, nkeys, interval);
 
-			perform_test(dbm, nkeys, interval);
-
-			dbm.close();
+			rdb.close();
 		}
 
 		return retval;
@@ -242,32 +296,40 @@ main(int argc, const char **argv)
 		return usage(prog);
 	}
 
-	Dbm dbm(path, name);
+	Rdb rdb(path, name, dbOpt);
 
 	if (pgSize != -1)
-		dbm.setKeyPageSize(pgSize);
+		rdb.setKeyPageSize(pgSize);
 
 	if (htSize != -1)
-		dbm.setHashTableSize(htSize);
+		rdb.setHashTableSize(htSize);
 
-	int retval = dbm.open();
-	if (retval == OK) {
+	int retval = rdb.open();
+	if (retval == E_ok) {
 		switch (cmd) {
 			case GET:
 				vlen = MAX_VALUE_LENGTH;
-				retval = dbm.get(key.c_str(), key.size(), val, &vlen);
-				if (retval == OK) {
+				retval = rdb.get(
+						key.c_str(),
+						(int)key.size(),
+						val,
+						&vlen);
+				if (retval == E_ok) {
 					val[vlen] = '\0';
 					fprintf(stdout, "%s\n", val);
-				} else if (retval == NOT_FOUND) {
+				} else if (retval == E_not_found) {
 					fprintf(stdout, "%s not found\n", key.c_str());
-					retval = OK;
+					retval = E_ok;
 				}
 				break;
 
 			case SET:
-				retval = dbm.set(key.c_str(), key.size(), value.c_str(), value.size());
-				if (retval == OK) {
+				retval = rdb.set(
+						key.c_str(),
+						(int)key.size(),
+						value.c_str(),
+						(int)value.size());
+				if (retval == E_ok) {
 					fprintf(stdout, "%s is set to %s\n",
 						key.c_str(), value.c_str());
 				}
@@ -275,22 +337,19 @@ main(int argc, const char **argv)
 
 			case DEL:
 			default:
-				retval = dbm.remove(key.c_str(), key.size());
-				if (retval == OK) {
+				retval = rdb.remove(key.c_str(), (int) key.size());
+				if (retval == E_ok) {
 					fprintf(stdout, "%s is removed\n",
 						key.c_str());
 				}
 				break;
 		}
 
-		dbm.close();
+		rdb.close();
 	}
 
-	TheLogger->close();
-
-	if (retval != OK) {
-		fprintf(stderr, "Operation failed with status %d\n",
-			retval);
+	if (retval != E_ok) {
+		fprintf(stderr, "Operation failed with status %d\n", retval);
 		retval = 1;
 	}
 
