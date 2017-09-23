@@ -98,7 +98,7 @@ FreeDiskPageMgr::init()
 				retval = file->read(&offset, toRead, &bRead, &oserr);
 				if (retval != E_ok) {
 					Log(ERR, caller, oserr,
-						"failed to read offset from file %s at offset %ld",
+						"failed to read offset from file %s at offset %" PRId64,
 						file->getFileName(), fsize);
 				} else if (bRead == 0) {
 					retval = E_eof_detected;
@@ -180,9 +180,9 @@ int
 FreeDiskPageMgr::free(int64_t offset)
 {
 	Assert((offset >= 0), __FILE__, __LINE__,
-			"invalid offset (%ld) specified", offset);
+		"invalid offset (%" PRId64 ") specified", offset);
 	Assert(((offset % pageSize) == 0), __FILE__, __LINE__,
-			"offset (%ld) is not correctly aligned", offset);
+		"offset (%" PRId64 ") is not correctly aligned", offset);
 
 	MutexGuard guard(mutex);
 

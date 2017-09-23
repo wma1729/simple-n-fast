@@ -28,8 +28,10 @@ PageMgr::PageMgr(int pageSize, int memUsage)
 	: pageSize(pageSize),
 	  mutex()
 {
+	const char *caller = "PageMgr::PageMgr";
+
 	pool = 0;
-	poolSize = GetMemorySize() * (memUsage / 100);
+	poolSize = (GetMemorySize() * memUsage) / 100;
 
 	do {
 		if (poolSize < 0) {
@@ -44,10 +46,13 @@ PageMgr::PageMgr(int pageSize, int memUsage)
 	} while (pool == 0);
 
 	Assert((pool != 0), __FILE__, __LINE__, errno,
-		"unable to allocate memory for page pool");
+		"unable to allocate memory (%" PRId64 ") for page pool", poolSize);
 
 	numOfPages = (int) (poolSize / pageSize);
 	numOfFreePages = numOfPages;
+
+	Log(DBG, caller, "poolSize = %" PRId64, poolSize);
+	Log(DBG, caller, "numOfPages = %d", numOfPages);
 
 #if !defined(WINDOWS)
 	posix_madvise(pool, poolSize, MADV_WILLNEED);

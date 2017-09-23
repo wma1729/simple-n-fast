@@ -159,8 +159,8 @@ private:
 			"page size (%d) is not a multiple of %d",
 			kpsize, KEY_PAGE_HDR_SIZE);
 
-		Assert((htSize > 0), __FILE__, __LINE__,
-			"invalid hash table size (%d)", htSize);
+		Assert((htsize > 0), __FILE__, __LINE__,
+			"invalid hash table size (%d)", htsize);
 
 		this->path = path;
 		this->name = name;

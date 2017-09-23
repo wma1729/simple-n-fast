@@ -224,12 +224,12 @@ KeyFile::writeFlags(int64_t offset, key_page_t *kp, int flags)
 			kp->kp_flags = flags;
 
 			Log(DBG, caller,
-				"flags for page at offset %ld changed: old 0x%04x, new 0x%04x",
+				"flags for page at offset %" PRId64 " changed: old 0x%04x, new 0x%04x",
 				offset, oflags, flags);
 		}
 	} else {
 		Log(ERR, caller,
-			"failed to set flags to 0x%04x for page at offset %ld",
+			"failed to set flags to 0x%04x for page at offset %" PRId64,
 			flags, offset);
 	}
 
@@ -265,12 +265,14 @@ KeyFile::writePrevOffset(int64_t offset, key_page_t *kp, int64_t prevOffset)
 			kp->kp_poff = prevOffset;
 
 			Log(DBG, caller,
-				"previous offset for page at offset %ld changed: old %ld, new %ld",
+				"previous offset for page at offset %" PRId64
+				" changed: old %" PRId64 ", new %" PRId64,
 				offset, opoff, prevOffset);
 		}
 	} else {
 		Log(ERR, caller,
-			"failed to set previous offset to %ld for page at offset %ld",
+			"failed to set previous offset to %" PRId64
+			" for page at offset %" PRId64,
 			prevOffset, offset);
 	}
 
@@ -306,12 +308,14 @@ KeyFile::writeNextOffset(int64_t offset, key_page_t *kp, int64_t nextOffset)
 			kp->kp_noff = nextOffset;
 
 			Log(DBG, caller,
-				"next offset for page at offset %ld changed: old %ld, new %ld",
+				"next offset for page at offset %" PRId64
+				" changed: old %" PRId64 ", new %" PRId64,
 				offset, onoff, nextOffset);
 		}
 	} else {
 		Log(ERR, caller,
-			"failed to set next offset to %ld for page at offset %ld",
+			"failed to set next offset to %" PRId64
+			" for page at offset %" PRId64,
 			nextOffset, offset);
 	}
 
@@ -328,7 +332,14 @@ KeyFile::writeNextOffset(int64_t offset, key_page_t *kp, int64_t nextOffset)
 int
 KeyFile::freePage(int64_t offset)
 {
-	return fdpMgr->free(offset);
+	const char *caller = "KeyFile::freePage";
+
+	if (fdpMgr) {
+		return fdpMgr->free(offset);
+	} else {
+		Log(ERR, caller, "free disk page manager is not set");
+		return E_invalid_state;
+	}
 }
 
 /**
@@ -354,7 +365,7 @@ int
 ValueFile::read(int64_t offset, value_page_t *vp)
 {
 	MutexGuard guard(mutex);
-	return ReadFile(this, offset, vp, int(sizeof(vp)));
+	return ReadFile(this, offset, vp, int(sizeof(*vp)));
 }
 
 /**
@@ -387,7 +398,7 @@ int
 ValueFile::write(int64_t offset, const value_page_t *vp)
 {
 	MutexGuard guard(mutex);
-	return WriteFile(this, offset, vp, int(sizeof(value_page_t)));
+	return WriteFile(this, offset, vp, int(sizeof(*vp)));
 }
 
 /**
@@ -466,5 +477,12 @@ ValueFile::writeFlags(int64_t offset, value_page_t *vp, int flags)
 int
 ValueFile::freePage(int64_t offset)
 {
-	return fdpMgr->free(offset);
+	const char *caller = "ValueFile::freePage";
+
+	if (fdpMgr) {
+		return fdpMgr->free(offset);
+	} else {
+		Log(ERR, caller, "free disk page manager is not set");
+		return E_invalid_state;
+	}
 }

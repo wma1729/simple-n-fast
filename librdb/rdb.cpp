@@ -85,7 +85,7 @@ Rdb::populateFreePages(const char *fname)
 		offset = 0L;
 
 		// Set the end of the file as the first free page
-		retval = valueFile->freePage(vfsize);
+		retval = fdpMgr->free(vfsize);
 
 		while (retval == E_ok) {
 			retval = valueFile->readFlags(offset, &flags);
@@ -224,7 +224,7 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 			retval = cache->update(kpn, nextOffset);
 			if (retval != E_ok) {
 				Log(ERR, caller,
-					"failed to read key page at offset %ld",
+					"failed to read key page at offset %" PRId64,
 					nextOffset);
 			}
 		}
@@ -245,21 +245,25 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 					ki->ki_kpn = kpn;
 					if (op == GET) {
 						Log(DBG, caller,
-							"key found: page offset = %ld, key index = %d",
+							"key found: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						ki->ki_voff = kp->kp_keys[ki->ki_kidx].kr_voff;
 						return E_ok;
 					} else if (kp->kp_vcount > 0) {
 						Log(DBG, caller,
-							"key deleted: page offset = %ld, key index = %d",
+							"key deleted: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						return keyFile->write(nextOffset, kp, kpSize);
 					} else {
 						Log(DBG, caller,
-							"key found: page offset = %ld, key index = %d",
+							"key found: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						Log(DBG, caller,
-							"release page at offset %ld", nextOffset);
+							"release page at offset %" PRId64,
+							nextOffset);
 						return E_ok;
 					}
 				}
@@ -269,7 +273,8 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 					ki->ki_kidx = keyRec.put(ki);
 					if (ki->ki_kidx >= 0) {
 						Log(DBG, caller,
-							"key inserted: page offset = %ld, key index = %d",
+							"key inserted: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						ki->ki_kpn = kpn;
 						ki->ki_voff = kp->kp_keys[ki->ki_kidx].kr_voff;
@@ -292,7 +297,7 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 			hashTable->addKeyPageNode(ki->ki_hash, kpn);
 		} else {
 			Log(ERR, caller,
-				"failed to read key page at offset %ld",
+				"failed to read key page at offset %" PRId64,
 				nextOffset);
 		}
 
@@ -312,21 +317,25 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 					ki->ki_kpn = kpn;
 					if (op == GET) {
 						Log(DBG, caller,
-							"key found: page offset = %ld, key index = %d",
+							"key found: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						ki->ki_voff = kp->kp_keys[ki->ki_kidx].kr_voff;
 						return E_ok;
 					} else if (kp->kp_vcount > 0) {
 						Log(DBG, caller,
-							"key deleted: page offset = %ld, key index = %d",
+							"key deleted: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						return keyFile->write(nextOffset, kp, kpSize);
 					} else {
 						Log(DBG, caller,
-							"key found: page offset = %ld, key index = %d",
+							"key found: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						Log(DBG, caller,
-							"release page at offset %ld", nextOffset);
+							"release page at offset %" PRId64,
+							nextOffset);
 						return E_ok;
 					}
 				}
@@ -336,7 +345,8 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 					ki->ki_kidx = keyRec.put(ki);
 					if (ki->ki_kidx >= 0) {
 						Log(DBG, caller,
-							"key inserted: page offset = %ld, key index = %d",
+							"key inserted: page offset = %" PRId64
+							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						ki->ki_kpn = kpn;
 						ki->ki_voff = kp->kp_keys[ki->ki_kidx].kr_voff;
@@ -389,7 +399,7 @@ Rdb::addNewPage(key_info_t *ki)
 			keyFile->getFileName());
 	} else {
 		Log(DBG, caller,
-			"new page inserted: page offset = %ld, key index = %d",
+			"new page inserted: page offset = %" PRId64 ", key index = %d",
 			pageOffset, ki->ki_kidx);
 
 		kpn->kpn_kpoff = pageOffset;
@@ -470,13 +480,13 @@ Rdb::get(
 
 		retval = valueFile->read(ki.ki_voff, &vp);
 		if (retval != E_ok) {
-			Log(ERR, caller, "failed to read value page at offset %ld from %s",
+			Log(ERR, caller, "failed to read value page at offset %" PRId64 " from %s",
 				ki.ki_voff, valueFile->getFileName());
 		} else {
 			Assert(!IsValuePageDeleted(&vp), __FILE__, __LINE__,
 				"value is already deleted");
 			Assert((klen == vp.vp_klen), __FILE__, __LINE__,
-				"key length mismatch");
+				"key length mismatch (expected %d, found %d)", klen, vp.vp_klen);
 			Assert((memcmp(key, vp.vp_key, klen) == 0), __FILE__, __LINE__,
 				"key mismatch");
 
@@ -664,7 +674,8 @@ Rdb::remove(
 				next_kpn = dki.ki_kpn->kpn_next;
 
 				Log(DBG, caller,
-					"previous page offset = %ld, next page offset = %ld",
+					"previous page offset = %" PRId64
+					", next page offset = %" PRId64,
 					prev_kpoff, next_kpoff);
 
 				// The previous page is already loaded. If there
@@ -677,7 +688,7 @@ Rdb::remove(
 						hashTable->addKeyPageNode(dki.ki_hash, next_kpn);
 					} else {
 						Log(ERR, caller,
-							"failed to read key page at offset %ld",
+							"failed to read key page at offset %" PRId64,
 							next_kpoff);
 					}
 				}
@@ -696,7 +707,7 @@ Rdb::remove(
 								dki.ki_kpn->kpn_kp, KPAGE_DELETED);
 					if (retval != E_ok) {
 						Log(ERR, caller,
-							"failed to mark key page at offset %ld as deleted",
+							"failed to mark key page at offset %" PRId64 " as deleted",
 							dki.ki_kpn->kpn_kpoff);
 					} else {
 						ustk.writeFlags(keyFile, dki.ki_kpn->kpn_kp,
@@ -709,8 +720,8 @@ Rdb::remove(
 							offset = prev_kp->kp_noff;
 							retval = keyFile->writeNextOffset(prev_kpoff, prev_kp, next_kpoff);
 							if (retval != E_ok) {
-								Log(ERR, caller, "failed to update key page at offset %ld to %s",
-									prev_kpoff, keyFile->getFileName());
+								Log(ERR, caller, "failed to update key page at offset %" PRId64
+									" to %s", prev_kpoff, keyFile->getFileName());
 							} else {
 								ustk.writeNextOffset(keyFile, prev_kp, prev_kpoff, offset);
 							}
@@ -721,8 +732,8 @@ Rdb::remove(
 							offset = next_kp->kp_poff;
 							retval = keyFile->writePrevOffset(next_kpoff, next_kp, prev_kpoff);
 							if (retval != E_ok) {
-								Log(ERR, caller, "failed to update key page at offset %ld to %s",
-									next_kpoff, keyFile->getFileName());
+								Log(ERR, caller, "failed to update key page at offset %" PRId64
+									" to %s", next_kpoff, keyFile->getFileName());
 							} else {
 								ustk.writePrevOffset(keyFile, next_kp, next_kpoff, offset);
 							}
