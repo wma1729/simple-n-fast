@@ -212,12 +212,8 @@ KeyFile::writeFlags(int64_t offset, key_page_t *kp, int flags)
 	const char  *caller = "KeyFile::writeFlags";
 	int         retval = E_ok;
 
-	{
-		MutexGuard guard(mutex);
-		offset += offsetof(key_page_t, kp_flags);
-		retval = write(offset, &flags, int(sizeof(flags)));
-	}
-
+	offset += offsetof(key_page_t, kp_flags);
+	retval = write(offset, &flags, int(sizeof(flags)));
 	if (retval == E_ok) {
 		if (kp) {
 			int oflags = kp->kp_flags;
@@ -253,12 +249,8 @@ KeyFile::writePrevOffset(int64_t offset, key_page_t *kp, int64_t prevOffset)
 	const char  *caller = "KeyFile::writePrevOffset";
 	int         retval = E_ok;
 
-	{
-		MutexGuard guard(mutex);
-		offset += offsetof(key_page_t, kp_poff);
-		retval = write(offset, &prevOffset, int(sizeof(prevOffset)));
-	}
-
+	offset += offsetof(key_page_t, kp_poff);
+	retval = write(offset, &prevOffset, int(sizeof(prevOffset)));
 	if (retval == E_ok) {
 		if (kp) {
 			int64_t opoff = kp->kp_poff;
@@ -296,12 +288,8 @@ KeyFile::writeNextOffset(int64_t offset, key_page_t *kp, int64_t nextOffset)
 	const char  *caller = "KeyFile::writeNextOffset";
 	int         retval = E_ok;
 
-	{
-		MutexGuard guard(mutex);
-		offset += offsetof(key_page_t, kp_noff);
-		retval = write(offset, &nextOffset, int(sizeof(nextOffset)));
-	}
-
+	offset += offsetof(key_page_t, kp_noff);
+	retval = write(offset, &nextOffset, int(sizeof(nextOffset)));
 	if (retval == E_ok) {
 		if (kp) {
 			int64_t onoff = kp->kp_noff;

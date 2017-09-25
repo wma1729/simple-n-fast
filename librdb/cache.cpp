@@ -292,8 +292,6 @@ LRUCache::touch(key_page_node_t *kpn)
 void
 LRUCache::free(key_page_node_t *kpn)
 {
-	MutexGuard guard(mutex);
-
 	cnode_t *cn = kpn->kpn_cnode;
 	if (cn == 0)
 		return;

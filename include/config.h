@@ -29,12 +29,21 @@ public:
 	{
 	}
 
+	/**
+	 * Gets reference to the internal map. Do not try to
+	 * manipulate it.
+	 */
+	const std::map<std::string, std::string> &getInternalMap() const
+	{
+		return kvMap;
+	}
+
 	int read();
-	const char *getString(const std::string &, int *error = E_ok);
-	int getInt(const std::string &, int *error = E_ok);
-	int64_t getInt64(const std::string &, int *error = E_ok);
-	bool getBool(const std::string &, int *error = E_ok);
-	void dump();
+	const char *getString(const std::string &, int *error = E_ok) const;
+	int getInt(const std::string &, int *error = E_ok) const;
+	int64_t getInt64(const std::string &, int *error = E_ok) const;
+	bool getBool(const std::string &, int *error = E_ok) const;
+	void dump() const;
 };
 
 #endif // _SNF_CONFIG_H_

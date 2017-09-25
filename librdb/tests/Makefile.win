@@ -1,0 +1,23 @@
+include ../../Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS =  $(P)\rdbts.obj
+
+all: platform $(P)\rdbts.exe
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\rdbts.exe: $(OBJS) $(LIBCOM) $(LIBRDB)
+	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
+
+{.}.cpp{$(P)}.obj:
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $< /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\rdbts.exe

@@ -1,0 +1,32 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/rdbts.o
+
+LIBS = -lpthread
+
+all: platform ${P}/rdbts
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/rdbts: ${OBJS} ${LIBCOM} ${LIBRDB}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+test:
+	@test -d db || mkdir db
+	@test -d log || mkdir log
+	@echo "DBPATH = ${PWD}/db" >> rdbts.conf
+	@echo "DBNAME = testdb" >> rdbts.conf
+	@${P}/rdbts -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf -logpath "${PWD}/log" -v
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/rdbts db log

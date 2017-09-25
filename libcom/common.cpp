@@ -62,6 +62,31 @@ GetLocalTime(local_time_t *lt)
 	return now;
 }
 
+/**
+ * Converts local time to string format.
+ * - YYYY/MM/DD hh:mm:ss.mse
+ *
+ * @param [in]  lt     - local time.
+ * @param [out] buf    - buffer to get the time string.
+ * @param [in]  buflen - size of the buffer.
+ *
+ * @return string representation of the time on success,
+ * NULL on failure.
+ */
+const char *
+LocalTimeToString(local_time_t *lt, char *buf, size_t buflen)
+{
+	if ((lt == 0) || (buf == 0) || (buflen <= 24)) {
+		return 0;
+	}
+
+	snprintf(buf, buflen, "%04d/%02d/%02d %02d:%02d:%02d.%03d",
+		lt->year, lt->month, lt->day,
+		lt->hour, lt->minute, lt->second, lt->msec);
+
+	return buf;
+}
+
 /*
  * Get the system error string.
  *

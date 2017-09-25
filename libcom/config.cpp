@@ -120,7 +120,7 @@ Config::read()
  * @return the config value in case of success, NULL on failure.
  */
 const char *
-Config::getString(const std::string &key, int *error)
+Config::getString(const std::string &key, int *error) const
 {
 	const char  *caller = "Config::getString";
 	const char  *val = 0;
@@ -151,7 +151,7 @@ Config::getString(const std::string &key, int *error)
  * check the error code as well.
  */
 int
-Config::getInt(const std::string &key, int *error)
+Config::getInt(const std::string &key, int *error) const
 {
 	const char  *caller = "Config::getInt";
 	int         val = -1;
@@ -183,7 +183,7 @@ Config::getInt(const std::string &key, int *error)
  * check the error code as well.
  */
 int64_t
-Config::getInt64(const std::string &key, int *error)
+Config::getInt64(const std::string &key, int *error) const
 {
 	const char  *caller = "Config::getInt64";
 	int64_t     val = -1L;
@@ -215,7 +215,7 @@ Config::getInt64(const std::string &key, int *error)
  * check the error code as well.
  */
 bool
-Config::getBool(const std::string &key, int *error)
+Config::getBool(const std::string &key, int *error) const
 {
 	const char  *caller = "Config::getBool";
 	bool        val = false;
@@ -249,7 +249,7 @@ Config::getBool(const std::string &key, int *error)
  * Dumps all the entries from the config file.
  */
 void
-Config::dump()
+Config::dump() const
 {
 	const char *caller = "Config::dump";
 

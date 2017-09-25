@@ -92,6 +92,7 @@ typedef struct
 } local_time_t;
 
 time_t     GetLocalTime(local_time_t *);
+const char *LocalTimeToString(local_time_t *, char *, size_t);
 const char *GetErrorStr(char *, size_t, int);
 const char *GetBaseName(char *, size_t, const char *, bool stripExt = false);
 
