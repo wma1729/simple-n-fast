@@ -131,7 +131,7 @@ Config::getString(const std::string &key, int *error) const
 	I = kvMap.find(key);
 	if (I == kvMap.end()) {
 		Log(DBG, caller, "key %s not found", key.c_str());
-		if (*error) *error = E_not_found;
+		if (error) *error = E_not_found;
 	} else {
 		val = I->second.c_str();
 		Log(DBG, caller, "%s = %s", key.c_str(), val);
@@ -162,7 +162,7 @@ Config::getInt(const std::string &key, int *error) const
 	I = kvMap.find(key);
 	if (I == kvMap.end()) {
 		Log(DBG, caller, "key %s not found", key.c_str());
-		if (*error) *error = E_not_found;
+		if (error) *error = E_not_found;
 	} else {
 		const char *vstr = I->second.c_str();
 		Log(DBG, caller, "%s = %s", key.c_str(), vstr);
@@ -194,7 +194,7 @@ Config::getInt64(const std::string &key, int *error) const
 	I = kvMap.find(key);
 	if (I == kvMap.end()) {
 		Log(DBG, caller, "key %s not found", key.c_str());
-		if (*error) *error = E_not_found;
+		if (error) *error = E_not_found;
 	} else {
 		const char *vstr = I->second.c_str();
 		Log(DBG, caller, "%s = %s", key.c_str(), vstr);
@@ -226,7 +226,7 @@ Config::getBool(const std::string &key, int *error) const
 	I = kvMap.find(key);
 	if (I == kvMap.end()) {
 		Log(DBG, caller, "key %s not found", key.c_str());
-		if (*error) *error = E_not_found;
+		if (error) *error = E_not_found;
 	} else {
 		const char *vstr = I->second.c_str();
 		Log(DBG, caller, "%s = %s", key.c_str(), vstr);

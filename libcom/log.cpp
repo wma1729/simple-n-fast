@@ -25,7 +25,7 @@ FileLogger::open(const local_time_t *lt)
 	snprintf(lf, MAXPATHLEN, "%s%c%04d%02d%02d.log",
 		logPath.c_str(), PATH_SEP, lt->year, lt->month, lt->day);
 
-	logFile = new File(lf, 0022);
+	logFile = DBG_NEW File(lf, 0022);
 
 	FileOpenFlags flags;
 	flags.o_append = true;
@@ -55,6 +55,7 @@ void
 FileLogger::log(log_level_t ll, const char *caller, const char *msg)
 {
 	char         logbuf[LOGBUFLEN + 1];
+	char         dtbuf[32];
 	local_time_t lt;
 
 	if ((ll == DBG) && !verbose) {
@@ -77,19 +78,13 @@ FileLogger::log(log_level_t ll, const char *caller, const char *msg)
 
 		if (logFile) {
 			int nbytes = snprintf(logbuf, LOGBUFLEN,
-					  "%04d/%02d/%02d %02d:%02d:%02d.%03d [%u.%u] [%s] [%s] %s\n",
-					  lt.year,
-					  lt.month,
-					  lt.day,
-					  lt.hour,
-					  lt.minute,
-					  lt.second,
-					  lt.msec,
-					  getpid(),
-					  gettid(),
-					  LevelStr(ll),
-					  caller,
-					  msg);
+					"%s [%u.%u] [%s] [%s] %s\n",
+					LocalTimeToString(&lt, dtbuf, sizeof(dtbuf)),
+					getpid(),
+					gettid(),
+					LevelStr(ll),
+					caller,
+					msg);
 
 			int bWritten;
 

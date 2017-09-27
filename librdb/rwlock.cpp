@@ -1,7 +1,4 @@
-#if !defined(WINDOWS)
-#include <errno.h>
-#endif
-
+#include "common.h"
 #include "util.h"
 #include "rdb/rwlock.h"
 
@@ -291,7 +288,7 @@ RWLockPool::get()
 		rwlock = pool.front();
 		pool.pop_front();
 	} else {
-		rwlock = new RWLock();
+		rwlock = DBG_NEW RWLock();
 	}
 
 	return rwlock;

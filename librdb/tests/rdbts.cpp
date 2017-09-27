@@ -1,11 +1,11 @@
 #include "tf/testmain.h"
-#include "tf/testassert.h"
+#include "tf/testmacros.h"
 #include "simpleSGR.h"
 
 namespace tf {
 
 Test *TestList[] = {
-	new SimpleSetGetRemove(),
+	DBG_NEW SimpleSetGetRemove(),
 	0
 };
 

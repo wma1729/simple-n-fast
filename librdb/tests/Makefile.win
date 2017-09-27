@@ -17,7 +17,16 @@ $(P)\rdbts.exe: $(OBJS) $(LIBCOM) $(LIBRDB)
 {.}.cpp{$(P)}.obj:
 	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $< /Fo$@
 
+test:
+	@if not exist db mkdir db
+	@if not exist log mkdir log
+	@echo DBPATH = $(MAKEDIR)\db >> rdbts.conf
+	@echo DBNAME = testdb >> rdbts.conf
+	@$(P)\rdbts.exe -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf -logpath "$(MAKEDIR)/log" -v
+
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\rdbts.exe
+	@del /q $(OBJS) $(P)\rdbts.* vc*.pdb rdbts.conf
+	@if exist db rmdir /q /s db
+	@if exist log rmdir /q /s log

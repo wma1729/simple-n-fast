@@ -6,7 +6,6 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdarg>
-#include <cstdlib>
 #include <cstring>
 #include <stdint.h>
 #include <inttypes.h>
@@ -16,6 +15,15 @@
 
 	#if !defined(WIN32_LEAN_AND_MEAN)
 	#define WIN32_LEAN_AND_MEAN
+	#endif
+
+	#if defined(_DEBUG)
+	#define _CRTDBG_MAP_ALLOC
+	#include <cstdlib>
+	#include <crtdbg.h>
+	#define DBG_NEW         new (_NORMAL_BLOCK, __FILE__, __LINE__)
+	#else
+	#define DBG_NEW         new
 	#endif
 
 	#define PATH_SEP        '\\'
@@ -45,6 +53,7 @@
 	#define INVALID_HANDLE_VALUE    (-1)
 	#define GET_ERRNO               errno
 	#define SET_ERRNO(E)            do { errno = (E); } while (0)
+	#define DBG_NEW                 new
 
 	#include <sys/time.h>
 	#include <sys/stat.h>
@@ -52,6 +61,7 @@
 	#include <fcntl.h>
 	#include <unistd.h>
 	#include <errno.h>
+	#include <cstdlib>
 
 	typedef int             fhandle_t;
 	typedef unsigned int    tid_t;

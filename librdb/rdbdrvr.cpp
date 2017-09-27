@@ -248,7 +248,7 @@ main(int argc, const char **argv)
 	}
 
 	if (!logPath.empty()) {
-		TheLogger = new FileLogger(logPath.c_str(), TheVerbosity);
+		TheLogger = DBG_NEW FileLogger(logPath.c_str(), TheVerbosity);
 	}
 
 	if (testing) {

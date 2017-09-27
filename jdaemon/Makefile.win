@@ -29,4 +29,4 @@ $(ROBJS): accountrights.cpp
 install:
 
 clean:
-	@del /q $(DOBJS) $(ROBJS) $(P)\jdaemonizer.exe $(P)\accountrights.exe
+	@del /q $(DOBJS) $(ROBJS) $(P)\jdaemonizer.* $(P)\accountrights.* vc*.pdb

@@ -34,4 +34,4 @@ $(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBCOM)
 install:
 
 clean:
-	@del /q $(OBJS) $(DRVROBJS) $(P)\rdb.lib $(P)\rdbdrvr.exe
+	@del /q $(OBJS) $(DRVROBJS) $(P)\rdb.lib $(P)\rdbdrvr.* vc*.pdb

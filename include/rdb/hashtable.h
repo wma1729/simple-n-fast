@@ -65,7 +65,7 @@ public:
 		: ht(0),
 		  htsize(0),
 		  mutex(),
-		  rwlockPool(new RWLockPool())
+		  rwlockPool(DBG_NEW RWLockPool())
 	{
 	}
 

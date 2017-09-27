@@ -59,7 +59,7 @@ public:
 		  tail(0),
 		  mutex()
 	{
-		pageMgr = new PageMgr(kpSize, memUsage);
+		pageMgr = DBG_NEW PageMgr(kpSize, memUsage);
 		max = pageMgr->getNumberOfPages();
 	}
 

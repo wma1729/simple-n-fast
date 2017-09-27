@@ -180,7 +180,7 @@ Daemonize(void)
 	int         len;
 	char        stopEvent[MAX_PATH + 1];
 
-	FileLogger *fileLogger = new FileLogger(TheDaemonArgs.logPath.c_str(), TheVerbosity);
+	FileLogger *fileLogger = DBG_NEW FileLogger(TheDaemonArgs.logPath.c_str(), TheVerbosity);
 	fileLogger->makeLogPath();
 	TheLogger = fileLogger;
 

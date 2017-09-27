@@ -16,7 +16,7 @@ Rdb::populateHashTable()
 
 	Log(DBG, caller, "preparing hash table and free disk pages in index file");
 
-	keyFile->setFreeDiskPageMgr(new FreeDiskPageMgr(kpSize));
+	keyFile->setFreeDiskPageMgr(DBG_NEW FreeDiskPageMgr(kpSize));
 
 	// Set the end of the file as the first free page
 	retval = keyFile->freePage(keyFile->size());
@@ -52,7 +52,7 @@ Rdb::populateFreePages(const char *fname)
 	int         retval = E_ok;
 	int         oserr = 0;
 	int         flags;
-	File        *file = new File(fname, 0022);
+	File        *file = DBG_NEW File(fname, 0022);
 	int64_t     vfsize = -1L;
 	int64_t     offset;
 
@@ -70,7 +70,7 @@ Rdb::populateFreePages(const char *fname)
 		return retval;
 	}
 
-	FreeDiskPageMgr *fdpMgr = new FreeDiskPageMgr(sizeof(value_page_t), file);
+	FreeDiskPageMgr *fdpMgr = DBG_NEW FreeDiskPageMgr(sizeof(value_page_t), file);
 	retval = fdpMgr->init();
 	if (retval != E_ok) {
 		// Something went wrong
@@ -142,7 +142,7 @@ Rdb::open()
 	strncat(attrPath, ".attr", MAXPATHLEN);
 	strncat(fdpPath, ".fdb", MAXPATHLEN);
 
-	std::unique_ptr<AttrFile> attrFile(new AttrFile(attrPath, 0022));
+	std::unique_ptr<AttrFile> attrFile(DBG_NEW AttrFile(attrPath, 0022));
 	retval = attrFile->open();
 	if (retval != E_ok) {
 		return retval;
@@ -166,19 +166,19 @@ Rdb::open()
 	kpSize = attrFile->getKeyPageSize();
 	htSize = attrFile->getHashTableSize();
 
-	std::unique_ptr<KeyFile> pKeyFile(new KeyFile(idxPath, 0022));
+	std::unique_ptr<KeyFile> pKeyFile(DBG_NEW KeyFile(idxPath, 0022));
 	retval = pKeyFile->open(options.syncIndexFile());
 	if (retval != E_ok) {
 		return retval;
 	}
 
-	std::unique_ptr<ValueFile> pValueFile(new ValueFile(dbPath, 0022));
+	std::unique_ptr<ValueFile> pValueFile(DBG_NEW ValueFile(dbPath, 0022));
 	retval = pValueFile->open(options.syncDataFile());
 	if (retval != E_ok) {
 		return retval;
 	}
 
-	hashTable = new HashTable();
+	hashTable = DBG_NEW HashTable();
 	retval = hashTable->allocate(htSize);
 	if (retval != E_ok) {
 		return retval;
@@ -187,7 +187,7 @@ Rdb::open()
 	keyFile = pKeyFile.release();
 	valueFile = pValueFile.release();
 
-	cache = new LRUCache(keyFile, kpSize, options.getMemoryUsage());
+	cache = DBG_NEW LRUCache(keyFile, kpSize, options.getMemoryUsage());
 
 	retval = populateHashTable();
 	if (retval == E_ok) {

@@ -223,7 +223,7 @@ Daemonize(void)
 	dup2(fd, 1);
 	dup2(fd, 2);
 
-	FileLogger *fileLogger = new FileLogger(TheDaemonArgs.logPath.c_str(), TheVerbosity);
+	FileLogger *fileLogger = DBG_NEW FileLogger(TheDaemonArgs.logPath.c_str(), TheVerbosity);
 	fileLogger->makeLogPath();
 	TheLogger = fileLogger;
 

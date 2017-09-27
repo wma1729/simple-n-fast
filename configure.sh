@@ -3,12 +3,13 @@
 # Generates Makefile.constants
 
 ME=`basename $0`
-USAGE="Usage: $ME [-cc <c++ compiler>] [-install <install_path>] [-h]" 
+USAGE="Usage: $ME [-cc <c++ compiler>] [-debug] [-install <install_path>] [-h]" 
 CC='g++'
 INSTPATH=
 PLAT=`uname -s`
 HARDWARE=
 BLDPLAT=
+DEBUG='-O'
 
 while [ $# -gt 0 ];
 do
@@ -21,6 +22,10 @@ do
 				echo $USAGE
 				exit 1
 			fi
+			;;
+
+		"-debug")
+			DEBUG='-g'
 			;;
 
 		"-install")
@@ -70,9 +75,10 @@ if [ "$PLAT" = "Linux" ]; then
 		LDFLAGS = -fpic
 		AR = ar
 		ARFLAGS = -r
-		DBG = -O
+		DBG = $DEBUG
 		INCL = -I`pwd`/include
 		LIBCOM = `pwd`/libcom/$BLDPLAT/libcom.a
+		LIBRDB = `pwd`/librdb/$BLDPLAT/librdb.a
 LINUX_CONFIG
 
 elif [ "$PLAT" = "SunOS" ]; then
@@ -95,6 +101,7 @@ elif [ "$PLAT" = "SunOS" ]; then
 		DBG = -O
 		INCL = -I`pwd`/include
 		LIBCOM = `pwd`/libcom/$BLDPLAT/libcom.a
+		LIBRDB = `pwd`/librdb/$BLDPLAT/librdb.a
 SOLARIS_CONFIG
 
 else

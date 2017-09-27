@@ -131,7 +131,7 @@ StartDaemon(void)
 	Log(DBG, caller, "successfully loaded %s", TheDaemonArgs.jvmLibPath.c_str());
 
 	count = (int) TheDaemonArgs.jvmOptions.size();
-	options = new JavaVMOption[count];
+	options = (JavaVMOption *)calloc(count, sizeof(JavaVMOption));
 
 	std::list<std::string>::const_iterator I;
 	for (I = TheDaemonArgs.jvmOptions.begin();
@@ -152,7 +152,7 @@ StartDaemon(void)
 	for (i = 0; i < count; ++i)
 		free(options[i].optionString);
 
-	delete options;
+	free(options);
 
 	if (retval != JNI_OK) {
 		Log(ERR, caller, "failed to create Java VM: %d", retval);
@@ -291,7 +291,7 @@ main(int argc, const char **argv)
 	}
 
 	if (configName) {
-		config = new Config(configName);
+		config = DBG_NEW Config(configName);
 		if (config->read() != E_ok) {
 			return 1;
 		}

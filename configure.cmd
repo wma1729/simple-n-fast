@@ -5,8 +5,9 @@ REM Generates Makefile.constants
 SETLOCAL ENABLEEXTENSIONS
 
 SET ME=%~nx0
-SET USAGE="Usage: %ME% [-cc <c++ compiler>] [-install <install_path>] [-h]" 
+SET USAGE="Usage: %ME% [-cc <c++ compiler>] [-debug] [-install <install_path>] [-h]" 
 SET CC=cl
+SET DEBUG=/O2
 
 :argparsingstart
 IF -%1-==-- GOTO argparsingend
@@ -22,6 +23,11 @@ IF %1==-cc (
 		ECHO %USAGE%
 		EXIT /b 1
 	)
+)
+
+IF %1==-debug (
+	SET valid=1
+	SET DEBUG=/Zi /D_DEBUG /MDd
 )
 
 IF %1==-install (
@@ -73,9 +79,10 @@ ECHO LD = link /dll /nologo >> Makefile.constants
 ECHO LDFLAGS = >> Makefile.constants
 ECHO AR = link /lib /nologo >> Makefile.constants
 ECHO ARFLAGS = >> Makefile.constants
-ECHO DBG = /O2 >> Makefile.constants
+ECHO DBG = %DEBUG% >> Makefile.constants
 ECHO INCL = /I"%BLDDIR%include" >> Makefile.constants
 ECHO LIBCOM = "%BLDDIR%libcom\%BLDPLAT%\com.lib" >> Makefile.constants
+ECHO LIBRDB = "%BLDDIR%librdb\%BLDPLAT%\rdb.lib" >> Makefile.constants
 
 ECHO Makefile.constants generated successfully
 

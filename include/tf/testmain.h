@@ -50,6 +50,10 @@ main(int argc, const char **argv)
 	const char *t = 0;
 	Config *config = 0;
 
+#if defined(WINDOWS)
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);  
+#endif
+
 	GetBaseName(prog, MAXPATHLEN + 1, argv[0], true);
 
 	for (int i = 1; i < argc; ++i) {
@@ -114,11 +118,11 @@ main(int argc, const char **argv)
 	}
 
 	if (lp) {
-		TheLogger = new FileLogger(lp, TheVerbosity);
+		TheLogger = DBG_NEW FileLogger(lp, TheVerbosity);
 	}
 
 	if (cf) {
-		config = new Config(cf);
+		config = DBG_NEW Config(cf);
 		retval = config->read();
 		if (retval != E_ok) {
 			fprintf(stderr, "failed to read config file %s\n", cf);
@@ -167,6 +171,12 @@ main(int argc, const char **argv)
 
 	suite.run(config);
 	suite.report();
+
+	if (config)
+		delete config;
+
+	if (TheLogger)
+		delete TheLogger;
 
 	return suite.failed() ? 1 : 0;
 	
