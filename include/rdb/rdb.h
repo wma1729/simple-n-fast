@@ -67,9 +67,9 @@ public:
 	{
 		const char  *caller = "setMemoryUsage";
 
-		if ((memusage < 5) || (memusage > 80)) {
+		if ((memusage < 2) || (memusage > 150)) {
 			Log(ERR, caller,
-				"invalid memory usage (%d); should be in the range [5, 80]",
+				"invalid memory usage (%d); should be in the range [2, 150]",
 				memusage);
 			return E_invalid_arg;
 		}
@@ -151,7 +151,7 @@ private:
 		int kpsize,
 		int htsize)
 	{
-		Assert((kpsize > MIN_KEY_PAGE_SIZE), __FILE__, __LINE__,
+		Assert((kpsize >= MIN_KEY_PAGE_SIZE), __FILE__, __LINE__,
 			"invalid page size (%d); should at least be %d",
 			kpsize, MIN_KEY_PAGE_SIZE);
 

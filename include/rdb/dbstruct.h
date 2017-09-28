@@ -9,7 +9,7 @@
 #endif
 
 #ifndef MIN_KEY_PAGE_SIZE
-#define MIN_KEY_PAGE_SIZE   512
+#define MIN_KEY_PAGE_SIZE   1024
 #endif
 
 #ifndef KEY_PAGE_SIZE
@@ -32,7 +32,7 @@ typedef struct dbattr
 	int a_htsize;   // hash table size
 } dbattr_t;
 
-/* 64 bytes Key record */
+/* 80 bytes Key record */
 extern "C"
 typedef struct key_rec
 {

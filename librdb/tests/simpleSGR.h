@@ -20,7 +20,7 @@ public:
 
 	virtual const char *description() const
 	{
-		return "Sets, gets, and removes a 2 key/value pairs";
+		return "Sets, gets, and removes 2 key/value pairs";
 	}
 
 	virtual bool execute(const Config *config)

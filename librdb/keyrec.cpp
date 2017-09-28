@@ -142,14 +142,7 @@ KeyRecords::height(short root)
 short
 KeyRecords::rotateLeft(short root)
 {
-	short pivot = -1;
-
-	Assert((balanceFactor(root) == -2), __FILE__, __LINE__,
-		"program bug: expected balance factor of -2 for index %d", root);
-	Assert((balanceFactor(RIGHT_OF(root)) == -1), __FILE__, __LINE__,
-		"program bug: expected balance factor of -1 for index %d", RIGHT_OF(root));
-
-	pivot = RIGHT_OF(root);
+	short pivot = RIGHT_OF(root);
 	RIGHT_OF(root) = LEFT_OF(pivot);
 	LEFT_OF(pivot) = root;
 
@@ -169,14 +162,7 @@ KeyRecords::rotateLeft(short root)
 short
 KeyRecords::rotateRight(short root)
 {
-	short pivot = -1;
-
-	Assert((balanceFactor(root) == 2), __FILE__, __LINE__,
-		"program bug: expected balance factor of 2 for index %d", root);
-	Assert((balanceFactor(LEFT_OF(root)) == 1), __FILE__, __LINE__,
-		"program bug: expected balance factor of 1 for index %d", LEFT_OF(root));
-
-	pivot = LEFT_OF(root);
+	short pivot = LEFT_OF(root);
 	LEFT_OF(root) = RIGHT_OF(pivot);
 	RIGHT_OF(pivot) = root;
 
@@ -196,11 +182,6 @@ KeyRecords::rotateRight(short root)
 short
 KeyRecords::rotateLeftRight(short root)
 {
-	Assert((balanceFactor(root) == 2), __FILE__, __LINE__,
-		"program bug: expected balance factor of 2 for index %d", root);
-	Assert((balanceFactor(LEFT_OF(root)) == -1), __FILE__, __LINE__,
-		"program bug: expected balance factor of -1 for index %d", LEFT_OF(root));
-
 	LEFT_OF(root) = rotateLeft(LEFT_OF(root));
 	return rotateRight(root);
 }
@@ -215,11 +196,6 @@ KeyRecords::rotateLeftRight(short root)
 short
 KeyRecords::rotateRightLeft(short root)
 {
-	Assert((balanceFactor(root) == -2), __FILE__, __LINE__,
-		"program bug: expected balance factor of -2 for index %d", root);
-	Assert((balanceFactor(RIGHT_OF(root)) == 1), __FILE__, __LINE__,
-		"program bug: expected balance factor of 1 for index %d", RIGHT_OF(root));
-
 	RIGHT_OF(root) = rotateRight(RIGHT_OF(root));
 	return rotateLeft(root);
 }
@@ -283,6 +259,8 @@ KeyRecords::put(short root, const key_info_t *ki, short *idx)
 		} else /* if (cmp > 0) */ {
 			RIGHT_OF(root) = put(RIGHT_OF(root), ki, idx);
 		}
+
+		height(root);
 	}
 
 	return balanceTree(root);
@@ -419,9 +397,9 @@ KeyRecords::remove(short root, const key_info_t *ki, short *idx)
 		} else /* if (cmp > 0) */ {
 			RIGHT_OF(root) = remove(RIGHT_OF(root), ki, idx);
 		}
-	}
 
-	height(root);
+		height(root);
+	}
 
 	return balanceTree(root);
 }
