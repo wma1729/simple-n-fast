@@ -140,7 +140,7 @@ Rdb::open()
 	strncat(idxPath, ".idx", MAXPATHLEN);
 	strncat(dbPath, ".db", MAXPATHLEN);
 	strncat(attrPath, ".attr", MAXPATHLEN);
-	strncat(fdpPath, ".fdb", MAXPATHLEN);
+	strncat(fdpPath, ".fdp", MAXPATHLEN);
 
 	std::unique_ptr<AttrFile> attrFile(DBG_NEW AttrFile(attrPath, 0022));
 	retval = attrFile->open();
@@ -806,6 +806,7 @@ Rdb::rebuild()
 	int             retval = E_ok;
 	char            idxPath[MAXPATHLEN + 1];
 	char            dbPath[MAXPATHLEN + 1];
+	char            dbPathBkup[MAXPATHLEN + 1];
 	char            attrPath[MAXPATHLEN + 1];
 	char            fdpPath[MAXPATHLEN + 1];
 	int64_t         offset = 0;
@@ -826,7 +827,7 @@ Rdb::rebuild()
 		strncat(idxPath, ".idx", MAXPATHLEN);
 		strncat(dbPath, ".db", MAXPATHLEN);
 		strncat(attrPath, ".attr", MAXPATHLEN);
-		strncat(fdpPath, ".fdb", MAXPATHLEN);
+		strncat(fdpPath, ".fdp", MAXPATHLEN);
 
 		if ((retval = backupFile(idxPath)) != E_ok)
 			return retval;
@@ -858,8 +859,9 @@ Rdb::rebuild()
 		return retval;
 	}
 
-	strncat(dbPath, ".bkup", MAXPATHLEN);
-	ValueFile vf(dbPath, 0022);
+	strncpy(dbPathBkup, dbPath, MAXPATHLEN);
+	strncat(dbPathBkup, ".bkup", MAXPATHLEN);
+	ValueFile vf(dbPathBkup, 0022);
 	retval = vf.open(false);
 	if (retval != E_ok) {
 		restoreFile(fdpPath);
@@ -878,6 +880,12 @@ Rdb::rebuild()
 		offset += (int64_t) sizeof(vp);
 	}
 
+	if (retval == E_eof_detected) {
+		retval = E_ok;
+	}
+
+	vf.close();
+
 	close();
 
 	if (retval != E_ok) {
@@ -891,8 +899,6 @@ Rdb::rebuild()
 		removeBackupFile(dbPath);
 		removeBackupFile(idxPath);
 	}
-
-	vf.close();
 
 	return retval;
 }
@@ -929,6 +935,8 @@ Rdb::close()
 		delete hashTable;
 		hashTable = 0;
 	}
+
+	opened = false;
 
 	return E_ok;
 }

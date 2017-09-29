@@ -57,6 +57,7 @@ FileSystem::getHome(char *buf, size_t buflen)
 	buf[buflen] = '\0';
 	return retval;
 }
+
 /**
  * Determines if the file path specified exists or not. It could be a file
  * or a directory.
@@ -111,6 +112,66 @@ FileSystem::exists(const char *path, int *oserr)
 #endif
 
 	return pathExists;
+}
+
+/**
+ * Gets the file size.
+ *
+ * @param [in]  path  - file path
+ * @param [out] oserr - OS error code.
+ *
+ * @return file size on success, -ve error code on failure.
+ */
+int64_t
+FileSystem::size(const char *path, int *oserr)
+{
+	const char  *caller = "FileSystem::size";
+	int64_t     fsize = -1L;
+
+	if (oserr) *oserr = 0;
+
+	if ((path == 0) || (*path == '\0')) {
+		return E_invalid_arg;
+	}
+
+#if defined(WINDOWS)
+
+	WIN32_FILE_ATTRIBUTE_DATA   fad;
+	wchar_t                     *pathW = MbsToWcs(path);
+
+	if (pathW) {
+		if (!GetFileAttributesExW(pathW, GetFileExInfoStandard, &fad)) {
+			int error = GET_ERRNO;
+			if (oserr) *oserr = 0;
+			Log(ERR, caller, error, "GetFileAttributesEx(%s) failed", path);
+			fsize = E_stat_failed;
+		} else {
+			LARGE_INTEGER dummy;
+			dummy.LowPart = fad.nFileSizeLow;
+			dummy.HighPart = fad.nFileSizeHigh;
+			fsize = int64_t(dummy.QuadPart);
+		}
+
+		free(pathW);
+	} else {
+		fsize = E_xlate_failed;
+	}
+
+#else
+
+	struct stat stbuf;
+
+	if (stat(path, &stbuf) < 0) {
+		if (oserr) *oserr = errno;
+		Log(ERR, caller, errno, "stat(%s) failed", path);
+		fsize = E_stat_failed;
+	} else {
+		fsize = int64_t(stbuf.st_size);
+	}
+
+#endif
+
+	return fsize;
 }
 
 /**
@@ -255,8 +316,8 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 
 		if (::mkdir(buf, mode) < 0) {
 			int error = GET_ERRNO;
-			Log(ERR, caller, error, "mkdir(%s) failed", buf);
 			if (oserr) *oserr = GET_ERRNO;
+			Log(ERR, caller, error, "mkdir(%s) failed", buf);
 			retval = E_mkdir_failed;
 		}
 

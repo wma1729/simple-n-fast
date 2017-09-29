@@ -4,6 +4,7 @@
 #include "multipleKPN.h"
 #include "normalFD.h"
 #include "bigload.h"
+#include "rebuildDB.h"
 
 static int
 RandomInRange(unsigned int seed, int lo, int hi)
@@ -51,7 +52,8 @@ Test *TestList[] = {
 	DBG_NEW SimpleSetGetRemove(),
 	DBG_NEW MultipleKeyPageNodes(),
 	DBG_NEW NormalFairDistribution(),
-	DBG_NEW BigLoad(),
+	DBG_NEW RebuildDB(),
+	// DBG_NEW BigLoad(),
 	0
 };
 

@@ -10,7 +10,7 @@ extern bool   TheVerbosity;
 static int
 usage(const char *prog)
 {
-	fprintf(stderr, "%s [-get|-set|-del] -path <db_path> -name <db_name>\n", prog);
+	fprintf(stderr, "%s [-get|-set|-del|-rebuild] -path <db_path> -name <db_name>\n", prog);
 	fprintf(stderr, "        -key <key> [-value <value>]\n");
 	fprintf(stderr, "        [-htsize <hash_table_size>] [-pgsize <page_size>]\n");
 	fprintf(stderr, "        [-memusage <%%_of_memory>] [-syncdf <0|1>]\n");
@@ -18,85 +18,10 @@ usage(const char *prog)
 	return 1;
 }
 
-static int
-random_in_range(int seed, int lo, int hi)
-{
-	if (lo == hi)
-		return lo;
-
-	if (seed != 0)
-		srand(seed);
-
-	return lo + (rand() % (hi - lo));
-}
-
-static void
-gen_key_val(char *key, char *val, int len)
-{
-	int idx;
-	char valid_chars[] = {
-		'0', '1', '2', '3',
-		'4', '5', '6', '7',
-		'8', '9', 'a', 'b',
-		'c', 'd', 'e', 'f',
-		'g', 'h', 'i', 'j',
-		'k', 'l', 'm', 'n',
-		'o', 'p', 'q', 'r',
-		's', 't', 'u', 'v',
-		'w', 'x', 'y', 'z'
-	};
-
-	for (int i = 0; i < len; i++) {
-		idx = random_in_range(0, 0, 36);
-		key[i] = valid_chars[idx];
-		val[len - i - 1] = toupper(key[i]);
-	}
-
-	return;
-}
-
-static void
-perform_test(Rdb &rdb, int64_t nkeys, int interval)
-{
-	int retval = E_ok;
-	int j = 0;
-	char key[32];
-	char val[32];
-	PerformanceTimer start, end;
-
-	for (int64_t i = 0; i < nkeys; ++i) {
-		if (j == 0) {
-			start.record();
-		}
-
-		gen_key_val(key, val, 32);
-		retval = rdb.set(key, 32, val, 32);
-		if (retval != E_ok) {
-			break;
-		}
-
-		++j;
-		if (j == interval) {
-			end.record();
-			fprintf(stdout, "%d,%" PRId64 "\n", j, end - start);
-			j = 0;
-		}
-
-	}
-
-	if ((retval == E_ok) && (j > 0)) {
-		end.record();
-		fprintf(stdout, "%d,%" PRId64 "\n", j, end - start);
-		fflush(stdout);
-		j = 0;
-	}
-
-	return;
-}
-
 int
 main(int argc, const char **argv)
 {
+	int retval = E_ok;
 	op_t cmd = NIL;
 	std::string path;
 	std::string name;
@@ -109,9 +34,7 @@ main(int argc, const char **argv)
 	int vlen;
 	char val[MAX_VALUE_LENGTH + 1];
 	char prog[MAXPATHLEN + 1];
-	bool testing = false;
-	int64_t nkeys = 1000;
-	int interval = 100;
+	bool rebuild = false;
 
 	GetBaseName(prog, MAXPATHLEN + 1, argv[0], true);
 
@@ -122,6 +45,8 @@ main(int argc, const char **argv)
 			cmd = SET;
 		} else if (strcmp("-del", argv[i]) == 0) {
 			cmd = DEL;
+		} else if (strcmp("-rebuild", argv[i]) == 0) {
+			rebuild = true;
 		} else if (strcmp("-path", argv[i]) == 0) {
 			++i;
 			if (argv[i]) {
@@ -222,24 +147,6 @@ main(int argc, const char **argv)
 				fprintf(stderr, "missing argument to -logpath\n");
 				return usage(prog);
 			}
-		} else if (strcmp("-test", argv[i]) == 0) {
-			testing = true;
-		} else if (strcmp("-n", argv[i]) == 0) {
-			++i;
-			if (argv[i]) {
-				nkeys = atoll(argv[i]);
-			} else {
-				fprintf(stderr, "missing argument to -n\n");
-				return usage(prog);
-			}
-		} else if (strcmp("-i", argv[i]) == 0) {
-			++i;
-			if (argv[i]) {
-				interval = atoi(argv[i]);
-			} else {
-				fprintf(stderr, "missing argument to -1\n");
-				return usage(prog);
-			}
 		} else if (strcmp("-v", argv[i]) == 0) {
 			TheVerbosity = true;
 		} else {
@@ -251,28 +158,8 @@ main(int argc, const char **argv)
 		TheLogger = DBG_NEW FileLogger(logPath.c_str(), TheVerbosity);
 	}
 
-	if (testing) {
-		Rdb rdb(path, name, dbOpt);
-
-		if (pgSize != -1)
-			rdb.setKeyPageSize(pgSize);
-
-		if (htSize != -1)
-			rdb.setHashTableSize(htSize);
-
-		int retval = rdb.open();
-		if (retval == E_ok) {
-
-			perform_test(rdb, nkeys, interval);
-
-			rdb.close();
-		}
-
-		return retval;
-	}
-
-	if (cmd == NIL) {
-		fprintf(stderr, "one of [-get|-set|-del] must be specified\n");
+	if ((cmd == NIL) && !rebuild) {
+		fprintf(stderr, "one of [-get|-set|-del|-rebuild] must be specified\n");
 		return usage(prog);
 	}
 
@@ -284,6 +171,24 @@ main(int argc, const char **argv)
 	if (name.empty()) {
 		fprintf(stderr, "database name not specified\n");
 		return usage(prog);
+	}
+
+	if (rebuild) {
+		Rdb rdb(path, name, dbOpt);
+
+		if (pgSize != -1)
+			rdb.setKeyPageSize(pgSize);
+
+		if (htSize != -1)
+			rdb.setHashTableSize(htSize);
+
+		retval = rdb.rebuild();
+		if (retval != E_ok) {
+			fprintf(stderr, "rebuild failed with status %d\n", retval);
+			return 1;
+		}
+
+		return 0;
 	}
 
 	if (key.empty()) {
@@ -304,7 +209,7 @@ main(int argc, const char **argv)
 	if (htSize != -1)
 		rdb.setHashTableSize(htSize);
 
-	int retval = rdb.open();
+	retval = rdb.open();
 	if (retval == E_ok) {
 		switch (cmd) {
 			case GET:
@@ -349,7 +254,7 @@ main(int argc, const char **argv)
 	}
 
 	if (retval != E_ok) {
-		fprintf(stderr, "Operation failed with status %d\n", retval);
+		fprintf(stderr, "operation failed with status %d\n", retval);
 		retval = 1;
 	}
 
