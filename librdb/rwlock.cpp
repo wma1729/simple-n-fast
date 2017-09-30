@@ -37,6 +37,11 @@ RWLock::~RWLock()
 
 #if !defined(WINDOWS)
 
+/*
+ * Unlocks the read write lock mutex.
+ * POSIX does not distinguish between unlocking of
+ * read or write locks. There is only a single call.
+ */
 int
 RWLock::unlock(int *oserr)
 {

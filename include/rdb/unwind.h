@@ -4,6 +4,9 @@
 #include <stack>
 #include "rdb/dbfiles.h"
 
+/*
+ * Unwind operation type.
+ */
 typedef enum unwind_op {
 	WRITE_FLAGS,
 	WRITE_NEXT_OFFSET,
@@ -11,8 +14,11 @@ typedef enum unwind_op {
 	FREE_PAGE
 } unwind_op_t;
 
+/*
+ * Unwind block: operation + arguments.
+ */
 typedef struct unwind_block {
-	unwind_op_t	    op;         // unwind operation
+	unwind_op_t     op;         // unwind operation
 	File            *file;      // file manager: downcast to [Key|Value]File
 	void            *page;      // Key/Value page to update
 	int64_t         pageOff;    // Page offset
@@ -20,6 +26,9 @@ typedef struct unwind_block {
 	int             flags;      // New flags
 } unwind_block_t;
 
+/**
+ * Unwind stack.
+ */
 class UnwindStack
 {
 private:

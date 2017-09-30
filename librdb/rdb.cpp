@@ -6,72 +6,14 @@
 #include "rdb/rdb.h"
 #include "rdb/unwind.h"
 
-/**
- * Sets the key page size. Must be called before opening
- * the database for the first time (time of database
- * creation).
- *
- * @param [in] kpsize - desired key page size.
- *
- * @return E_ok on success, -ve error code on failure.
- */
-int
-Rdb::setKeyPageSize(int kpsize)
-{
-	const char  *caller = "Rdb::setKetPageSize";
-
-	if (kpsize < MIN_KEY_PAGE_SIZE) {
-		Log(ERR, caller, "invalid page size (%d); should at least be %d",
-			kpsize, MIN_KEY_PAGE_SIZE);
-		return E_invalid_arg;
-	}
-
-	if ((kpsize % KEY_PAGE_HDR_SIZE) != 0) {
-		Log(ERR, caller, "page size (%d) is not a multiple of %d",
-			kpsize, KEY_PAGE_HDR_SIZE);
-		return E_invalid_arg;
-	}
-
-	MutexGuard guard(openMutex);
-	if (!opened) {
-		this->kpSize = kpsize;
-		return E_ok;
-	} else {
-		Log(ERR, caller, "DB is open; cannot set key page size");
-		return E_invalid_state;
-	}
-}
-
-/**
- * Sets the hash table size. Must be called before opening
- * the database for the first time (time of database
- * creation).
- *
- * @param [in] htsize - desired hash table size.
+/*
+ * Reads the key file and do the following:
+ * 1. Populates the hash table i.e. set the offset of the first
+ *    key page in the hash table entry.
+ * 2. Prepares the in-memory free disk key page stack.
  *
  * @return E_ok on success, -ve error code on failure.
  */
-int
-Rdb::setHashTableSize(int htsize)
-{
-	const char  *caller = "Rdb::setHashTableSize";
-
-	if (htsize <= 0) {
-		Log(ERR, caller,
-			"invalid hash table size (%d)", htSize);
-		return E_invalid_arg;
-	}
-
-	MutexGuard guard(openMutex);
-	if (!opened) {
-		this->htSize = NextPrime(htSize);
-		return E_ok;
-	} else {
-		Log(ERR, caller, "DB is open; cannot set hash table size");
-		return E_invalid_state;
-	}
-}
-
 int
 Rdb::populateHashTable()
 {
@@ -111,6 +53,15 @@ Rdb::populateHashTable()
 	return retval;
 }
 
+/*
+ * Prepares the free disk db page stack. It relies on
+ * <dbname>.fdp file. If it cannot read that file, it
+ * reads the whole db file to achieve this.
+ *
+ * @param [in] fname - <dbname>.fdp file.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 Rdb::populateFreePages(const char *fname)
 {
@@ -184,93 +135,15 @@ Rdb::populateFreePages(const char *fname)
 	return retval;
 }
 
-int
-Rdb::open()
-{
-	int     retval = E_ok;
-	char    idxPath[MAXPATHLEN + 1];
-	char    dbPath[MAXPATHLEN + 1];
-	char    attrPath[MAXPATHLEN + 1];
-	char    fdpPath[MAXPATHLEN + 1];
-
-	MutexGuard guard(openMutex);
-	if (opened) {
-		return E_ok;
-	}
-
-	snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), PATH_SEP, name.c_str());
-	strncpy(dbPath, idxPath, MAXPATHLEN);
-	strncpy(attrPath, idxPath, MAXPATHLEN);
-	strncpy(fdpPath, idxPath, MAXPATHLEN);
-
-	strncat(idxPath, ".idx", MAXPATHLEN);
-	strncat(dbPath, ".db", MAXPATHLEN);
-	strncat(attrPath, ".attr", MAXPATHLEN);
-	strncat(fdpPath, ".fdp", MAXPATHLEN);
-
-	std::unique_ptr<AttrFile> attrFile(DBG_NEW AttrFile(attrPath, 0022));
-	retval = attrFile->open();
-	if (retval != E_ok) {
-		return retval;
-	}
-
-	retval = attrFile->read();
-	if (retval != E_ok) {
-		if (retval == E_eof_detected) {
-			attrFile->setKeyPageSize(kpSize);
-			attrFile->setHashTableSize(htSize);
-			retval = attrFile->write();
-		}
-	}
-
-	attrFile->close();
-
-	if (retval != E_ok) {
-		return retval;
-	}
-
-	kpSize = attrFile->getKeyPageSize();
-	htSize = attrFile->getHashTableSize();
-
-	std::unique_ptr<KeyFile> pKeyFile(DBG_NEW KeyFile(idxPath, 0022));
-	retval = pKeyFile->open(options.syncIndexFile());
-	if (retval != E_ok) {
-		return retval;
-	}
-
-	std::unique_ptr<ValueFile> pValueFile(DBG_NEW ValueFile(dbPath, 0022));
-	retval = pValueFile->open(options.syncDataFile());
-	if (retval != E_ok) {
-		return retval;
-	}
-
-	hashTable = DBG_NEW HashTable();
-	retval = hashTable->allocate(htSize);
-	if (retval != E_ok) {
-		return retval;
-	}
-
-	keyFile = pKeyFile.release();
-	valueFile = pValueFile.release();
-
-	cache = DBG_NEW LRUCache(keyFile, kpSize, options.getMemoryUsage());
-
-	retval = populateHashTable();
-	if (retval == E_ok) {
-		retval = populateFreePages(fdpPath);
-	}
-
-	if (retval != E_ok) {
-		delete valueFile;
-		delete keyFile;
-		delete hashTable;
-	} else {
-		opened = true;
-	}
-
-	return retval;
-}
-
+/*
+ * Main function to process the key pages and find the
+ * correct key page that holds (or can hold) the key.
+ *
+ * @param [inout] key - key information.
+ * @param [in]    op  - operation being performed.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 Rdb::processKeyPages(key_info_t *ki, op_t op)
 {
@@ -433,6 +306,13 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 	return retval;
 }
 
+/*
+ * Adds a new key page to the system.
+ *
+ * @param [inout] ki - key information.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 Rdb::addNewPage(key_info_t *ki)
 {
@@ -494,6 +374,222 @@ Rdb::addNewPage(key_info_t *ki)
 	return retval;
 }
 
+/*
+ * Backups up a database file.
+ */
+int
+Rdb::backupFile(const char *oldName)
+{
+	char    newName[MAXPATHLEN + 1];
+
+	strncpy(newName, oldName, MAXPATHLEN);
+	strncat(newName, ".bkup", MAXPATHLEN);
+
+	return FileSystem::rename(newName, oldName);
+}
+
+/*
+ * Restores/recovers from the backed up file.
+ */
+int
+Rdb::restoreFile(const char *oldName)
+{
+	char    newName[MAXPATHLEN + 1];
+
+	strncpy(newName, oldName, MAXPATHLEN);
+	strncat(newName, ".bkup", MAXPATHLEN);
+
+	return FileSystem::rename(oldName, newName);
+}
+
+/*
+ * Removes the backed-up file.
+ */
+int
+Rdb::removeBackupFile(const char *oldName)
+{
+	char    newName[MAXPATHLEN + 1];
+
+	strncpy(newName, oldName, MAXPATHLEN);
+	strncat(newName, ".bkup", MAXPATHLEN);
+
+	return FileSystem::removeFile(newName);
+}
+
+/**
+ * Sets the key page size. Must be called before opening
+ * the database for the first time (time of database
+ * creation).
+ *
+ * @param [in] kpsize - desired key page size.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+Rdb::setKeyPageSize(int kpsize)
+{
+	const char  *caller = "Rdb::setKetPageSize";
+
+	if (kpsize < MIN_KEY_PAGE_SIZE) {
+		Log(ERR, caller, "invalid page size (%d); should at least be %d",
+			kpsize, MIN_KEY_PAGE_SIZE);
+		return E_invalid_arg;
+	}
+
+	if ((kpsize % KEY_PAGE_HDR_SIZE) != 0) {
+		Log(ERR, caller, "page size (%d) is not a multiple of %d",
+			kpsize, KEY_PAGE_HDR_SIZE);
+		return E_invalid_arg;
+	}
+
+	MutexGuard guard(openMutex);
+	if (!opened) {
+		this->kpSize = kpsize;
+		return E_ok;
+	} else {
+		Log(ERR, caller, "DB is open; cannot set key page size");
+		return E_invalid_state;
+	}
+}
+
+/**
+ * Sets the hash table size. Must be called before opening
+ * the database for the first time (time of database
+ * creation).
+ *
+ * @param [in] htsize - desired hash table size.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+Rdb::setHashTableSize(int htsize)
+{
+	const char  *caller = "Rdb::setHashTableSize";
+
+	if (htsize <= 0) {
+		Log(ERR, caller,
+			"invalid hash table size (%d)", htSize);
+		return E_invalid_arg;
+	}
+
+	MutexGuard guard(openMutex);
+	if (!opened) {
+		this->htSize = NextPrime(htSize);
+		return E_ok;
+	} else {
+		Log(ERR, caller, "DB is open; cannot set hash table size");
+		return E_invalid_state;
+	}
+}
+
+/**
+ * Opens the database. The key page size and hash table size
+ * must be set before opening the database for the first time.
+ * Once the database is created, the key page and the hash table
+ * size do not change. The only way to change them is to rebuild
+ * the database.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+Rdb::open()
+{
+	int     retval = E_ok;
+	char    idxPath[MAXPATHLEN + 1];
+	char    dbPath[MAXPATHLEN + 1];
+	char    attrPath[MAXPATHLEN + 1];
+	char    fdpPath[MAXPATHLEN + 1];
+
+	MutexGuard guard(openMutex);
+	if (opened) {
+		return E_ok;
+	}
+
+	snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), PATH_SEP, name.c_str());
+	strncpy(dbPath, idxPath, MAXPATHLEN);
+	strncpy(attrPath, idxPath, MAXPATHLEN);
+	strncpy(fdpPath, idxPath, MAXPATHLEN);
+
+	strncat(idxPath, ".idx", MAXPATHLEN);
+	strncat(dbPath, ".db", MAXPATHLEN);
+	strncat(attrPath, ".attr", MAXPATHLEN);
+	strncat(fdpPath, ".fdp", MAXPATHLEN);
+
+	std::unique_ptr<AttrFile> attrFile(DBG_NEW AttrFile(attrPath, 0022));
+	retval = attrFile->open();
+	if (retval != E_ok) {
+		return retval;
+	}
+
+	retval = attrFile->read();
+	if (retval != E_ok) {
+		if (retval == E_eof_detected) {
+			attrFile->setKeyPageSize(kpSize);
+			attrFile->setHashTableSize(htSize);
+			retval = attrFile->write();
+		}
+	}
+
+	attrFile->close();
+
+	if (retval != E_ok) {
+		return retval;
+	}
+
+	kpSize = attrFile->getKeyPageSize();
+	htSize = attrFile->getHashTableSize();
+
+	std::unique_ptr<KeyFile> pKeyFile(DBG_NEW KeyFile(idxPath, 0022));
+	retval = pKeyFile->open(options.syncIndexFile());
+	if (retval != E_ok) {
+		return retval;
+	}
+
+	std::unique_ptr<ValueFile> pValueFile(DBG_NEW ValueFile(dbPath, 0022));
+	retval = pValueFile->open(options.syncDataFile());
+	if (retval != E_ok) {
+		return retval;
+	}
+
+	hashTable = DBG_NEW HashTable();
+	retval = hashTable->allocate(htSize);
+	if (retval != E_ok) {
+		return retval;
+	}
+
+	keyFile = pKeyFile.release();
+	valueFile = pValueFile.release();
+
+	cache = DBG_NEW LRUCache(keyFile, kpSize, options.getMemoryUsage());
+
+	retval = populateHashTable();
+	if (retval == E_ok) {
+		retval = populateFreePages(fdpPath);
+	}
+
+	if (retval != E_ok) {
+		delete valueFile;
+		delete keyFile;
+		delete hashTable;
+	} else {
+		opened = true;
+	}
+
+	return retval;
+}
+
+/**
+ * Gets the value for the key from the database.
+ *
+ * @param [in]    key    - database key.
+ * @param [in]    klen   - database key length.
+ * @param [out]   value  - value for the corresponding key.
+ * @param [inout] vlen   - maximum value size on input,
+ *                         actual value size on output.
+ *
+ * @return E_ok on success, E_not_found if the value is not
+ * found, -ve error code on failure.
+ */
 int
 Rdb::get(
 	const char *key,
@@ -575,6 +671,31 @@ Rdb::get(
 	return retval;
 }
 
+/**
+ * Set the key/value pair in the database. It is also used to
+ * update the value in the database.
+ *
+ * @param [in]  key     - database key.
+ * @param [in]  klen    - database key length.
+ * @param [in]  value   - value for the corresponding key.
+ * @param [in]  vlen    - value length.
+ * @param [in]  updater - the updater object.
+ *
+ * - updater == 0
+ *   If the key does not exist, a new key/value pair is
+ *   added to the database.
+ *   If the key already exists, its value is set to the new
+ *   value specified.
+ * - updater != 0
+ *   If the key does not exist, a new key/value pair is
+ *   added to the database.
+ *   If the key already exists, its existing value is passed
+ *   to the update() function of updater. Then the value
+ *   returned by getUpdatedValue() is persisted in the
+ *   database.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 Rdb::set(
 	const char *key,
@@ -689,6 +810,14 @@ Rdb::set(
 	return retval;
 }
 
+/**
+ * Removes the key/value pair from the database.
+ *
+ * @param [in]  key     - database key.
+ * @param [in]  klen    - database key length.
+ * 
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 Rdb::remove(
 	const char *key,
@@ -857,39 +986,21 @@ Rdb::remove(
 	return retval;
 }
 
-int
-Rdb::backupFile(const char *oldName)
-{
-	char    newName[MAXPATHLEN + 1];
-
-	strncpy(newName, oldName, MAXPATHLEN);
-	strncat(newName, ".bkup", MAXPATHLEN);
-
-	return FileSystem::rename(newName, oldName);
-}
-
-int
-Rdb::restoreFile(const char *oldName)
-{
-	char    newName[MAXPATHLEN + 1];
-
-	strncpy(newName, oldName, MAXPATHLEN);
-	strncat(newName, ".bkup", MAXPATHLEN);
-
-	return FileSystem::rename(oldName, newName);
-}
-
-int
-Rdb::removeBackupFile(const char *oldName)
-{
-	char    newName[MAXPATHLEN + 1];
-
-	strncpy(newName, oldName, MAXPATHLEN);
-	strncat(newName, ".bkup", MAXPATHLEN);
-
-	return FileSystem::removeFile(newName);
-}
-
+/**
+ * Rebuilds the database. It does the following:
+ * 1. Backs up the database.
+ * 2. Create a new database.
+ * 3. Reads the key/value from the backed up database files
+ *    and adds them to the new database created.
+ * 4. Cleans up the backed up files.
+ *
+ * Rebuilding database serves two purposes:
+ * 1. Defragment the database.
+ * 2. Provides for a way to change the key page and
+ *    hash table size.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 Rdb::rebuild()
 {
@@ -994,6 +1105,11 @@ Rdb::rebuild()
 	return retval;
 }
 
+/**
+ * Closes the database.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 Rdb::close()
 {

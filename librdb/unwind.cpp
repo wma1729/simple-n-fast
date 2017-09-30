@@ -1,6 +1,9 @@
 #include "util.h"
 #include "rdb/unwind.h"
 
+/**
+ * Executes the unwinding of the stack.
+ */
 void
 UnwindStack::execute()
 {
@@ -76,6 +79,9 @@ UnwindStack::execute()
 	}
 }
 
+/*
+ * Pushes the unwind operation (restoring flags) on the stack.
+ */
 void
 UnwindStack::writeFlags(File *file, void *page, int64_t pageOff, int flags)
 {
@@ -91,6 +97,9 @@ UnwindStack::writeFlags(File *file, void *page, int64_t pageOff, int flags)
 	stk.push(blk);
 }
 
+/*
+ * Pushes the unwind operation (restoring next offset) on the stack.
+ */
 void
 UnwindStack::writeNextOffset(File *file, void *page, int64_t pageOff, int64_t offset)
 {
@@ -106,6 +115,9 @@ UnwindStack::writeNextOffset(File *file, void *page, int64_t pageOff, int64_t of
 	stk.push(blk);
 }
 
+/*
+ * Pushes the unwind operation (restoring previous offset) on the stack.
+ */
 void
 UnwindStack::writePrevOffset(File *file, void *page, int64_t pageOff, int64_t offset)
 {
@@ -121,6 +133,9 @@ UnwindStack::writePrevOffset(File *file, void *page, int64_t pageOff, int64_t of
 	stk.push(blk);
 }
 
+/*
+ * Pushes the unwind operation (freeing page) on the stack.
+ */
 void
 UnwindStack::freePage(File *file, int64_t offset)
 {
@@ -136,6 +151,10 @@ UnwindStack::freePage(File *file, int64_t offset)
 	stk.push(blk);
 }
 
+/*
+ * Either executes or clear the unwind stack based on the
+ * status code.
+ */
 void
 UnwindStack::unwind(int status)
 {
