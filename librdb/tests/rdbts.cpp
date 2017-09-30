@@ -52,9 +52,9 @@ namespace tf {
 Test *TestList[] = {
 	DBG_NEW SimpleSetGetRemove(),
 	DBG_NEW UpdateDB(),
-	// DBG_NEW MultipleKeyPageNodes(),
-	// DBG_NEW NormalFairDistribution(),
-	// DBG_NEW RebuildDB(),
+	DBG_NEW MultipleKeyPageNodes(),
+	DBG_NEW NormalFairDistribution(),
+	DBG_NEW RebuildDB(),
 	// DBG_NEW BigLoad(),
 	0
 };
