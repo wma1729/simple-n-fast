@@ -1,6 +1,7 @@
 #include "tf/testmain.h"
 #include "tf/testmacros.h"
 #include "simpleSGR.h"
+#include "updateDB.h"
 #include "multipleKPN.h"
 #include "normalFD.h"
 #include "bigload.h"
@@ -50,9 +51,10 @@ namespace tf {
 
 Test *TestList[] = {
 	DBG_NEW SimpleSetGetRemove(),
-	DBG_NEW MultipleKeyPageNodes(),
-	DBG_NEW NormalFairDistribution(),
-	DBG_NEW RebuildDB(),
+	DBG_NEW UpdateDB(),
+	// DBG_NEW MultipleKeyPageNodes(),
+	// DBG_NEW NormalFairDistribution(),
+	// DBG_NEW RebuildDB(),
 	// DBG_NEW BigLoad(),
 	0
 };

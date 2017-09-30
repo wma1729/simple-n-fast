@@ -126,6 +126,42 @@ public:
 };
 
 /**
+ * Abstract record updater.
+ */
+class Updater
+{
+public:
+	/**
+	 * Virtual distructor.
+	 */
+	virtual ~Updater()
+	{
+	}
+
+	/**
+	 * Takes the old value, updates the value. The updated
+	 * value can be obtained using getUpdatedValue().
+	 *
+	 * @param [in]    oval - old value.
+	 * @param [in]    olen - old value length.
+	 *
+	 * @return 0 on success, -ve error code on failure.
+	 */
+	virtual int update(const char *oval, int olen) = 0;
+
+	/**
+	 * Returns the updated value.
+	 *
+	 * @param [out]   nval - updated value.
+	 * @param [inout] nlen - max updated value length as input,
+	 *                       actual updated value length as output.
+	 *
+	 * @return 0 on success, -ve error code on failure.
+	 */
+	virtual int getUpdatedValue(char *nval, int *nlen) = 0;
+};
+
+/**
  * The main database class.
  */
 class Rdb
@@ -264,7 +300,7 @@ public:
 		init(path, name, kpsize, htsize);
 	}
 
-	~Rdb()
+	virtual ~Rdb()
 	{
 		close();
 	}
@@ -293,34 +329,7 @@ public:
 		return kpSize;
 	}
 
-	/**
-	 * Sets the key page size. Must be called before opening
-	 * the database for the first time (time of database
-	 * creation).
-	 *
-	 * @param [in] kpsize - desired key page size.
-	 *
-	 * @return E_ok on success, -ve error code on failure.
-	 */
-	int setKeyPageSize(int kpsize)
-	{
-		const char  *caller = "setKetPageSize";
-
-		if (kpsize < MIN_KEY_PAGE_SIZE) {
-			Log(ERR, caller, "invalid page size (%d); should at least be %d",
-				kpsize, MIN_KEY_PAGE_SIZE);
-			return E_invalid_arg;
-		}
-
-		if ((kpsize % KEY_PAGE_HDR_SIZE) != 0) {
-			Log(ERR, caller, "page size (%d) is not a multiple of %d",
-				kpsize, KEY_PAGE_HDR_SIZE);
-			return E_invalid_arg;
-		}
-
-		this->kpSize = kpsize;
-		return E_ok;
-	}
+	int setKeyPageSize(int);
 
 	/**
 	 * Gets the hash table size.
@@ -330,33 +339,12 @@ public:
 		return htSize;
 	}
 
-	/**
-	 * Sets the hash table size. Must be called before opening
-	 * the database for the first time (time of database
-	 * creation).
-	 *
-	 * @param [in] htsize - desired hash table size.
-	 *
-	 * @return E_ok on success, -ve error code on failure.
-	 */
-	int setHashTableSize(int htsize)
-	{
-		const char  *caller = "setHashTableSize";
-
-		if (htsize <= 0) {
-			Log(ERR, caller,
-				"invalid hash table size (%d)", htSize);
-			return E_invalid_arg;
-		}
-
-		this->htSize = NextPrime(htSize);
-		return E_ok;
-	}
+	int setHashTableSize(int);
 
 	int open();
-	int get(const char *key, int klen, char *value, int *vlen);
-	int set(const char *key, int klen, const char *value, int vlen);
-	int remove(const char *key, int klen);
+	int get(const char *, int, char *, int *);
+	int set(const char *, int, const char *, int, Updater *updater = 0);
+	int remove(const char *, int);
 	int rebuild();
 	int close();
 };

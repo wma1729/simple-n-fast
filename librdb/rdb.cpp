@@ -6,6 +6,72 @@
 #include "rdb/rdb.h"
 #include "rdb/unwind.h"
 
+/**
+ * Sets the key page size. Must be called before opening
+ * the database for the first time (time of database
+ * creation).
+ *
+ * @param [in] kpsize - desired key page size.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+Rdb::setKeyPageSize(int kpsize)
+{
+	const char  *caller = "Rdb::setKetPageSize";
+
+	if (kpsize < MIN_KEY_PAGE_SIZE) {
+		Log(ERR, caller, "invalid page size (%d); should at least be %d",
+			kpsize, MIN_KEY_PAGE_SIZE);
+		return E_invalid_arg;
+	}
+
+	if ((kpsize % KEY_PAGE_HDR_SIZE) != 0) {
+		Log(ERR, caller, "page size (%d) is not a multiple of %d",
+			kpsize, KEY_PAGE_HDR_SIZE);
+		return E_invalid_arg;
+	}
+
+	MutexGuard guard(openMutex);
+	if (!opened) {
+		this->kpSize = kpsize;
+		return E_ok;
+	} else {
+		Log(ERR, caller, "DB is open; cannot set key page size");
+		return E_invalid_state;
+	}
+}
+
+/**
+ * Sets the hash table size. Must be called before opening
+ * the database for the first time (time of database
+ * creation).
+ *
+ * @param [in] htsize - desired hash table size.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
+int
+Rdb::setHashTableSize(int htsize)
+{
+	const char  *caller = "Rdb::setHashTableSize";
+
+	if (htsize <= 0) {
+		Log(ERR, caller,
+			"invalid hash table size (%d)", htSize);
+		return E_invalid_arg;
+	}
+
+	MutexGuard guard(openMutex);
+	if (!opened) {
+		this->htSize = NextPrime(htSize);
+		return E_ok;
+	} else {
+		Log(ERR, caller, "DB is open; cannot set hash table size");
+		return E_invalid_state;
+	}
+}
+
 int
 Rdb::populateHashTable()
 {
@@ -514,7 +580,8 @@ Rdb::set(
 	const char *key,
 	int klen,
 	const char *value,
-	int vlen)
+	int vlen,
+	Updater *updater)
 {
 	const char      *caller = "Rdb::set";
 	int             retval;
@@ -562,12 +629,36 @@ Rdb::set(
 	if (retval == E_ok) {
 		ValidateKeyInfo(&ki, __FILE__, __LINE__);
 
-		Log(DBG, caller, "overwriting an existing value");
+		Log(DBG, caller, "key exists");
 
-		retval = valueFile->write(ki.ki_voff, &vp);
-		if (retval != E_ok) {
-			Log(ERR, caller, "failed to write value to %s",
-				valueFile->getFileName());
+		if (updater) {
+			Log(DBG, caller, "updating the value");
+
+			retval = valueFile->read(ki.ki_voff, &vp);
+			if (retval != E_ok) {
+				Log(ERR, caller, "failed to read value page at offset %" PRId64 " from %s",
+					ki.ki_voff, valueFile->getFileName());
+			} else {
+				Assert(!IsValuePageDeleted(&vp), __FILE__, __LINE__,
+					"value is already deleted");
+				Assert((klen == vp.vp_klen), __FILE__, __LINE__,
+					"key length mismatch (expected %d, found %d)", klen, vp.vp_klen);
+				Assert((memcmp(key, vp.vp_key, klen) == 0), __FILE__, __LINE__,
+					"key mismatch");
+
+				retval = updater->update(vp.vp_value, vp.vp_vlen);
+				if (retval == E_ok) {
+					retval = updater->getUpdatedValue(vp.vp_value, &(vp.vp_vlen));
+				}
+			}
+		}
+
+		if (retval == E_ok) {
+			retval = valueFile->write(ki.ki_voff, &vp);
+			if (retval != E_ok) {
+				Log(ERR, caller, "failed to write value to %s",
+					valueFile->getFileName());
+			}
 		}
 	} else if (retval == E_not_found) {
 

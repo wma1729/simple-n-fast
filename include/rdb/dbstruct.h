@@ -17,7 +17,7 @@
 #endif
 
 #ifndef MAX_KEY_LENGTH
-#define MAX_KEY_LENGTH      64
+#define MAX_KEY_LENGTH      48
 #endif
 
 #ifndef MAX_VALUE_LENGTH
@@ -32,7 +32,7 @@ typedef struct dbattr
 	int a_htsize;   // hash table size
 } dbattr_t;
 
-/* 80 bytes Key record */
+/* 64 bytes Key record */
 extern "C"
 typedef struct key_rec
 {
