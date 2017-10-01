@@ -21,7 +21,7 @@
 #endif
 
 #ifndef MAX_VALUE_LENGTH
-#define MAX_VALUE_LENGTH    176
+#define MAX_VALUE_LENGTH    192
 #endif
 
 /* DB attributes */
