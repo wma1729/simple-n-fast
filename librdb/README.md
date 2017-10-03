@@ -1,4 +1,4 @@
-# Librdb
+# librdb
 
 Librdb is a simple embeddable database library used to manage millions of key-value pairs. Librdb is thread-safe. Multiple databases can be managed in a single-process. The maximum size of the key and value are 48 and 192 bytes respectively.
 
@@ -35,6 +35,8 @@ So theoretically, we will need one hash lookup and 24 searches to find a key in 
 
 #### Constructor
 
+Look at `include/rdb/rdb.h` for reference.
+
 ```C++
 Rdb(const std::string &dbPath, const std::string &dbName);
 Rdb(const std::string &dbPath, const std::string &dbName, const RdbOptions &opt);
@@ -50,7 +52,7 @@ There are 5 configuration options:
 4. Sync data file after every write. Default is true.
 5. Sync index file after every write. Default is false.
 
-Key page and hash table size must be set before the first open. Once the database is opened, these values are *almost* set in stone. If you specify a different value on subsequent opens, the values are simply ignored. There is a way to change them. See `rebuild` below.
+Key page and hash table size must be set before the first open. Once the database is opened, these values are *almost* set in stone. If you specify a different value on subsequent opens, the values are simply ignored. There is a way to change them. See `rebuild` below. The set the last three options, use `RdbOptions`.
 
 ```C++
 int Rdb::open();
@@ -60,3 +62,55 @@ Opens the database. When the database is opened for the first time, the key page
 hash table size are persisted in *`dbname.attr`* file. Subsequent opens use the values stored in
 the file.
 
+```C++
+int Rdb::get(const char *key, int klen, char *value, int *vlen);
+```
+
+Get the *value* for the *key* from the database. *vlen*, on input specifies the maximum *value* buffer length and on successful return contains the actual *value* length.
+
+```C++
+
+class Updater
+{
+public:
+	virtual int update(const char *oval, int olen) = 0;
+	virtual int getUpdatedValue(char *nval, int *nlen) = 0;
+};
+
+int Rdb::set(const char *key, int klen, const char *value, int vlen, Updater *updater = 0);
+```
+
+Sets the *value* for the *key* in the database. This function is also used to updated the value in the database.
+
+Key Exists in DB | updater  | Behaviour
+-----------------|----------|--------------------------------------
+No               | NULL     | The key/value pair is added to the database.
+Yes              | NULL     | The value for the key is overwritten.
+No               | Not-NULL | The key/value pair is added to the database. *updater* is ignored.
+Yes              | Not-NULL | The current value of the key is passed in to *updater::update* method. The value returned by *updater::getUpdatedValue* is persisted in the database.
+
+```C++
+int Rdb::remove(const char *key, int klen);
+```
+
+Removes the *key* from the database.
+
+```C++
+int Rdb::rebuild()
+```
+
+Rebuilds the database. You can use this for two purposes:
+1. Defragmenting the database.
+2. Resetting the key page size and the hash table size.
+
+The database must not be in use for this operation.
+
+```C++
+int Rdb::close()
+```
+
+Closes the database.
+
+### rdbdrvr
+
+`rdbdrvr` is a simple driver of this library. This code and the test code could be used as an example for the librdb usage.
