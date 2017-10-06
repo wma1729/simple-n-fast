@@ -1,0 +1,11 @@
+apply plugin : 'java'
+
+repositories {
+	mavenCentral();
+}
+
+jar {
+	baseName 'snf-jaas'
+	version '1.0.0'
+	extension 'jar'
+}
