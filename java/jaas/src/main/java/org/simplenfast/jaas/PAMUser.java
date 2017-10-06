@@ -28,7 +28,7 @@ import javax.security.auth.login.LoginException;
 
 class PAMUser
 {
-	private native long login0(PAMUser user, String serviceName, String userName, char [] password)
+	private native long login0(String serviceName, String userName, char [] password)
 						throws NativeException;
 	private native int logout0(long context);
 
@@ -65,7 +65,7 @@ class PAMUser
 		}
 
 		try {
-			context = login0(this, serviceName, userName, password);
+			context = login0(serviceName, userName, password);
 		} catch (NativeException ex) {
 			throw NativeUtil.NativeToLoginException(ex);
 		}

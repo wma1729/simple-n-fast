@@ -28,7 +28,7 @@ import javax.security.auth.login.LoginException;
 
 public class NTUser
 {
-	private native long login0(NTUser ntUser, String domainName, String userName, char [] password)
+	private native long login0(String domainName, String userName, char [] password)
 						throws NativeException;
 	private native boolean logout0(long impersonationToken);
 
@@ -78,7 +78,7 @@ public class NTUser
 		}
 
 		try {
-			impersonationToken = login0(this, domainName, userName, password);
+			impersonationToken = login0(domainName, userName, password);
 		} catch (NativeException ex) {
 			throw NativeUtil.NativeToLoginException(ex);
 		}
