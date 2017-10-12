@@ -1,6 +1,6 @@
 include Makefile.constants
 
-DIRS = libcom jdaemon librdb librdb/tests
+DIRS = libcom jdaemon librdb librdb/tests jni java
 
 all:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.simplenfast.jaas;
+package org.simplenfast.nex;
 
 import javax.security.auth.login.LoginException;
 
@@ -33,7 +33,7 @@ public class NativeUtil
 	 * @param ex NativeException
 	 * @return LoginException
 	 */
-	static LoginException NativeToLoginException(NativeException ex)	
+	public static LoginException NativeToLoginException(NativeException ex)	
 	{
 		StringBuilder strBldr = new StringBuilder(ex.getMessage());
 
@@ -51,7 +51,7 @@ public class NativeUtil
 		}
 
 		LoginException loginEx = new LoginException(strBldr.toString());
-		loginEx.initCause(ex);
+		loginEx.setStackTrace(ex.getStackTrace());
 
 		return loginEx;
 	}

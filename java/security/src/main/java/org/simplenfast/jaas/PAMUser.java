@@ -24,13 +24,16 @@
 
 package org.simplenfast.jaas;
 
+import org.simplenfast.nex.NativeException;
+import org.simplenfast.nex.NativeUtil;
+
 import javax.security.auth.login.LoginException;
 
-class PAMUser
+public class PAMUser
 {
 	private native long login0(String serviceName, String userName, char [] password)
 						throws NativeException;
-	private native int logout0(long context);
+	private native boolean logout0(long context);
 
 	private final String serviceName;
 	private final String userName;
@@ -40,7 +43,7 @@ class PAMUser
 	private long GID;
 	private long [] supplementaryGIDs;
 
-	PAMUser(String serviceName, String userName, char [] password)
+	public PAMUser(String serviceName, String userName, char [] password)
 	{
 		this.serviceName = serviceName;
 		this.userName = userName;
@@ -54,10 +57,10 @@ class PAMUser
 		if (libPath != null) {
 			System.load(libPath);
 		}
-		System.loadLibrary("pam");
+		//System.loadLibrary("pam");
 	}
 
-	synchronized boolean login()
+	public synchronized boolean login()
 			throws LoginException
 	{
 		if (context != 0) {
@@ -73,10 +76,10 @@ class PAMUser
 		return (context != 0);
 	}
 
-	synchronized boolean logout()
+	public synchronized boolean logout()
 	{
 		if (context != 0) {
-			if (logout0(context) != 0) {
+			if (!logout0(context)) {
 				return false;
 			}
 			context = 0;
@@ -84,37 +87,37 @@ class PAMUser
 		return true;
 	}
 
-	String getUserName()
+	public String getUserName()
 	{
 		return userName;
 	}
 
-	long getUID()
+	public long getUID()
 	{
 		return UID;
 	}
 
-	void setUID(long UID)
+	public void setUID(long UID)
 	{
 		this.UID = UID;
 	}
 
-	long getGID()
+	public long getGID()
 	{
 		return GID;
 	}
 
-	void setGID(long GID)
+	public void setGID(long GID)
 	{
 		this.GID = GID;
 	}
 
-	long[] getSupplementaryGIDs()
+	public long[] getSupplementaryGIDs()
 	{
 		return supplementaryGIDs;
 	}
 
-	void setSupplementaryGIDs(long[] supplementaryGIDs)
+	public void setSupplementaryGIDs(long[] supplementaryGIDs)
 	{
 		this.supplementaryGIDs = supplementaryGIDs;
 	}

@@ -1,0 +1,5 @@
+all:
+	@gradle build
+
+clean:
+	@gradle clean

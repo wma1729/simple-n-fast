@@ -22,14 +22,14 @@
  * THE SOFTWARE.
  */
 
-package org.simplenfast.jaas;
+package org.simplenfast.nex;
 
 /**
  * Exception thrown by the native code.
  * 
  * This is a generic exception thrown by the native code using JNI.
  */
-class NativeException extends Exception
+public class NativeException extends Exception
 {
 	private final int errorCode;
 	private final String errorString;
@@ -41,7 +41,7 @@ class NativeException extends Exception
 	 * 
 	 * @param message Exception message. 
 	 */
-	NativeException(String message)
+	public NativeException(String message)
 	{
 		this(message, -1, null);
 	}
@@ -54,19 +54,29 @@ class NativeException extends Exception
 	 * @param errorCode Native error code.
 	 * @param errorString Description of the native error code.
 	 */
-	NativeException(String message, int errorCode, String errorString)	
+	public NativeException(String message, int errorCode, String errorString)	
 	{
 		super(message);
 		this.errorCode = errorCode;
 		this.errorString = errorString;
 	}
 
-	int getErrorCode()
+	/**
+	 * Gets the native error code.
+	 * 
+	 * @return the native error code, generally OS specific.
+	 */
+	public int getErrorCode()
 	{
 		return errorCode;
 	}
 
-	String getErrorString()
+	/**
+	 * Gets the detailed error string corresponding to the error code.
+	 * 
+	 * @return the error string.
+	 */
+	public String getErrorString()
 	{
 		return errorString;
 	}
@@ -74,13 +84,14 @@ class NativeException extends Exception
 	/**
 	 * Update the stack trace.
 	 * 
-	 * Adds the exception generation location in the native code.
+	 * Adds the exception generation location in the native code. Called
+	 * by the native code.
 	 * 
 	 * @param methodName Method that threw the exception.
 	 * @param fileName File name where the exception was thrown.
 	 * @param lineNumber  Line number where the exception was thrown.
 	 */
-	void addToStackTrace(String methodName, String fileName, int lineNumber)
+	public void addToStackTrace(String methodName, String fileName, int lineNumber)
 	{
 		StackTraceElement [] curStk = getStackTrace();
 		StackTraceElement [] newStk = new StackTraceElement[curStk.length + 1];

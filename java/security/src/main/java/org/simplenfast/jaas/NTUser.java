@@ -24,6 +24,9 @@
 
 package org.simplenfast.jaas;
 
+import org.simplenfast.nex.NativeException;
+import org.simplenfast.nex.NativeUtil;
+
 import javax.security.auth.login.LoginException;
 
 public class NTUser
@@ -59,7 +62,6 @@ public class NTUser
 
 		this.password = password;
 		this.userSID = null;
-		this.domainSID = null;
 		this.primaryGroupSID = null;
 		this.groupSIDs = null;
 		this.impersonationToken = 0;
