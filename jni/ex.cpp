@@ -1,5 +1,20 @@
 #include "ex.h"
 
+/**
+ * Throws NativeException in the Java code. The idea is to provide
+ * the cause of the failure in native code as clearly as possible.
+ * The native code, at least the one I have, logs nothing. The only
+ * way to debug is through the exception.
+ *
+ * @param [in] env         - JNI environment
+ * @param [in] message     - message describing the exception
+ * @param [in] errorCode   - native error code (often OS error code)
+ * @param [in] errorString - native error string corresponding to
+ *                           the error code
+ * @param [in] methodName  - method name where the error occurred
+ * @param [in] fileName    - file name where the error occurred
+ * @param [in] lineNumber  - line number where the error occurred
+ */
 void
 ThrowNativeException(
 	JNIEnv *env,
@@ -39,6 +54,9 @@ ThrowNativeException(
 				env->NewStringUTF(errorString));
 	}
 
+	/*
+	 * Add the details to the java exception stack trace.
+	 */
 	jmethodID exMethod = env->GetMethodID(
 				exClass,
 				"addToStackTrace",

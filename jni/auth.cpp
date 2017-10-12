@@ -5,6 +5,15 @@
 #include "ex.h"
 #include "i18n.h"
 
+/**
+ * Converts jcharArray to c string. I wish there were an easier way
+ * (may be there is one!).
+ *
+ * @param [in] env  - JNI environment
+ * @param [in] jarr - JNI representation of character array.
+ *
+ * @return an equivalent C string.
+ */
 char *
 jcharArrayToCString(
 	JNIEnv *env,
@@ -22,7 +31,7 @@ jcharArrayToCString(
 
 		ThrowNativeException(
 			env,
-			"malloc() of array buffer failed",
+			"calloc() of array buffer failed",
 			errno,
 			GetErrorStr(errbuf, ERRSTRLEN, errno),
 			who,
@@ -171,9 +180,7 @@ pam_login(
 	char        message[512];
 	const struct pam_conv conv = { conversation, password };
 
-	if (pamh) {
-		*pamh = 0;
-	}
+	*pamh = 0;
 
 	do {
 		retval = pam_start(service, user, &conv, pamh);

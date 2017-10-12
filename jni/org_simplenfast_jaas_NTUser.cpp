@@ -13,8 +13,8 @@ get_token_info(
 {
 	const char  *who = "get_token_info";
 	void        *tInfo = 0;
-	DWORD       error = 0;
 	DWORD       tInfoLen = 0;
+	DWORD       error = 0;
 	DWORD       retLen = 0;
 	char        errbuf[ERRSTRLEN + 1];
 

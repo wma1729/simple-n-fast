@@ -136,6 +136,7 @@ set_principals(
 				"setSupplementaryGIDs",
 				"([J)V");
 		env->CallVoidMethod(obj, mid, jgids);
+
 		env->DeleteLocalRef(jgids);
 	}
 
