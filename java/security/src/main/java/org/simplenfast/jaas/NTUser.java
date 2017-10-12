@@ -29,6 +29,11 @@ import org.simplenfast.nex.NativeUtil;
 
 import javax.security.auth.login.LoginException;
 
+/**
+ * Provides authentication mechanism on Windows platforms
+ * using Win32 APIs (LogonUser & ImpersonateLoggedOnUser for
+ * login, and RevertToSelf for logout).
+ */
 public class NTUser
 {
 	private native long login0(String domainName, String userName, char [] password)
@@ -44,6 +49,14 @@ public class NTUser
 	private String [] groupSIDs;
 	private long impersonationToken;
 
+	/**
+	 * Creates the NTUser object and loads the native
+	 * DLL as specified by system property
+	 * 'simplenfast.jaas.libpath'.
+	 * 
+	 * @param user     - user name
+	 * @param password - user password
+	 */
 	public NTUser(String user, char [] password)
 	{
 		String [] fields = user.split("\\\\");
@@ -72,6 +85,13 @@ public class NTUser
 		}
 	}
 
+	/**
+	 * Login using the credentials provided.
+	 * This method calls the native method login0.
+	 * 
+	 * @return true if the login is successful, false otherwise.
+	 * @throws LoginException
+	 */
 	public synchronized boolean login()
 		throws LoginException
 	{
@@ -88,6 +108,12 @@ public class NTUser
 		return (impersonationToken != 0);
 	}
 
+	/**
+	 * Logout and closes the login context.
+	 * This method calls the native method logout0().
+	 * 
+	 * @return true if the logout is successful, false otherwise.
+	 */
 	public synchronized boolean logout()
 	{
 		if (impersonationToken != 0) {
@@ -115,6 +141,10 @@ public class NTUser
 		return userSID;
 	}
 
+	/**
+	 * Called by native code, login0().
+	 * @param userSID user SID
+	 */
 	public void setUserSID(String userSID)
 	{
 		this.userSID = userSID;
@@ -125,6 +155,10 @@ public class NTUser
 		return domainSID;
 	}
 
+	/**
+	 * Called by native code, login0().
+	 * @param domainSID domain SID
+	 */
 	public void setDomainSID(String domainSID)
 	{
 		this.domainSID = domainSID;
@@ -135,6 +169,10 @@ public class NTUser
 		return primaryGroupSID;
 	}
 
+	/**
+	 * Called by native code, login0().
+	 * @param primaryGroupSID user's primary group SID
+	 */
 	public void setPrimaryGroupSID(String primaryGroupSID)
 	{
 		this.primaryGroupSID = primaryGroupSID;
@@ -145,6 +183,10 @@ public class NTUser
 		return groupSIDs;
 	}
 
+	/**
+	 * Called by native code, login0().
+	 * @param groupSIDs SIDs of other groups, the user belong to.
+	 */
 	public void setGroupSIDs(String[] groupSIDs)
 	{
 		this.groupSIDs = groupSIDs;

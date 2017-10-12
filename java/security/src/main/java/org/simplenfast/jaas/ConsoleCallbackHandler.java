@@ -32,6 +32,10 @@ import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 
+/**
+ * Reads the user credentials from the console and pass them to
+ * the JAAS login module.
+ */
 public class ConsoleCallbackHandler implements CallbackHandler
 {
 	@Override

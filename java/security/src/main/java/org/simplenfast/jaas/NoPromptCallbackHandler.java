@@ -33,17 +33,31 @@ import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 
+/**
+ * Instead of prompting the user for credentials, this class
+ * can be used to pass the user credentials to the JAAS
+ * login module.
+ */
 public class NoPromptCallbackHandler implements CallbackHandler
 {
 	private final String name;
 	private final char [] password;
 
+	/**
+	 * Creates the object with the user name and password.
+	 * 
+	 * @param name     - user name
+	 * @param password - user password
+	 */
 	public NoPromptCallbackHandler(String name, char [] password)
 	{
 		this.name = name;
 		this.password = password;
 	}
 
+	/**
+	 * Clears the user specified password.
+	 */
 	public void clearPassword()
 	{
 		Arrays.fill(password, ' ');
