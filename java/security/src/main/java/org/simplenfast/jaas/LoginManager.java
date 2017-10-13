@@ -33,6 +33,11 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+/**
+ * Provides an easy to use interface to JAAS Login Modules. 
+ * The login entry name in the JAAS configuration files is obtained
+ * from the system property <code>simplenfast.jaas.config.entry</code>.
+ */
 public class LoginManager
 {
 	private static final Logger LOGGER = Logger.getLogger(LoginManager.class.getName());
@@ -47,6 +52,10 @@ public class LoginManager
 		}
 	}
 
+	/**
+	 * Gets an instance of the LoginManager.
+	 * @return login manager instance.
+	 */
 	public static synchronized LoginManager getInstance()
 	{
 		if (mgr == null) {
@@ -55,6 +64,12 @@ public class LoginManager
 		return mgr;
 	}
 
+	/**
+	 * Provides the login mechanism using ConsoleCallbackHandler.
+	 * The user will be prompted for the user name and password.
+	 * 
+	 * @return the login context if successful, null on failure.
+	 */
 	public LoginContext login()
 	{
 		final String who = "login";
@@ -85,6 +100,15 @@ public class LoginManager
 		return loginCtx;
 	}
 
+	/**
+	 * Provides the login mechanism using NoPromptCallbackHandler.
+	 * The user name and password are specified as parameters.
+	 * 
+	 * @param name user name
+	 * @param password user password
+	 * 
+	 * @return the login context if successful, null on failure.
+	 */
 	public LoginContext login(String name, char [] password)
 	{
 		final String who = "login";
@@ -115,6 +139,11 @@ public class LoginManager
 		return loginCtx;
 	}
 
+	/**
+	 * Provides the logout mechanism.
+	 * 
+	 * @param loginCtx the login context obtained from <code>login</code>.
+	 */
 	public void logout(LoginContext loginCtx)
 	{
 		final String who = "logout";
@@ -127,6 +156,9 @@ public class LoginManager
 		}
 	}
 
+	/*
+	 * A test method.
+	 */
 	public static void main(String [] args)
 	{
 		LoginManager loginMgr = LoginManager.getInstance();

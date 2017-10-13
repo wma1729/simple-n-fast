@@ -33,7 +33,7 @@ import javax.security.auth.login.LoginException;
  * Provides authentication mechanism on Unix based platforms
  * using Pluggable Authentication Modules (or PAM).
  */
-public class PAMUser
+class PAMUser
 {
 	private native long login0(String serviceName, String userName, char [] password)
 						throws NativeException;
@@ -56,7 +56,7 @@ public class PAMUser
 	 * @param userName    - user name
 	 * @param password    - user password
 	 */
-	public PAMUser(String serviceName, String userName, char [] password)
+	PAMUser(String serviceName, String userName, char [] password)
 	{
 		this.serviceName = serviceName;
 		this.userName = userName;
@@ -79,7 +79,7 @@ public class PAMUser
 	 * @return true if the login is successful, false otherwise.
 	 * @throws LoginException
 	 */
-	public synchronized boolean login()
+	synchronized boolean login()
 			throws LoginException
 	{
 		if (context != 0) {
@@ -101,7 +101,7 @@ public class PAMUser
 	 * 
 	 * @return true if the logout is successful, false otherwise.
 	 */
-	public synchronized boolean logout()
+	synchronized boolean logout()
 	{
 		if (context != 0) {
 			if (!logout0(context)) {
@@ -112,12 +112,12 @@ public class PAMUser
 		return true;
 	}
 
-	public String getUserName()
+	String getUserName()
 	{
 		return userName;
 	}
 
-	public long getUID()
+	long getUID()
 	{
 		return UID;
 	}
@@ -126,12 +126,12 @@ public class PAMUser
 	 * Called by the native code, login0().
 	 * @param UID user ID
 	 */
-	public void setUID(long UID)
+	void setUID(long UID)
 	{
 		this.UID = UID;
 	}
 
-	public long getGID()
+	long getGID()
 	{
 		return GID;
 	}
@@ -140,12 +140,12 @@ public class PAMUser
 	 * Called by the native code, login0().
 	 * @param GID primary group ID of the user
 	 */
-	public void setGID(long GID)
+	void setGID(long GID)
 	{
 		this.GID = GID;
 	}
 
-	public long[] getSupplementaryGIDs()
+	long[] getSupplementaryGIDs()
 	{
 		return supplementaryGIDs;
 	}
@@ -154,7 +154,7 @@ public class PAMUser
 	 * Called by the native code, login0().
 	 * @param supplementaryGIDs array of supplementary GIDs for the user.
 	 */
-	public void setSupplementaryGIDs(long[] supplementaryGIDs)
+	void setSupplementaryGIDs(long[] supplementaryGIDs)
 	{
 		this.supplementaryGIDs = supplementaryGIDs;
 	}

@@ -48,6 +48,26 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
+/**
+ * NT Login Module
+ * 
+ * The login/logout facility is provided using Win32 APIs.
+ * {@link #login} is implemented using <code>LogonUser/ImpersonateLoggedOnUser</code>.
+ * {@link #logout} is implemented using <code>RevertToSelf/CloseHandle</code>.
+ * 
+ * The class relies on the system property <code>simplenfast.jaas.libpath</code>. The
+ * value should be set to the full path of the library, <code>ntuser.dll</code>.
+ * 
+ * The JAAS configuration file should be specified using system property
+ * <code>java.security.auth.login.config</code>. The configuration file should look
+ * like:
+ * <code>
+ * LoginEntryName {
+ *     org.simplenfast.jaas.NTLoginModule required
+ *         debug = true;
+ * };
+ * </code>
+ */
 public class NTLoginModule implements LoginModule
 {
 	private static final Logger LOGGER = Logger.getLogger(NTLoginModule.class.getName());

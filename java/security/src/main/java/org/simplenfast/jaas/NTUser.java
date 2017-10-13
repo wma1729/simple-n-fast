@@ -34,7 +34,7 @@ import javax.security.auth.login.LoginException;
  * using Win32 APIs (LogonUser & ImpersonateLoggedOnUser for
  * login, and RevertToSelf for logout).
  */
-public class NTUser
+class NTUser
 {
 	private native long login0(String domainName, String userName, char [] password)
 						throws NativeException;
@@ -57,7 +57,7 @@ public class NTUser
 	 * @param user     - user name
 	 * @param password - user password
 	 */
-	public NTUser(String user, char [] password)
+	NTUser(String user, char [] password)
 	{
 		String [] fields = user.split("\\\\");
 		switch (fields.length) {
@@ -92,7 +92,7 @@ public class NTUser
 	 * @return true if the login is successful, false otherwise.
 	 * @throws LoginException
 	 */
-	public synchronized boolean login()
+	synchronized boolean login()
 		throws LoginException
 	{
 		if (impersonationToken != 0) {
@@ -114,7 +114,7 @@ public class NTUser
 	 * 
 	 * @return true if the logout is successful, false otherwise.
 	 */
-	public synchronized boolean logout()
+	synchronized boolean logout()
 	{
 		if (impersonationToken != 0) {
 			if (!logout0(impersonationToken)) {
@@ -126,17 +126,17 @@ public class NTUser
 		return true;
 	}
 
-	public String getUserName()
+	String getUserName()
 	{
 		return userName;
 	}
 
-	public String getDomainName()
+	String getDomainName()
 	{
 		return domainName;
 	}
 
-	public String getUserSID()
+	String getUserSID()
 	{
 		return userSID;
 	}
@@ -145,12 +145,12 @@ public class NTUser
 	 * Called by native code, login0().
 	 * @param userSID user SID
 	 */
-	public void setUserSID(String userSID)
+	void setUserSID(String userSID)
 	{
 		this.userSID = userSID;
 	}
 
-	public String getDomainSID()
+	String getDomainSID()
 	{
 		return domainSID;
 	}
@@ -159,12 +159,12 @@ public class NTUser
 	 * Called by native code, login0().
 	 * @param domainSID domain SID
 	 */
-	public void setDomainSID(String domainSID)
+	void setDomainSID(String domainSID)
 	{
 		this.domainSID = domainSID;
 	}
 
-	public String getPrimaryGroupSID()
+	String getPrimaryGroupSID()
 	{
 		return primaryGroupSID;
 	}
@@ -173,12 +173,12 @@ public class NTUser
 	 * Called by native code, login0().
 	 * @param primaryGroupSID user's primary group SID
 	 */
-	public void setPrimaryGroupSID(String primaryGroupSID)
+	void setPrimaryGroupSID(String primaryGroupSID)
 	{
 		this.primaryGroupSID = primaryGroupSID;
 	}
 
-	public String[] getGroupSIDs()
+	String[] getGroupSIDs()
 	{
 		return groupSIDs;
 	}
@@ -187,12 +187,12 @@ public class NTUser
 	 * Called by native code, login0().
 	 * @param groupSIDs SIDs of other groups, the user belong to.
 	 */
-	public void setGroupSIDs(String[] groupSIDs)
+	void setGroupSIDs(String[] groupSIDs)
 	{
 		this.groupSIDs = groupSIDs;
 	}
 
-	public long getImpersonationToken()
+	long getImpersonationToken()
 	{
 		return impersonationToken;
 	}

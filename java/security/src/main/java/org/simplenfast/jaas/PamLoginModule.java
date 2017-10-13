@@ -44,6 +44,25 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
+/**
+ * PAM Login Module
+ * 
+ * The login/logout facility is provided using libpam interface.
+ * 
+ * The class relies on the system property <code>simplenfast.jaas.libpath</code>. The
+ * value should be set to the full path of the library, <code>pamuser.so</code>.
+ * 
+ * The JAAS configuration file should be specified using system property
+ * <code>java.security.auth.login.config</code>. The configuration file should look
+ * like:
+ * <code>
+ * LoginEntryName {
+ *     org.simplenfast.jaas.PAMLoginModule required
+ *         debug = true
+ *         service = PamServiceName
+ * };
+ * </code>
+ */
 public class PamLoginModule implements LoginModule
 {
 	private static final Logger LOGGER = 
