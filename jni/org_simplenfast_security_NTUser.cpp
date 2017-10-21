@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <Sddl.h>
-#include "org_simplenfast_jaas_NTUser.h"
+#include <Userenv.h>
+#include "org_simplenfast_security_NTUser.h"
 #include "common.h"
 #include "auth.h"
 #include "ex.h"
@@ -25,7 +26,7 @@ get_token_info(
 			if (tInfo == 0) {
 				ThrowNativeException(
 					env,
-					"malloc() of token information buffer failed",
+					"malloc of token information buffer failed",
 					errno,
 					GetErrorStr(errbuf, ERRSTRLEN, errno),
 					who,
@@ -37,7 +38,7 @@ get_token_info(
 
 			ThrowNativeException(
 				env,
-				"GetTokenInformation() to fetch token information length failed",
+				"GetTokenInformation to fetch token information length failed",
 				error,
 				GetErrorStr(errbuf, ERRSTRLEN, error),
 				who,
@@ -54,7 +55,7 @@ get_token_info(
 
 		ThrowNativeException(
 			env,
-			"GetTokenInformation() to fetch token information failed",
+			"GetTokenInformation to fetch token information failed",
 			error,
 			GetErrorStr(errbuf, ERRSTRLEN, error),
 			who,
@@ -85,7 +86,7 @@ get_sid_string(
 
 			ThrowNativeException(
 				env,
-				"ConvertSidToStringSid() failed",
+				"ConvertSidToStringSid failed",
 				error,
 				GetErrorStr(errbuf, ERRSTRLEN, error),
 				who,
@@ -95,7 +96,7 @@ get_sid_string(
 	} else {
 		ThrowNativeException(
 			env,
-			"IsValidSid() failed",
+			"IsValidSid failed",
 			-1,
 			0,
 			who,
@@ -136,7 +137,7 @@ get_domain_sid(
 
 			if ((sid == 0) || (refDomain == 0)) {
 				snprintf(message, sizeof(message),
-					"malloc() of %s buffer failed",
+					"malloc of %s buffer failed",
 					(sid == 0) ? "SID" : "reference domain");
 
 				ThrowNativeException(
@@ -155,7 +156,7 @@ get_domain_sid(
 			error = GetLastError();
 
 			snprintf(message, sizeof(message),
-				"GetTokenInformation() to fetch domain (%s) SID failed",
+				"GetTokenInformation to fetch domain (%s) SID failed",
 				domain);
 
 			ThrowNativeException(
@@ -182,7 +183,7 @@ get_domain_sid(
 			error = GetLastError();
 
 			snprintf(message, sizeof(message),
-				"GetTokenInformation() to fetch domain (%s) SID failed",
+				"GetTokenInformation to fetch domain (%s) SID failed",
 				domain);
 
 			ThrowNativeException(
@@ -332,7 +333,7 @@ set_principals(
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_simplenfast_jaas_NTUser_login0(
+Java_org_simplenfast_security_NTUser_login0(
 	JNIEnv *env,
 	jobject obj,
 	jstring domain,
@@ -363,8 +364,255 @@ Java_org_simplenfast_jaas_NTUser_login0(
 	return HandleToLong(hToken);
 }
 
+static bool
+CreatePipe(
+	JNIEnv *env,
+	HANDLE fd[],
+	bool readInheritable,
+	bool writeInheritable)
+{
+	const char  *who = "CreatePipe";
+	char        errbuf[ERRSTRLEN + 1];
+	HANDLE      hRead;
+	HANDLE      hWrite;
+	SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, FALSE };
+
+	if (!::CreatePipe(&hRead, &hWrite, &sa, 0)) {
+		int error = GetLastError();
+
+		ThrowNativeException(
+			env,
+			"CreatePipe failed",
+			error,
+			GetErrorStr(errbuf, ERRSTRLEN, error),
+			who,
+			__FILE__,
+			__LINE__);
+
+		return false;
+	}
+
+	if (readInheritable) {
+		if (!SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)) {
+			int error = GetLastError();
+
+			CloseHandle(hRead);
+			CloseHandle(hWrite);
+
+			ThrowNativeException(
+				env,
+				"SetHandleInformation failed to make read handle inheritable",
+				error,
+				GetErrorStr(errbuf, ERRSTRLEN, error),
+				who,
+				__FILE__,
+				__LINE__);
+
+			return false;
+		}
+	}
+
+	if (writeInheritable) {
+		if (!SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT)) {
+			int error = GetLastError();
+
+			CloseHandle(hRead);
+			CloseHandle(hWrite);
+
+			ThrowNativeException(
+				env,
+				"SetHandleInformation failed to make write handle inheritable",
+				error,
+				GetErrorStr(errbuf, ERRSTRLEN, error),
+				who,
+				__FILE__,
+				__LINE__);
+
+			return false;
+		}
+	}
+
+	fd[0] = hRead;
+	fd[1] = hWrite;
+
+	return true;
+}
+
+JNIEXPORT jlong JNICALL
+Java_org_simplenfast_security_NTUser_execute0(
+	JNIEnv *env,
+	jobject obj,
+	jlong ctx,
+	jstring binary,
+	jstring commandLine,
+	jstring directory,
+	jlongArray stdFds)
+{
+	const char  *who = "Java_org_simplenfast_security_NTUser_execute0";
+	DWORD       error = 0;
+	HANDLE      hToken = (HANDLE)(ctx);
+	HANDLE      hIn[2];
+	HANDLE      hOut[2];
+	HANDLE      hErr[2];
+	void        *envBlk = 0;
+	char        errbuf[ERRSTRLEN + 1];
+
+	if (!CreatePipe(env, hIn, true, false)) {
+		return (jlong)(0L);
+	}
+
+	if (!CreatePipe(env, hOut, false, true)) {
+		CloseHandle(hIn[0]);
+		CloseHandle(hIn[1]);
+		return (jlong)(0L);
+	}
+
+	if (!CreatePipe(env, hErr, false, true)) {
+		CloseHandle(hIn[0]);
+		CloseHandle(hIn[1]);
+		CloseHandle(hOut[0]);
+		CloseHandle(hOut[1]);
+		return (jlong)(0L);
+	}
+
+	if (!CreateEnvironmentBlock(&envBlk, hToken, FALSE)) {
+		error = GetLastError();
+
+		CloseHandle(hIn[0]);
+		CloseHandle(hIn[1]);
+		CloseHandle(hOut[0]);
+		CloseHandle(hOut[1]);
+		CloseHandle(hErr[0]);
+		CloseHandle(hErr[1]);
+
+		ThrowNativeException(
+			env,
+			"CreateEnvironmentBlock failed",
+			error,
+			GetErrorStr(errbuf, ERRSTRLEN, error),
+			who,
+			__FILE__,
+			__LINE__);
+
+		return (jlong)(0L);
+	}
+
+	char *dir = (char *) env->GetStringUTFChars(directory, NULL);
+	char *bin = (char *) env->GetStringUTFChars(binary, NULL);
+	char *cmdLine = (char *) env->GetStringUTFChars(commandLine, NULL);
+
+	STARTUPINFO si;
+	memset(&si, 0, sizeof(si));
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESTDHANDLES;
+	si.hStdInput = hIn[0];
+	si.hStdOutput = hOut[1];
+	si.hStdError = hErr[1];
+
+	PROCESS_INFORMATION pi;
+	memset(&pi, 0, sizeof(pi));
+
+	BOOL retval = CreateProcessAsUser(
+			hToken,
+			bin,
+			cmdLine,
+			NULL,
+			NULL,
+			TRUE,
+			CREATE_DEFAULT_ERROR_MODE |
+			CREATE_NO_WINDOW |
+			DETACHED_PROCESS |
+			CREATE_UNICODE_ENVIRONMENT,
+			envBlk,
+			dir,
+			&si,
+			&pi);
+	if (!retval) {
+		error = GetLastError();
+	}
+
+	env->ReleaseStringUTFChars(commandLine, cmdLine);
+	env->ReleaseStringUTFChars(binary, bin);
+	env->ReleaseStringUTFChars(directory, dir);
+
+	DestroyEnvironmentBlock(envBlk);
+
+	CloseHandle(hIn[0]);
+	CloseHandle(hOut[1]);
+	CloseHandle(hErr[1]);
+
+	if (!retval) {
+		CloseHandle(hIn[1]);
+		CloseHandle(hOut[0]);
+		CloseHandle(hErr[0]);
+
+		ThrowNativeException(
+			env,
+			"CreateProcessAsUser failed",
+			error,
+			GetErrorStr(errbuf, ERRSTRLEN, error),
+			who,
+			__FILE__,
+			__LINE__);
+
+		return (jlong)(0L);
+	} else {
+		if (pi.hThread != INVALID_HANDLE_VALUE)
+			CloseHandle(pi.hThread);  
+
+		jlong std_fds[3] = { (jlong)hIn[1], jlong(hOut[0]), jlong(hErr[0]) };
+		env->SetLongArrayRegion(stdFds, 0, 3, std_fds);
+
+		return (jlong)(pi.hProcess);
+	}
+}
+
+JNIEXPORT jint JNICALL
+Java_org_simplenfast_security_NTUser_getExitCode0(
+	JNIEnv *env,
+	jobject obj,
+	jlong procId,
+	jlong timeout)
+{
+	const char  *who = "Java_org_simplenfast_security_NTUser_getExitCode0";
+	HANDLE      hProcess = (HANDLE)(procId);
+	jint        ec = -1;
+	DWORD       retval;
+	DWORD       error;
+	char        errbuf[ERRSTRLEN + 1];
+
+	retval = WaitForSingleObject(hProcess, (DWORD)timeout);
+	if (retval == WAIT_OBJECT_0) {
+		GetExitCodeProcess(hProcess, &retval);
+		ec = (jint)(retval);
+	} else if (retval == WAIT_TIMEOUT) {
+		TerminateProcess(hProcess, ERROR_PROCESS_ABORTED);
+		ThrowNativeException(
+			env,
+			"process timed out",
+			-1,
+			"",
+			who,
+			__FILE__,
+			__LINE__);
+	} else {
+		error = GetLastError();
+		TerminateProcess(hProcess, ERROR_PROCESS_ABORTED);
+		ThrowNativeException(
+			env,
+			"WaitForSingleObject failed",
+			error,
+			GetErrorStr(errbuf, ERRSTRLEN, error),
+			who,
+			__FILE__,
+			__LINE__);
+	}
+
+	return ec;
+}
+
 JNIEXPORT jboolean JNICALL
-Java_org_simplenfast_jaas_NTUser_logout0(
+Java_org_simplenfast_security_NTUser_logout0(
 	JNIEnv *env,
 	jobject obj,
 	jlong ctx)

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package org.simplenfast.jaas;
+package org.simplenfast.security;
 
 import com.sun.security.auth.UnixNumericGroupPrincipal;
 import com.sun.security.auth.UnixNumericUserPrincipal;

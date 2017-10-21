@@ -1,6 +1,9 @@
 include ../Makefile.constants
 
-OBJS = ${P}/auth.o ${P}/ex.o ${P}/org_simplenfast_jaas_PAMUser.o
+OBJS = ${P}/auth.o \
+       ${P}/ex.o \
+       ${P}/org_simplenfast_security_PAMUser.o
+
 LIBS = -lpam -lpthread
 
 JVM_INCL = -I${JAVA_HOME}/include
@@ -11,12 +14,12 @@ ifeq ($(PLAT), SunOS)
 	JVM_INCL += -I${JAVA_HOME}/include/solaris
 endif
 
-all: platform ${P}/libpamuser.so
+all: platform ${P}/libsnfjni.so
 
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/libpamuser.so: ${OBJS} ${LIBCOM}
+${P}/libsnfjni.so: ${OBJS} ${LIBCOM}
 	${LD} ${LDFLAGS} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
@@ -25,4 +28,4 @@ ${P}/%.o: %.cpp
 install:
 
 clean:
-	@/bin/rm -rf ${OBJS} ${P}/libpamuser.so
+	@/bin/rm -rf ${OBJS} ${P}/libsnfjni.so

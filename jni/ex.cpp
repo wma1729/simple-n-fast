@@ -25,7 +25,7 @@ ThrowNativeException(
 	const char *fileName,
 	int lineNumber)
 {
-	jclass exClass = env->FindClass("org/simplenfast/nex/NativeException");
+	jclass exClass = env->FindClass("org/simplenfast/security/NativeException");
 	if (exClass == 0) {
 		return;
 	}

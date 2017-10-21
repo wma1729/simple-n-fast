@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package org.simplenfast.jaas;
+package org.simplenfast.security;
 
 import com.sun.security.auth.NTUserPrincipal;
 import com.sun.security.auth.NTSidUserPrincipal;

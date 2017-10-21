@@ -22,10 +22,12 @@
  * THE SOFTWARE.
  */
 
-package org.simplenfast.jaas;
+package org.simplenfast.security;
 
-import org.simplenfast.nex.NativeException;
-import org.simplenfast.nex.NativeUtil;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 
 import javax.security.auth.login.LoginException;
 
@@ -34,9 +36,13 @@ import javax.security.auth.login.LoginException;
  * using Win32 APIs (LogonUser & ImpersonateLoggedOnUser for
  * login, and RevertToSelf for logout).
  */
-class NTUser
+class NTUser implements JniUser
 {
 	private native long login0(String domainName, String userName, char [] password)
+						throws NativeException;
+	private native long execute0(long token, String binary, String commandLine, String directory, long [] stdFds)
+						throws NativeException;
+	private native int getExitCode0(long processCtx, long timeout)
 						throws NativeException;
 	private native boolean logout0(long impersonationToken);
 
@@ -49,10 +55,49 @@ class NTUser
 	private String [] groupSIDs;
 	private long impersonationToken;
 
+	static {
+		String libPath = System.getProperty("simplenfast.native.libpath");
+		if (libPath != null) {
+			System.load(libPath);
+		}
+	}
+
+	private boolean hasWhiteSpace(String s)
+	{
+		if (s != null) {
+			for (int i = 0; i < s.length(); ++i) {
+				if (Character.isWhitespace(s.charAt(i))) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private String commandLine(String binary, List<String> arguments)
+	{
+		StringBuilder strBldr = new StringBuilder();
+		if (hasWhiteSpace(binary)) {
+			strBldr.append('"').append(binary).append('"');
+		} else {
+			strBldr.append(binary);
+		}
+
+		for (String arg: arguments) {
+			strBldr.append(' ');
+			if (hasWhiteSpace(arg)) {
+				strBldr.append('"').append(arg).append('"');
+			} else {
+				strBldr.append(arg);
+			}
+		}
+
+		return strBldr.toString();
+	}
 	/**
 	 * Creates the NTUser object and loads the native
 	 * DLL as specified by system property
-	 * 'simplenfast.jaas.libpath'.
+	 * 'simplenfast.native.libpath'.
 	 * 
 	 * @param user     - user name
 	 * @param password - user password
@@ -78,11 +123,6 @@ class NTUser
 		this.primaryGroupSID = null;
 		this.groupSIDs = null;
 		this.impersonationToken = 0;
-
-		String libPath = System.getProperty("simplenfast.jaas.libpath");
-		if (libPath != null) {
-			System.load(libPath);
-		}
 	}
 
 	/**
@@ -92,7 +132,8 @@ class NTUser
 	 * @return true if the login is successful, false otherwise.
 	 * @throws LoginException
 	 */
-	synchronized boolean login()
+	@Override
+	public synchronized boolean login()
 		throws LoginException
 	{
 		if (impersonationToken != 0) {
@@ -102,10 +143,49 @@ class NTUser
 		try {
 			impersonationToken = login0(domainName, userName, password);
 		} catch (NativeException ex) {
-			throw NativeUtil.NativeToLoginException(ex);
+			throw ex.toLoginException();
 		}
 
 		return (impersonationToken != 0);
+	}
+
+	@Override
+	public long execute(String binary, List<String> arguments, String directory, long [] stdFds)
+		throws IOException
+	{
+		long processCtx = 0;
+		
+		try {
+			processCtx = execute0(
+									impersonationToken,
+									binary,
+									commandLine(binary, arguments),
+									directory,
+									stdFds);
+		} catch (NativeException ex) {
+			throw ex.toIOException();
+		}
+
+		return processCtx;
+	}
+
+	@Override
+	public int getExitCode(long processCtx, long timeout, TimeUnit unit)
+		throws InterruptedException
+	{
+		int ec = -1;
+
+		if (processCtx != 0) {
+			try {
+				ec = getExitCode0(processCtx, unit.toMillis(timeout));
+			} catch (NativeException ex) {
+				throw ex.toInterruptedException();
+			}
+		} else {
+			throw new IllegalArgumentException("process not created yet");
+		}
+
+		return ec;
 	}
 
 	/**
@@ -114,7 +194,8 @@ class NTUser
 	 * 
 	 * @return true if the logout is successful, false otherwise.
 	 */
-	synchronized boolean logout()
+	@Override
+	public synchronized boolean logout()
 	{
 		if (impersonationToken != 0) {
 			if (!logout0(impersonationToken)) {

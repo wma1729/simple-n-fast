@@ -22,14 +22,17 @@
  * THE SOFTWARE.
  */
 
-package org.simplenfast.nex;
+package org.simplenfast.security;
+
+import java.io.IOException;
+import javax.security.auth.login.LoginException;
 
 /**
  * Exception thrown by the native code.
  * 
  * This is a generic exception thrown by the native code using JNI.
  */
-public class NativeException extends Exception
+public class NativeException extends Throwable
 {
 	private final int errorCode;
 	private final String errorString;
@@ -59,6 +62,27 @@ public class NativeException extends Exception
 		super(message);
 		this.errorCode = errorCode;
 		this.errorString = errorString;
+	}
+
+	@Override
+	public String getMessage()
+	{
+		StringBuilder strBldr = new StringBuilder(super.getMessage());
+
+		if (getErrorString() != null) {
+			strBldr.append(": ");
+			strBldr.append(getErrorString());
+			if (getErrorCode() != -1) {
+				strBldr.append(" (");
+				strBldr.append(getErrorCode());
+				strBldr.append(")");
+			}
+		} else if (getErrorCode() != -1) {
+				strBldr.append(": ");
+				strBldr.append(getErrorCode());
+		}
+
+		return strBldr.toString();
 	}
 
 	/**
@@ -98,5 +122,41 @@ public class NativeException extends Exception
 		System.arraycopy(curStk, 0, newStk, 1, curStk.length);
 		newStk[0] = new StackTraceElement("Native", methodName, fileName, lineNumber);
 		setStackTrace(newStk);
+	}
+
+	/**
+	 * Returns the corresponding Java LoginException
+	 * 
+	 * @return standard Java LoginException.
+	 */
+	public LoginException toLoginException()
+	{
+		LoginException loginEx = new LoginException(getMessage());
+		loginEx.setStackTrace(getStackTrace());
+		return loginEx;
+	}
+
+	/**
+	 * Returns the corresponding Java IOException
+	 * 
+	 * @return standard Java IOException.
+	 */
+	public IOException toIOException()
+	{
+		IOException ioEx = new IOException(getMessage());
+		ioEx.setStackTrace(getStackTrace());
+		return ioEx;
+	}
+
+	/**
+	 * Returns the corresponding Java InterruptedException
+	 * 
+	 * @return standard Java InterruptedException.
+	 */
+	public InterruptedException toInterruptedException()
+	{
+		InterruptedException intrEx = new InterruptedException(getMessage());
+		intrEx.setStackTrace(getStackTrace());
+		return intrEx;
 	}
 }

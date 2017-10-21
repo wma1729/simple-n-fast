@@ -1,16 +1,18 @@
 include ..\Makefile.constants
 
-OBJS = $(P)\auth.obj $(P)\ex.obj $(P)\org_simplenfast_jaas_NTUser.obj
+OBJS = $(P)\auth.obj \
+       $(P)\ex.obj \
+       $(P)\org_simplenfast_security_NTUser.obj
 
 JVM_INCL = /I"$(JAVA_HOME)\include" /I"$(JAVA_HOME)\include\win32"
 
-all: platform $(P)\ntuser.dll
+all: platform $(P)\snfjni.dll
 
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\ntuser.dll: $(OBJS) $(LIBCOM)
-	$(LD) $(LDFLAGS) /PDB:$*.pdb $** Advapi32.lib Kernel32.lib /OUT:$@
+$(P)\snfjni.dll: $(OBJS) $(LIBCOM)
+	$(LD) $(LDFLAGS) /PDB:$*.pdb $** Advapi32.lib Kernel32.lib Userenv.lib /OUT:$@
 
 $(OBJS): $(*B).cpp
 	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(JVM_INCL) $(INCL) $(*B).cpp /Fo$@
@@ -18,4 +20,4 @@ $(OBJS): $(*B).cpp
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\ntuser.* vc*.pdb
+	@del /q $(OBJS) $(P)\snfjni.* vc*.pdb

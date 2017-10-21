@@ -22,10 +22,11 @@
  * THE SOFTWARE.
  */
 
-package org.simplenfast.jaas;
+package org.simplenfast.security;
 
-import org.simplenfast.nex.NativeException;
-import org.simplenfast.nex.NativeUtil;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.login.LoginException;
 
@@ -33,9 +34,13 @@ import javax.security.auth.login.LoginException;
  * Provides authentication mechanism on Unix based platforms
  * using Pluggable Authentication Modules (or PAM).
  */
-class PAMUser
+class PAMUser implements JniUser
 {
 	private native long login0(String serviceName, String userName, char [] password)
+						throws NativeException;
+	private native long execute0(String binary, String [] arguments, String directory, long [] stdFds)
+						throws NativeException;
+	private native int getExitCode0(long processCtx, long timeout)
 						throws NativeException;
 	private native boolean logout0(long context);
 
@@ -47,10 +52,17 @@ class PAMUser
 	private long GID;
 	private long [] supplementaryGIDs;
 
+	static {
+		String libPath = System.getProperty("simplenfast.native.libpath");
+		if (libPath != null) {
+			System.load(libPath);
+		}
+	}
+
 	/**
 	 * Creates the PAMUser object and loads the native
 	 * shared object as specified by system property
-	 * 'simplenfast.jaas.libpath'.
+	 * 'simplenfast.native.libpath'.
 	 * 
 	 * @param serviceName - service to be used with PAM
 	 * @param userName    - user name
@@ -65,11 +77,21 @@ class PAMUser
 		this.UID = -1;
 		this.GID = -1;
 		this.supplementaryGIDs = null;
+	}
 
-		String libPath = System.getProperty("simplenfast.jaas.libpath");
-		if (libPath != null) {
-			System.load(libPath);
+	private String [] toArgVector(String binary, List<String> arguments)
+	{
+		int size = arguments.size();
+		int idx = 0;
+		String [] args = new String[size + 1];
+
+		args[idx++] = binary;
+
+		for (String arg : arguments) {
+			args[idx++] = arg;
 		}
+
+		return args;
 	}
 
 	/**
@@ -79,7 +101,8 @@ class PAMUser
 	 * @return true if the login is successful, false otherwise.
 	 * @throws LoginException
 	 */
-	synchronized boolean login()
+	@Override
+	public synchronized boolean login()
 			throws LoginException
 	{
 		if (context != 0) {
@@ -89,10 +112,48 @@ class PAMUser
 		try {
 			context = login0(serviceName, userName, password);
 		} catch (NativeException ex) {
-			throw NativeUtil.NativeToLoginException(ex);
+			throw ex.toLoginException();
 		}
 
 		return (context != 0);
+	}
+	
+	@Override
+	public long execute(String binary, List<String> arguments, String directory, long [] stdFds)
+		throws IOException
+	{
+		long processCtx = -1;
+		
+		try {
+			processCtx = execute0(
+									binary,
+									toArgVector(binary, arguments),
+									directory,
+									stdFds);
+		} catch (NativeException ex) {
+			throw ex.toIOException();
+		}
+
+		return processCtx;
+	}
+
+	@Override
+	public int getExitCode(long processCtx, long timeout, TimeUnit unit)
+		throws InterruptedException
+	{
+		int ec = -1;
+
+		if (processCtx != -1) {
+			try {
+				ec = getExitCode0(processCtx, unit.toSeconds(timeout));
+			} catch (NativeException ex) {
+				throw ex.toInterruptedException();
+			}
+		} else {
+			throw new IllegalArgumentException("process not created yet");
+		}
+
+		return ec;
 	}
 
 	/**
@@ -101,7 +162,8 @@ class PAMUser
 	 * 
 	 * @return true if the logout is successful, false otherwise.
 	 */
-	synchronized boolean logout()
+	@Override
+	public synchronized boolean logout()
 	{
 		if (context != 0) {
 			if (!logout0(context)) {

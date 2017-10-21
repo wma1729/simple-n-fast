@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package org.simplenfast.jaas;
+package org.simplenfast.security;
 
 import java.io.IOException;
 import java.util.Arrays;

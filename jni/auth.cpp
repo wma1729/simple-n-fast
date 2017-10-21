@@ -31,7 +31,7 @@ jcharArrayToCString(
 
 		ThrowNativeException(
 			env,
-			"calloc() of array buffer failed",
+			"calloc of array buffer failed",
 			errno,
 			GetErrorStr(errbuf, ERRSTRLEN, errno),
 			who,
@@ -79,7 +79,7 @@ nt_login(
 		error = GetLastError();
 
 		snprintf(message, sizeof(message),
-				"LogonUser() for %s\\%s failed",
+				"LogonUser for %s\\%s failed",
 				domain,
 				user);
 
@@ -99,7 +99,7 @@ nt_login(
 			hToken = NULL;
 
 			snprintf(message, sizeof(message),
-					"ImpersonateLoggedOnUser() for %s\\%s failed",
+					"ImpersonateLoggedOnUser for %s\\%s failed",
 					domain,
 					user);
 
@@ -154,7 +154,7 @@ conversation(
 
 	reply = (struct pam_response *)malloc(sizeof(struct pam_response));
 	if (reply == 0) {
-		return PAM_CONV_ERR;
+		return PAM_BUF_ERR;
 	}
 
 	reply->resp = strdup(pwd);
@@ -186,7 +186,7 @@ pam_login(
 		retval = pam_start(service, user, &conv, pamh);
 		if (retval != PAM_SUCCESS) {
 			snprintf(message, sizeof(message),
-				"pam_start() for user %s failed using service %s",
+				"pam_start for user %s failed using service %s",
 				user, service);
 
 			ThrowNativeException(
@@ -205,7 +205,7 @@ pam_login(
 		retval = pam_authenticate(*pamh, 0);
 		if (retval != PAM_SUCCESS) {
 			snprintf(message, sizeof(message),
-				"pam_authenticate() for user %s failed using service %s",
+				"pam_authenticate for user %s failed using service %s",
 				user, service);
 
 			ThrowNativeException(
@@ -223,7 +223,7 @@ pam_login(
 		retval = pam_acct_mgmt(*pamh, 0);
 		if (retval != PAM_SUCCESS) {
 			snprintf(message, sizeof(message),
-				"pam_acct_mgmt() for user %s failed using service %s",
+				"pam_acct_mgmt for user %s failed using service %s",
 				user, service);
 
 			ThrowNativeException(
@@ -237,6 +237,25 @@ pam_login(
 
 			break;
 		}
+
+		retval = pam_open_session(*pamh, 0);
+		if (retval != PAM_SUCCESS) {
+			snprintf(message, sizeof(message),
+				"pam_open_session for user %s failed using service %s",
+				user, service);
+
+			ThrowNativeException(
+				env,
+				message,
+				retval,
+				pam_strerror(*pamh, retval),
+				who,
+				__FILE__,
+				__LINE__);
+
+			break;
+		}
+
 	} while (0);
 
 	if (retval != PAM_SUCCESS) {
@@ -253,9 +272,12 @@ bool
 pam_logout(pam_handle_t *pamh)
 {
 	if (pamh) {
-		int retval = pam_end(pamh, PAM_SUCCESS);
+		int retval = pam_close_session(pamh, 0);
 		if (retval == PAM_SUCCESS) {
-			return true;
+			retval = pam_end(pamh, PAM_SUCCESS);
+			if (retval == PAM_SUCCESS) {
+				return true;
+			}
 		}
 	}
 
