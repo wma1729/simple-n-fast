@@ -15,6 +15,8 @@ OBJS =  $(P)\common.obj \
 		$(P)\perftimer.obj \
 		$(P)\util.obj
 
+PDB = $(P)\libcom.pdb
+
 all: platform $(P)\com.lib
 
 platform:
@@ -24,9 +26,9 @@ $(P)\com.lib: $(OBJS)
 	$(AR) $(ARFLAGS) $** /OUT:$@
 
 $(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $(*B).cpp /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
 
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\com.lib vc*.pdb
+	@del /q $(OBJS) $(P)\com.lib $(PDB)

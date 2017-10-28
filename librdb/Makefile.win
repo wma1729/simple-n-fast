@@ -17,6 +17,9 @@ OBJS =  $(P)\cache.obj \
 
 DRVROBJS = $(P)\rdbdrvr.obj
 
+LIBRDBPDB = $(P)\librdb.pdb
+LIBRDBDRVRPDB = $(P)\rdbdrvr.pdb
+
 all: platform $(P)\rdb.lib $(P)\rdbdrvr.exe
 
 platform:
@@ -26,12 +29,15 @@ $(P)\rdb.lib: $(OBJS)
 	$(AR) $(ARFLAGS) $** /OUT:$@
 
 $(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBCOM)
-	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
+	$(CC) $(DBG) /Fd$(LIBRDBDRVRPDB) $** /Fe$@
 
-{.}.cpp{$(P)}.obj:
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $< /Fo$@
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBRDBPDB) $(*B).cpp /Fo$@
+
+$(DRVROBJS) : $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBRDBDRVRPDB) $(*B).cpp /Fo$@
 
 install:
 
 clean:
-	@del /q $(OBJS) $(DRVROBJS) $(P)\rdb.lib $(P)\rdbdrvr.* vc*.pdb
+	@del /q $(OBJS) $(DRVROBJS) $(P)\rdb.lib $(LIBRDBPDB) $(P)\rdbdrvr.* 

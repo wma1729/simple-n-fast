@@ -15,7 +15,7 @@ $(P)\rdbts.exe: $(OBJS) $(LIBCOM) $(LIBRDB)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
 {.}.cpp{$(P)}.obj:
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $< /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(P)\rdbts.pdb $< /Fo$@
 
 test:
 	@if not exist db mkdir db
@@ -27,6 +27,6 @@ test:
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\rdbts.* vc*.pdb rdbts.conf
+	@del /q $(OBJS) $(P)\rdbts.* rdbts.conf
 	@if exist db rmdir /q /s db
 	@if exist log rmdir /q /s log

@@ -6,18 +6,20 @@ OBJS = $(P)\auth.obj \
 
 JVM_INCL = /I"$(JAVA_HOME)\include" /I"$(JAVA_HOME)\include\win32"
 
+PDB = $(P)\snfjni.pdb
+
 all: platform $(P)\snfjni.dll
 
 platform:
 	@if not exist $(P) mkdir $(P)
 
 $(P)\snfjni.dll: $(OBJS) $(LIBCOM)
-	$(LD) $(LDFLAGS) /PDB:$*.pdb $** Advapi32.lib Kernel32.lib Userenv.lib /OUT:$@
+	$(LD) $(LDFLAGS) /PDB:$(PDB) $** Advapi32.lib Kernel32.lib Userenv.lib /OUT:$@
 
 $(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(JVM_INCL) $(INCL) $(*B).cpp /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(JVM_INCL) $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
 
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\snfjni.* vc*.pdb
+	@del /q $(OBJS) $(P)\snfjni.* 
