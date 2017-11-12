@@ -287,6 +287,8 @@ Java_org_simplenfast_security_PAMUser_execute0(
 	int         std_err[2];
 	uid_t       uid = -1;
 	gid_t       gid = -1;
+	const char  *userName;
+	jstring     usr;
 	jclass      cls;
 	jmethodID   mid;
 	char        message[512];
@@ -299,6 +301,13 @@ Java_org_simplenfast_security_PAMUser_execute0(
 			"getUID",
 			"()J");
 	uid = (uid_t) env->CallLongMethod(obj, mid);
+
+	mid = env->GetMethodID(
+			cls,
+			"getUserName",
+			"()Ljava/lang/String;");
+	usr = (jstring) env->CallObjectMethod(obj, mid);
+	userName = env->GetStringUTFChars(usr, 0);
 
 	mid = env->GetMethodID(
 			cls,
@@ -338,22 +347,36 @@ Java_org_simplenfast_security_PAMUser_execute0(
 		close(std_err[1]);
 		close(std_err[0]);
 
-		if (setuid(uid) < 0) {
+		if (initgroups(userName, gid) < 0) {
 			error = errno;
 			size_t n = snprintf(message, sizeof(message),
-					"setuid to %d failed: %s (%d)",
-					(int) uid,
+					"initgroups for %s:%d failed: %s (%d)",
+					userName,
+					(int) gid,
 					GetErrorStr(errbuf, ERRSTRLEN, error),
 					error);
 			n = write(2, message, n);
 			exit(error);
 		}
 
+		env->ReleaseStringUTFChars(usr, userName);
+
 		if (setgid(gid) < 0) {
 			error = errno;
 			size_t n = snprintf(message, sizeof(message),
 					"setgid to %d failed: %s (%d)",
 					(int) gid,
+					GetErrorStr(errbuf, ERRSTRLEN, error),
+					error);
+			n = write(2, message, n);
+			exit(error);
+		}
+
+		if (setuid(uid) < 0) {
+			error = errno;
+			size_t n = snprintf(message, sizeof(message),
+					"setuid to %d failed: %s (%d)",
+					(int) uid,
 					GetErrorStr(errbuf, ERRSTRLEN, error),
 					error);
 			n = write(2, message, n);
