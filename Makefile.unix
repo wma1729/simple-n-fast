@@ -1,13 +1,13 @@
 include Makefile.constants
 
-DIRS = libcom jdaemon librdb librdb/tests jni java
+DIRS = libcom jdaemon librdb librdb/tests
 
 all:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
 
 cscope:
 	/bin/rm cscope.out
-	cscope -b -R -u -Iinclude -slibcom -sjdaemon
+	cscope -b -R -u -Iinclude -slibcom -sjdaemon -slibrdb
 
 install:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done
