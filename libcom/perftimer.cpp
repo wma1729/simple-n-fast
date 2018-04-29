@@ -1,7 +1,7 @@
 #include "perftimer.h"
 #include "log.h"
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 LARGE_INTEGER PerformanceTimer::freq = { 0 };
 #endif
 
@@ -10,7 +10,7 @@ LARGE_INTEGER PerformanceTimer::freq = { 0 };
  */
 PerformanceTimer::PerformanceTimer()
 {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	counter.QuadPart = 0L;
 #else
 	tv.tv_sec = 0;
@@ -26,7 +26,7 @@ PerformanceTimer::PerformanceTimer()
  */
 PerformanceTimer::PerformanceTimer(const PerformanceTimer &timer)
 {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	this->counter = timer.counter;
 #else
 	this->tv.tv_sec = timer.tv.tv_sec;
@@ -40,7 +40,7 @@ PerformanceTimer::PerformanceTimer(const PerformanceTimer &timer)
 void
 PerformanceTimer::record()
 {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	BOOL retval = FALSE;
 
 	if (freq.QuadPart == 0L) {
@@ -68,7 +68,7 @@ PerformanceTimer &
 PerformanceTimer::operator=(const PerformanceTimer &timer)
 {
 	if (this != &timer) {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 		this->counter = timer.counter;
 #else
 		this->tv.tv_sec = timer.tv.tv_sec;
@@ -96,7 +96,7 @@ PerformanceTimer::operator-(const PerformanceTimer &timer)
 
 	int64_t elapsed;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	elapsed = int64_t((((this->counter.QuadPart - timer.counter.QuadPart) * 1000000) /
 						this->freq.QuadPart));
 #else

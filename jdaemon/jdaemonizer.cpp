@@ -235,7 +235,7 @@ StopDaemon(void)
 	return retval;
 }
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	#include "ntservice.cpp"
 #else
 	#include "unixdaemon.cpp"
@@ -244,7 +244,7 @@ StopDaemon(void)
 static int
 Usage(const char *progName)
 {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	fprintf(stderr, "Usage: %s [-start|-stop|-chkconf] -config <service_config> [-verbose]\n",
 #else
 	fprintf(stderr, "Usage: %s [-start|-stop|-chkconf] -config <daemon_config> [-verbose]\n",

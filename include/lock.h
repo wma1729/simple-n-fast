@@ -1,7 +1,7 @@
 #ifndef _SNF_LOCK_H_
 #define _SNF_LOCK_H_
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 #include <Windows.h>
 #else
 #include <pthread.h>
@@ -15,7 +15,7 @@
 class Mutex
 {
 private:
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	CRITICAL_SECTION    mtx;
 #else
 	pthread_mutex_t     mtx;

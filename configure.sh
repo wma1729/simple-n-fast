@@ -70,7 +70,7 @@ if [ "$PLAT" = "Linux" ]; then
 		INSTDIR = $INSTPATH
 		CC = $CC -m64
 		CFLAGS = -c -Wall
-		DEFINES = -DLINUX -D_POSIX_PTHREAD_SEMANTICS
+		DEFINES = -D_POSIX_PTHREAD_SEMANTICS
 		LD = $CC -shared -m64
 		LDFLAGS = -fpic
 		AR = ar
@@ -80,29 +80,6 @@ if [ "$PLAT" = "Linux" ]; then
 		LIBCOM = `pwd`/libcom/$BLDPLAT/libcom.a
 		LIBRDB = `pwd`/librdb/$BLDPLAT/librdb.a
 LINUX_CONFIG
-
-elif [ "$PLAT" = "SunOS" ]; then
-	HARDWARE=`isainfo -k`
-
-	BLDPLAT=$PLAT"_"$HARDWARE
-
-	cat > Makefile.constants <<-SOLARIS_CONFIG
-		PLAT = $PLAT
-		P = $BLDPLAT
-		M = $HARDWARE
-		INSTDIR = $INSTPATH
-		CC = $CC
-		CFLAGS = -c -mt
-		DEFINES = -DSOLARIS
-		LD = $CC -G
-		LDFLAGS = -Kpic
-		AR = ar
-		ARFLAGS = -r
-		DBG = -O
-		INCL = -I`pwd`/include
-		LIBCOM = `pwd`/libcom/$BLDPLAT/libcom.a
-		LIBRDB = `pwd`/librdb/$BLDPLAT/librdb.a
-SOLARIS_CONFIG
 
 else
 	echo "Unsupported platform $P";

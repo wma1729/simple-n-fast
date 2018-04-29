@@ -9,7 +9,7 @@
 class PerformanceTimer
 {
 private:
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	static	LARGE_INTEGER   freq;
 	        LARGE_INTEGER   counter;
 #else

@@ -5,7 +5,7 @@
 #include "util.h"
 #include <ctype.h>
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <pwd.h>
 #endif
 
@@ -22,7 +22,7 @@ FileSystem::getHome(char *buf, size_t buflen)
 {
 	int retval = E_ok;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	const char *ptr = getenv("USERPROFILE");
 	if (ptr == 0) {
@@ -78,7 +78,7 @@ FileSystem::exists(const char *path, int *oserr)
 		return false;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	DWORD   error = ERROR_FILE_NOT_FOUND;
 	DWORD   fileAttr = INVALID_FILE_ATTRIBUTES;
@@ -134,7 +134,7 @@ FileSystem::size(const char *path, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	WIN32_FILE_ATTRIBUTE_DATA   fad;
 	wchar_t                     *pathW = MbsToWcs(path);
@@ -201,7 +201,7 @@ FileSystem::isAbsolutePath(const char *p)
 {
 	int i = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	if (isalpha(p[i]) && (p[i + 1] == ':') && (p[i + 2] == PATH_SEP)) {
 		/* C:\ */
@@ -294,7 +294,7 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 
 		Log(DBG, caller, "making directory %s", buf);
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 		BOOL    status = FALSE;
 		wchar_t *pathW = MbsToWcs(buf);
@@ -356,7 +356,7 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	DWORD   flags = MOVEFILE_REPLACE_EXISTING;
 	DWORD   attr = 0;
@@ -396,7 +396,7 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 		retval = E_xlate_failed;
 	}
 
-#else /* !WINDOWS */
+#else /* !_WIN32 */
 
 	if (::rename(oldName, newName) < 0)
 	{
@@ -432,7 +432,7 @@ FileSystem::removeFile(const char *f, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	wchar_t *fW = MbsToWcs(f);
 
@@ -484,7 +484,7 @@ FileSystem::removeDir(const char *d, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	wchar_t *dW = MbsToWcs(d);
 

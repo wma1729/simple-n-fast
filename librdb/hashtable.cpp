@@ -1,4 +1,4 @@
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <sys/mman.h>
 #endif
 
@@ -40,7 +40,7 @@ HashTable::allocate(int size)
 			"failed to allocate memory for hash table");
 		return E_no_memory;
 	} else {
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 		posix_madvise(ht, len, MADV_WILLNEED);
 #endif
 		for (int i = 0; i < size; ++i)

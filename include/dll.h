@@ -12,7 +12,7 @@ class Dll
 private:
 	std::string path;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	HMODULE     hModule;
 #else
 	void        *handle;
@@ -26,7 +26,7 @@ public:
 	Dll(const std::string &path)
 		: path(path)
 	{
-#if defined(WINDOWS)
+#if defined(_WIN32)
 		hModule = NULL;
 #else
 		handle = 0;

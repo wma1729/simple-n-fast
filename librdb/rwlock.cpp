@@ -9,7 +9,7 @@ RWLock::RWLock()
 {
 	cnt = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	InitializeSRWLock(&lock);
 #else
 	int error = pthread_rwlock_init(&lock, 0);
@@ -26,7 +26,7 @@ RWLock::~RWLock()
 	Assert((cnt == 0), __FILE__, __LINE__,
 		"someone is holding the lock");
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	// Nothing to do here
 #else
 	int error = pthread_rwlock_destroy(&lock);
@@ -35,7 +35,7 @@ RWLock::~RWLock()
 #endif
 }
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 
 /*
  * Unlocks the read write lock mutex.
@@ -75,7 +75,7 @@ RWLock::rdlock(int *oserr)
 {
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	AcquireSRWLockShared(&lock);
 #else
 	const char  *caller = "RWLock::rdlock";
@@ -113,7 +113,7 @@ RWLock::tryrdlock(int *oserr)
 {
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	if (!TryAcquireSRWLockShared(&lock)) {
 		return E_try_again;
 	}
@@ -158,7 +158,7 @@ RWLock::rdunlock(int *oserr)
 	if (cnt > 0) {
 		cnt--;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 		ReleaseSRWLockShared(&lock);
 #else
 		retval = unlock(oserr);
@@ -185,7 +185,7 @@ RWLock::wrlock(int *oserr)
 {
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	AcquireSRWLockExclusive(&lock);
 #else
 	const char  *caller = "RWLock::wrlock";
@@ -221,7 +221,7 @@ RWLock::trywrlock(int *oserr)
 {
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	if (!TryAcquireSRWLockExclusive(&lock)) {
 		return E_try_again;
 	}
@@ -265,7 +265,7 @@ RWLock::wrunlock(int *oserr)
 	if (cnt > 0) {
 		cnt--;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 		ReleaseSRWLockExclusive(&lock);
 #else
 		retval = unlock(oserr);

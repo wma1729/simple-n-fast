@@ -8,7 +8,7 @@
  */
 Mutex::Mutex()
 {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	InitializeCriticalSection(&mtx);
 #else
 	int error = pthread_mutex_init(&mtx, 0);
@@ -21,7 +21,7 @@ Mutex::Mutex()
  */
 Mutex::~Mutex()
 {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	DeleteCriticalSection(&mtx);
 #else
 	int error = pthread_mutex_destroy(&mtx);
@@ -45,7 +45,7 @@ Mutex::lock(int *oserr)
 
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	EnterCriticalSection(&mtx);
 #else
 	int error = pthread_mutex_lock(&mtx);
@@ -74,7 +74,7 @@ Mutex::trylock(int *oserr)
 
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	if (!TryEnterCriticalSection(&mtx)) {
 		retval = E_try_again;
 	}
@@ -107,7 +107,7 @@ Mutex::unlock(int *oserr)
 
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	LeaveCriticalSection(&mtx);
 #else
 	int error = pthread_mutex_unlock(&mtx);

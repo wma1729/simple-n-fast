@@ -11,7 +11,7 @@
 #include <inttypes.h>
 #include <string>
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	#if !defined(WIN32_LEAN_AND_MEAN)
 	#define WIN32_LEAN_AND_MEAN
@@ -41,7 +41,7 @@
 	typedef DWORD   pid_t;
 	typedef DWORD   tid_t;
 
-#else /* if !defined(WINDOWS) */
+#else /* if !defined(_WIN32) */
 
 	#define _FILE_OFFSET_BITS 64
 
@@ -68,10 +68,10 @@
 
 #endif
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	#define getpid()    GetCurrentProcessId()
 	#define gettid()    GetCurrentThreadId()
-#elif defined(LINUX)
+#elif defined(__linux__)
 	#define gettid()    (tid_t)syscall(SYS_gettid)
 #else
 	#define gettid()    (tid_t)pthread_self()

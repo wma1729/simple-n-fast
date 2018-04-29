@@ -50,7 +50,7 @@ main(int argc, const char **argv)
 	const char *t = 0;
 	Config *config = 0;
 
-#if defined(WINDOWS) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);  
 #endif
 

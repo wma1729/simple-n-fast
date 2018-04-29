@@ -1,4 +1,4 @@
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <sys/mman.h>
 #endif
 
@@ -10,7 +10,7 @@
 static size_t
 GetMemorySize()
 {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	MEMORYSTATUSEX mstat;
 	mstat.dwLength = sizeof(mstat);
 	GlobalMemoryStatusEx(&mstat);
@@ -54,7 +54,7 @@ PageMgr::PageMgr(int pageSize, int memUsage)
 	Log(DBG, caller, "poolSize = %" PRId64, poolSize);
 	Log(DBG, caller, "numOfPages = %d", numOfPages);
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 	posix_madvise(pool, poolSize, MADV_WILLNEED);
 #endif
 

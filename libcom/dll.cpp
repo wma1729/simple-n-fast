@@ -1,7 +1,7 @@
 #include "dll.h"
 #include "util.h"
 
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 #include <dlfcn.h>
 #endif
 
@@ -11,7 +11,7 @@ Dll::load(bool lazy)
 	const char  *caller = "Dll::load";
 	int         retval = E_ok;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	hModule = LoadLibrary(path.c_str());
 	if (hModule == NULL) {
@@ -49,7 +49,7 @@ Dll::getSymbol(const char *symbol)
 	const char  *caller = "Dll::getSymbol";
 	void        *addr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	if (hModule != NULL) {
 		addr = GetProcAddress(hModule, symbol);
@@ -82,7 +82,7 @@ Dll::unload()
 	const char  *caller = "Dll::unload";
 	int         retval = E_ok;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	if (hModule != NULL) {
 		if (!FreeLibrary(hModule)) {

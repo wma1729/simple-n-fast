@@ -1,7 +1,7 @@
 #ifndef _SNF_TF_TESTMACROS_H_
 #define _SNF_TF_TESTMACROS_H_
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 #define ASSERT_EQ(N1, N2, FMT, ...) do {                        \
     Log(DBG, name(), (FMT), __VA_ARGS__);                       \
@@ -43,7 +43,7 @@
     }                                                           \
 } while (0)
 
-#else // !WINDOWS
+#else // !_WIN32
 
 #define ASSERT_EQ(N1, N2, FMT, ...) do {                        \
     Log(DBG, name(), (FMT), ##__VA_ARGS__);                     \

@@ -22,7 +22,7 @@ File::open(const FileOpenFlags &flags, mode_t mode, int *oserr)
 
 	if (oserr) *oserr = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	DWORD	amode = READ_CONTROL | SYNCHRONIZE;
 	DWORD	shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
@@ -163,7 +163,7 @@ File::read(void *buf, int toRead, int *bRead, int *oserr)
 
 	do {
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 		if (!ReadFile(fd, cbuf, toRead, LPDWORD(&n), 0)) {
 			retval = E_read_failed;
@@ -259,7 +259,7 @@ File::write(const void *buf, int toWrite, int *bWritten, int *oserr)
 
 	*bWritten = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	if (!WriteFile(fd, buf, toWrite, LPDWORD(&nbytes), 0)) {
 		nbytes = -1;
@@ -331,7 +331,7 @@ File::seek(int whence, int64_t offset, int64_t *newOffset, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	DWORD         type;
 	LARGE_INTEGER reqOff;
@@ -421,7 +421,7 @@ File::sync(int *oserr)
 		return E_invalid_state;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	if (!FlushFileBuffers(fd)) {
 		retval = E_sync_failed;
@@ -459,7 +459,7 @@ File::size(int *oserr)
 		return E_invalid_state;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	LARGE_INTEGER fileSize;
 
@@ -508,7 +508,7 @@ File::truncate(int64_t fsize, int *oserr)
 	retval = seek(fsize, oserr);
 	if (retval == E_ok) {
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 		if (!SetEndOfFile(fd)) {
 			retval = -1;
@@ -559,7 +559,7 @@ File::lock(int type, int64_t start, int64_t len, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	DWORD           lckflags = LOCK_SHARED;
 	LARGE_INTEGER   theStart;
@@ -658,7 +658,7 @@ File::trylock(int type, int64_t start, int64_t len, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	DWORD           lckflags = LOCK_SHARED;
 	LARGE_INTEGER   theStart;
@@ -766,7 +766,7 @@ File::unlock(int64_t start, int64_t len, int *oserr)
 		return E_invalid_arg;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	LARGE_INTEGER   theStart;
 	LARGE_INTEGER   theLen;
@@ -817,7 +817,7 @@ int
 File::close(int *oserr)
 {
 	if (fd != INVALID_HANDLE_VALUE) {
-#if defined(WINDOWS)
+#if defined(_WIN32)
 		if (!CloseHandle(fd)) {
 			if (oserr) *oserr = GET_ERRNO;
 			return E_close_failed;

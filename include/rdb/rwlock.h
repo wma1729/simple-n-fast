@@ -1,7 +1,7 @@
 #ifndef _SNF_RDB_RWLOCK_H_
 #define _SNF_RDB_RWLOCK_H_
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 #include <Windows.h>
 #else
 #include <pthread.h>
@@ -18,7 +18,7 @@ class RWLock
 private:
 	int                 cnt;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 	SRWLOCK             lock;
 #else
 	pthread_rwlock_t    lock;

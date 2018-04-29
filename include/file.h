@@ -61,7 +61,7 @@ struct FileOpenFlags
  */
 class FileMask
 {
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 private:
 	mode_t	omask;
 #endif
@@ -69,7 +69,7 @@ private:
 public:
 	FileMask(mode_t mask)
 	{
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 		// Set the new mask and save the old mask
 		omask = umask(mask);
 #endif
@@ -77,7 +77,7 @@ public:
 
 	~FileMask()
 	{
-#if !defined(WINDOWS)
+#if !defined(_WIN32)
 		// Restore the old mask
 		umask(omask);
 #endif

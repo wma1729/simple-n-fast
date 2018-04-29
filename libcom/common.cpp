@@ -12,7 +12,7 @@ GetLocalTime(local_time_t *lt)
 {
 	time_t	now = 0;
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	SYSTEMTIME      st;
 	FILETIME        ft;
@@ -38,7 +38,7 @@ GetLocalTime(local_time_t *lt)
 
 	now = (time_t)((current.QuadPart - epoch.QuadPart) / 10000000);
 
-#else /* !WINDOWS */
+#else /* !_WIN32 */
 
 	struct timeval  tv;
 	struct timezone tz;
@@ -110,7 +110,7 @@ GetErrorStr(char *str, size_t len, int err)
 		return 0;
 	}
 
-#if defined(WINDOWS)
+#if defined(_WIN32)
 
 	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, str, (DWORD)len, NULL);
 	if (str[0] == '\0') {
@@ -130,7 +130,7 @@ GetErrorStr(char *str, size_t len, int err)
 		}
 	}
 
-#elif defined(LINUX)
+#elif defined(__linux__)
 
 	char tmpBuf[ERRSTRLEN + 1];
 	char *s = strerror_r(err, tmpBuf, ERRSTRLEN);
@@ -138,13 +138,6 @@ GetErrorStr(char *str, size_t len, int err)
 		strncpy(str, s, len);
 	} else {
 		snprintf(str, len, "Unknown error %d", err);
-	}
-	str[len] = '\0';
-
-#else
-
-	if (strerror_r(err, str, len) != 0) {
-		len = snprintf(str, len, "Unknown error %d", err);
 	}
 	str[len] = '\0';
 
