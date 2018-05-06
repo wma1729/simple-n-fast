@@ -1,0 +1,27 @@
+include ../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/json.o \
+	${P}/parser.o \
+	${P}/lexer.o \
+	${P}/misc.o \
+	${P}/utf.o
+
+all: platform ${P}/libjson.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/libjson.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/libjson.a
