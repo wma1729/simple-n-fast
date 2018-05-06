@@ -8,22 +8,25 @@ OBJS =  $(P)\json.obj \
 		$(P)\parser.obj \
 		$(P)\lexer.obj \
 		$(P)\misc.obj \
-		$(P)\utf.obj
+		$(P)\utf.obj \
+		$(P)\dllmain.obj
 
-PDB = $(P)\libjson.pdb
+DEFINES = $(DEFINES) /D_SNF_EXPORTING_
 
-all: platform $(P)\json.lib
+PDB = $(P)\json.pdb
+
+all: platform $(P)\json.dll
 
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\json.lib: $(OBJS)
-	$(AR) $(ARFLAGS) $** /OUT:$@
+$(P)\json.dll: $(OBJS)
+	$(LD) $(LDFLAGS) $** /PDB:$(PDB) /OUT:$@
 
 $(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) /wd4251 $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
 
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\json.lib $(PDB)
+	@del /q $(OBJS) $(P)\json.dll $(PDB)

@@ -1,6 +1,16 @@
 ﻿#ifndef _SNF_JSON_H_
 #define _SNF_JSON_H_
 
+#if defined(_WIN32)
+	#if defined(_SNF_EXPORTING_)
+		#define SNF_DLL_DECLSPEC    __declspec(dllexport)
+	#else // !_SNF_EXPORTING_
+		#define SNF_DLL_DECLSPEC    __declspec(dllimport)
+	#endif
+#else // !_WIN32
+	#define SNF_DLL_DECLSPEC
+#endif
+
 #include <string>
 #include <map>
 #include <vector>
@@ -10,9 +20,9 @@
 namespace snf {
 namespace json {
 
-class value;
+class SNF_DLL_DECLSPEC value;
 
-class object
+class SNF_DLL_DECLSPEC object
 {
 private:
 	std::map<std::string, value> m_members;
@@ -46,7 +56,7 @@ public:
 	std::string str(bool, int indent = 0) const;
 };
 
-class array
+class SNF_DLL_DECLSPEC array
 {
 private:
 	std::vector<value> m_elements;
@@ -72,7 +82,7 @@ public:
 	std::string str(bool, int indent = 0) const;
 };
 
-class value
+class SNF_DLL_DECLSPEC value
 {
 private:
 	enum class T
@@ -163,9 +173,9 @@ public:
 	std::string str(bool, int indent = 0) const;
 };
 
-value from_string(const std::string &);
-value from_file(const std::string &);
-value from_stream(std::istream &);
+SNF_DLL_DECLSPEC value from_string(const std::string &);
+SNF_DLL_DECLSPEC value from_file(const std::string &);
+SNF_DLL_DECLSPEC value from_stream(std::istream &);
 
 } // json
 } // snf

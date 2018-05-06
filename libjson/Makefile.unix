@@ -10,13 +10,13 @@ OBJS =  ${P}/json.o \
 	${P}/misc.o \
 	${P}/utf.o
 
-all: platform ${P}/libjson.a
+all: platform ${P}/libjson.so
 
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/libjson.a: ${OBJS}
-	${AR} ${ARFLAGS} $@ $^
+${P}/libjson.so: ${OBJS}
+	${LD} ${LDFLAGS} $^ -o $@
 
 ${P}/%.o: %.cpp
 	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
@@ -24,4 +24,4 @@ ${P}/%.o: %.cpp
 install:
 
 clean:
-	@/bin/rm -rf ${OBJS} ${P}/libjson.a
+	@/bin/rm -rf ${OBJS} ${P}/libjson.so
