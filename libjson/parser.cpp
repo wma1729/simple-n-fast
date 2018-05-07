@@ -16,7 +16,7 @@ from_string(const std::string &s)
 {
 	std::istringstream iss(s);
 	iss.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);
-	return std::move(from_stream(iss));
+	return from_stream(iss);
 }
 
 // can throw ios_base::failure exception
@@ -26,14 +26,14 @@ from_file(const std::string &f)
 	std::ifstream ifs;
 	ifs.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);
 	ifs.open(f);
-	return std::move(from_stream(ifs));
+	return from_stream(ifs);
 }
 
 value
 from_stream(std::istream &is)
 {
 	lexer lex(is);
-	return std::move(parse(lex));
+	return parse(lex);
 }
 
 static value
@@ -74,7 +74,7 @@ parse_array(lexer &lex)
 	}
 
 	val = std::move(arr);
-	return std::move(val);
+	return val;
 }
 
 static value
@@ -126,7 +126,7 @@ parse_object(lexer &lex)
 	}
 
 	val = std::move(obj);
-	return std::move(val);
+	return val;
 }
 
 static value
@@ -134,12 +134,12 @@ parse(lexer &lex)
 {
 	const token &t = lex.get();
 	if (t.t_kind == kind::k_lcb) {
-		return std::move(parse_object(lex));
+		return parse_object(lex);
 	} else if (t.t_kind == kind::k_lb) {
-		return std::move(parse_array(lex));
+		return parse_array(lex);
 	} else {
 		throw_exception("only object and array are allowed as the top level JSON!");
-		return std::move(value());
+		return value();
 	}
 }
 

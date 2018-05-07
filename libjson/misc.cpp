@@ -47,7 +47,7 @@ string_unescape(const std::string &s)
 			throw;	
 	}
 
-	return std::move(str);
+	return str;
 }
 
 std::string
@@ -91,7 +91,7 @@ string_escape(const std::string &s)
 			throw;	
 	}
 
-	return std::move(str);
+	return str;
 }
 
 void

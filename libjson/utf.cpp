@@ -46,7 +46,7 @@ utf8_encode(uint32_t codepoint)
 		str += static_cast<char>(0x80 + (codepoint & 0x00003F));
 	}
 
-	return std::move(str);
+	return str;
 }
 
 /*
@@ -128,7 +128,7 @@ utf16_decode(std::istream &is)
 		throw_exception(oss.str());
 	}
 
-	return std::move(utf8_encode(dw));
+	return utf8_encode(dw);
 }
 
 std::string
@@ -179,9 +179,7 @@ utf16_encode(std::istream &is)
 		oss << "\\u" << std::setw(4) << std::setfill('0') << std::hex << w2;
 	}
 
-	std::string str = oss.str();
-
-	return std::move(str);
+	return oss.str();
 }
 
 } // json
