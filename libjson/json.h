@@ -16,9 +16,35 @@
 #include <vector>
 #include <initializer_list>
 #include <istream>
+#include <stdexcept>
 
 namespace snf {
 namespace json {
+
+class SNF_DLL_DECLSPEC parsing_error : public std::runtime_error
+{
+private:
+	int m_row;
+	int m_col;
+
+public:
+	parsing_error(const std::string &msg, int row = -1, int col = -1)
+		: std::runtime_error(msg)
+		, m_row(row)
+		, m_col(col)
+	{
+	}
+
+	parsing_error(const char *msg, int row = -1, int col = -1)
+		: std::runtime_error(msg)
+		, m_row(row)
+		, m_col(col)
+	{
+	}
+
+	int row() const { return m_row; }
+	int col() const { return m_col; }
+};
 
 class SNF_DLL_DECLSPEC value;
 

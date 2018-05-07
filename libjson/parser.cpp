@@ -63,14 +63,15 @@ parse_array(lexer &lex)
 				break;
 
 			default:
-				throw_exception("value expected");
+				throw parsing_error("array element expected", lex.row(), lex.col());
+				break;
 		}
 
 		t = lex.get();
 		if (t.t_kind == kind::k_rb)
 			break;
 		else if (t.t_kind != kind::k_comma)
-			throw_exception(", or ] expected");
+			throw parsing_error(", or ] expected", lex.row(), lex.col());
 	}
 
 	val = std::move(arr);
@@ -87,13 +88,13 @@ parse_object(lexer &lex)
 
 	while (t.t_kind != kind::k_eof) {
 		if (t.t_kind != kind::k_string)
-			throw_exception("string expected");
+			throw parsing_error("string expected", lex.row(), lex.col());
 
 		key = t.t_value.get_string();	
 
 		t = lex.get();
 		if (t.t_kind != kind::k_colon)
-			throw_exception("colon expected");
+			throw parsing_error("colon expected", lex.row(), lex.col());
 
 		t = lex.get();
 		switch (t.t_kind) {
@@ -115,14 +116,15 @@ parse_object(lexer &lex)
 				break;
 
 			default:
-				throw_exception("value expected");
+				throw parsing_error("object member value expected",
+					lex.row(), lex.col());
 		}
 
 		t = lex.get();
 		if (t.t_kind == kind::k_rcb)
 			break;
 		else if (t.t_kind != kind::k_comma)
-			throw_exception(", or } expected");
+			throw parsing_error(", or } expected", lex.row(), lex.col());
 	}
 
 	val = std::move(obj);
@@ -138,7 +140,8 @@ parse(lexer &lex)
 	} else if (t.t_kind == kind::k_lb) {
 		return parse_array(lex);
 	} else {
-		throw_exception("only object and array are allowed as the top level JSON!");
+		throw parsing_error("only object and array are allowed as the top level JSON!",
+			lex.row(), lex.col());
 		return value();
 	}
 }

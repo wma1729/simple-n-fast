@@ -57,8 +57,13 @@ public:
 		, m_col(0)
 		, m_lastrowcol(0)
 		, m_token() {}
+
 	~lexer() {}
+
 	token & get();
+
+	int row() const { return m_row; }
+	int col() const { return m_col; }
 };
 
 } // json

@@ -24,7 +24,7 @@ $(P)\json.dll: $(OBJS)
 	$(LD) $(LDFLAGS) $** /PDB:$(PDB) /OUT:$@
 
 $(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) /wd4251 $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) /wd4251 /wd4275 $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
 
 install:
 

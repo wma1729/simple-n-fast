@@ -29,7 +29,7 @@ utf8_encode(uint32_t codepoint)
 		std::ostringstream oss;
 		oss.setf(std::ios::showbase);
 		oss << "invalid code point (" << std::hex << codepoint << ")";
-		throw_exception(oss.str());
+		throw std::runtime_error(oss.str());
 	} else if (codepoint < 0x80) {
 		str += static_cast<char>(codepoint);
 	} else if (codepoint < 0x800) {
@@ -103,7 +103,7 @@ utf16_decode(std::istream &is)
 
 	w1 = utf16_decode_seq(is);
 	if (w1 == -1)
-		throw_exception("invalid UTF-16 main sequence");
+		throw std::runtime_error("invalid UTF-16 main sequence");
 
 	dw = w1;
 
@@ -111,7 +111,7 @@ utf16_decode(std::istream &is)
 
 		w2 = utf16_decode_seq(is);
 		if (w2 == -1)
-			throw_exception("invalid UTF-16 surrogate sequence");
+			throw std::runtime_error("invalid UTF-16 surrogate sequence");
 
 		if ((w2 >= 0xDC00) && (w1 <= 0xDFFF)) {
 			dw = ((w1 - 0xD800) << 10) + (w2 - 0xDC00) + 0x10000;
@@ -119,13 +119,13 @@ utf16_decode(std::istream &is)
 			std::ostringstream oss;
 			oss.setf(std::ios::showbase);
 			oss << "invalid UTF-16 surrogate sequence (" << std::hex << w2 << ")";
-			throw_exception(oss.str());
+			throw std::runtime_error(oss.str());
 		}
 	} else {
 		std::ostringstream oss;
 		oss.setf(std::ios::showbase);
 		oss << "invalid UTF-16 main sequence (" << std::hex << w1 << ")";
-		throw_exception(oss.str());
+		throw std::runtime_error(oss.str());
 	}
 
 	return utf8_encode(dw);
@@ -161,7 +161,7 @@ utf16_encode(std::istream &is)
 			std::ostringstream oss;
 			oss.setf(std::ios::showbase);
 			oss << "invalid UTF-8 sequence (" << std::hex << c << ")";
-			throw_exception(oss.str());
+			throw std::runtime_error(oss.str());
 		}
 	}
 

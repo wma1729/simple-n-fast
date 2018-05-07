@@ -1,7 +1,6 @@
 #include "misc.h"
 #include "utf.h"
 #include <sstream>
-#include <stdexcept>
 
 namespace snf {
 namespace json {
@@ -35,7 +34,7 @@ string_unescape(const std::string &s)
 						break;
 
 					default:
-						throw_exception("invalid escape sequence");
+						throw std::runtime_error("invalid escape sequence");
 						break;
 				}
 			} else {
@@ -83,7 +82,7 @@ string_escape(const std::string &s)
 				iss.putback(c);
 				str += utf16_encode(iss);
 			} else {
-				throw_exception("invalid code point");
+				throw std::runtime_error("invalid code point");
 			}
 		}
 	} catch (const std::ios::failure &) {
@@ -92,22 +91,6 @@ string_escape(const std::string &s)
 	}
 
 	return str;
-}
-
-void
-throw_exception(const std::string &msg)
-{
-	std::ostringstream oss;
-	oss << "parsing error; " << msg;
-	throw std::runtime_error(oss.str());
-}
-
-void
-throw_exception(const std::string &msg, int row, int col)
-{
-	std::ostringstream oss;
-	oss << "parsing error at " << row << "." << col << "; " << msg;
-	throw std::runtime_error(oss.str());
 }
 
 } // json

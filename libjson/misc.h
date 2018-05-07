@@ -52,9 +52,6 @@ constexpr bool uxdigit(char c)
 std::string string_unescape(const std::string &);
 std::string string_escape(const std::string &);
 
-void throw_exception(const std::string &);
-void throw_exception(const std::string &, int, int);
-
 } // json
 } // snf
 
