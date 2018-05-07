@@ -2,6 +2,7 @@
 #define _SNF_PERFTIMER_H_
 
 #include "common.h"
+#include <chrono>
 
 /**
  * Used to time code (in micro-seconds).
@@ -9,12 +10,7 @@
 class PerformanceTimer
 {
 private:
-#if defined(_WIN32)
-	static	LARGE_INTEGER   freq;
-	        LARGE_INTEGER   counter;
-#else
-	struct timeval  tv;
-#endif
+	std::chrono::time_point<std::chrono::high_resolution_clock> m_tp;
 
 public:
 	PerformanceTimer();
@@ -24,7 +20,7 @@ public:
 	}
 
 	PerformanceTimer & operator=(const PerformanceTimer &);
-	void record();
+	void now();
 	int64_t operator-(const PerformanceTimer &);
 };
 

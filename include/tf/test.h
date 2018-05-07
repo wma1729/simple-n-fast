@@ -34,11 +34,11 @@ public:
 	{
 		GetLocalTime(&st);
 
-		begin.record();
+		begin.now();
 
 		bool passed = execute(config);
 
-		end.record();
+		end.now();
 
 		failure = !passed;
 

@@ -1,21 +1,13 @@
 #include "perftimer.h"
-#include "log.h"
 
-#if defined(_WIN32)
-LARGE_INTEGER PerformanceTimer::freq = { 0 };
-#endif
+using namespace std::chrono;
 
 /**
  * Constructs the performance timer object.
  */
 PerformanceTimer::PerformanceTimer()
 {
-#if defined(_WIN32)
-	counter.QuadPart = 0L;
-#else
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-#endif
+	m_tp = high_resolution_clock::now();
 }
 
 /**
@@ -26,37 +18,16 @@ PerformanceTimer::PerformanceTimer()
  */
 PerformanceTimer::PerformanceTimer(const PerformanceTimer &timer)
 {
-#if defined(_WIN32)
-	this->counter = timer.counter;
-#else
-	this->tv.tv_sec = timer.tv.tv_sec;
-	this->tv.tv_usec = timer.tv.tv_usec;
-#endif
+	m_tp = timer.m_tp;
 }
 
 /**
  * Records the time now in the timer.
  */
 void
-PerformanceTimer::record()
+PerformanceTimer::now()
 {
-#if defined(_WIN32)
-	BOOL retval = FALSE;
-
-	if (freq.QuadPart == 0L) {
-		retval = QueryPerformanceFrequency(&freq);
-		Assert((retval != FALSE), __FILE__, __LINE__, GetLastError(),
-			"failed to query the performance counter frequency");
-	}
-
-	retval = QueryPerformanceCounter(&counter);
-	Assert((retval != FALSE), __FILE__, __LINE__, GetLastError(),
-		"failed to query the performance counter");
-#else
-	int retval = gettimeofday(&tv, 0);
-	Assert((retval == 0), __FILE__, __LINE__, errno,
-		"failed to get time of day");
-#endif
+	m_tp = high_resolution_clock::now();
 }
 
 /**
@@ -68,14 +39,8 @@ PerformanceTimer &
 PerformanceTimer::operator=(const PerformanceTimer &timer)
 {
 	if (this != &timer) {
-#if defined(_WIN32)
-		this->counter = timer.counter;
-#else
-		this->tv.tv_sec = timer.tv.tv_sec;
-		this->tv.tv_usec = timer.tv.tv_usec;
-#endif
+		m_tp = timer.m_tp;
 	}
-
 	return *this;
 }
 
@@ -90,19 +55,5 @@ PerformanceTimer::operator=(const PerformanceTimer &timer)
 int64_t
 PerformanceTimer::operator-(const PerformanceTimer &timer)
 {
-	if (this == &timer) {
-		return 0L;
-	}
-
-	int64_t elapsed;
-
-#if defined(_WIN32)
-	elapsed = int64_t((((this->counter.QuadPart - timer.counter.QuadPart) * 1000000) /
-						this->freq.QuadPart));
-#else
-	elapsed = int64_t((this->tv.tv_sec - timer.tv.tv_sec) * 1000000);
-	elapsed += int64_t(this->tv.tv_usec - timer.tv.tv_usec);
-#endif
-
-	return elapsed;
+	return duration_cast<microseconds>(m_tp - timer.m_tp).count();
 }
