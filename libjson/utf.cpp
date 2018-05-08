@@ -20,12 +20,12 @@ namespace json {
  * 3     |  U+0800 |   U+FFFF | 1110xxxx | 10xxxxxx | 10xxxxxx |
  * 4     | U+10000 | U+10FFFF | 11110xxx | 10xxxxxx | 10xxxxxx | 10xxxxxx
  */
-std::string
+static std::string
 utf8_encode(uint32_t codepoint)
 {
 	std::string str;
 
-	if ((codepoint < 0) || (codepoint > 0x10FFFF)) {
+	if (codepoint > 0x10FFFF) {
 		std::ostringstream oss;
 		oss.setf(std::ios::showbase);
 		oss << "invalid code point (" << std::hex << codepoint << ")";
@@ -135,7 +135,7 @@ std::string
 utf16_encode(std::istream &is)
 {
 	uint32_t dw = 0;
-	int len = 0;
+	int len;
 	char c;
 
 	is.get(c);
@@ -168,15 +168,16 @@ utf16_encode(std::istream &is)
 	std::ostringstream oss;
 
 	if (dw < 0x10000) {
-		oss << "\\u" << std::setw(4) << std::setfill('0') << std::hex << dw;
+		oss << std::setw(4) << std::setfill('0') << std::hex
+			<< "\\u" << dw;
 	} else {
 		int w1, w2;
 
 		dw -= 0x10000;
 		w1 = 0xD800 | ((dw & 0xFFC00) >> 10);
 		w2 = 0xDC00 | (dw & 0x003FF);
-		oss << "\\u" << std::setw(4) << std::setfill('0') << std::hex << w1;
-		oss << "\\u" << std::setw(4) << std::setfill('0') << std::hex << w2;
+		oss << std::setw(4) << std::setfill('0') << std::hex
+			<< "\\u" << w1 << "\\u" << w2;
 	}
 
 	return oss.str();

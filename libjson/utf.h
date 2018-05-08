@@ -8,7 +8,6 @@
 namespace snf {
 namespace json {
 
-std::string utf8_encode(uint32_t);
 std::string utf16_decode(std::istream &);
 std::string utf16_encode(std::istream &);
 
