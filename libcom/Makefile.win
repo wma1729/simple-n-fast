@@ -12,7 +12,6 @@ OBJS =  $(P)\common.obj \
 		$(P)\i18n.obj \
 		$(P)\lock.obj \
 		$(P)\log.obj \
-		$(P)\perftimer.obj \
 		$(P)\util.obj
 
 PDB = $(P)\libcom.pdb
