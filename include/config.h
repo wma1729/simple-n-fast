@@ -1,8 +1,7 @@
 #ifndef _SNF_CONFIG_H_
 #define _SNF_CONFIG_H_
 
-#include "common.h"
-#include "error.h"
+#include <string>
 #include <map>
 
 /**
@@ -16,34 +15,33 @@
 class Config
 {
 private:
-	std::string configFile;
-	std::map<std::string, std::string> kvMap;
+	std::string m_filename;
+	std::map<std::string, std::string> m_kvmap;
+	using const_iterator_t = std::map<std::string, std::string>::const_iterator;
 
+	void read();
 public:
 	/**
-	 * Creates Config object withe the config file
+	 * Creates Config object withe the config file.
 	 * @param [in] cf - config file name.
 	 */
 	Config(const std::string &cf)
-		: configFile(cf)
+		: m_filename(cf)
 	{
+		read();
 	}
 
 	/**
-	 * Gets reference to the internal map. Do not try to
-	 * manipulate it.
+	 * Gets the config file name.
+	 * @return name of the config file.
 	 */
-	const std::map<std::string, std::string> &getInternalMap() const
-	{
-		return kvMap;
-	}
+	const std::string &name() const { return m_filename; }
 
-	int read();
-	const char *getString(const std::string &, int *error = E_ok) const;
-	int getInt(const std::string &, int *error = E_ok) const;
-	int64_t getInt64(const std::string &, int *error = E_ok) const;
-	bool getBool(const std::string &, int *error = E_ok) const;
-	void dump() const;
+	const_iterator_t begin() const { return m_kvmap.begin(); }
+	const_iterator_t end() const { return m_kvmap.end(); }
+
+	const char *get(const std::string &) const;
+	const std::string &get(const std::string &, const std::string &) const;
 };
 
 #endif // _SNF_CONFIG_H_

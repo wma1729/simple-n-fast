@@ -30,9 +30,9 @@ public:
 	virtual bool execute(const Config *config)
 	{
 		ASSERT_NE(config, 0, "check config");
-		const char *dbPath = config->getString("DBPATH");
+		const char *dbPath = config->get("DBPATH");
 		ASSERT_NE(dbPath, 0, "get DBPATH from config");
-		const char *dbName = config->getString("DBNAME");
+		const char *dbName = config->get("DBNAME");
 		ASSERT_NE(dbName, 0, "get DBNAME from config");
 
 		RdbOptions options;

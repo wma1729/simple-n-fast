@@ -123,7 +123,6 @@ main(int argc, const char **argv)
 
 	if (cf) {
 		config = DBG_NEW Config(cf);
-		retval = config->read();
 		if (retval != E_ok) {
 			fprintf(stderr, "failed to read config file %s\n", cf);
 			return 1;

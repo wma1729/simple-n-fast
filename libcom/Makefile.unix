@@ -12,7 +12,6 @@ OBJS =  ${P}/common.o \
 		${P}/i18n.o \
 		${P}/lock.o \
 		${P}/log.o \
-		${P}/perftimer.o \
 		${P}/util.o
 
 all: platform ${P}/libcom.a

@@ -292,25 +292,15 @@ main(int argc, const char **argv)
 
 	if (configName) {
 		config = DBG_NEW Config(configName);
-		if (config->read() != E_ok) {
-			return 1;
-		}
 	} else {
 		fprintf(stderr, "%s\n", "-config option not specified");
 		return 1;
 	}
 
-	config->dump();
+	TheDaemonArgs.name = config->get("NAME", progName);
 
-	ptr = config->getString("NAME", &retval);
-	if ((ptr != 0) && (retval == E_ok)) {
-		TheDaemonArgs.name = ptr;
-	} else {
-		TheDaemonArgs.name = progName;
-	}
-
-	ptr = config->getString("HOME", &retval);
-	if ((ptr != 0) && (retval == E_ok)) {
+	ptr = config->get("HOME");
+	if (ptr != 0) {
 		TheDaemonArgs.home = ptr;
 	} else {
 		if (FileSystem::getHome(buf, MAXPATHLEN) != E_ok) {
@@ -320,8 +310,8 @@ main(int argc, const char **argv)
 		TheDaemonArgs.home = buf;
 	}
 
-	ptr = config->getString("PID_PATH", &retval);
-	if ((ptr == 0) || (retval != E_ok)) {
+	ptr = config->get("PID_PATH");
+	if (ptr == 0) {
 		ptr = TheDaemonArgs.home.c_str();
 	}
 
@@ -332,15 +322,10 @@ main(int argc, const char **argv)
 	buf[n] = '\0';
 	TheDaemonArgs.pidPath = buf;
 
-	ptr = config->getString("LOG_PATH", &retval);
-	if ((ptr != 0) && (retval == E_ok)) {
-		TheDaemonArgs.logPath = ptr;
-	} else {
-		TheDaemonArgs.logPath = TheDaemonArgs.home;
-	}
+	TheDaemonArgs.logPath = config->get("LOG_PATH", TheDaemonArgs.home);
 
-	ptr = config->getString("JVM_LIB_PATH", &retval);
-	if ((ptr == 0) || (retval != E_ok)) {
+	ptr = config->get("JVM_LIB_PATH");
+	if (ptr == 0) {
 		fprintf(stderr, "%s\n", "failed to find JVM_LIB_PATH");
 		return 1;
 	}
@@ -349,43 +334,31 @@ main(int argc, const char **argv)
 
 	for (int i = 0; i < 128; ++i) {
 		snprintf(buf, MAXPATHLEN, "%s_%d", "JVM_OPTIONS", i);
-		ptr = config->getString(buf, &retval);
-		if ((ptr != 0) && (retval == E_ok)) {
+		ptr = config->get(buf);
+		if (ptr != 0) {
 			TheDaemonArgs.jvmOptions.push_back(ptr);
 		} else {
 			break;
 		}
 	}
 
-	ptr = config->getString("START_CLASS", &retval);
-	if ((ptr == 0) || (retval != E_ok)) {
+	ptr = config->get("START_CLASS");
+	if (ptr == 0) {
 		fprintf(stderr, "%s\n", "failed to find START_CLASS");
 		return 1;
 	}
 
 	TheDaemonArgs.startClass = ptr;
+	TheDaemonArgs.startMethod = config->get("START_METHOD", "start");
 
-	ptr = config->getString("START_METHOD", &retval);
-	if ((ptr != 0) && (retval == E_ok)) {
-		TheDaemonArgs.startMethod = ptr;
-	} else {
-		TheDaemonArgs.startMethod = "start";
-	}
-
-	ptr = config->getString("STOP_CLASS", &retval);
-	if ((ptr == 0) || (retval != E_ok)) {
+	ptr = config->get("STOP_CLASS");
+	if (ptr == 0) {
 		fprintf(stderr, "%s\n", "failed to find STOP_CLASS");
 		return 1;
 	}
 
 	TheDaemonArgs.stopClass = ptr;
-
-	ptr = config->getString("STOP_METHOD", &retval);
-	if ((ptr != 0) && (retval == E_ok)) {
-		TheDaemonArgs.stopMethod = ptr;
-	} else {
-		TheDaemonArgs.stopMethod = "stop";
-	}
+	TheDaemonArgs.stopMethod = config->get("STOP_METHOD", "stop");
 
 	if (checkConfig) {
 		LogDaemonArgs();

@@ -3,18 +3,19 @@
 
 #include "common.h"
 #include "config.h"
-#include "perftimer.h"
-#include "util.h"
+#include <chrono>
 
 namespace tf {
+
+using namespace std::chrono;
 
 class Test
 {
 protected:
-	local_time_t        st;
-	PerformanceTimer    begin;
-	PerformanceTimer    end;
-	bool                failure;
+	local_time_t st;
+	time_point<high_resolution_clock> begin;
+	time_point<high_resolution_clock> end;
+	bool failure;
 
 public:
 	Test()
@@ -34,11 +35,11 @@ public:
 	{
 		GetLocalTime(&st);
 
-		begin.now();
+		begin = high_resolution_clock::now();
 
 		bool passed = execute(config);
 
-		end.now();
+		end = high_resolution_clock::now();
 
 		failure = !passed;
 
@@ -53,7 +54,7 @@ public:
 		fprintf(stderr, "Start Time   : %s\n",
 				LocalTimeToString(&st, buf, sizeof(buf)));
 		fprintf(stderr, "Elapsed Time : %" PRId64 " micro-seconds\n",
-				end - begin);
+				duration_cast<microseconds>(end - begin).count());
 		fprintf(stderr, "Status       : %s\n",
 				failure ? "FAIL" : "PASS");
 	}
