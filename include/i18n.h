@@ -1,7 +1,11 @@
 #ifndef _SNF_I18N_H_
 #define _SNF_I18N_H_
 
-wchar_t *MbsToWcs(const char *);
-char    *WcsToMbs(const wchar_t *);
+namespace snf {
+
+wchar_t *mbs2wcs(const char *);
+char    *wcs2mbs(const wchar_t *);
+
+} // snf
 
 #endif // _SNF_I18N_H_

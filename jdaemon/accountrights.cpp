@@ -96,7 +96,7 @@ AddRemoveAccountRight(const char *account, const char *right, bool remove)
 		status = LsaOpenPolicy(NULL, &attr, POLICY_CREATE_ACCOUNT | POLICY_LOOKUP_NAMES, &lsaHandle);
 		if (status == STATUS_SUCCESS) {
 			size_t len = strlen(right);
-			wchar_t *rightW = MbsToWcs(right);
+			wchar_t *rightW = snf::mbs2wcs(right);
 
 			LSA_UNICODE_STRING accountRights[1];
 			accountRights[0].Length = (USHORT)(len * sizeof(wchar_t));
@@ -125,7 +125,7 @@ AddRemoveAccountRight(const char *account, const char *right, bool remove)
 				}
 			}
 
-			free(rightW);
+			delete [] rightW;
 
 			LsaClose(lsaHandle);
 		} else {

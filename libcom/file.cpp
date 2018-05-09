@@ -70,13 +70,13 @@ File::open(const FileOpenFlags &flags, mode_t mode, int *oserr)
 		fattr = FILE_FLAG_WRITE_THROUGH;
 	}
 
-	wchar_t *fnameW = MbsToWcs(fname.c_str());
+	wchar_t *fnameW = snf::mbs2wcs(fname.c_str());
 	if (fnameW) {
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
 		fd = CreateFileW(fnameW, amode, shareMode, &sa, disposition, fattr, NULL);
 
-		free(fnameW);
+		delete [] fnameW;
 	}
 
 #else

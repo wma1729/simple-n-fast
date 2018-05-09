@@ -82,7 +82,7 @@ FileSystem::exists(const char *path, int *oserr)
 
 	DWORD   error = ERROR_FILE_NOT_FOUND;
 	DWORD   fileAttr = INVALID_FILE_ATTRIBUTES;
-	wchar_t *pathW = MbsToWcs(path);
+	wchar_t *pathW = snf::mbs2wcs(path);
 
 	if (pathW) {
 		fileAttr = GetFileAttributesW(pathW);
@@ -90,7 +90,7 @@ FileSystem::exists(const char *path, int *oserr)
 			error = GET_ERRNO;
 			if (oserr) *oserr = error;
 		}
-		free(pathW);
+		delete [] pathW;
 	}
 
 	if (fileAttr == INVALID_FILE_ATTRIBUTES) {
@@ -137,7 +137,7 @@ FileSystem::size(const char *path, int *oserr)
 #if defined(_WIN32)
 
 	WIN32_FILE_ATTRIBUTE_DATA   fad;
-	wchar_t                     *pathW = MbsToWcs(path);
+	wchar_t                     *pathW = snf::mbs2wcs(path);
 
 	if (pathW) {
 		if (!GetFileAttributesExW(pathW, GetFileExInfoStandard, &fad)) {
@@ -152,7 +152,7 @@ FileSystem::size(const char *path, int *oserr)
 			fsize = int64_t(dummy.QuadPart);
 		}
 
-		free(pathW);
+		delete [] pathW;
 	} else {
 		fsize = E_xlate_failed;
 	}
@@ -297,7 +297,7 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 #if defined(_WIN32)
 
 		BOOL    status = FALSE;
-		wchar_t *pathW = MbsToWcs(buf);
+		wchar_t *pathW = snf::mbs2wcs(buf);
 
 		if (pathW) {
 			if (!CreateDirectoryW(pathW, 0)) {
@@ -307,7 +307,7 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 				retval = E_mkdir_failed;
 			}
 
-			free(pathW);
+			delete [] pathW;
 		} else {
 			retval = E_xlate_failed;
 		}
@@ -363,14 +363,14 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 	wchar_t *oldNameW = 0;
 	wchar_t *newNameW = 0;
 
-	oldNameW = MbsToWcs(oldName);
+	oldNameW = snf::mbs2wcs(oldName);
 	if (oldNameW) {
 		attr = GetFileAttributesW(oldNameW);
 		if (attr & FILE_ATTRIBUTE_DIRECTORY) {
 			flags = 0;
 		}
 
-		newNameW = MbsToWcs(newName);
+		newNameW = snf::mbs2wcs(newName);
 		if (newNameW) {
 			if (flags) {
 				attr = GetFileAttributesW(newNameW);
@@ -386,12 +386,12 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 					oldName, newName);
 				retval = E_rename_failed;
 			}
-			free(newNameW);
+			delete [] newNameW;
 		} else {
 			retval = E_xlate_failed;
 		}
 
-		free(oldNameW);
+		delete [] oldNameW;
 	} else {
 		retval = E_xlate_failed;
 	}
@@ -434,7 +434,7 @@ FileSystem::removeFile(const char *f, int *oserr)
 
 #if defined(_WIN32)
 
-	wchar_t *fW = MbsToWcs(f);
+	wchar_t *fW = snf::mbs2wcs(f);
 
 	if (fW) {
 		int error = GET_ERRNO;
@@ -445,7 +445,7 @@ FileSystem::removeFile(const char *f, int *oserr)
 			retval = E_remove_failed;
 		}
 
-		free(fW);
+		delete [] fW;
 	} else {
 		retval = E_xlate_failed;
 	}
@@ -486,7 +486,7 @@ FileSystem::removeDir(const char *d, int *oserr)
 
 #if defined(_WIN32)
 
-	wchar_t *dW = MbsToWcs(d);
+	wchar_t *dW = snf::mbs2wcs(d);
 
 	if (dW) {
 		if (!RemoveDirectoryW(dW)) {
@@ -496,7 +496,7 @@ FileSystem::removeDir(const char *d, int *oserr)
 			retval = E_remove_failed;
 		}
 
-		free(dW);
+		delete [] dW;
 	} else {
 		retval = E_xlate_failed;
 	}

@@ -1,41 +1,40 @@
 #ifndef _SNF_DLL_H_
 #define _SNF_DLL_H_
 
-#include "common.h"
+#if defined(_WIN32)
+#include <Windows.h>
+#endif
+
+#include <string>
+
+namespace snf {
 
 /**
  * Loads/unloads dynamically linked library (shared objects on Unix
  * platforms).
  */
-class Dll
+class dll
 {
 private:
-	std::string path;
+	std::string m_path;
 
 #if defined(_WIN32)
-	HMODULE     hModule;
+	HMODULE     m_handle;
 #else
-	void        *handle;
+	void        *m_handle;
 #endif
 
 public:
-	/**
-	 * Creates Dll object with the dll path.
-	 * @param [in] path - dll path.
-	 */
-	Dll(const std::string &path)
-		: path(path)
-	{
-#if defined(_WIN32)
-		hModule = NULL;
-#else
-		handle = 0;
-#endif
-	}
+	dll() = delete;
+	dll(const dll &) = delete;
+	dll(dll &&) = delete;
 
-	int load(bool);
-	void *getSymbol(const char *);
-	int unload();
+	dll(const std::string &, bool lazy = false);
+	~dll();
+	
+	void *symbol(const char *);
 };
+
+} // snf
 
 #endif // _SNF_DLL_H_

@@ -1,8 +1,12 @@
+#if defined(_WIN32)
+#include <Windows.h>
+#else
 #include <cstdlib>
+#endif
+
+namespace snf {
 
 #if defined(_WIN32)
-
-#include <Windows.h>
 
 /**
  * Converts multi-byte string to wide-char string. The memory for the
@@ -14,7 +18,7 @@
  * @return the wide-char string on success, and NULL on failure.
  */
 wchar_t *
-MbsToWcs(const char *s)
+mbs2wcs(const char *s)
 {
 	if ((s == 0) || (*s == '\0')) {
 		return 0;
@@ -25,13 +29,11 @@ MbsToWcs(const char *s)
 		return 0;
 	}
 
-	wchar_t *ws = (wchar_t *)malloc(nReq * sizeof(wchar_t));
-	if (ws) {
-		int n = MultiByteToWideChar(CP_ACP, 0, s, -1, ws, nReq);
-		if (n != nReq) {
-			free(ws);
-			ws = 0;
-		}
+	wchar_t *ws = new wchar_t[nReq];
+	int n = MultiByteToWideChar(CP_ACP, 0, s, -1, ws, nReq);
+	if (n != nReq) {
+		delete [] ws;
+		ws = 0;
 	}
 
 	return ws;
@@ -47,7 +49,7 @@ MbsToWcs(const char *s)
  * @return the multi-byte string on success, and NULL on failure.
  */
 char *
-WcsToMbs(const wchar_t *ws)
+wcs2mbs(const wchar_t *ws)
 {
 	if ((ws == 0) || (*ws == L'\0')) {
 		return 0;
@@ -58,13 +60,11 @@ WcsToMbs(const wchar_t *ws)
 		return 0;
 	}
 
-	char *s = (char *)malloc(nReq);
-	if (s) {
-		int n = WideCharToMultiByte(CP_ACP, 0, ws, -1, s, nReq, 0, 0);
-		if (n != nReq) {
-			free(s);
-			s = 0;
-		}
+	char *s = new char[nReq];
+	int n = WideCharToMultiByte(CP_ACP, 0, ws, -1, s, nReq, 0, 0);
+	if (n != nReq) {
+		delete [] s;
+		s = 0;
 	}
 
 	return s;
@@ -81,7 +81,7 @@ WcsToMbs(const wchar_t *ws)
  * @return the wide-char string on success, and NULL on failure.
  */
 wchar_t *
-MbsToWcs(const char *s)
+mbs2wcs(const char *s)
 {
 	if ((s == 0) || (*s == '\0')) {
 		return 0;
@@ -92,15 +92,13 @@ MbsToWcs(const char *s)
 		return 0;
 	}
 
-	wchar_t *ws = (wchar_t *)malloc((nReq + 1) * sizeof(wchar_t));
-	if (ws) {
-		size_t n = mbstowcs(ws, s, nReq);
-		if (n <= 0) {
-			free(ws);
-			ws = 0;
-		} else {
-			ws[n] = L'\0';
-		}
+	wchar_t *ws = new wchar_t[nReq + 1];
+	size_t n = mbstowcs(ws, s, nReq);
+	if (n <= 0) {
+		delete [] ws;
+		ws = 0;
+	} else {
+		ws[n] = L'\0';
 	}
 
 	return ws;
@@ -115,7 +113,7 @@ MbsToWcs(const char *s)
  * @return the multi-byte string on success, and NULL on failure.
  */
 char *
-WcsToMbs(const wchar_t *ws)
+wcs2mbs(const wchar_t *ws)
 {
 	if ((ws == 0) || (*ws == L'\0')) {
 		return 0;
@@ -126,18 +124,18 @@ WcsToMbs(const wchar_t *ws)
 		return 0;
 	}
 
-	char *s = (char *)malloc(nReq + 1);
-	if (s) {
-		size_t n = wcstombs(s, ws, nReq);
-		if (n <= 0) {
-			free(s);
-			s = 0;
-		} else {
-			s[n] = '\0';
-		}
+	char *s = new char[nReq + 1];
+	size_t n = wcstombs(s, ws, nReq);
+	if (n <= 0) {
+		delete [] s;
+		s = 0;
+	} else {
+		s[n] = '\0';
 	}
 
 	return s;
 }
 
 #endif
+
+} // snf

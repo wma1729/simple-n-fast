@@ -117,12 +117,8 @@ StartDaemon(void)
 	JNIEnv          *env;
 	JavaVMInitArgs  vmArgs;
 	JavaVMOption    *options;
-	Dll             dll(TheDaemonArgs.jvmLibPath);
-	create_jvm_t    pCreateJVM = 0;
-
-	if (dll.load(false) == E_ok) {
-		pCreateJVM = (create_jvm_t)dll.getSymbol("JNI_CreateJavaVM");
-	}
+	snf::dll        lib(TheDaemonArgs.jvmLibPath);
+	create_jvm_t    pCreateJVM = (create_jvm_t)lib.symbol("JNI_CreateJavaVM");
 
 	if (pCreateJVM == 0) {
 		return JNI_ERR;

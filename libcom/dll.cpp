@@ -1,28 +1,29 @@
 #include "dll.h"
-#include "util.h"
+#include "i18n.h"
+#include <sstream>
 
 #if !defined(_WIN32)
 #include <dlfcn.h>
 #endif
 
-int
-Dll::load(bool lazy)
+namespace snf {
+
+dll::dll(const std::string &path, bool lazy)
+	: m_path(path)
+	, m_handle(0)
 {
-	const char  *caller = "Dll::load";
-	int         retval = E_ok;
-
 #if defined(_WIN32)
+	wchar_t *wpath = mbs2wcs(m_path.c_str());
+	m_handle = LoadLibraryW(wpath);
+	DWORD syserr = GetLastError();
+	delete [] wpath;
 
-	hModule = LoadLibrary(path.c_str());
-	if (hModule == NULL) {
-		Log(ERR, caller, GET_ERRNO,
-			"failed to load library %s",
-			path.c_str());
-		retval = E_load_failed;
+	if (m_handle == NULL) {
+		std::ostringstream oss;
+		oss << "failed to load dll " << m_path;
+		throw std::system_error(syserr, std::system_category(), oss.str());
 	}
-
 #else
-
 	int flags = RTLD_GLOBAL;
 
 	if (lazy)
@@ -30,85 +31,49 @@ Dll::load(bool lazy)
 	else
 		flags |= RTLD_NOW;
 
-	handle = dlopen(path.c_str(), flags);
-	if (handle == 0) {
-		Log(ERR, caller,
-			"failed to load library %s: %s",
-			path.c_str(), dlerror());
-		retval = E_load_failed;
+	m_handle = dlopen(m_path.c_str(), flags);
+	if (m_handle == 0) {
+		std::ostringstream oss;
+		oss << "failed to load shared library " << m_path << ": " << dlerror();
+		throw std::runtime_error(oss.str());
 	}
-
 #endif
-
-	return retval;
 }
 
 void *
-Dll::getSymbol(const char *symbol)
+dll::symbol(const char *symbol)
 {
-	const char  *caller = "Dll::getSymbol";
-	void        *addr = 0;
+	void *addr = 0;
 
 #if defined(_WIN32)
-
-	if (hModule != NULL) {
-		addr = GetProcAddress(hModule, symbol);
-		if (addr == 0) {
-			Log(ERR, caller, GET_ERRNO,
-				"failed to find symbol %s in library %s",
-				symbol, path.c_str());	
-		}
+	addr = GetProcAddress(m_handle, symbol);
+	if (addr == 0) {
+		std::ostringstream oss;
+		oss << "failed to find symbol " << symbol << " in dll " << m_path;
+		throw std::system_error(GetLastError(), std::system_category(), oss.str());
 	}
-
 #else
-
-	if (handle != 0) {
-		addr = dlsym(handle, symbol);
-		if (addr == 0) {
-			Log(ERR, caller,
-				"failed to find symbol %s in library %s: %s",
-				symbol, path.c_str(), dlerror());
-		}
+	addr = dlsym(m_handle, symbol);
+	if (addr == 0) {
+		std::ostringstream oss;
+		oss << "failed to find symbol " << symbol << " in shared library " << m_path
+			<< ": " << dlerror();
+		throw std::runtime_error(oss.str());
 	}
-
 #endif
 
 	return addr;
 }
 
-int
-Dll::unload()
+dll::~dll()
 {
-	const char  *caller = "Dll::unload";
-	int         retval = E_ok;
-
 #if defined(_WIN32)
-
-	if (hModule != NULL) {
-		if (!FreeLibrary(hModule)) {
-			Log(ERR, caller, GET_ERRNO,
-				"failed to unload library %s",
-				path.c_str());
-			retval = E_unload_failed;
-		} else {
-			hModule = NULL;
-		}
-	}
-
+	if (FreeLibrary(m_handle))
+		m_handle = 0;
 #else
-
-	if (handle != 0) {
-		if (dlclose(handle) != 0) {
-			Log(ERR, caller,
-				"failed to unload library %s: %s",
-				path.c_str(), dlerror());
-			retval = E_unload_failed;
-		} else {
-			handle = 0;
-		}
-	}
-
+	if (dlclose(m_handle) == 0)
+		m_handle = 0;
 #endif
-
-	return retval;
 }
+
+} // snf

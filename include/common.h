@@ -10,25 +10,12 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <string>
+#include "dbg.h"
 
 #if defined(_WIN32)
 
-	#if !defined(WIN32_LEAN_AND_MEAN)
-	#define WIN32_LEAN_AND_MEAN
-	#endif
-
-	#if defined(_DEBUG)
-	#define _CRTDBG_MAP_ALLOC
-	#include <cstdlib>
-	#include <crtdbg.h>
-	#define DBG_NEW         new (_NORMAL_BLOCK, __FILE__, __LINE__)
-	#else
-	#define DBG_NEW         new
-	#endif
-
 	#define PATH_SEP        '\\'
-
-	#define GET_ERRNO       (int)GetLastError()
+	#define GET_ERRNO       static_cast<int>(GetLastError())
 	#define SET_ERRNO(E)    SetLastError(E)
 	#define strcasecmp      _stricmp
 	#define strncasecmp     _strnicmp
@@ -45,15 +32,10 @@
 
 	#define _FILE_OFFSET_BITS 64
 
-	#if !defined(_REENTRANT)
-	#define _REENTRANT
-	#endif
-
 	#define PATH_SEP                '/'
 	#define INVALID_HANDLE_VALUE    (-1)
 	#define GET_ERRNO               errno
 	#define SET_ERRNO(E)            do { errno = (E); } while (0)
-	#define DBG_NEW                 new
 
 	#include <sys/time.h>
 	#include <sys/stat.h>
@@ -85,7 +67,7 @@
 #define ERRSTRLEN       255
 #endif
 
-#define ISNEWLINE(C)    (((C) == '\n') || ((C) == '\r'))
+constexpr bool isnewline(int c) { return ((c == '\n') || (c == '\r')); }
 
 /**
  * Local time. Hides platform variations.

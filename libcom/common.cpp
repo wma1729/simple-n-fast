@@ -123,7 +123,7 @@ GetErrorStr(char *str, size_t len, int err)
 
 	len = strlen(str);
 	while (len) {
-		if (isspace(str[len - 1]) || ISNEWLINE(str[len - 1])) {
+		if (isspace(str[len - 1]) || isnewline(str[len - 1])) {
 			str[--len] = '\0';
 		} else {
 			break;
