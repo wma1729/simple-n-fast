@@ -10,7 +10,6 @@ OBJS =  $(P)\common.obj \
 		$(P)\file.obj \
 		$(P)\filesystem.obj \
 		$(P)\i18n.obj \
-		$(P)\lock.obj \
 		$(P)\log.obj \
 		$(P)\util.obj
 

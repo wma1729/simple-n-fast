@@ -1,3 +1,5 @@
+#include "error.h"
+#include "log.h"
 #include "rdb/cache.h"
 
 /*
@@ -11,7 +13,7 @@
 cnode_t *
 LRUCache::removeLast()
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	cnode_t *cn = tail;
 	if (tail) {
@@ -69,7 +71,7 @@ LRUCache::getCacheNode()
 void
 LRUCache::add(cnode_t *cn)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (cn) {
 		cn->c_prev = 0;
@@ -92,7 +94,7 @@ LRUCache::add(cnode_t *cn)
 void
 LRUCache::free(cnode_t *cn)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (cn->c_prev) {
 		cn->c_prev->c_next = cn->c_next;
@@ -246,7 +248,7 @@ LRUCache::update(key_page_node_t *kpn, int64_t offset)
 void
 LRUCache::touch(key_page_node_t *kpn)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (kpn == 0) {
 		return;

@@ -2,7 +2,7 @@
 #define _SNF_RDB_DBSTRUCT_H_
 
 #include "common.h"
-#include "util.h"
+#include "log.h"
 
 #ifndef KEY_PAGE_HDR_SIZE
 #define KEY_PAGE_HDR_SIZE   64

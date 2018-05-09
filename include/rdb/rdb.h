@@ -177,9 +177,9 @@ private:
 	ValueFile   *valueFile;
 	LRUCache    *cache;
 	bool        opened;
-	Mutex       openMutex;
+	std::mutex  openMutex;
 	int         opCount;
-	Mutex       opMutex;
+	std::mutex  opMutex;
 
 	inline void init(
 		const std::string &path,
@@ -231,9 +231,7 @@ public:
 	 */
 	Rdb(const std::string &path,
 		const std::string &name)
-		: options(),
-		  openMutex(),
-		  opMutex()
+		: options()
 	{
 		init(path, name, KEY_PAGE_SIZE, HASH_TABLE_SIZE);
 	}
@@ -251,9 +249,7 @@ public:
 	Rdb(const std::string &path,
 		const std::string &name,
 		const RdbOptions &opt)
-		: options(opt),
-		  openMutex(),
-		  opMutex()
+		: options(opt)
 	{
 		init(path, name, KEY_PAGE_SIZE, HASH_TABLE_SIZE);
 	}
@@ -272,9 +268,7 @@ public:
 		const std::string &name,
 		int kpsize,
 		int htsize)
-		: options(),
-		  openMutex(),
-		  opMutex()
+		: options()
 	{
 		init(path, name, kpsize, htsize);
 	}
@@ -293,9 +287,7 @@ public:
 		int kpsize,
 		int htsize,
 		const RdbOptions &opt)
-		: options(opt),
-		  openMutex(),
-		  opMutex()
+		: options(opt)
 	{
 		init(path, name, kpsize, htsize);
 	}

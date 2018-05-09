@@ -5,6 +5,7 @@
 #include "dll.h"
 #include "filesystem.h"
 #include "log.h"
+#include "error.h"
 
 struct DaemonArgs {
 	std::string             name;           // daemon/service name

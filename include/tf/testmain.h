@@ -5,6 +5,7 @@
 #include <cctype>
 #include <vector>
 #include "log.h"
+#include "error.h"
 
 extern Logger   *TheLogger;
 extern bool     TheVerbosity;

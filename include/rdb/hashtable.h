@@ -1,7 +1,7 @@
 #ifndef _SNF_RDB_HASHTABLE_H_
 #define _SNF_RDB_HASHTABLE_H_
 
-#include "util.h"
+#include <mutex>
 #include "rdb/dbstruct.h"
 #include "rdb/rwlock.h"
 
@@ -52,7 +52,7 @@ class HashTable
 private:
 	hash_entry_t    *ht;
 	int             htsize;
-	Mutex           mutex;
+	std::mutex      mutex;
 	RWLockPool      *rwlockPool;
 
 	void initHashEntry(hash_entry_t *);
@@ -64,7 +64,6 @@ public:
 	HashTable()
 		: ht(0),
 		  htsize(0),
-		  mutex(),
 		  rwlockPool(DBG_NEW RWLockPool())
 	{
 	}

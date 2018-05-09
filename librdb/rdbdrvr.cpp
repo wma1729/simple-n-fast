@@ -1,6 +1,5 @@
 #include "common.h"
 #include "log.h"
-#include "util.h"
 #include "rdb/rdb.h"
 
 extern Logger *TheLogger;

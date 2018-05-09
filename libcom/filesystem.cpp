@@ -1,8 +1,8 @@
 #include "common.h"
 #include "filesystem.h"
 #include "error.h"
+#include "log.h"
 #include "i18n.h"
-#include "util.h"
 #include <ctype.h>
 
 #if !defined(_WIN32)

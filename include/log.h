@@ -2,9 +2,34 @@
 #define _SNF_LOG_H_
 
 #include "common.h"
+#include <mutex>
 #include "file.h"
-#include "lock.h"
-#include "util.h"
+
+/**
+ * Logging severity.
+ */
+typedef enum { INF, DBG, WRN, ERR } log_level_t;
+
+/**
+ * Log level to string representation.
+ */
+inline const char *
+LevelStr(log_level_t l)
+{
+	switch (l)
+	{
+		case INF: return "INF";
+		case DBG: return "DBG";
+		case WRN: return "WRN";
+		case ERR: return "ERR";
+		default:  return "UNK";
+	}
+}
+
+void Log(log_level_t, const char *, const char *, ...);
+void Log(log_level_t, const char *, int, const char *, ...);
+void Assert(bool, const char *, int, const char *, ...);
+void Assert(bool, const char *, int, int, const char *, ...);
 
 /**
  * Base logger class.
@@ -62,7 +87,7 @@ private:
 	bool        mkLogPath;
 	int         lastDay;
 	File        *logFile;
-	Mutex       mutex;
+	std::mutex  mutex;
 
 	void open(const local_time_t *);
 
@@ -77,8 +102,7 @@ public:
 		  logPath(path),
 		  mkLogPath(false),
 		  lastDay(-1),
-		  logFile(0),
-		  mutex()
+		  logFile(0)
 	{
 	}
 

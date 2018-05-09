@@ -3,6 +3,8 @@
 #endif
 
 #include "rdb/pagemgr.h"
+#include "log.h"
+#include "error.h"
 
 /**
  * Get the physical memory size in bytes.
@@ -25,8 +27,7 @@ GetMemorySize()
 }
 
 PageMgr::PageMgr(int pageSize, int memUsage)
-	: pageSize(pageSize),
-	  mutex()
+	: pageSize(pageSize)
 {
 	const char *caller = "PageMgr::PageMgr";
 
@@ -66,7 +67,7 @@ PageMgr::get()
 {
 	char *addr = 0;
 
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (!nextFreePage.empty() && (numOfFreePages > 0)) {
 		addr = nextFreePage.top();
@@ -100,7 +101,7 @@ PageMgr::free(void *addr)
 		"address (%p) is not correctly aligned",
 		addr);
 
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	nextFreePage.push(caddr);
 	numOfFreePages++;

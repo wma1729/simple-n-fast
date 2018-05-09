@@ -1,5 +1,5 @@
-#include "util.h"
 #include "rdb/unwind.h"
+#include "error.h"
 
 /**
  * Executes the unwinding of the stack.

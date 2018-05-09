@@ -1,4 +1,3 @@
-#include "util.h"
 #include "rdb/keyrec.h"
 
 #define LEFT_OF(N)      kp->kp_keys[N].kr_left

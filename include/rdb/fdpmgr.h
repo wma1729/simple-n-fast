@@ -2,8 +2,8 @@
 #define _FDPMGR_H_
 
 #include <stack>
+#include <mutex>
 #include "file.h"
-#include "util.h"
 
 /**
  * Manage a stack of free disk page offsets
@@ -30,7 +30,7 @@ private:
 	std::stack<int64_t> nextFreeOffset;
 	File                *file;
 	int64_t             fsize;
-	Mutex               mutex;
+	std::mutex          mutex;
 
 	int addOffsetToFile(int64_t);
 	int removeOffsetFromFile();
@@ -49,7 +49,6 @@ public:
 	 *                        created from scratch.
 	 */
 	FreeDiskPageMgr(int pageSize, File *file = 0)
-		: mutex()
 	{
 		this->pageSize = pageSize;
 		this->file = file;
@@ -66,7 +65,7 @@ public:
 			file = 0;
 		}
 
-		MutexGuard guard(mutex);
+		std::lock_guard<std::mutex> guard(mutex);
 		while (!nextFreeOffset.empty())
 			nextFreeOffset.pop();
 	}
@@ -82,7 +81,7 @@ public:
 	 */
 	size_t size()
 	{
-		MutexGuard guard(mutex);
+		std::lock_guard<std::mutex> guard(mutex);
 		return nextFreeOffset.size();
 	}
 };

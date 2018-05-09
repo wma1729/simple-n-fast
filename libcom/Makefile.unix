@@ -10,7 +10,6 @@ OBJS =  ${P}/common.o \
 		${P}/file.o \
 		${P}/filesystem.o \
 		${P}/i18n.o \
-		${P}/lock.o \
 		${P}/log.o \
 		${P}/util.o
 

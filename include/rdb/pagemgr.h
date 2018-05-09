@@ -2,8 +2,8 @@
 #define _PAGEMGR_H_
 
 #include <stack>
+#include <mutex>
 #include "common.h"
-#include "util.h"
 
 class PageMgr
 {
@@ -14,7 +14,7 @@ private:
 	int                 numOfFreePages;
 	int                 pageSize;
 	std::stack<char *>  nextFreePage;
-	Mutex               mutex;
+	std::mutex          mutex;
 
 
 public:
@@ -27,7 +27,7 @@ public:
 			pool = 0;
 		}
 
-		MutexGuard guard(mutex);
+		std::lock_guard<std::mutex> guard(mutex);
 
 		while (!nextFreePage.empty())
 			nextFreePage.pop();

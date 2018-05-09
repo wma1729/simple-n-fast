@@ -1,6 +1,7 @@
 #include "common.h"
 #include "filesystem.h"
 #include "log.h"
+#include "error.h"
 
 /*
  * Opens the log file.
@@ -64,34 +65,31 @@ FileLogger::log(log_level_t ll, const char *caller, const char *msg)
 
 	GetLocalTime(&lt);
 
-	if (E_ok == mutex.lock()) {
+	std::lock_guard<std::mutex> guard(mutex);
 
-		if (logFile == 0) {
-			open(&lt);
-		}
+	if (logFile == 0) {
+		open(&lt);
+	}
 
-		if (lastDay != lt.day) {
-			delete logFile;
-			logFile = 0;
-			open(&lt);
-		}
+	if (lastDay != lt.day) {
+		delete logFile;
+		logFile = 0;
+		open(&lt);
+	}
 
-		if (logFile) {
-			int nbytes = snprintf(logbuf, LOGBUFLEN,
-					"%s [%u.%u] [%s] [%s] %s\n",
-					LocalTimeToString(&lt, dtbuf, sizeof(dtbuf)),
-					getpid(),
-					gettid(),
-					LevelStr(ll),
-					caller,
-					msg);
+	if (logFile) {
+		int nbytes = snprintf(logbuf, LOGBUFLEN,
+				"%s [%u.%u] [%s] [%s] %s\n",
+				LocalTimeToString(&lt, dtbuf, sizeof(dtbuf)),
+				getpid(),
+				gettid(),
+				LevelStr(ll),
+				caller,
+				msg);
 
-			int bWritten;
+		int bWritten;
 
-			logFile->write(logbuf, nbytes, &bWritten);
-		}
-
-		mutex.unlock();	
+		logFile->write(logbuf, nbytes, &bWritten);
 	}
 
 	return;

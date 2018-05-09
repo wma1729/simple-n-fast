@@ -2,7 +2,7 @@
 #define _CACHE_H_
 
 #include <list>
-#include "util.h"
+#include <mutex>
 #include "rdb/dbfiles.h"
 #include "rdb/pagemgr.h"
 
@@ -28,14 +28,14 @@ typedef struct cnode
 class LRUCache
 {
 private:
-	KeyFile *keyFile;
-	PageMgr *pageMgr;
-	int     kpSize;
-	int     max;
-	int     num;
-	cnode_t *head;
-	cnode_t *tail;
-	Mutex   mutex;
+	KeyFile     *keyFile;
+	PageMgr     *pageMgr;
+	int         kpSize;
+	int         max;
+	int         num;
+	cnode_t     *head;
+	cnode_t     *tail;
+	std::mutex  mutex;
 
 	cnode_t *removeLast();
 	cnode_t *getCacheNode();
@@ -56,8 +56,7 @@ public:
 		  kpSize(kpSize),
 		  num(0),
 		  head(0),
-		  tail(0),
-		  mutex()
+		  tail(0)
 	{
 		pageMgr = DBG_NEW PageMgr(kpSize, memUsage);
 		max = pageMgr->getNumberOfPages();
@@ -69,7 +68,7 @@ public:
 	~LRUCache()
 	{
 		{
-			MutexGuard guard(mutex);
+			std::lock_guard<std::mutex> guard(mutex);
 
 			cnode_t *n;
 			while ((n = head) != 0) {

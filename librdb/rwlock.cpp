@@ -1,6 +1,7 @@
 #include "common.h"
-#include "util.h"
 #include "rdb/rwlock.h"
+#include "log.h"
+#include "error.h"
 
 /**
  * Constructs the read write lock object.

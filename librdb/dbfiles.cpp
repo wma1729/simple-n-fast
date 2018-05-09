@@ -1,5 +1,7 @@
 #include <cstddef>
 #include "rdb/dbfiles.h"
+#include "log.h"
+#include "error.h"
 
 /*
  * Opens the database file.
@@ -143,7 +145,7 @@ KeyFile::open(bool sync)
 int
 KeyFile::read(int64_t offset, void *buf, int toRead)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 	return ReadFile(this, offset, buf, toRead);
 }
 
@@ -159,7 +161,7 @@ KeyFile::read(int64_t offset, void *buf, int toRead)
 int
 KeyFile::write(int64_t offset, const void *buf, int toWrite)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 	return WriteFile(this, offset, buf, toWrite);
 }
 
@@ -352,7 +354,7 @@ ValueFile::open(bool sync)
 int
 ValueFile::read(int64_t offset, value_page_t *vp)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 	return ReadFile(this, offset, vp, int(sizeof(*vp)));
 }
 
@@ -368,7 +370,7 @@ ValueFile::read(int64_t offset, value_page_t *vp)
 int
 ValueFile::readFlags(int64_t offset, int *flags)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 	offset += offsetof(value_page_t, vp_flags);
 	return ReadFile(this, offset, flags, int(sizeof(int)));
 }
@@ -385,7 +387,7 @@ ValueFile::readFlags(int64_t offset, int *flags)
 int
 ValueFile::write(int64_t offset, const value_page_t *vp)
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 	return WriteFile(this, offset, vp, int(sizeof(*vp)));
 }
 
@@ -440,7 +442,7 @@ ValueFile::writeFlags(int64_t offset, value_page_t *vp, int flags)
 	int         retval = E_ok;
 
 	{
-		MutexGuard guard(mutex);
+		std::lock_guard<std::mutex> guard(mutex);
 		offset += offsetof(value_page_t, vp_flags);
 		retval = WriteFile(this, offset, &flags, int(sizeof(flags)));
 	}

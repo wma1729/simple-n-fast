@@ -1,6 +1,5 @@
 #include <memory>
 #include "common.h"
-#include "util.h"
 #include "filesystem.h"
 #include "rdb/keyrec.h"
 #include "rdb/rdb.h"
@@ -442,7 +441,7 @@ Rdb::setKeyPageSize(int kpsize)
 		return E_invalid_arg;
 	}
 
-	MutexGuard guard(openMutex);
+	std::lock_guard<std::mutex> guard(openMutex);
 	if (!opened) {
 		this->kpSize = kpsize;
 		return E_ok;
@@ -472,7 +471,7 @@ Rdb::setHashTableSize(int htsize)
 		return E_invalid_arg;
 	}
 
-	MutexGuard guard(openMutex);
+	std::lock_guard<std::mutex> guard(openMutex);
 	if (!opened) {
 		this->htSize = NextPrime(htSize);
 		return E_ok;
@@ -500,7 +499,7 @@ Rdb::open()
 	char    attrPath[MAXPATHLEN + 1];
 	char    fdpPath[MAXPATHLEN + 1];
 
-	MutexGuard guard(openMutex);
+	std::lock_guard<std::mutex> guard(openMutex);
 	if (opened) {
 		return E_ok;
 	}
@@ -624,7 +623,7 @@ Rdb::get(
 	}
 
 	{
-		MutexGuard guard(opMutex);
+		std::lock_guard<std::mutex> guard(opMutex);
 		opCount++;
 	}
 
@@ -664,7 +663,7 @@ Rdb::get(
 	}
 
 	{
-		MutexGuard guard(opMutex);
+		std::lock_guard<std::mutex> guard(opMutex);
 		opCount--;
 	}
 
@@ -732,7 +731,7 @@ Rdb::set(
 	}
 
 	{
-		MutexGuard guard(opMutex);
+		std::lock_guard<std::mutex> guard(opMutex);
 		opCount++;
 	}
 
@@ -803,7 +802,7 @@ Rdb::set(
 	ustk.unwind(retval);
 
 	{
-		MutexGuard guard(opMutex);
+		std::lock_guard<std::mutex> guard(opMutex);
 		opCount--;
 	}
 
@@ -841,7 +840,7 @@ Rdb::remove(
 	}
 
 	{
-		MutexGuard guard(opMutex);
+		std::lock_guard<std::mutex> guard(opMutex);
 		opCount++;
 	}
 
@@ -979,7 +978,7 @@ Rdb::remove(
 	ustk.unwind(retval);
 
 	{
-		MutexGuard guard(opMutex);
+		std::lock_guard<std::mutex> guard(opMutex);
 		opCount--;
 	}
 
@@ -1015,7 +1014,7 @@ Rdb::rebuild()
 	value_page_t    vp;
 
 	{
-		MutexGuard guard1(openMutex);
+		std::lock_guard<std::mutex> guard1(openMutex);
 		if (opened) {
 			Log(ERR, caller, "DB is open; close it before rebuilding");
 			return E_invalid_state;
@@ -1113,12 +1112,12 @@ Rdb::rebuild()
 int
 Rdb::close()
 {
-	MutexGuard guard1(openMutex);
+	std::lock_guard<std::mutex> guard1(openMutex);
 	if (!opened) {
 		return E_ok;
 	}
 
-	MutexGuard guard2(opMutex);
+	std::lock_guard<std::mutex> guard2(opMutex);
 	if (opCount > 0) {
 		return E_try_again;
 	}

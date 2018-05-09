@@ -1,8 +1,8 @@
 #ifndef _SNF_RDB_DBFILES_H_
 #define _SNF_RDB_DBFILES_H_
 
+#include <mutex>
 #include "file.h"
-#include "util.h"
 #include "rdb/dbstruct.h"
 #include "rdb/fdpmgr.h"
 
@@ -67,7 +67,7 @@ class KeyFile : public File
 {
 private:
 	FreeDiskPageMgr *fdpMgr;
-	Mutex           mutex;
+	std::mutex      mutex;
 
 public:
 	/**
@@ -79,8 +79,7 @@ public:
 	 */
 	KeyFile(const char *fname, mode_t mask)
 		: File(fname, mask),
-		  fdpMgr(0),
-		  mutex()
+		  fdpMgr(0)
 	{
 	}
 
@@ -134,7 +133,7 @@ class ValueFile : public File
 {
 private:
 	FreeDiskPageMgr *fdpMgr;
-	Mutex           mutex;
+	std::mutex      mutex;
 
 public:
 	/**
@@ -145,8 +144,7 @@ public:
 	 *                     the file.
 	 */
 	ValueFile(const char *fname, mode_t mask)
-		: File(fname, mask),
-		  mutex()
+		: File(fname, mask)
 	{
 		this->fdpMgr = 0;
 	}

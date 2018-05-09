@@ -3,6 +3,8 @@
 #endif
 
 #include "rdb/hashtable.h"
+#include "log.h"
+#include "error.h"
 
 /*
  * Initializes hash table entry.
@@ -66,7 +68,7 @@ HashTable::rdlock(int index)
 
 	hash_entry_t *hent = ht + index;
 
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (hent->rwlock == 0) {
 		hent->rwlock = rwlockPool->get();
@@ -96,7 +98,7 @@ HashTable::rdunlock(int index)
 
 	hash_entry_t *hent = ht + index;
 
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (hent->rwlock) {
 		hent->rwlock->rdunlock();
@@ -122,7 +124,7 @@ HashTable::wrlock(int index)
 
 	hash_entry_t *hent = ht + index;
 
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (hent->rwlock == 0) {
 		hent->rwlock = rwlockPool->get();
@@ -152,7 +154,7 @@ HashTable::wrunlock(int index)
 
 	hash_entry_t *hent = ht + index;
 
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	if (hent->rwlock) {
 		hent->rwlock->wrunlock();

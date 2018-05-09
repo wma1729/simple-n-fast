@@ -1,5 +1,4 @@
 #include "common.h"
-#include "util.h"
 #include "log.h"
 
 Logger	*TheLogger = 0;

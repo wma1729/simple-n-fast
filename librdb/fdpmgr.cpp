@@ -1,4 +1,6 @@
 #include "rdb/fdpmgr.h"
+#include "log.h"
+#include "error.h"
 
 /*
  * Adds the offset to the file.
@@ -136,7 +138,7 @@ FreeDiskPageMgr::init()
 int64_t
 FreeDiskPageMgr::get()
 {
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	Assert(!nextFreeOffset.empty(), __FILE__, __LINE__,
 		"empty offset stack");
@@ -184,7 +186,7 @@ FreeDiskPageMgr::free(int64_t offset)
 	Assert(((offset % pageSize) == 0), __FILE__, __LINE__,
 		"offset (%" PRId64 ") is not correctly aligned", offset);
 
-	MutexGuard guard(mutex);
+	std::lock_guard<std::mutex> guard(mutex);
 
 	nextFreeOffset.push(offset);
 
