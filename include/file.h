@@ -2,6 +2,13 @@
 #define _SNF_FILE_H_
 
 #include "common.h"
+#if defined(_WIN32)
+	using fhandle_t = HANDLE;
+#else
+	#include <sys/types.h>
+	#include <sys/stat.h>
+	using fhandle_t = int;
+#endif
 
 /**
  * File Open mode

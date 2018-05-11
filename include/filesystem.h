@@ -1,6 +1,8 @@
 #ifndef _SNF_FILESYSTEM_H_
 #define _SNF_FILESYSTEM_H_
 
+#include "common.h"
+
 /**
  * File system level operations.
  */

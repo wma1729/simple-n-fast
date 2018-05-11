@@ -1,5 +1,6 @@
 #include "common.h"
 #include "log.h"
+#include <cstdarg>
 
 Logger	*TheLogger = 0;
 bool    TheVerbosity = false;
@@ -68,7 +69,7 @@ Log(log_level_t ll, const char *caller, int error, const char *fmt, ...)
 	va_end(ap);
 
 	snprintf(errbuf2, sizeof(errbuf2), ": %s (%d)",
-		GetErrorStr(errbuf1, sizeof(errbuf1), error),
+		snf::syserr(errbuf1, sizeof(errbuf1), error),
 		error);
 
 	strcat(buf, errbuf2);

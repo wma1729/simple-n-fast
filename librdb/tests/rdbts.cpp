@@ -1,5 +1,5 @@
-#include "tf/testmain.h"
-#include "tf/testmacros.h"
+#include "test.h"
+#include "testmain.h"
 #include "simpleSGR.h"
 #include "updateDB.h"
 #include "multipleKPN.h"
@@ -47,6 +47,7 @@ GenKeyValue(char *key, char *val, int len)
 	return;
 }
 
+namespace snf {
 namespace tf {
 
 Test *TestList[] = {
@@ -55,8 +56,9 @@ Test *TestList[] = {
 	DBG_NEW MultipleKeyPageNodes(),
 	DBG_NEW NormalFairDistribution(),
 	DBG_NEW RebuildDB(),
-	// DBG_NEW BigLoad(),
+	DBG_NEW BigLoad(),
 	0
 };
 
-}
+} // namespace tf
+} // namespace snf

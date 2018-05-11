@@ -15,7 +15,7 @@ $(P)\rdbts.exe: $(OBJS) $(LIBCOM) $(LIBRDB)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
 {.}.cpp{$(P)}.obj:
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(P)\rdbts.pdb $< /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $(TFINCL) /Fd$(P)\rdbts.pdb $< /Fo$@
 
 test:
 	@if not exist db mkdir db

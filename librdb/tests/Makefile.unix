@@ -13,11 +13,11 @@ all: platform ${P}/rdbts
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/rdbts: ${OBJS} ${LIBCOM} ${LIBRDB}
+${P}/rdbts: ${OBJS} ${LIBRDB} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
-	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} ${TFINCL} $^ -o $@
 
 test:
 	@test -d db || mkdir db

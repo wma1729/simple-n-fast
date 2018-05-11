@@ -4,6 +4,7 @@
 #include "common.h"
 #include <mutex>
 #include "file.h"
+#include "timeutil.h"
 
 /**
  * Logging severity.
@@ -89,7 +90,7 @@ private:
 	File        *logFile;
 	std::mutex  mutex;
 
-	void open(const local_time_t *);
+	void open(const snf::local_time &);
 
 public:
 	/**

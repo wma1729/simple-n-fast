@@ -1,4 +1,3 @@
-#include "common.h"
 #include "rdb/rwlock.h"
 #include "log.h"
 #include "error.h"

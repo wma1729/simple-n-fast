@@ -1,5 +1,4 @@
 #include <memory>
-#include "common.h"
 #include "filesystem.h"
 #include "rdb/keyrec.h"
 #include "rdb/rdb.h"

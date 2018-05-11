@@ -1,91 +1,6 @@
 #include "common.h"
 
-/**
- * Get local system time.
- *
- * @param [out] lt Local time.
- *
- * @return UTC time since epoch.
- */
-time_t
-GetLocalTime(local_time_t *lt)
-{
-	time_t	now = 0;
-
-#if defined(_WIN32)
-
-	SYSTEMTIME      st;
-	FILETIME        ft;
-	ULARGE_INTEGER  current;
-	ULARGE_INTEGER  epoch;
-
-	GetLocalTime(&st);
-
-	lt->year = st.wYear;
-	lt->month = st.wMonth;
-	lt->day = st.wDay;
-	lt->hour = st.wHour;
-	lt->minute = st.wMinute;
-	lt->second = st.wSecond;
-	lt->msec = st.wMilliseconds;
-
-	epoch.QuadPart = 116444736000000000I64;
-
-	SystemTimeToFileTime(&st, &ft);
-
-	current.LowPart = ft.dwLowDateTime;
-	current.HighPart = ft.dwHighDateTime;
-
-	now = (time_t)((current.QuadPart - epoch.QuadPart) / 10000000);
-
-#else /* !_WIN32 */
-
-	struct timeval  tv;
-	struct timezone tz;
-	struct tm       *ptm;
-	struct tm       tmStruct;
-
-	gettimeofday(&tv, &tz);
-	now = (time_t)(tv.tv_sec);
-	ptm = localtime_r(&now, &tmStruct);
-
-	lt->year = ptm->tm_year + 1900;
-	lt->month = ptm->tm_mon + 1;
-	lt->day = ptm->tm_mday;
-	lt->hour = ptm->tm_hour;
-	lt->minute = ptm->tm_min;
-	lt->second = ptm->tm_sec;
-	lt->msec = (tv.tv_usec == 0) ? 0 : (int)(tv.tv_usec / 1000);
-
-#endif
-
-	return now;
-}
-
-/**
- * Converts local time to string format.
- * - YYYY/MM/DD hh:mm:ss.mse
- *
- * @param [in]  lt     - local time.
- * @param [out] buf    - buffer to get the time string.
- * @param [in]  buflen - size of the buffer.
- *
- * @return string representation of the time on success,
- * NULL on failure.
- */
-const char *
-LocalTimeToString(local_time_t *lt, char *buf, size_t buflen)
-{
-	if ((lt == 0) || (buf == 0) || (buflen <= 24)) {
-		return 0;
-	}
-
-	snprintf(buf, buflen, "%04d/%02d/%02d %02d:%02d:%02d.%03d",
-		lt->year, lt->month, lt->day,
-		lt->hour, lt->minute, lt->second, lt->msec);
-
-	return buf;
-}
+namespace snf {
 
 /*
  * Get the system error string.
@@ -98,7 +13,7 @@ LocalTimeToString(local_time_t *lt, char *buf, size_t buflen)
  * failure.
  */
 const char *
-GetErrorStr(char *str, size_t len, int err)
+syserr(char *str, size_t len, int err)
 {
 	if (str == 0) {
 		return 0;
@@ -158,7 +73,7 @@ GetErrorStr(char *str, size_t len, int err)
  * error.
  */
 const char *
-GetBaseName(char *buf, size_t buflen, const char *path, bool stripExt)
+basename(char *buf, size_t buflen, const char *path, bool stripExt)
 {
 	if ((path == 0) || (*path == 0)) {
 		return 0;
@@ -185,3 +100,19 @@ GetBaseName(char *buf, size_t buflen, const char *path, bool stripExt)
 
 	return buf;
 }
+
+std::string
+trim(const std::string &str)
+{
+	size_t b = str.find_first_not_of(" \f\n\r\t\v");
+	if (b == std::string::npos)
+		b = 0;
+
+	size_t e = str.find_last_not_of(" \f\n\r\t\v");
+	if (e == std::string::npos)
+		e = str.size();
+
+	return str.substr(b, e - b + 1);
+}
+
+} // namespace snf

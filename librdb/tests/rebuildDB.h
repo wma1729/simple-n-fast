@@ -5,17 +5,11 @@
 
 extern void GenKeyValue(char *, char *, int);
 
-class RebuildDB : public tf::Test
+class RebuildDB : public snf::tf::Test
 {
 public:
-	RebuildDB()
-		: tf::Test()
-	{
-	}
-
-	~RebuildDB()
-	{
-	}
+	RebuildDB() : snf::tf::Test() {}
+	~RebuildDB() {}
 
 	virtual const char *name() const
 	{
@@ -71,21 +65,26 @@ public:
 		for (int i = 0; i < 16; ++i) {
 			retval = rdb.set(kvpair[i].key, kvpair[i].klen,
 					kvpair[i].value, kvpair[i].vlen);
-			ASSERT_EQ(retval, E_ok, "rdb set (%s/%s)",
-				kvpair[i].key, kvpair[i].value);
+
+			m_strm << "rdb set: key = " << kvpair[i].key
+				<< ", value = " << kvpair[i].value;
+			ASSERT_EQ(retval, E_ok, m_strm.str());
+			m_strm.str("");
 		}
 
 		retval = rdb.remove("a", 1);
-		ASSERT_EQ(retval, E_ok, "rdb remove(%s)", "a");
+
+		ASSERT_EQ(retval, E_ok, "rdb remove: key = a");
 
 		retval = rdb.remove("bb", 2);
-		ASSERT_EQ(retval, E_ok, "rdb remove(%s)", "bb");
+		ASSERT_EQ(retval, E_ok, "rdb remove: key = bb");
 
 		retval = rdb.remove("ccc", 3);
-		ASSERT_EQ(retval, E_ok, "rdb remove(%s)", "ccc");
+		ASSERT_EQ(retval, E_ok, "rdb remove: key = ccc");
 
 		retval = rdb.remove("dddd", 3);
-		ASSERT_EQ(retval, E_ok, "rdb remove(%s)", "ddd");
+		ASSERT_EQ(retval, E_ok, "rdb remove: key = sddd");
+		m_strm.str("");
 
 		retval = rdb.close();
 		ASSERT_EQ(retval, E_ok, "rdb close");

@@ -2,6 +2,10 @@
 #include "i18n.h"
 #include "error.h"
 
+#if !defined(_WIN32)
+	#include <fcntl.h>
+#endif
+
 /**
  * Opens the file. Before opening the file, the umask
  * specified in the constructor is applied.

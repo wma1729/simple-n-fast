@@ -263,7 +263,7 @@ main(int argc, const char **argv)
 	char        progName[MAXPATHLEN + 1];
 	char        buf[MAXPATHLEN + 1];
 
-	GetBaseName(progName, MAXPATHLEN, argv[0], true);
+	snf::basename(progName, MAXPATHLEN, argv[0], true);
 
 	for (int i = 1; i < argc; ++i) {
 		if (strcmp("-start", argv[i]) == 0) {

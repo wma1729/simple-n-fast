@@ -70,13 +70,14 @@ if [ "$PLAT" = "Linux" ]; then
 		INSTDIR = $INSTPATH
 		CC = $CC -m64
 		CFLAGS = -c -Wall
-		DEFINES = -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT
+		DEFINES = -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -D_FILE_OFFSET_BITS=64
 		LD = $CC -shared -m64
 		LDFLAGS = -fPIC
 		AR = ar
 		ARFLAGS = -r
 		DBG = $DEBUG
 		INCL = -I`pwd`/include
+		TFINCL = -I`pwd`/tf
 		LIBCOM = `pwd`/libcom/$BLDPLAT/libcom.a
 		LIBRDB = `pwd`/librdb/$BLDPLAT/librdb.a
 LINUX_CONFIG

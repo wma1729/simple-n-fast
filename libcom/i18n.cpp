@@ -3,6 +3,7 @@
 #else
 #include <cstdlib>
 #endif
+#include "dbg.h"
 
 namespace snf {
 
@@ -29,7 +30,7 @@ mbs2wcs(const char *s)
 		return 0;
 	}
 
-	wchar_t *ws = new wchar_t[nReq];
+	wchar_t *ws = DBG_NEW wchar_t[nReq];
 	int n = MultiByteToWideChar(CP_ACP, 0, s, -1, ws, nReq);
 	if (n != nReq) {
 		delete [] ws;
@@ -60,7 +61,7 @@ wcs2mbs(const wchar_t *ws)
 		return 0;
 	}
 
-	char *s = new char[nReq];
+	char *s = DBG_NEW char[nReq];
 	int n = WideCharToMultiByte(CP_ACP, 0, ws, -1, s, nReq, 0, 0);
 	if (n != nReq) {
 		delete [] s;
@@ -92,7 +93,7 @@ mbs2wcs(const char *s)
 		return 0;
 	}
 
-	wchar_t *ws = new wchar_t[nReq + 1];
+	wchar_t *ws = DBG_NEW wchar_t[nReq + 1];
 	size_t n = mbstowcs(ws, s, nReq);
 	if (n <= 0) {
 		delete [] ws;
@@ -124,7 +125,7 @@ wcs2mbs(const wchar_t *ws)
 		return 0;
 	}
 
-	char *s = new char[nReq + 1];
+	char *s = DBG_NEW char[nReq + 1];
 	size_t n = wcstombs(s, ws, nReq);
 	if (n <= 0) {
 		delete [] s;

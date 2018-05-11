@@ -4,17 +4,11 @@
 
 extern void GenKeyValue(char *, char *, int);
 
-class BigLoad : public tf::Test
+class BigLoad : public snf::tf::Test
 {
 public:
-	BigLoad()
-		: tf::Test()
-	{
-	}
-
-	~BigLoad()
-	{
-	}
+	BigLoad() : snf::tf::Test() {}
+	~BigLoad() {}
 
 	virtual const char *name() const
 	{
@@ -23,7 +17,7 @@ public:
 
 	virtual const char *description() const
 	{
-		return "Adds 25 million keys";
+		return "Adds 2880000 million keys";
 	}
 
 	virtual bool execute(const Config *config)
@@ -48,13 +42,16 @@ public:
 		/*
 		 * 2880000 = 800 * 60 * 60
 		 * Assuming that we can set 800 entries
-		 * in an hour on a system with 16GB
+		 * in a second on a system with 16GB
 		 * memory and 4 core CPU.
 		 */
 		for (int i = 0; i < 2880000; ++i) {
 			GenKeyValue(key, val, 32);
 			retval = rdb.set(key, 32, val, 32);
-			ASSERT_EQ(retval, E_ok, "rdb set (%s/%s)", key, val);
+
+			m_strm << "rdb set: key = " << key << ", value = " << val;
+			ASSERT_EQ(retval, E_ok, m_strm.str());
+			m_strm.str("");
 		}
 
 		retval = rdb.close();

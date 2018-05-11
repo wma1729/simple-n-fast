@@ -4,17 +4,11 @@
 
 extern void GenKeyValue(char *, char *, int);
 
-class NormalFairDistribution : public tf::Test
+class NormalFairDistribution : public snf::tf::Test
 {
 public:
-	NormalFairDistribution()
-		: tf::Test()
-	{
-	}
-
-	~NormalFairDistribution()
-	{
-	}
+	NormalFairDistribution() : snf::tf::Test() {}
+	~NormalFairDistribution() {}
 
 	virtual const char *name() const
 	{
@@ -53,22 +47,34 @@ public:
 			kvPair[key] = val;
 
 			retval = rdb.set(key, 32, val, 32);
-			ASSERT_EQ(retval, E_ok, "rdb set (%s/%s)", key, val);
+
+			m_strm << "rdb set: key = " << key << ", value = " << val;
+			ASSERT_EQ(retval, E_ok, m_strm.str());
+			m_strm.str("");
 		}
 
 		std::map<std::string, std::string>::iterator I;
 		for (I = kvPair.begin(); I != kvPair.end(); ++I) {
 			retval = rdb.get(I->first.c_str(), 32, outbuf, &outlen);
-			ASSERT_EQ(retval, E_ok, "rdb get(%s)", I->first.c_str());
+
+			m_strm << "rdb get: key = " << I->first;
+			ASSERT_EQ(retval, E_ok, m_strm.str());
+			m_strm.str("");
+
 			ASSERT_EQ(outlen, 32, "value length match");
 			ASSERT_MEM_EQ(outbuf, I->second.c_str(), 32, "value match");
 
 			retval = rdb.remove(I->first.c_str(), 32);
-			ASSERT_EQ(retval, E_ok, "rdb remove(%s)", I->first.c_str());
+
+			m_strm << "rdb remove: key = " << I->first;
+			ASSERT_EQ(retval, E_ok, m_strm.str());
+			m_strm.str("");
 
 			retval = rdb.get(I->first.c_str(), 32, outbuf, &outlen);
-			ASSERT_EQ(retval, E_not_found, "rdb get(%s) should return E_not_found",
-				I->first.c_str());
+
+			m_strm << "rdb get: key = " << I->first << " should return E_not_found";
+			ASSERT_EQ(retval, E_not_found, m_strm.str());
+			m_strm.str("");
 		}
 
 		retval = rdb.close();

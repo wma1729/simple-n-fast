@@ -1,4 +1,3 @@
-#include "common.h"
 #include "log.h"
 #include "rdb/rdb.h"
 
@@ -34,7 +33,7 @@ main(int argc, const char **argv)
 	char prog[MAXPATHLEN + 1];
 	bool rebuild = false;
 
-	GetBaseName(prog, MAXPATHLEN + 1, argv[0], true);
+	snf::basename(prog, MAXPATHLEN + 1, argv[0], true);
 
 	for (int i = 1; i < argc; ++i) {
 		if (strcmp("-get", argv[i]) == 0) {

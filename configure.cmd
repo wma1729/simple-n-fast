@@ -81,6 +81,7 @@ ECHO AR = link /lib /nologo >> Makefile.constants
 ECHO ARFLAGS = >> Makefile.constants
 ECHO DBG = %DEBUG% >> Makefile.constants
 ECHO INCL = /I"%BLDDIR%include" >> Makefile.constants
+ECHO TFINCL = /I"%BLDDIR%tf" >> Makefile.constants
 ECHO LIBCOM = "%BLDDIR%libcom\%BLDPLAT%\com.lib" >> Makefile.constants
 ECHO LIBRDB = "%BLDDIR%librdb\%BLDPLAT%\rdb.lib" >> Makefile.constants
 

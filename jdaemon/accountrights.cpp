@@ -149,7 +149,7 @@ main(int argc, const char **argv)
 	const char *account = 0;
 	const char *right = 0;
 
-	GetBaseName(progName, MAXPATHLEN, argv[0], true);
+	snf::basename(progName, MAXPATHLEN, argv[0], true);
 
 	for (int i = 1; i < argc; ++i) {
 		if (strcmp("-account", argv[i]) == 0) {

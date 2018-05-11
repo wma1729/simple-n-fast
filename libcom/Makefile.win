@@ -11,6 +11,7 @@ OBJS =  $(P)\common.obj \
 		$(P)\filesystem.obj \
 		$(P)\i18n.obj \
 		$(P)\log.obj \
+		$(P)\timeutil.obj \
 		$(P)\util.obj
 
 PDB = $(P)\libcom.pdb

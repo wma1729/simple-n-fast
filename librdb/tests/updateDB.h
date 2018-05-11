@@ -40,17 +40,11 @@ public:
 	}
 };
 
-class UpdateDB : public tf::Test
+class UpdateDB : public snf::tf::Test
 {
 public:
-	UpdateDB()
-		: tf::Test()
-	{
-	}
-
-	~UpdateDB()
-	{
-	}
+	UpdateDB() : snf::tf::Test() {}
+	~UpdateDB() {}
 
 	virtual const char *name() const
 	{
@@ -80,7 +74,7 @@ public:
 		struct TestValue value = { "dummydata", 1 };
 
 		retval = rdb.set("dummykey", 8, (const char *)&value, (int)sizeof(value));
-		ASSERT_EQ(retval, E_ok, "rdb set (%s)", "dummykey");
+		ASSERT_EQ(retval, E_ok, "rdb set: key = dummykey");
 
 		char buf1[32];
 		int  buf1len = (int)(sizeof(buf1) - 1);
@@ -88,16 +82,16 @@ public:
 		int  buf2len = (int)(sizeof(buf2) - 1);
 
 		retval = rdb.get("dummykey", 8, buf1, &buf1len);
-		ASSERT_EQ(retval, E_ok, "rdb get(%s)", "dummykey");
+		ASSERT_EQ(retval, E_ok, "rdb get: key = dummykey");
 		ASSERT_EQ(buf1len, (int)sizeof(value), "value length match");
 
 		MyUpdater *mupdater = new MyUpdater();
 
 		retval = rdb.set("dummykey", 8, "dummydata", 9, mupdater);
-		ASSERT_EQ(retval, E_ok, "rdb set (%s)", "dummykey");
+		ASSERT_EQ(retval, E_ok, "rdb update: key = dummykey");
 
 		retval = rdb.get("dummykey", 8, buf1, &buf1len);
-		ASSERT_EQ(retval, E_ok, "rdb get(%s)", "dummykey");
+		ASSERT_EQ(retval, E_ok, "rdb get: key = dummykey");
 		ASSERT_EQ(buf1len, (int)sizeof(value), "value length match");
 
 		mupdater->getUpdatedValue(buf2, &buf2len);
@@ -108,7 +102,7 @@ public:
 		ASSERT_EQ(nvalue->refcnt, 2, "reference count match");
 
 		retval = rdb.remove("dummykey", 8);
-		ASSERT_EQ(retval, E_ok, "rdb remove(%s)", "dummykey");
+		ASSERT_EQ(retval, E_ok, "rdb remove: key = dummykey");
 
 		retval = rdb.close();
 		ASSERT_EQ(retval, E_ok, "rdb close");

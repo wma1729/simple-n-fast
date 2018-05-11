@@ -9,7 +9,7 @@
  * @param [in] lt - local time.
  */
 void
-FileLogger::open(const local_time_t *lt)
+FileLogger::open(const snf::local_time &lt)
 {
 	char lf[MAXPATHLEN + 1];
 
@@ -24,7 +24,7 @@ FileLogger::open(const local_time_t *lt)
 	}
 
 	snprintf(lf, MAXPATHLEN, "%s%c%04d%02d%02d.log",
-		logPath.c_str(), PATH_SEP, lt->year, lt->month, lt->day);
+		logPath.c_str(), PATH_SEP, lt.year(), lt.month(), lt.day());
 
 	logFile = DBG_NEW File(lf, 0022);
 
@@ -37,7 +37,7 @@ FileLogger::open(const local_time_t *lt)
 		delete logFile;
 		logFile = 0;
 	} else {
-		lastDay = lt->day;
+		lastDay = lt.day();
 	}
 
 	return;
@@ -55,32 +55,29 @@ FileLogger::open(const local_time_t *lt)
 void
 FileLogger::log(log_level_t ll, const char *caller, const char *msg)
 {
-	char         logbuf[LOGBUFLEN + 1];
-	char         dtbuf[32];
-	local_time_t lt;
+	char             logbuf[LOGBUFLEN + 1];
+	snf::local_time  lt;
 
 	if ((ll == DBG) && !verbose) {
 		return;
 	}
 
-	GetLocalTime(&lt);
-
 	std::lock_guard<std::mutex> guard(mutex);
 
 	if (logFile == 0) {
-		open(&lt);
+		open(lt);
 	}
 
-	if (lastDay != lt.day) {
+	if (lastDay != lt.day()) {
 		delete logFile;
 		logFile = 0;
-		open(&lt);
+		open(lt);
 	}
 
 	if (logFile) {
 		int nbytes = snprintf(logbuf, LOGBUFLEN,
 				"%s [%u.%u] [%s] [%s] %s\n",
-				LocalTimeToString(&lt, dtbuf, sizeof(dtbuf)),
+				lt.str().c_str(),
 				getpid(),
 				gettid(),
 				LevelStr(ll),
