@@ -76,10 +76,11 @@ if [ "$PLAT" = "Linux" ]; then
 		AR = ar
 		ARFLAGS = -r
 		DBG = $DEBUG
-		INCL = -I`pwd`/include
-		TFINCL = -I`pwd`/tf
-		LIBCOM = `pwd`/libcom/$BLDPLAT/libcom.a
-		LIBRDB = `pwd`/librdb/$BLDPLAT/librdb.a
+		INCLCOM = -I`pwd`/libcom/include
+		INCLRDB = -I`pwd`/librdb/include
+		INCLTF = -I`pwd`/tf
+		LIBCOM = `pwd`/libcom/src/$BLDPLAT/libcom.a
+		LIBRDB = `pwd`/librdb/src/$BLDPLAT/librdb.a
 LINUX_CONFIG
 
 else

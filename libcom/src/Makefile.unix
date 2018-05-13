@@ -1,0 +1,33 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/common.o \
+		${P}/config.o \
+		${P}/dll.o \
+		${P}/file.o \
+		${P}/filesystem.o \
+		${P}/i18n.o \
+		${P}/log.o \
+		${P}/timeutil.o \
+		${P}/util.o
+
+INCL = ${INCLCOM}
+
+all: platform ${P}/libcom.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/libcom.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/libcom.a

@@ -6,6 +6,10 @@ include ../../Makefile.constants
 
 OBJS =  $(P)\rdbts.obj
 
+INCL = $(INCLCOM) $(INCLRDB) $(INCLTF)
+
+PDB = $(P)\rdbts.pdb
+
 all: platform $(P)\rdbts.exe
 
 platform:
@@ -15,7 +19,7 @@ $(P)\rdbts.exe: $(OBJS) $(LIBCOM) $(LIBRDB)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
 {.}.cpp{$(P)}.obj:
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) $(TFINCL) /Fd$(P)\rdbts.pdb $< /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $< /Fo$@
 
 test:
 	@if not exist db mkdir db
@@ -27,6 +31,7 @@ test:
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\rdbts.* rdbts.conf
+	@del /q $(OBJS) $(PDB) $(P)\rdbts.*
+	@if exist rdbts.conf del /q rdbts.conf
 	@if exist db rmdir /q /s db
 	@if exist log rmdir /q /s log

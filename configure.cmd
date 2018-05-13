@@ -80,10 +80,11 @@ ECHO LDFLAGS = /DEBUG:FULL /DYNAMICBASE >> Makefile.constants
 ECHO AR = link /lib /nologo >> Makefile.constants
 ECHO ARFLAGS = >> Makefile.constants
 ECHO DBG = %DEBUG% >> Makefile.constants
-ECHO INCL = /I"%BLDDIR%include" >> Makefile.constants
-ECHO TFINCL = /I"%BLDDIR%tf" >> Makefile.constants
-ECHO LIBCOM = "%BLDDIR%libcom\%BLDPLAT%\com.lib" >> Makefile.constants
-ECHO LIBRDB = "%BLDDIR%librdb\%BLDPLAT%\rdb.lib" >> Makefile.constants
+ECHO INCLCOM = /I"%BLDDIR%libcom\include" >> Makefile.constants
+ECHO INCLRDB = /I"%BLDDIR%librdb\include" >> Makefile.constants
+ECHO INCLTF = /I"%BLDDIR%tf" >> Makefile.constants
+ECHO LIBCOM = "%BLDDIR%libcom\src\%BLDPLAT%\com.lib" >> Makefile.constants
+ECHO LIBRDB = "%BLDDIR%librdb\src\%BLDPLAT%\rdb.lib" >> Makefile.constants
 
 ECHO Makefile.constants generated successfully
 

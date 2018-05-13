@@ -2,9 +2,9 @@
 #define _SNF_RDB_RDB_H_
 
 #include "error.h"
-#include "rdb/cache.h"
-#include "rdb/dbfiles.h"
-#include "rdb/hashtable.h"
+#include "cache.h"
+#include "dbfiles.h"
+#include "hashtable.h"
 
 int NextPrime(int); // from librdb/prime.cpp
 

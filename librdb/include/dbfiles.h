@@ -3,8 +3,8 @@
 
 #include <mutex>
 #include "file.h"
-#include "rdb/dbstruct.h"
-#include "rdb/fdpmgr.h"
+#include "dbstruct.h"
+#include "fdpmgr.h"
 
 /**
  * Manage DB attributes file.

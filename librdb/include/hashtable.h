@@ -2,8 +2,8 @@
 #define _SNF_RDB_HASHTABLE_H_
 
 #include <mutex>
-#include "rdb/dbstruct.h"
-#include "rdb/rwlock.h"
+#include "dbstruct.h"
+#include "rwlock.h"
 
 #ifndef HASH_TABLE_SIZE
 #define HASH_TABLE_SIZE 500000

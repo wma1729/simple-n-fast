@@ -1,31 +1,12 @@
 include ../Makefile.constants
 
-ifndef P
-$(error P is not set)
-endif
+DIRS = src
 
-OBJS =  ${P}/common.o \
-		${P}/config.o \
-		${P}/dll.o \
-		${P}/file.o \
-		${P}/filesystem.o \
-		${P}/i18n.o \
-		${P}/log.o \
-		${P}/timeutil.o \
-		${P}/util.o
-
-all: platform ${P}/libcom.a
-
-platform:
-	@test -d ${P} || mkdir ${P}
-
-${P}/libcom.a: ${OBJS}
-	${AR} ${ARFLAGS} $@ $^
-
-${P}/%.o: %.cpp
-	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+all:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
 
 install:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done
 
-clean:
-	@/bin/rm -rf ${OBJS} ${P}/libcom.a
+clean: 
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix clean; done

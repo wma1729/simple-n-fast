@@ -1,7 +1,7 @@
 #ifndef _SNF_RDB_KEYREC_H_
 #define _SNF_RDB_KEYREC_H_
 
-#include "rdb/dbstruct.h"
+#include "dbstruct.h"
 
 /**
  * Manages key records as balanced AVL binary tree.

@@ -2,7 +2,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "rdb/hashtable.h"
+#include "hashtable.h"
 #include "log.h"
 #include "error.h"
 

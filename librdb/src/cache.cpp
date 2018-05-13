@@ -1,6 +1,6 @@
 #include "error.h"
 #include "log.h"
-#include "rdb/cache.h"
+#include "cache.h"
 
 /*
  * Removes the last (or LRU) element from

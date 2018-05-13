@@ -5,6 +5,7 @@ $(error P is not set)
 endif
 
 OBJS = ${P}/jdaemonizer.o
+INCL = ${INCLCOM}
 LIBS = -lpthread -ldl
 
 JVM_INCL = -I${JAVA_HOME}/include

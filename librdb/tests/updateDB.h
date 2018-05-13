@@ -1,5 +1,5 @@
 #include "error.h"
-#include "rdb/rdb.h"
+#include "rdb.h"
 
 struct TestValue {
 	char val[16];

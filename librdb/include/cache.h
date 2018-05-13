@@ -3,8 +3,8 @@
 
 #include <list>
 #include <mutex>
-#include "rdb/dbfiles.h"
-#include "rdb/pagemgr.h"
+#include "dbfiles.h"
+#include "pagemgr.h"
 
 /* LRU cache node */
 typedef struct cnode

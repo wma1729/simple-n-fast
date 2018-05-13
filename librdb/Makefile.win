@@ -1,43 +1,12 @@
-include ../Makefile.constants
+include ..\Makefile.constants
 
-!IFNDEF P
-!ERROR P is not set
-!ENDIF
+DIRS = src tests
 
-OBJS =  $(P)\cache.obj \
-		$(P)\dbfiles.obj \
-		$(P)\fdpmgr.obj \
-		$(P)\hashtable.obj \
-		$(P)\keyrec.obj \
-		$(P)\pagemgr.obj \
-		$(P)\prime.obj \
-		$(P)\rdb.obj \
-		$(P)\rwlock.obj \
-		$(P)\unwind.obj
-
-DRVROBJS = $(P)\rdbdrvr.obj
-
-LIBRDBPDB = $(P)\librdb.pdb
-LIBRDBDRVRPDB = $(P)\rdbdrvr.pdb
-
-all: platform $(P)\rdb.lib $(P)\rdbdrvr.exe
-
-platform:
-	@if not exist $(P) mkdir $(P)
-
-$(P)\rdb.lib: $(OBJS)
-	$(AR) $(ARFLAGS) $** /OUT:$@
-
-$(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBCOM)
-	$(CC) $(DBG) /Fd$(LIBRDBDRVRPDB) $** /Fe$@
-
-$(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBRDBPDB) $(*B).cpp /Fo$@
-
-$(DRVROBJS) : $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBRDBDRVRPDB) $(*B).cpp /Fo$@
+all:
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)
 
 install:
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)
 
 clean:
-	@del /q $(OBJS) $(DRVROBJS) $(P)\rdb.lib $(LIBRDBPDB) $(P)\rdbdrvr.* 
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)

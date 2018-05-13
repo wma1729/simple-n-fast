@@ -1,8 +1,8 @@
 #include <memory>
 #include "filesystem.h"
-#include "rdb/keyrec.h"
-#include "rdb/rdb.h"
-#include "rdb/unwind.h"
+#include "keyrec.h"
+#include "rdb.h"
+#include "unwind.h"
 
 /*
  * Reads the key file and do the following:

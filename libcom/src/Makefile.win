@@ -1,0 +1,35 @@
+include ..\..\Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS =  $(P)\common.obj \
+		$(P)\config.obj \
+		$(P)\dll.obj \
+		$(P)\file.obj \
+		$(P)\filesystem.obj \
+		$(P)\i18n.obj \
+		$(P)\log.obj \
+		$(P)\timeutil.obj \
+		$(P)\util.obj
+
+INCL = $(INCLCOM)
+
+PDB = $(P)\libcom.pdb
+
+all: platform $(P)\com.lib
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\com.lib: $(OBJS)
+	$(AR) $(ARFLAGS) $** /OUT:$@
+
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\com.lib $(PDB)

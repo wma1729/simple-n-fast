@@ -1,4 +1,4 @@
-#include "rdb/keyrec.h"
+#include "keyrec.h"
 
 #define LEFT_OF(N)      kp->kp_keys[N].kr_left
 #define RIGHT_OF(N)     kp->kp_keys[N].kr_right

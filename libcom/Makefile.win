@@ -1,33 +1,12 @@
-include ../Makefile.constants
+include ..\Makefile.constants
 
-!IFNDEF P
-!ERROR P is not set
-!ENDIF
+DIRS = src
 
-OBJS =  $(P)\common.obj \
-		$(P)\config.obj \
-		$(P)\dll.obj \
-		$(P)\file.obj \
-		$(P)\filesystem.obj \
-		$(P)\i18n.obj \
-		$(P)\log.obj \
-		$(P)\timeutil.obj \
-		$(P)\util.obj
-
-PDB = $(P)\libcom.pdb
-
-all: platform $(P)\com.lib
-
-platform:
-	@if not exist $(P) mkdir $(P)
-
-$(P)\com.lib: $(OBJS)
-	$(AR) $(ARFLAGS) $** /OUT:$@
-
-$(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
+all:
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)
 
 install:
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)
 
 clean:
-	@del /q $(OBJS) $(P)\com.lib $(PDB)
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)

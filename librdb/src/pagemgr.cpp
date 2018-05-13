@@ -2,9 +2,9 @@
 #include <sys/mman.h>
 #endif
 
-#include "rdb/pagemgr.h"
-#include "log.h"
+#include "pagemgr.h"
 #include "error.h"
+#include "log.h"
 
 /**
  * Get the physical memory size in bytes.

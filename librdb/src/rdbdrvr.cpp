@@ -1,5 +1,5 @@
+#include "rdb.h"
 #include "log.h"
-#include "rdb/rdb.h"
 
 extern Logger *TheLogger;
 extern bool   TheVerbosity;

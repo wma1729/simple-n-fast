@@ -1,6 +1,6 @@
 #include <map>
 #include "error.h"
-#include "rdb/rdb.h"
+#include "rdb.h"
 
 extern void GenKeyValue(char *, char *, int);
 

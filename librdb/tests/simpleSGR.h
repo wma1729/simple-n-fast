@@ -1,5 +1,5 @@
 #include "error.h"
-#include "rdb/rdb.h"
+#include "rdb.h"
 
 class SimpleSetGetRemove : public snf::tf::Test
 {

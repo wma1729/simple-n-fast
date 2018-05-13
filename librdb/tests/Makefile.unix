@@ -8,6 +8,8 @@ OBJS =  ${P}/rdbts.o
 
 LIBS = -lpthread
 
+INCL = ${INCLCOM} ${INCLRDB} ${INCLTF}
+
 all: platform ${P}/rdbts
 
 platform:
@@ -17,7 +19,7 @@ ${P}/rdbts: ${OBJS} ${LIBRDB} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
-	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} ${TFINCL} $^ -o $@
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
 
 test:
 	@test -d db || mkdir db

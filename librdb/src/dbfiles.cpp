@@ -1,5 +1,5 @@
 #include <cstddef>
-#include "rdb/dbfiles.h"
+#include "dbfiles.h"
 #include "log.h"
 #include "error.h"
 

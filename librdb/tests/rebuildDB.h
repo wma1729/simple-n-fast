@@ -1,7 +1,7 @@
 #include <map>
 #include "error.h"
 #include "filesystem.h"
-#include "rdb/rdb.h"
+#include "rdb.h"
 
 extern void GenKeyValue(char *, char *, int);
 
