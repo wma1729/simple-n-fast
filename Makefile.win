@@ -1,6 +1,6 @@
 include Makefile.constants
 
-DIRS = libcom jdaemon librdb librdb\tests
+DIRS = libcom jdaemon librdb libjson
 
 all:
 	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)

@@ -1,27 +1,12 @@
 include ../Makefile.constants
 
-ifndef P
-$(error P is not set)
-endif
+DIRS = src
 
-OBJS =  ${P}/json.o \
-	${P}/parser.o \
-	${P}/lexer.o \
-	${P}/misc.o \
-	${P}/utf.o
-
-all: platform ${P}/libjson.so
-
-platform:
-	@test -d ${P} || mkdir ${P}
-
-${P}/libjson.so: ${OBJS}
-	${LD} ${LDFLAGS} $^ -o $@
-
-${P}/%.o: %.cpp
-	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+all:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
 
 install:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done
 
-clean:
-	@/bin/rm -rf ${OBJS} ${P}/libjson.so
+clean: 
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix clean; done

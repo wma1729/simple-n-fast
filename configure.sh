@@ -78,9 +78,11 @@ if [ "$PLAT" = "Linux" ]; then
 		DBG = $DEBUG
 		INCLCOM = -I`pwd`/libcom/include
 		INCLRDB = -I`pwd`/librdb/include
+		INCLJSON = -I`pwd`/libjson/include
 		INCLTF = -I`pwd`/tf
 		LIBCOM = `pwd`/libcom/src/$BLDPLAT/libcom.a
 		LIBRDB = `pwd`/librdb/src/$BLDPLAT/librdb.a
+		LIBJSON = `pwd`/librdb/src/$BLDPLAT/libjson.a
 LINUX_CONFIG
 
 else

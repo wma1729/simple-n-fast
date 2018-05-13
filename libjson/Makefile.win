@@ -1,32 +1,12 @@
-include ../Makefile.constants
+include ..\Makefile.constants
 
-!IFNDEF P
-!ERROR P is not set
-!ENDIF
+DIRS = src
 
-OBJS =  $(P)\json.obj \
-		$(P)\parser.obj \
-		$(P)\lexer.obj \
-		$(P)\misc.obj \
-		$(P)\utf.obj \
-		$(P)\dllmain.obj
-
-DEFINES = $(DEFINES) /D_SNF_EXPORTING_
-
-PDB = $(P)\json.pdb
-
-all: platform $(P)\json.dll
-
-platform:
-	@if not exist $(P) mkdir $(P)
-
-$(P)\json.dll: $(OBJS)
-	$(LD) $(LDFLAGS) $** /PDB:$(PDB) /OUT:$@
-
-$(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) /wd4251 /wd4275 $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
+all:
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)
 
 install:
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)
 
 clean:
-	@del /q $(OBJS) $(P)\json.dll $(PDB)
+	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)

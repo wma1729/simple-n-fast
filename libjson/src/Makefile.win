@@ -1,0 +1,31 @@
+include ..\..\Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS =  $(P)\json.obj \
+		$(P)\parser.obj \
+		$(P)\lexer.obj \
+		$(P)\misc.obj \
+		$(P)\utf.obj
+
+INCL =  $(INCLJSON)
+
+PDB = $(P)\json.pdb
+
+all: platform $(P)\json.lib
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\json.lib: $(OBJS)
+	$(AR) $(ARFLAGS) $** /OUT:$@
+
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\json.lib $(PDB)
