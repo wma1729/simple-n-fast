@@ -56,7 +56,7 @@ Test *TestList[] = {
 	DBG_NEW MultipleKeyPageNodes(),
 	DBG_NEW NormalFairDistribution(),
 	DBG_NEW RebuildDB(),
-	DBG_NEW BigLoad(),
+	// DBG_NEW BigLoad(),
 	0
 };
 

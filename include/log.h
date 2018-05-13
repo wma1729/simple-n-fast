@@ -87,7 +87,7 @@ private:
 	std::string logPath;
 	bool        mkLogPath;
 	int         lastDay;
-	File        *logFile;
+	snf::file   *logFile;
 	std::mutex  mutex;
 
 	void open(const snf::local_time &);

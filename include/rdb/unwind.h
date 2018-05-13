@@ -19,7 +19,7 @@ typedef enum unwind_op {
  */
 typedef struct unwind_block {
 	unwind_op_t     op;         // unwind operation
-	File            *file;      // file manager: downcast to [Key|Value]File
+	snf::file       *file;      // file manager: downcast to [Key|Value]File
 	void            *page;      // Key/Value page to update
 	int64_t         pageOff;    // Page offset
 	int64_t         offset;     // New Offset to update or disk block to free
@@ -51,10 +51,10 @@ public:
 		clear();
 	}
 
-	void writeFlags(File *, void *, int64_t, int);
-	void writeNextOffset(File *, void *, int64_t, int64_t);
-	void writePrevOffset(File *, void *, int64_t, int64_t);
-	void freePage(File *, int64_t);
+	void writeFlags(snf::file *, void *, int64_t, int);
+	void writeNextOffset(snf::file *, void *, int64_t, int64_t);
+	void writePrevOffset(snf::file *, void *, int64_t, int64_t);
+	void freePage(snf::file *, int64_t);
 	void unwind(int);
 };
 

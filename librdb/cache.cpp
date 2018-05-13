@@ -142,7 +142,7 @@ LRUCache::getPage(key_page_t *&kp, int64_t offset)
 		if (retval != E_ok) {
 			Log(ERR, who,
 				"unable to read page at offset %" PRId64 " from %s",
-				offset, keyFile->getFileName());
+				offset, keyFile->name());
 			pageMgr->free(kp);
 		}
 	}

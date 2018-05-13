@@ -9,12 +9,12 @@
  * @return E_ok on success, -ve error code on failure.
  */
 static int
-OpenFile(File *file, bool sync = false)
+OpenFile(snf::file *file, bool sync = false)
 {
-	const char      *caller = "OpenFile";
-	int             retval = E_ok;
-	int             oserr = 0;
-	FileOpenFlags   oflags;
+	const char           *caller = "OpenFile";
+	int                  retval = E_ok;
+	int                  oserr = 0;
+	snf::file_open_flags oflags;
 
 	oflags.o_read = true;
 	oflags.o_write = true;
@@ -26,7 +26,7 @@ OpenFile(File *file, bool sync = false)
 	if (retval != E_ok) {
 		Log(ERR, caller, oserr,
 			"failed to open file %s",
-			file->getFileName());
+			file->name());
 	}
 
 	return retval;
@@ -38,7 +38,7 @@ OpenFile(File *file, bool sync = false)
  * @return E_ok on success, -ve error code on failure.
  */
 static int
-ReadFile(File *file, int64_t offset, void *buf, int toRead)
+ReadFile(snf::file *file, int64_t offset, void *buf, int toRead)
 {
 	const char  *caller = "ReadFile";
 	int         retval = E_ok;
@@ -49,7 +49,7 @@ ReadFile(File *file, int64_t offset, void *buf, int toRead)
 	if (retval != E_ok) {
 		Log(ERR, caller, oserr,
 			"failed to read file %s at offset %" PRId64,
-			file->getFileName(), offset);
+			file->name(), offset);
 	} else if (bRead == 0) {
 		Log(DBG, caller, "end of file detected at offset %" PRId64, offset);
 		retval = E_eof_detected;
@@ -68,7 +68,7 @@ ReadFile(File *file, int64_t offset, void *buf, int toRead)
  * @return E_ok on success, -ve error code on failure.
  */
 static int
-WriteFile(File *file, int64_t offset, const void *buf, int toWrite)
+WriteFile(snf::file *file, int64_t offset, const void *buf, int toWrite)
 {
 	const char  *caller = "WriteFile";
 	int         retval = E_ok;
@@ -79,7 +79,7 @@ WriteFile(File *file, int64_t offset, const void *buf, int toWrite)
 	if (retval != E_ok) {
 		Log(ERR, caller, oserr,
 			"failed to write file %s at offset %" PRId64,
-			file->getFileName(), offset);
+			file->name(), offset);
 	} else if (bWritten != toWrite) {
 		Log(ERR, caller, "expected to write %d bytes, wrote only %d byte",
 			toWrite, bWritten);

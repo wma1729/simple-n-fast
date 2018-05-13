@@ -28,7 +28,7 @@ class FreeDiskPageMgr
 private:
 	int                 pageSize;
 	std::stack<int64_t> nextFreeOffset;
-	File                *file;
+	snf::file           *file;
 	int64_t             fsize;
 	std::mutex          mutex;
 
@@ -48,7 +48,7 @@ public:
 	 *                        database opens and the stack is
 	 *                        created from scratch.
 	 */
-	FreeDiskPageMgr(int pageSize, File *file = 0)
+	FreeDiskPageMgr(int pageSize, snf::file *file = 0)
 	{
 		this->pageSize = pageSize;
 		this->file = file;

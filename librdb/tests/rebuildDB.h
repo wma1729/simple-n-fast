@@ -21,12 +21,12 @@ public:
 		return "Rebuild database";
 	}
 
-	virtual bool execute(const Config *config)
+	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(config, 0, "check config");
-		const char *dbPath = config->get("DBPATH");
+		ASSERT_NE(conf, 0, "check config");
+		const char *dbPath = conf->get("DBPATH");
 		ASSERT_NE(dbPath, 0, "get DBPATH from config");
-		const char *dbName = config->get("DBNAME");
+		const char *dbName = conf->get("DBNAME");
 		ASSERT_NE(dbName, 0, "get DBNAME from config");
 
 		RdbOptions options;
@@ -73,7 +73,6 @@ public:
 		}
 
 		retval = rdb.remove("a", 1);
-
 		ASSERT_EQ(retval, E_ok, "rdb remove: key = a");
 
 		retval = rdb.remove("bb", 2);
@@ -82,8 +81,8 @@ public:
 		retval = rdb.remove("ccc", 3);
 		ASSERT_EQ(retval, E_ok, "rdb remove: key = ccc");
 
-		retval = rdb.remove("dddd", 3);
-		ASSERT_EQ(retval, E_ok, "rdb remove: key = sddd");
+		retval = rdb.remove("dddd", 4);
+		ASSERT_EQ(retval, E_ok, "rdb remove: key = dddd");
 		m_strm.str("");
 
 		retval = rdb.close();
@@ -98,12 +97,31 @@ public:
 		snprintf(dbpath, MAXPATHLEN, "%s%c%s.db", dbPath, PATH_SEP, dbName);
 		snprintf(fdppath, MAXPATHLEN, "%s%c%s.fdp", dbPath, PATH_SEP, dbName);
 
-		int64_t dbsize = FileSystem::size(dbpath);
+		int64_t dbsize = snf::fs::size(dbpath);
 		int64_t expsize = sizeof(value_page_t) * 12;
-		int64_t fdpsize = FileSystem::size(fdppath);
+		int64_t fdpsize = snf::fs::size(fdppath);
 
-		ASSERT_EQ(dbsize, expsize, "db size match");
 		ASSERT_EQ(fdpsize, 8, "fdp size match");
+		ASSERT_EQ(dbsize, expsize, "db size match");
+
+		retval = rdb.open();
+		ASSERT_EQ(retval, E_ok, "rdb open again");
+
+		for (int i = 0; i < 16; ++i) {
+			retval = rdb.remove(kvpair[i].key, kvpair[i].klen);
+			if ((strcmp("a", kvpair[i].key) == 0) ||
+				(strcmp("bb", kvpair[i].key) == 0) ||
+				(strcmp("ccc", kvpair[i].key) == 0) ||
+				(strcmp("dddd", kvpair[i].key) == 0)) {
+				m_strm << "already deleted key" << kvpair[i].key;
+				ASSERT_EQ(retval, E_not_found, m_strm.str());
+				m_strm.str("");
+			} else {
+				m_strm << "delete key " << kvpair[i].key;
+				ASSERT_EQ(retval, E_ok, m_strm.str());
+				m_strm.str("");
+			}
+		}
 
 		return true;
 	}

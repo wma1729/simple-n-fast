@@ -6,17 +6,20 @@
 /**
  * File system level operations.
  */
-class FileSystem
-{
-public:
-	static int      getHome(char *, size_t);
-	static bool     exists(const char *, int *oserr = 0);
-	static int64_t  size(const char *, int *oserr = 0);
-	static int      isAbsolutePath(const char *);
-	static int      mkdir(const char *, mode_t, int *oserr = 0);
-	static int      rename(const char *, const char *, int *oserr = 0);
-	static int      removeFile(const char *, int *oserr = 0);
-	static int      removeDir(const char *, int *oserr = 0);
-};
+
+namespace snf {
+namespace fs {
+
+int      get_home(char *, size_t);
+bool     exists(const char *, int *oserr = 0);
+int64_t  size(const char *, int *oserr = 0);
+int      is_abs_path(const char *);
+int      mkdir(const char *, mode_t, int *oserr = 0);
+int      rename(const char *, const char *, int *oserr = 0);
+int      remove_file(const char *, int *oserr = 0);
+int      remove_dir(const char *, int *oserr = 0);
+
+} // namespace fs
+} // namespace snf
 
 #endif // _SNF_FILESYSTEM_H_

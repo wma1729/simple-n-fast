@@ -67,13 +67,13 @@ Rdb::populateFreePages(const char *fname)
 	int         retval = E_ok;
 	int         oserr = 0;
 	int         flags;
-	File        *file = DBG_NEW File(fname, 0022);
+	snf::file   *file = DBG_NEW snf::file(fname, 0022);
 	int64_t     vfsize = -1L;
 	int64_t     offset;
 
 	Log(DBG, caller, "preparing free disk pages in db file");
 
-	FileOpenFlags oflags;
+	snf::file_open_flags oflags;
 	oflags.o_read = true;
 	oflags.o_write = true;
 	oflags.o_create = true;
@@ -340,7 +340,7 @@ Rdb::addNewPage(key_info_t *ki)
 	retval = keyFile->write(&pageOffset, kp, kpSize);
 	if (retval != E_ok) {
 		Log(ERR, caller, "failed to write key to %s",
-			keyFile->getFileName());
+			keyFile->name());
 	} else {
 		Log(DBG, caller,
 			"new page inserted: page offset = %" PRId64 ", key index = %d",
@@ -383,7 +383,7 @@ Rdb::backupFile(const char *oldName)
 	strncpy(newName, oldName, MAXPATHLEN);
 	strncat(newName, ".bkup", MAXPATHLEN);
 
-	return FileSystem::rename(newName, oldName);
+	return snf::fs::rename(newName, oldName);
 }
 
 /*
@@ -397,7 +397,7 @@ Rdb::restoreFile(const char *oldName)
 	strncpy(newName, oldName, MAXPATHLEN);
 	strncat(newName, ".bkup", MAXPATHLEN);
 
-	return FileSystem::rename(oldName, newName);
+	return snf::fs::rename(oldName, newName);
 }
 
 /*
@@ -411,7 +411,7 @@ Rdb::removeBackupFile(const char *oldName)
 	strncpy(newName, oldName, MAXPATHLEN);
 	strncat(newName, ".bkup", MAXPATHLEN);
 
-	return FileSystem::removeFile(newName);
+	return snf::fs::remove_file(newName);
 }
 
 /**
@@ -641,7 +641,7 @@ Rdb::get(
 		retval = valueFile->read(ki.ki_voff, &vp);
 		if (retval != E_ok) {
 			Log(ERR, caller, "failed to read value page at offset %" PRId64 " from %s",
-				ki.ki_voff, valueFile->getFileName());
+				ki.ki_voff, valueFile->name());
 		} else {
 			Assert(!IsValuePageDeleted(&vp), __FILE__, __LINE__,
 				"value is already deleted");
@@ -756,7 +756,7 @@ Rdb::set(
 			retval = valueFile->read(ki.ki_voff, &vp);
 			if (retval != E_ok) {
 				Log(ERR, caller, "failed to read value page at offset %" PRId64 " from %s",
-					ki.ki_voff, valueFile->getFileName());
+					ki.ki_voff, valueFile->name());
 			} else {
 				Assert(!IsValuePageDeleted(&vp), __FILE__, __LINE__,
 					"value is already deleted");
@@ -776,7 +776,7 @@ Rdb::set(
 			retval = valueFile->write(ki.ki_voff, &vp);
 			if (retval != E_ok) {
 				Log(ERR, caller, "failed to write value to %s",
-					valueFile->getFileName());
+					valueFile->name());
 			}
 		}
 	} else if (retval == E_not_found) {
@@ -786,7 +786,7 @@ Rdb::set(
 		retval = valueFile->write(&(ki.ki_voff), &vp);
 		if (retval != E_ok) {
 			Log(ERR, caller, "failed to write value to %s",
-				valueFile->getFileName());
+				valueFile->name());
 		} else {
 			ustk.freePage(valueFile, ki.ki_voff);
 			ustk.writeFlags(valueFile, &vp, ki.ki_voff, VPAGE_DELETED);
@@ -939,7 +939,7 @@ Rdb::remove(
 							retval = keyFile->writeNextOffset(prev_kpoff, prev_kp, next_kpoff);
 							if (retval != E_ok) {
 								Log(ERR, caller, "failed to update key page at offset %" PRId64
-									" to %s", prev_kpoff, keyFile->getFileName());
+									" to %s", prev_kpoff, keyFile->name());
 							} else {
 								ustk.writeNextOffset(keyFile, prev_kp, prev_kpoff, offset);
 							}
@@ -951,7 +951,7 @@ Rdb::remove(
 							retval = keyFile->writePrevOffset(next_kpoff, next_kp, prev_kpoff);
 							if (retval != E_ok) {
 								Log(ERR, caller, "failed to update key page at offset %" PRId64
-									" to %s", next_kpoff, keyFile->getFileName());
+									" to %s", next_kpoff, keyFile->name());
 							} else {
 								ustk.writePrevOffset(keyFile, next_kp, next_kpoff, offset);
 							}

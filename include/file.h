@@ -10,10 +10,12 @@
 	using fhandle_t = int;
 #endif
 
+namespace snf {
+
 /**
  * File Open mode
  */
-struct FileOpenFlags
+struct file_open_flags
 {
 	bool	o_read;
 	bool	o_write;
@@ -23,7 +25,7 @@ struct FileOpenFlags
 	bool	o_excl;
 	bool	o_sync;
 
-	FileOpenFlags()
+	file_open_flags()
 	{
 		o_read = false;
 		o_write = false;
@@ -34,7 +36,7 @@ struct FileOpenFlags
 		o_sync = false;
 	}
 
-	FileOpenFlags(const FileOpenFlags &flags)
+	file_open_flags(const file_open_flags &flags)
 	{
 		if (this != &flags) {
 			this->o_read = flags.o_read;
@@ -47,7 +49,7 @@ struct FileOpenFlags
 		}
 	}
 
-	FileOpenFlags & operator= (const FileOpenFlags &flags)
+	file_open_flags & operator= (const file_open_flags &flags)
 	{
 		if (this != &flags) {
 			this->o_read = flags.o_read;
@@ -64,37 +66,9 @@ struct FileOpenFlags
 };
 
 /**
- * File mask guard. Only for Unix platforms. NOOP on windows.
- */
-class FileMask
-{
-#if !defined(_WIN32)
-private:
-	mode_t	omask;
-#endif
-
-public:
-	FileMask(mode_t mask)
-	{
-#if !defined(_WIN32)
-		// Set the new mask and save the old mask
-		omask = umask(mask);
-#endif
-	}
-
-	~FileMask()
-	{
-#if !defined(_WIN32)
-		// Restore the old mask
-		umask(omask);
-#endif
-	}
-};
-
-/**
  * A simple class to manage file operations.
  */
-class File
+class file
 {
 protected:
 	std::string	fname;
@@ -113,7 +87,7 @@ public:
 	 * @param [in] mask  - umask to use when opening
 	 *                     the file.
 	 */
-	File(const char *fname, mode_t mask)
+	file(const char *fname, mode_t mask)
 	{
 		this->fname = fname;
 		this->mask = mask;
@@ -124,7 +98,7 @@ public:
 	 * Destroys the file manager object. The file, if open,
 	 * is closed.
 	 */
-	virtual ~File()
+	virtual ~file()
 	{
 		close();
 	}
@@ -132,7 +106,7 @@ public:
 	/**
 	 * Gets the file name that this object is managing.
 	 */
-	const char *getFileName() const
+	const char *name() const
 	{
 		return fname.c_str();
 	}
@@ -140,12 +114,12 @@ public:
 	/**
 	 * Gets the low level file handle.
 	 */
-	fhandle_t getFileHandle() const
+	fhandle_t handle() const
 	{
 		return fd;
 	}
 
-	virtual int     open(const FileOpenFlags &, mode_t mode = 0600, int *oserr = 0);
+	virtual int     open(const file_open_flags &, mode_t mode = 0600, int *oserr = 0);
 	virtual int     read(void *, int, int *, int *oserr = 0);
 	virtual int     read(int64_t, void *, int, int *, int *oserr = 0);
 	virtual int     write(const void *, int, int *, int *oserr = 0);
@@ -160,5 +134,7 @@ public:
 	virtual int     unlock(int64_t, int64_t len = 0, int *oserr = 0);
 	virtual int     close(int *oserr = 0);
 };
+
+} // namespace snf
 
 #endif // _SNF_FILE_H_

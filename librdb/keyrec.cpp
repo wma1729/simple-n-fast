@@ -249,7 +249,7 @@ KeyRecords::put(short root, const key_info_t *ki, short *idx)
 	} else {
 		const key_rec_t *krec = &(kp->kp_keys[root]);
 
-		int cmp = memcmp(ki->ki_key, krec->kr_key, ki->ki_klen);
+		int cmp = keycmp(ki, krec);
 		if (cmp < 0) {
 			LEFT_OF(root) = put(LEFT_OF(root), ki, idx);
 		} else if (cmp == 0) {
@@ -373,7 +373,7 @@ KeyRecords::remove(short root, const key_info_t *ki, short *idx)
 	if (root != -1) {
 		key_rec_t *krec = &(kp->kp_keys[root]);
 
-		int cmp = memcmp(ki->ki_key, krec->kr_key, ki->ki_klen);
+		int cmp = keycmp(ki, krec);
 		if (cmp < 0) {
 			LEFT_OF(root) = remove(LEFT_OF(root), ki, idx);
 		} else if (cmp == 0) {
@@ -401,6 +401,18 @@ KeyRecords::remove(short root, const key_info_t *ki, short *idx)
 	}
 
 	return balanceTree(root);
+}
+
+/**
+ * Compares key. memcmp() with key length into consideration.
+ */
+int
+KeyRecords::keycmp(const key_info_t *ki, const key_rec_t *krec)
+{
+	int cmp = ki->ki_klen - krec->kr_klen;
+	if (cmp == 0)
+		cmp = memcmp(ki->ki_key, krec->kr_key, ki->ki_klen);
+	return cmp;
 }
 
 /**
@@ -440,7 +452,7 @@ KeyRecords::get(const key_info_t *ki)
 	while (root != -1) {
 		const key_rec_t *krec = &(kp->kp_keys[root]);
 
-		int cmp = memcmp(ki->ki_key, krec->kr_key, ki->ki_klen);
+		int cmp = keycmp(ki, krec);
 		if (cmp < 0) {
 			root = LEFT_OF(root);
 		} else if (cmp == 0) {

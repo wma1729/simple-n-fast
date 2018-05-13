@@ -257,7 +257,7 @@ main(int argc, const char **argv)
 	int         retval = E_ok;
 	bool        stop = false;
 	bool        checkConfig = false;
-	Config      *config = 0;
+	snf::config *config = 0;
 	const char  *configName = 0;
 	const char  *ptr;
 	char        progName[MAXPATHLEN + 1];
@@ -288,7 +288,7 @@ main(int argc, const char **argv)
 	}
 
 	if (configName) {
-		config = DBG_NEW Config(configName);
+		config = DBG_NEW snf::config(configName);
 	} else {
 		fprintf(stderr, "%s\n", "-config option not specified");
 		return 1;
@@ -300,7 +300,7 @@ main(int argc, const char **argv)
 	if (ptr != 0) {
 		TheDaemonArgs.home = ptr;
 	} else {
-		if (FileSystem::getHome(buf, MAXPATHLEN) != E_ok) {
+		if (snf::fs::get_home(buf, MAXPATHLEN) != E_ok) {
 			fprintf(stderr, "%s\n", "failed to find HOME");
 			return 1;
 		}

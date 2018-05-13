@@ -20,12 +20,12 @@ public:
 		return "Adds 2880000 million keys";
 	}
 
-	virtual bool execute(const Config *config)
+	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(config, 0, "check config");
-		const char *dbPath = config->get("DBPATH");
+		ASSERT_NE(conf, 0, "check config");
+		const char *dbPath = conf->get("DBPATH");
 		ASSERT_NE(dbPath, 0, "get DBPATH from config");
-		const char *dbName = config->get("DBNAME");
+		const char *dbName = conf->get("DBNAME");
 		ASSERT_NE(dbName, 0, "get DBNAME from config");
 
 		RdbOptions options;

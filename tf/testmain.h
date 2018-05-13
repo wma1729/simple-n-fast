@@ -39,11 +39,9 @@ main(int argc, const char **argv)
 	const char *sd = 0;
 	const char *cf = 0;
 	const char *tl = 0;
-	Config *config = 0;
+	snf::config *conf = 0;
 
-#if defined(_WIN32) && defined(_DEBUG)
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);  
-#endif
+	ENABLE_LEAK_CHECK;
 
 	snf::basename(prog, MAXPATHLEN + 1, argv[0], true);
 
@@ -98,7 +96,7 @@ main(int argc, const char **argv)
 	}
 
 	if (cf) {
-		config = DBG_NEW Config(cf);
+		conf = DBG_NEW snf::config(cf);
 	}
 
 	snf::tf::TestSuite suite(sn, sd);
@@ -124,11 +122,11 @@ main(int argc, const char **argv)
 		}
 	}
 
-	suite.run(config);
+	suite.run(conf);
 	suite.report();
 
-	if (config)
-		delete config;
+	if (conf)
+		delete conf;
 
 	return suite.failed() ? 1 : 0;
 }

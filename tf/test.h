@@ -31,9 +31,9 @@ public:
 
 	virtual const char *name() const = 0;
 	virtual const char *description() const = 0;
-	virtual bool execute(const Config *) = 0;
+	virtual bool execute(const snf::config *) = 0;
 
-	virtual bool run(const Config *config)
+	virtual bool run(const snf::config *config)
 	{
 		m_st = DBG_NEW local_time;
 		m_begin = high_resolution_clock::now();
@@ -83,7 +83,8 @@ public:
 	{
 		if (m_et) delete m_et;
 		for (auto t : m_tests)
-			delete t;
+			if (t)
+				delete t;
 		m_tests.clear();
 		
 	}
@@ -103,7 +104,7 @@ public:
 		return m_desc.c_str();
 	}
 
-	virtual bool execute(const Config *config)
+	virtual bool execute(const snf::config *config)
 	{
 		m_st = DBG_NEW local_time;
 

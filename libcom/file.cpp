@@ -6,6 +6,34 @@
 	#include <fcntl.h>
 #endif
 
+namespace snf {
+
+#if !defined(_WIN32)
+
+/**
+ * File mask guard. Only for Unix platforms. NOOP on windows.
+ */
+class file_mask
+{
+private:
+	mode_t	omask;
+
+public:
+	file_mask(mode_t mask)
+	{
+		// Set the new mask and save the old mask
+		omask = umask(mask);
+	}
+
+	~file_mask()
+	{
+		// Restore the old mask
+		umask(omask);
+	}
+};
+
+#endif // _WIN32
+
 /**
  * Opens the file. Before opening the file, the umask
  * specified in the constructor is applied.
@@ -20,7 +48,7 @@
  * @return E_ok on success, -ve error code on failure.
  */
 int
-File::open(const FileOpenFlags &flags, mode_t mode, int *oserr)
+file::open(const file_open_flags &flags, mode_t mode, int *oserr)
 {
 	int retval = E_ok;
 
@@ -113,7 +141,7 @@ File::open(const FileOpenFlags &flags, mode_t mode, int *oserr)
 		oflags |= O_SYNC;
 	}
 
-	FileMask fmask(mask);
+	file_mask fmask(mask);
 
 	fd = ::open(fname.c_str(), oflags, mode);
 
@@ -139,7 +167,7 @@ File::open(const FileOpenFlags &flags, mode_t mode, int *oserr)
  * @return E_ok on success, -ve error code on success.
  */
 int
-File::read(void *buf, int toRead, int *bRead, int *oserr)
+file::read(void *buf, int toRead, int *bRead, int *oserr)
 {
 	int     retval = E_ok;
 	int     n = 0, nbytes = 0;
@@ -218,9 +246,9 @@ File::read(void *buf, int toRead, int *bRead, int *oserr)
  * @return E_ok on success, -ve error code on success.
  */
 int
-File::read(int64_t offset, void *buf, int toRead, int *bRead, int *oserr)
+file::read(int64_t offset, void *buf, int toRead, int *bRead, int *oserr)
 {
-	int retval = File::seek(offset, oserr);
+	int retval = file::seek(offset, oserr);
 	if (retval == E_ok) {
 		retval = read(buf, toRead, bRead, oserr);
 	}
@@ -238,7 +266,7 @@ File::read(int64_t offset, void *buf, int toRead, int *bRead, int *oserr)
  * @return E_ok on success, -ve error code on success.
  */
 int
-File::write(const void *buf, int toWrite, int *bWritten, int *oserr)
+file::write(const void *buf, int toWrite, int *bWritten, int *oserr)
 {
 	int retval = E_ok;
 	int nbytes = 0;
@@ -299,9 +327,9 @@ File::write(const void *buf, int toWrite, int *bWritten, int *oserr)
  * @return E_ok on success, -ve error code on success.
  */
 int
-File::write(int64_t offset, const void *buf, int toWrite, int *bWritten, int *oserr)
+file::write(int64_t offset, const void *buf, int toWrite, int *bWritten, int *oserr)
 {
-	int retval = File::seek(offset, oserr);
+	int retval = file::seek(offset, oserr);
 	if (retval == E_ok) {
 		retval = write(buf, toWrite, bWritten, oserr);
 	}
@@ -321,7 +349,7 @@ File::write(int64_t offset, const void *buf, int toWrite, int *bWritten, int *os
  * @return E_ok on success, -ve error code on failure.
  */
 int
-File::seek(int whence, int64_t offset, int64_t *newOffset, int *oserr)
+file::seek(int whence, int64_t offset, int64_t *newOffset, int *oserr)
 {
 	int retval = E_ok;
 
@@ -391,7 +419,7 @@ File::seek(int whence, int64_t offset, int64_t *newOffset, int *oserr)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-File::seek(int64_t offset, int *oserr)
+file::seek(int64_t offset, int *oserr)
 {
 	int     retval = E_ok;
 	int64_t newOffset = -1L;
@@ -415,7 +443,7 @@ File::seek(int64_t offset, int *oserr)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-File::sync(int *oserr)
+file::sync(int *oserr)
 {
 	int retval = E_ok;
 
@@ -453,7 +481,7 @@ File::sync(int *oserr)
  * on failure.
  */
 int64_t
-File::size(int *oserr)
+file::size(int *oserr)
 {
 	int64_t	fsize = 0;
 
@@ -499,7 +527,7 @@ File::size(int *oserr)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-File::truncate(int64_t fsize, int *oserr)
+file::truncate(int64_t fsize, int *oserr)
 {
 	int retval = E_ok;
 
@@ -545,7 +573,7 @@ File::truncate(int64_t fsize, int *oserr)
  * @return E_ok on success (after acquiring the lock), -ve error code on failure.
  */
 int
-File::lock(int type, int64_t start, int64_t len, int *oserr)
+file::lock(int type, int64_t start, int64_t len, int *oserr)
 {
 	int retval = E_ok;
 
@@ -644,7 +672,7 @@ File::lock(int type, int64_t start, int64_t len, int *oserr)
  * is acquired by another process, and -ve error code on failure.
  */
 int
-File::trylock(int type, int64_t start, int64_t len, int *oserr)
+file::trylock(int type, int64_t start, int64_t len, int *oserr)
 {
 	int retval = E_ok;
 
@@ -752,7 +780,7 @@ File::trylock(int type, int64_t start, int64_t len, int *oserr)
  * @return E_ok on success (after releasing the lock), -ve error code on failure.
  */
 int
-File::unlock(int64_t start, int64_t len, int *oserr)
+file::unlock(int64_t start, int64_t len, int *oserr)
 {
 	int retval = E_ok;
 
@@ -818,7 +846,7 @@ File::unlock(int64_t start, int64_t len, int *oserr)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-File::close(int *oserr)
+file::close(int *oserr)
 {
 	if (fd != INVALID_HANDLE_VALUE) {
 #if defined(_WIN32)
@@ -837,3 +865,5 @@ File::close(int *oserr)
 
 	return E_ok;
 }
+
+} // namespace snf

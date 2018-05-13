@@ -83,7 +83,7 @@ UnwindStack::execute()
  * Pushes the unwind operation (restoring flags) on the stack.
  */
 void
-UnwindStack::writeFlags(File *file, void *page, int64_t pageOff, int flags)
+UnwindStack::writeFlags(snf::file *file, void *page, int64_t pageOff, int flags)
 {
 	unwind_block_t blk;
 
@@ -101,7 +101,7 @@ UnwindStack::writeFlags(File *file, void *page, int64_t pageOff, int flags)
  * Pushes the unwind operation (restoring next offset) on the stack.
  */
 void
-UnwindStack::writeNextOffset(File *file, void *page, int64_t pageOff, int64_t offset)
+UnwindStack::writeNextOffset(snf::file *file, void *page, int64_t pageOff, int64_t offset)
 {
 	unwind_block_t blk;
 
@@ -119,7 +119,7 @@ UnwindStack::writeNextOffset(File *file, void *page, int64_t pageOff, int64_t of
  * Pushes the unwind operation (restoring previous offset) on the stack.
  */
 void
-UnwindStack::writePrevOffset(File *file, void *page, int64_t pageOff, int64_t offset)
+UnwindStack::writePrevOffset(snf::file *file, void *page, int64_t pageOff, int64_t offset)
 {
 	unwind_block_t blk;
 
@@ -137,7 +137,7 @@ UnwindStack::writePrevOffset(File *file, void *page, int64_t pageOff, int64_t of
  * Pushes the unwind operation (freeing page) on the stack.
  */
 void
-UnwindStack::freePage(File *file, int64_t offset)
+UnwindStack::freePage(snf::file *file, int64_t offset)
 {
 	unwind_block_t blk;
 

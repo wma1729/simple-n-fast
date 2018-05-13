@@ -25,9 +25,9 @@ test:
 	@echo "DBPATH = ${CURDIR}/db" >> rdbts.conf
 	@echo "DBNAME = testdb" >> rdbts.conf
 ifeq (${DBG},-g)
-	@valgrind --quiet --leak-check=full --show-leak-kinds=all ${P}/rdbts -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf -logpath "${CURDIR}/log" -v
+	@valgrind --quiet --leak-check=full --show-leak-kinds=all ${P}/rdbts -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf"
 else
-	@${P}/rdbts -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf -logpath "${CURDIR}/log" -v
+	@${P}/rdbts -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf
 endif
 
 install:

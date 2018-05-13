@@ -17,16 +17,18 @@ public:
 		return "Sets, gets, and removes 2 key/value pairs";
 	}
 
-	virtual bool execute(const Config *config)
+	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(config, 0, "check config");
-		const char *dbPath = config->get("DBPATH");
+		ASSERT_NE(conf, 0, "check config");
+		const char *dbPath = conf->get("DBPATH");
 		ASSERT_NE(dbPath, 0, "get DBPATH from config");
-		const char *dbName = config->get("DBNAME");
+		const char *dbName = conf->get("DBNAME");
 		ASSERT_NE(dbName, 0, "get DBNAME from config");
 
 		RdbOptions options;
 		options.setMemoryUsage(5);
+		std::cerr << "dbpath = " << dbPath << std::endl;
+		std::cerr << "dbname = " << dbName << std::endl;
 		Rdb rdb(dbPath, dbName, 4096, 10, options);
 
 		int retval = rdb.open();

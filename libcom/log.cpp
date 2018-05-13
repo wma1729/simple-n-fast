@@ -13,9 +13,9 @@ FileLogger::open(const snf::local_time &lt)
 {
 	char lf[MAXPATHLEN + 1];
 
-	if (!FileSystem::exists(logPath.c_str())) {
+	if (!snf::fs::exists(logPath.c_str())) {
 		if (mkLogPath) {
-			if (FileSystem::mkdir(logPath.c_str(), 0755) != 0) {
+			if (snf::fs::mkdir(logPath.c_str(), 0755) != 0) {
 				return;
 			}
 		} else {
@@ -26,9 +26,9 @@ FileLogger::open(const snf::local_time &lt)
 	snprintf(lf, MAXPATHLEN, "%s%c%04d%02d%02d.log",
 		logPath.c_str(), PATH_SEP, lt.year(), lt.month(), lt.day());
 
-	logFile = DBG_NEW File(lf, 0022);
+	logFile = DBG_NEW snf::file(lf, 0022);
 
-	FileOpenFlags flags;
+	snf::file_open_flags flags;
 	flags.o_append = true;
 	flags.o_create = true;
 	flags.o_sync = true;

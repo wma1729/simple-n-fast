@@ -4,6 +4,8 @@
 #include <string>
 #include <map>
 
+namespace snf {
+
 /**
  * Configuration options read from a file and store
  * in a map. The file has the format:
@@ -12,7 +14,7 @@
  * </pre>
  * Empty lines are ignored. Comments starts with '#'.
  */
-class Config
+class config
 {
 private:
 	std::string m_filename;
@@ -22,10 +24,10 @@ private:
 	void read();
 public:
 	/**
-	 * Creates Config object withe the config file.
+	 * Creates config object withe the config file.
 	 * @param [in] cf - config file name.
 	 */
-	Config(const std::string &cf)
+	config(const std::string &cf)
 		: m_filename(cf)
 	{
 		read();
@@ -43,5 +45,7 @@ public:
 	const char *get(const std::string &) const;
 	const std::string &get(const std::string &, const std::string &) const;
 };
+
+} // namespace snf
 
 #endif // _SNF_CONFIG_H_

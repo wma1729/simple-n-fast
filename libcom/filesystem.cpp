@@ -9,6 +9,9 @@
 #include <pwd.h>
 #endif
 
+namespace snf {
+namespace fs {
+
 /**
  * Get home directory for the current user.
  *
@@ -18,7 +21,7 @@
  * @return E_ok on success, -ve error code on failure.
  */
 int
-FileSystem::getHome(char *buf, size_t buflen)
+get_home(char *buf, size_t buflen)
 {
 	int retval = E_ok;
 
@@ -68,7 +71,7 @@ FileSystem::getHome(char *buf, size_t buflen)
  * @return true if the file path exists, false otherwise.
  */
 bool
-FileSystem::exists(const char *path, int *oserr)
+exists(const char *path, int *oserr)
 {
 	bool pathExists = true;
 
@@ -123,9 +126,8 @@ FileSystem::exists(const char *path, int *oserr)
  * @return file size on success, -ve error code on failure.
  */
 int64_t
-FileSystem::size(const char *path, int *oserr)
+size(const char *path, int *oserr)
 {
-	const char  *caller = "FileSystem::size";
 	int64_t     fsize = -1L;
 
 	if (oserr) *oserr = 0;
@@ -141,9 +143,7 @@ FileSystem::size(const char *path, int *oserr)
 
 	if (pathW) {
 		if (!GetFileAttributesExW(pathW, GetFileExInfoStandard, &fad)) {
-			int error = GET_ERRNO;
-			if (oserr) *oserr = 0;
-			Log(ERR, caller, error, "GetFileAttributesEx(%s) failed", path);
+			if (oserr) *oserr = GET_ERRNO;
 			fsize = E_stat_failed;
 		} else {
 			LARGE_INTEGER dummy;
@@ -163,7 +163,6 @@ FileSystem::size(const char *path, int *oserr)
 
 	if (stat(path, &stbuf) < 0) {
 		if (oserr) *oserr = errno;
-		Log(ERR, caller, errno, "stat(%s) failed", path);
 		fsize = E_stat_failed;
 	} else {
 		fsize = int64_t(stbuf.st_size);
@@ -197,7 +196,7 @@ FileSystem::size(const char *path, int *oserr)
  * (like invalid file path).
  */
 int
-FileSystem::isAbsolutePath(const char *p)
+is_abs_path(const char *p)
 {
 	int i = 0;
 
@@ -252,9 +251,8 @@ FileSystem::isAbsolutePath(const char *p)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
+mkdir(const char *dir, mode_t mode, int *oserr)
 {
-	const char  *caller = "FileSystem::mkdir";
 	int         retval = E_ok;
 	const char  *ptr1;
 	const char  *ptr2;
@@ -267,7 +265,7 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 	}
 
 	ptr1 = dir;
-	int i = isAbsolutePath(dir);
+	int i = is_abs_path(dir);
 	if (i < 0) {
 		return i;
 	}
@@ -289,10 +287,8 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 			ptr1 = 0;
 		}
 
-		if (FileSystem::exists(buf))
+		if (exists(buf))
 			continue;
-
-		Log(DBG, caller, "making directory %s", buf);
 
 #if defined(_WIN32)
 
@@ -301,9 +297,7 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 
 		if (pathW) {
 			if (!CreateDirectoryW(pathW, 0)) {
-				int error = GET_ERRNO;
-				if (oserr) *oserr = error;
-				Log(ERR, caller, error, "CreateDirectory(%s) failed", buf);
+				if (oserr) *oserr = GET_ERRNO;
 				retval = E_mkdir_failed;
 			}
 
@@ -315,9 +309,7 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
 #else
 
 		if (::mkdir(buf, mode) < 0) {
-			int error = GET_ERRNO;
 			if (oserr) *oserr = GET_ERRNO;
-			Log(ERR, caller, error, "mkdir(%s) failed", buf);
 			retval = E_mkdir_failed;
 		}
 
@@ -339,20 +331,17 @@ FileSystem::mkdir(const char *dir, mode_t mode, int *oserr)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-FileSystem::rename(const char *newName, const char *oldName, int *oserr)
+rename(const char *newName, const char *oldName, int *oserr)
 {
-	const char	*caller = "FileSystem::rename";
-	int 		retval = E_ok;
+	int 	retval = E_ok;
 
 	if (oserr) *oserr = 0;
 
 	if ((newName == 0) || (*newName == '\0')) {
-		Log(ERR, caller, "invalid new name specified");
 		return E_invalid_arg;
 	}
 
 	if ((oldName == 0) || (*oldName == '\0')) {
-		Log(ERR, caller, "invalid old name specified");
 		return E_invalid_arg;
 	}
 
@@ -380,10 +369,7 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 			}
 
 			if (!MoveFileExW(oldNameW, newNameW, flags)) {
-				int error = GET_ERRNO;
-				if (oserr) *oserr = error;
-				Log(ERR, caller, error, "MoveFile(%s, %s) failed",
-					oldName, newName);
+				if (oserr) *oserr = GET_ERRNO;
 				retval = E_rename_failed;
 			}
 			delete [] newNameW;
@@ -401,8 +387,6 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
 	if (::rename(oldName, newName) < 0)
 	{
 		if (oserr) *oserr = errno;
-		Log(ERR, caller, errno, "rename(%s, %s) failed",
-			oldName, newName);
 		retval = E_rename_failed;
 	}
 
@@ -420,15 +404,13 @@ FileSystem::rename(const char *newName, const char *oldName, int *oserr)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-FileSystem::removeFile(const char *f, int *oserr)
+remove_file(const char *f, int *oserr)
 {
-	const char  *caller = "FileSystem::removeFile";
-	int			retval = E_ok;
+	int	retval = E_ok;
 
 	if (oserr) *oserr = 0;
 
 	if ((f == 0) || (*f == '\0')) {
-		Log(ERR, caller, "invalid file specified");
 		return E_invalid_arg;
 	}
 
@@ -437,11 +419,8 @@ FileSystem::removeFile(const char *f, int *oserr)
 	wchar_t *fW = snf::mbs2wcs(f);
 
 	if (fW) {
-		int error = GET_ERRNO;
-		if (oserr) *oserr = error;
-
 		if (!DeleteFileW(fW)) {
-			Log(ERR, caller, error, "DeleteFile(%s) failed", f);
+			if (oserr) *oserr = GET_ERRNO;
 			retval = E_remove_failed;
 		}
 
@@ -454,7 +433,6 @@ FileSystem::removeFile(const char *f, int *oserr)
 
 	if (unlink(f) != 0) {
 		if (*oserr) *oserr = errno;
-		Log(ERR, caller, errno, "unlink(%s) failed", f);
 		retval = E_remove_failed;
 	}
 
@@ -472,15 +450,13 @@ FileSystem::removeFile(const char *f, int *oserr)
  * @return E_ok on success, -ve error code on failure.
  */
 int
-FileSystem::removeDir(const char *d, int *oserr)
+remove_dir(const char *d, int *oserr)
 {
-	const char  *caller = "FileSystem::removeDir";
-	int         retval = E_ok;
+	int	retval = E_ok;
 
 	if (oserr) *oserr = 0;
 
 	if ((d == 0) || (*d == '\0')) {
-		Log(ERR, caller, "invalid directory specified");
 		return E_invalid_arg;
 	}
 
@@ -490,9 +466,7 @@ FileSystem::removeDir(const char *d, int *oserr)
 
 	if (dW) {
 		if (!RemoveDirectoryW(dW)) {
-			int error = GET_ERRNO;
-			if (oserr) *oserr = error;
-			Log(ERR, caller, error, "RemoveDirectory(%s) failed", d);
+			if (oserr) *oserr = GET_ERRNO;
 			retval = E_remove_failed;
 		}
 
@@ -505,7 +479,6 @@ FileSystem::removeDir(const char *d, int *oserr)
 
 	if (rmdir(d) != 0) {
 		if (oserr) *oserr = errno;
-		Log(ERR, caller, errno, "rmdir(%s) failed", d);
 		retval = E_remove_failed;
 	}
 
@@ -513,3 +486,6 @@ FileSystem::removeDir(const char *d, int *oserr)
 
 	return retval;
 }
+
+} // namespace fs
+} // namespace snf

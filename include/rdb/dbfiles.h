@@ -9,7 +9,7 @@
 /**
  * Manage DB attributes file.
  */
-class AttrFile : public File
+class AttrFile : public snf::file
 {
 private:
 	dbattr_t    dbAttr;
@@ -23,7 +23,7 @@ public:
 	 *                     the file.
 	 */
 	AttrFile(const char *fname, mode_t mask)
-		: File(fname, mask)
+		: snf::file(fname, mask)
 	{
 		memset(&dbAttr, 0, sizeof(dbattr_t));
 	}
@@ -63,7 +63,7 @@ public:
 /**
  * Manages key file.
  */
-class KeyFile : public File
+class KeyFile : public snf::file
 {
 private:
 	FreeDiskPageMgr *fdpMgr;
@@ -78,7 +78,7 @@ public:
 	 *                     the file.
 	 */
 	KeyFile(const char *fname, mode_t mask)
-		: File(fname, mask),
+		: snf::file(fname, mask),
 		  fdpMgr(0)
 	{
 	}
@@ -129,7 +129,7 @@ public:
 /**
  * Manages value file.
  */
-class ValueFile : public File
+class ValueFile : public snf::file
 {
 private:
 	FreeDiskPageMgr *fdpMgr;
@@ -144,7 +144,7 @@ public:
 	 *                     the file.
 	 */
 	ValueFile(const char *fname, mode_t mask)
-		: File(fname, mask)
+		: snf::file(fname, mask)
 	{
 		this->fdpMgr = 0;
 	}

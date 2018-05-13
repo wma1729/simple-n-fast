@@ -27,7 +27,7 @@ FreeDiskPageMgr::addOffsetToFile(int64_t offset)
 		if (retval != E_ok) {
 			Log(ERR, caller, oserr,
 				"failed to write free disk page offset (%" PRId64 ") to file %s",
-				offset, file->getFileName());
+				offset, file->name());
 		} else if (bWritten != toWrite) {
 			Log(ERR, caller, "expected to write %d bytes, written only %d bytes",
 				toWrite, bWritten);
@@ -61,7 +61,7 @@ FreeDiskPageMgr::removeOffsetFromFile()
 		if (retval != E_ok) {
 			fsize += sizeof(int64_t);
 			Log(ERR, caller, "failed to remove last free disk page offset from file %s",
-				file->getFileName());
+				file->name());
 		}
 	}
 
@@ -94,14 +94,14 @@ FreeDiskPageMgr::init()
 		if (retval != E_ok) {
 			Log(ERR, caller, oserr,
 				"unable to seek to the start of the file %s",
-				file->getFileName());
+				file->name());
 		} else {
 			do {
 				retval = file->read(&offset, toRead, &bRead, &oserr);
 				if (retval != E_ok) {
 					Log(ERR, caller, oserr,
 						"failed to read offset from file %s at offset %" PRId64,
-						file->getFileName(), fsize);
+						file->name(), fsize);
 				} else if (bRead == 0) {
 					retval = E_eof_detected;
 					break;
@@ -215,7 +215,7 @@ FreeDiskPageMgr::reset()
 		int retval = file->truncate(0L, &oserr);
 		if (retval != E_ok) {
 			Log(ERR, caller, oserr, "failed to truncate file %s to size 0",
-				file->getFileName());
+				file->name());
 			return retval;
 		}
 		fsize = 0;

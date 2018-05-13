@@ -28,6 +28,7 @@ private:
 	short removeMin(short, short *);
 	short removeMax(short, short *);
 	short remove(short, const key_info_t *, short *);
+	int keycmp(const key_info_t *, const key_rec_t *);
 
 public:
 	/**
