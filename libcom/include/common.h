@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cinttypes>
 #include <string>
+#include <sstream>
 #include "dbg.h"
 
 #if defined(_WIN32)
@@ -13,7 +14,6 @@
 	#include <Windows.h>
 	#include <io.h>
 
-	#define PATH_SEP        '\\'
 	#define GET_ERRNO       static_cast<int>(GetLastError())
 	#define SET_ERRNO(E)    SetLastError(E)
 	#define strcasecmp      _stricmp
@@ -32,14 +32,13 @@
 	#include <sys/syscall.h>
 	#include <errno.h>
 
-	#define PATH_SEP                '/'
 	#define INVALID_HANDLE_VALUE    (-1)
 	#define GET_ERRNO               errno
 	#define SET_ERRNO(E)            do { errno = (E); } while (0)
 
 	using tid_t = uint32_t;
 
-	#define gettid()    (tid_t)syscall(SYS_gettid)
+	#define gettid()    static_cast<tid_t>(syscall(SYS_gettid))
 #endif
 
 #if !defined(MAXPATHLEN)
@@ -50,9 +49,21 @@
 #define ERRSTRLEN       255
 #endif
 
-constexpr bool isnewline(int c) { return ((c == '\n') || (c == '\r')); }
-
 namespace snf {
+
+constexpr bool isnewline(int c)
+{
+	return ((c == '\n') || (c == '\r'));
+}
+
+constexpr char pathsep()
+{
+#if defined(_WIN32)
+	return '\\';
+#else
+	return '/';
+#endif
+}
 
 const char *syserr(char *, size_t, int);
 const char *basename(char *, size_t, const char *, bool stripExt = false);

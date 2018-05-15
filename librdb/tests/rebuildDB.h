@@ -94,8 +94,8 @@ public:
 		char dbpath[MAXPATHLEN + 1];
 		char fdppath[MAXPATHLEN + 1];
 
-		snprintf(dbpath, MAXPATHLEN, "%s%c%s.db", dbPath, PATH_SEP, dbName);
-		snprintf(fdppath, MAXPATHLEN, "%s%c%s.fdp", dbPath, PATH_SEP, dbName);
+		snprintf(dbpath, MAXPATHLEN, "%s%c%s.db", dbPath, snf::pathsep(), dbName);
+		snprintf(fdppath, MAXPATHLEN, "%s%c%s.fdp", dbPath, snf::pathsep(), dbName);
 
 		int64_t dbsize = snf::fs::size(dbpath);
 		int64_t expsize = sizeof(value_page_t) * 12;

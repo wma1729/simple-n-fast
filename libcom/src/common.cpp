@@ -83,7 +83,7 @@ basename(char *buf, size_t buflen, const char *path, bool stripExt)
 		return 0;
 	}
 
-	const char *ptr = strrchr(path, PATH_SEP);
+	const char *ptr = strrchr(path, pathsep());
 	if (ptr != 0) {
 		ptr++;
 	} else {

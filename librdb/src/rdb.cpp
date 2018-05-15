@@ -503,7 +503,7 @@ Rdb::open()
 		return E_ok;
 	}
 
-	snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), PATH_SEP, name.c_str());
+	snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), snf::pathsep(), name.c_str());
 	strncpy(dbPath, idxPath, MAXPATHLEN);
 	strncpy(attrPath, idxPath, MAXPATHLEN);
 	strncpy(fdpPath, idxPath, MAXPATHLEN);
@@ -1019,7 +1019,7 @@ Rdb::rebuild()
 			return E_invalid_state;
 		}
 
-		snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), PATH_SEP, name.c_str());
+		snprintf(idxPath, MAXPATHLEN, "%s%c%s", path.c_str(), snf::pathsep(), name.c_str());
 		strncpy(dbPath, idxPath, MAXPATHLEN);
 		strncpy(attrPath, idxPath, MAXPATHLEN);
 		strncpy(fdpPath, idxPath, MAXPATHLEN);

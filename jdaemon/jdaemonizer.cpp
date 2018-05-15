@@ -314,7 +314,7 @@ main(int argc, const char **argv)
 
 	int n = snprintf(buf, MAXPATHLEN, "%s%c.%s.pid",
 				ptr,
-				PATH_SEP,
+				snf::pathsep(),
 				progName);
 	buf[n] = '\0';
 	TheDaemonArgs.pidPath = buf;

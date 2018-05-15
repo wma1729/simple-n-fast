@@ -24,7 +24,7 @@ FileLogger::open(const snf::local_time &lt)
 	}
 
 	snprintf(lf, MAXPATHLEN, "%s%c%04d%02d%02d.log",
-		logPath.c_str(), PATH_SEP, lt.year(), lt.month(), lt.day());
+		logPath.c_str(), snf::pathsep(), lt.year(), lt.month(), lt.day());
 
 	logFile = DBG_NEW snf::file(lf, 0022);
 

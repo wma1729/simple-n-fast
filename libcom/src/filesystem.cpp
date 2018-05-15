@@ -202,13 +202,13 @@ is_abs_path(const char *p)
 
 #if defined(_WIN32)
 
-	if (isalpha(p[i]) && (p[i + 1] == ':') && (p[i + 2] == PATH_SEP)) {
+	if (isalpha(p[i]) && (p[i + 1] == ':') && (p[i + 2] == pathsep())) {
 		/* C:\ */
 		i = 3;
-	} else if ((p[i] == PATH_SEP) && (p[i + 1] == PATH_SEP) && (p[i + 2] == '?') && (p[i + 3] == PATH_SEP)) {
+	} else if ((p[i] == pathsep()) && (p[i + 1] == pathsep()) && (p[i + 2] == '?') && (p[i + 3] == pathsep())) {
 		/* \\?\ */
 		i = 4;
-		if (isalpha(p[i]) && (p[i + 1] == ':') && (p[i + 2] == PATH_SEP)) {
+		if (isalpha(p[i]) && (p[i + 1] == ':') && (p[i + 2] == pathsep())) {
 			/* \\?\C:\ */
 			i += 3;
 		} else if ((p[i] == 'U') && (p[i + 1] == 'N') && (p[i + 2] == 'C')) {
@@ -226,14 +226,14 @@ is_abs_path(const char *p)
 		} else {
 			return E_invalid_arg;
 		}
-	} else if ((p[0] == PATH_SEP) && (p[1] == PATH_SEP)) {
+	} else if ((p[0] == pathsep()) && (p[1] == pathsep())) {
 		/* \\ */
 		i = 2;
 	}
 
 #endif
 
-	while (p[i] == PATH_SEP)
+	while (p[i] == pathsep())
 		i++;
 
 	return i;
@@ -278,7 +278,7 @@ mkdir(const char *dir, mode_t mode, int *oserr)
 		if ((ptr1 == 0) || (*ptr1 == '\0'))
 			break;
 
-		if ((ptr2 = strchr(ptr1, PATH_SEP)) != 0) {
+		if ((ptr2 = strchr(ptr1, pathsep())) != 0) {
 			ptr2++;
 			strncat(buf, ptr1, ptr2 - ptr1);
 			ptr1 = ptr2;
