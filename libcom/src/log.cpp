@@ -78,8 +78,8 @@ FileLogger::log(log_level_t ll, const char *caller, const char *msg)
 		int nbytes = snprintf(logbuf, LOGBUFLEN,
 				"%s [%u.%u] [%s] [%s] %s\n",
 				lt.str().c_str(),
-				getpid(),
-				gettid(),
+				snf::getpid(),
+				snf::gettid(),
 				LevelStr(ll),
 				caller,
 				msg);

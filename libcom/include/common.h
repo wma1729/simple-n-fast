@@ -14,17 +14,12 @@
 	#include <Windows.h>
 	#include <io.h>
 
-	#define GET_ERRNO       static_cast<int>(GetLastError())
-	#define SET_ERRNO(E)    SetLastError(E)
 	#define strcasecmp      _stricmp
 	#define strncasecmp     _strnicmp
 
 	using mode_t = int;
 	using pid_t = DWORD;
 	using tid_t = DWORD;
-
-	#define getpid()    GetCurrentProcessId()
-	#define gettid()    GetCurrentThreadId()
 
 #else /* if !defined(_WIN32) */
 
@@ -33,12 +28,9 @@
 	#include <errno.h>
 
 	#define INVALID_HANDLE_VALUE    (-1)
-	#define GET_ERRNO               errno
-	#define SET_ERRNO(E)            do { errno = (E); } while (0)
 
 	using tid_t = uint32_t;
 
-	#define gettid()    static_cast<tid_t>(syscall(SYS_gettid))
 #endif
 
 #if !defined(MAXPATHLEN)
@@ -51,17 +43,59 @@
 
 namespace snf {
 
-constexpr bool isnewline(int c)
+constexpr bool
+isnewline(int c)
 {
 	return ((c == '\n') || (c == '\r'));
 }
 
-constexpr char pathsep()
+constexpr char
+pathsep(void)
 {
 #if defined(_WIN32)
 	return '\\';
 #else
 	return '/';
+#endif
+}
+
+inline int
+system_error(void)
+{
+#if defined(_WIN32)
+	return static_cast<int>(::GetLastError());
+#else
+	return errno;
+#endif
+}
+
+inline void
+system_error(int syserr)
+{
+#if defined(_WIN32)
+	::SetLastError(syserr);
+#else
+	errno = syserr;
+#endif
+}
+
+inline pid_t
+getpid(void)
+{
+#if defined(_WIN32)
+	return ::GetCurrentProcessId();
+#else
+	return ::getpid();
+#endif
+}
+
+inline tid_t
+gettid(void)
+{
+#if defined(_WIN32)
+	return ::GetCurrentThreadId();
+#else
+	return static_cast<tid_t>(::syscall(SYS_gettid));
 #endif
 }
 

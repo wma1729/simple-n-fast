@@ -90,7 +90,7 @@ exists(const char *path, int *oserr)
 	if (pathW) {
 		fileAttr = GetFileAttributesW(pathW);
 		if (fileAttr == INVALID_FILE_ATTRIBUTES) {
-			error = GET_ERRNO;
+			error = system_error();
 			if (oserr) *oserr = error;
 		}
 		delete [] pathW;
@@ -106,8 +106,8 @@ exists(const char *path, int *oserr)
 #else
 
 	if (access(path, F_OK) < 0) {
-		if (oserr) *oserr = GET_ERRNO;
-		if (ENOENT == GET_ERRNO) {
+		if (oserr) *oserr = system_error();
+		if (ENOENT == system_error()) {
 			pathExists = false;
 		}
 	}
@@ -143,7 +143,7 @@ size(const char *path, int *oserr)
 
 	if (pathW) {
 		if (!GetFileAttributesExW(pathW, GetFileExInfoStandard, &fad)) {
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 			fsize = E_stat_failed;
 		} else {
 			LARGE_INTEGER dummy;
@@ -297,7 +297,7 @@ mkdir(const char *dir, mode_t mode, int *oserr)
 
 		if (pathW) {
 			if (!CreateDirectoryW(pathW, 0)) {
-				if (oserr) *oserr = GET_ERRNO;
+				if (oserr) *oserr = system_error();
 				retval = E_mkdir_failed;
 			}
 
@@ -309,7 +309,7 @@ mkdir(const char *dir, mode_t mode, int *oserr)
 #else
 
 		if (::mkdir(buf, mode) < 0) {
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 			retval = E_mkdir_failed;
 		}
 
@@ -369,7 +369,7 @@ rename(const char *newName, const char *oldName, int *oserr)
 			}
 
 			if (!MoveFileExW(oldNameW, newNameW, flags)) {
-				if (oserr) *oserr = GET_ERRNO;
+				if (oserr) *oserr = system_error();
 				retval = E_rename_failed;
 			}
 			delete [] newNameW;
@@ -420,7 +420,7 @@ remove_file(const char *f, int *oserr)
 
 	if (fW) {
 		if (!DeleteFileW(fW)) {
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 			retval = E_remove_failed;
 		}
 
@@ -466,7 +466,7 @@ remove_dir(const char *d, int *oserr)
 
 	if (dW) {
 		if (!RemoveDirectoryW(dW)) {
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 			retval = E_remove_failed;
 		}
 

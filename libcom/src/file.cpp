@@ -149,7 +149,7 @@ file::open(const file_open_flags &flags, mode_t mode, int *oserr)
 
 	if (fd == INVALID_HANDLE_VALUE) {
 		retval = E_open_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	}
 
 	return retval;
@@ -199,7 +199,7 @@ file::read(void *buf, int toRead, int *bRead, int *oserr)
 
 		if (!ReadFile(fd, cbuf, toRead, LPDWORD(&n), 0)) {
 			retval = E_read_failed;
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 			break;
 		} else if (n == 0) {
 			break;
@@ -209,9 +209,9 @@ file::read(void *buf, int toRead, int *bRead, int *oserr)
 
 		n = ::read(fd, cbuf, toRead);
 		if (n < 0) {
-			if (EINTR != GET_ERRNO) {
+			if (EINTR != system_error()) {
 				retval = E_read_failed;
-				if (oserr) *oserr = GET_ERRNO;
+				if (oserr) *oserr = system_error();
 				break;
 			} else {
 				continue;
@@ -305,7 +305,7 @@ file::write(const void *buf, int toWrite, int *bWritten, int *oserr)
 
 	if (nbytes < 0) {
 		retval = E_write_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	} else {
 		*bWritten = nbytes;
 	}
@@ -390,7 +390,7 @@ file::seek(int whence, int64_t offset, int64_t *newOffset, int *oserr)
 
 	if (!SetFilePointerEx(fd, reqOff, &newOff, type)) {
 		retval = E_seek_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	} else if (newOffset) {
 		*newOffset = newOff.QuadPart;
 	}
@@ -400,7 +400,7 @@ file::seek(int whence, int64_t offset, int64_t *newOffset, int *oserr)
 	off_t newOff = ::lseek(fd, offset, whence);
 	if (newOff == (off_t)-1) {
 		retval = E_seek_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	} else if (newOffset) {
 		*newOffset = newOff;
 	}
@@ -457,14 +457,14 @@ file::sync(int *oserr)
 
 	if (!FlushFileBuffers(fd)) {
 		retval = E_sync_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	}
 
 #else
 
 	if (fsync(fd) < 0) {
 		retval = E_sync_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	}
 
 #endif
@@ -497,7 +497,7 @@ file::size(int *oserr)
 
 	if (!GetFileSizeEx(fd, &fileSize)) {
 		fsize = E_stat_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	} else {
 		fsize = fileSize.QuadPart;
 	}
@@ -508,7 +508,7 @@ file::size(int *oserr)
 
 	if (fstat(fd, &statBuf) < 0) {
 		fsize = E_stat_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	} else {
 		fsize = statBuf.st_size;
 	}
@@ -554,7 +554,7 @@ file::truncate(int64_t fsize, int *oserr)
 
 		if (retval < 0) {
 			retval = E_trunc_failed;
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 		}
 	}
 
@@ -614,7 +614,7 @@ file::lock(int type, int64_t start, int64_t len, int *oserr)
 
 	if (!LockFileEx(fd, lckflags, 0, low, high, &overlapped)) {
 		retval = E_lock_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	}
 
 #else
@@ -640,11 +640,11 @@ file::lock(int type, int64_t start, int64_t len, int *oserr)
 
 	do {
 		if (fcntl(fd, F_SETLKW, &lck) < 0) {
-			if (EINTR == GET_ERRNO) {
+			if (EINTR == system_error()) {
 				continue;
 			} else {
 				retval = E_lock_failed;
-				if (oserr) *oserr = GET_ERRNO;
+				if (oserr) *oserr = system_error();
 			}
 		} else {
 			retval = E_ok;
@@ -713,7 +713,7 @@ file::trylock(int type, int64_t start, int64_t len, int *oserr)
 	overlapped.hEvent = 0;
 
 	if (!LockFileEx(fd, lckflags, 0, low, high, &overlapped)) {
-		int error = GET_ERRNO;
+		int error = system_error();
 
 		if (ERROR_IO_PENDING == error) {
 			retval = E_try_again;
@@ -747,7 +747,7 @@ file::trylock(int type, int64_t start, int64_t len, int *oserr)
 
 	do {
 		if (fcntl(fd, F_SETLK, &lck) < 0) {
-			int error = GET_ERRNO;
+			int error = system_error();
 
 			if (EINTR == error) {
 				continue;
@@ -817,7 +817,7 @@ file::unlock(int64_t start, int64_t len, int *oserr)
 
 	if (!UnlockFileEx(fd, 0, low, high, &overlapped)) {
 		retval = E_unlock_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	}
 
 #else
@@ -831,7 +831,7 @@ file::unlock(int64_t start, int64_t len, int *oserr)
 
 	if (fcntl(fd, F_SETLK, &lck) < 0) {
 		retval = E_unlock_failed;
-		if (oserr) *oserr = GET_ERRNO;
+		if (oserr) *oserr = system_error();
 	}
 
 #endif
@@ -851,12 +851,12 @@ file::close(int *oserr)
 	if (fd != INVALID_HANDLE_VALUE) {
 #if defined(_WIN32)
 		if (!CloseHandle(fd)) {
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 			return E_close_failed;
 		}
 #else
 		if (::close(fd) < 0) {
-			if (oserr) *oserr = GET_ERRNO;
+			if (oserr) *oserr = system_error();
 			return E_close_failed;
 		}
 #endif
