@@ -11,17 +11,17 @@ usage(const char *prog)
 		<< prog
 		<< "[-name <suite_name>] [-desc <suite_description>]" << std::endl
 		<< "[-config <config_file>] [-tests <comma_separated_list_of_tests>]" << std::endl
-		<< "[-h]" << std::endl;
+		<< "[-v] [-h]" << std::endl;
 	return 1;
 }
 
-static snf::tf::Test *
+static snf::tf::test *
 find_test(const std::string &tname)
 {
 	for (int i = 0; ; ++i) {
-		if (snf::tf::TestList[i]) {
-			if (strcasecmp(tname.c_str(), snf::tf::TestList[i]->name()) == 0) {
-				return snf::tf::TestList[i];
+		if (snf::tf::test_list[i]) {
+			if (strcasecmp(tname.c_str(), snf::tf::test_list[i]->name()) == 0) {
+				return snf::tf::test_list[i];
 			}
 		} else {
 			break;
@@ -99,7 +99,7 @@ main(int argc, const char **argv)
 		conf = DBG_NEW snf::config(cf);
 	}
 
-	snf::tf::TestSuite suite(sn, sd);
+	snf::tf::test_suite suite(sn, sd);
 
 	if (tl) {
 		std::stringstream ss(tl);
@@ -107,15 +107,15 @@ main(int argc, const char **argv)
 		while (ss) {
 			std::string s;
 			std::getline(ss, s, ',');
-			snf::tf::Test *test = find_test(snf::trim(s));
+			snf::tf::test *test = find_test(snf::trim(s));
 			if (test) {
-				suite.addTest(test);
+				suite.add(test);
 			}
 		}
 	} else {
 		for (int i = 0; ; ++i) {
-			if (snf::tf::TestList[i]) {
-				suite.addTest(snf::tf::TestList[i]);
+			if (snf::tf::test_list[i]) {
+				suite.add(snf::tf::test_list[i]);
 			} else {
 				break;
 			}

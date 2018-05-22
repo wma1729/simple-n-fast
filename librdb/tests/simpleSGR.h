@@ -1,10 +1,10 @@
 #include "error.h"
 #include "rdb.h"
 
-class SimpleSetGetRemove : public snf::tf::Test
+class SimpleSetGetRemove : public snf::tf::test
 {
 public:
-	SimpleSetGetRemove() : snf::tf::Test() {}
+	SimpleSetGetRemove() : snf::tf::test() {}
 	~SimpleSetGetRemove() {}
 
 	virtual const char *name() const
@@ -19,11 +19,11 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(conf, 0, "check config");
+		ASSERT_NE(conf, nullptr, "check config");
 		const char *dbPath = conf->get("DBPATH");
-		ASSERT_NE(dbPath, 0, "get DBPATH from config");
+		ASSERT_NE(dbPath, nullptr, "get DBPATH from config");
 		const char *dbName = conf->get("DBNAME");
-		ASSERT_NE(dbName, 0, "get DBNAME from config");
+		ASSERT_NE(dbName, nullptr, "get DBNAME from config");
 
 		RdbOptions options;
 		options.setMemoryUsage(5);

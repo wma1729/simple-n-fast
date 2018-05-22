@@ -50,7 +50,7 @@ GenKeyValue(char *key, char *val, int len)
 namespace snf {
 namespace tf {
 
-Test *TestList[] = {
+test *test_list[] = {
 	DBG_NEW SimpleSetGetRemove(),
 	DBG_NEW UpdateDB(),
 	DBG_NEW MultipleKeyPageNodes(),

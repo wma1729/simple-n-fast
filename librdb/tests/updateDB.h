@@ -1,7 +1,7 @@
 #include "error.h"
 #include "rdb.h"
 
-struct TestValue {
+struct test_value {
 	char val[16];
 	int  refcnt;
 };
@@ -24,7 +24,7 @@ public:
 	{
 		newValueLen = ovlen;
 		memcpy(newValue, oval, ovlen);
-		struct TestValue *value = (struct TestValue *)newValue;
+		struct test_value *value = (struct test_value *)newValue;
 		value->refcnt++;
 		return 0;
 	}
@@ -40,10 +40,10 @@ public:
 	}
 };
 
-class UpdateDB : public snf::tf::Test
+class UpdateDB : public snf::tf::test
 {
 public:
-	UpdateDB() : snf::tf::Test() {}
+	UpdateDB() : snf::tf::test() {}
 	~UpdateDB() {}
 
 	virtual const char *name() const
@@ -58,11 +58,11 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(conf, 0, "check config");
+		ASSERT_NE(conf, nullptr, "check config");
 		const char *dbPath = conf->get("DBPATH");
-		ASSERT_NE(dbPath, 0, "get DBPATH from config");
+		ASSERT_NE(dbPath, nullptr, "get DBPATH from config");
 		const char *dbName = conf->get("DBNAME");
-		ASSERT_NE(dbName, 0, "get DBNAME from config");
+		ASSERT_NE(dbName, nullptr, "get DBNAME from config");
 
 		RdbOptions options;
 		options.setMemoryUsage(1);
@@ -71,7 +71,7 @@ public:
 		int retval = rdb.open();
 		ASSERT_EQ(retval, E_ok, "rdb open");
 
-		struct TestValue value = { "dummydata", 1 };
+		struct test_value value = { "dummydata", 1 };
 
 		retval = rdb.set("dummykey", 8, (const char *)&value, (int)sizeof(value));
 		ASSERT_EQ(retval, E_ok, "rdb set: key = dummykey");
@@ -98,7 +98,7 @@ public:
 		ASSERT_EQ(buf1len, buf2len, "db & updater - value length match");
 		ASSERT_MEM_EQ(buf1, buf2, buf1len, "db & updater - value match");
 
-		struct TestValue *nvalue = (struct TestValue *)buf1;
+		struct test_value *nvalue = (struct test_value *)buf1;
 		ASSERT_EQ(nvalue->refcnt, 2, "reference count match");
 
 		retval = rdb.remove("dummykey", 8);

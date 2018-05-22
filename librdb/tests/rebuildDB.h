@@ -5,10 +5,10 @@
 
 extern void GenKeyValue(char *, char *, int);
 
-class RebuildDB : public snf::tf::Test
+class RebuildDB : public snf::tf::test
 {
 public:
-	RebuildDB() : snf::tf::Test() {}
+	RebuildDB() : snf::tf::test() {}
 	~RebuildDB() {}
 
 	virtual const char *name() const
@@ -23,11 +23,11 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(conf, 0, "check config");
+		ASSERT_NE(conf, nullptr, "check config");
 		const char *dbPath = conf->get("DBPATH");
-		ASSERT_NE(dbPath, 0, "get DBPATH from config");
+		ASSERT_NE(dbPath, nullptr, "get DBPATH from config");
 		const char *dbName = conf->get("DBNAME");
-		ASSERT_NE(dbName, 0, "get DBNAME from config");
+		ASSERT_NE(dbName, nullptr, "get DBNAME from config");
 
 		RdbOptions options;
 		Rdb rdb(dbPath, dbName, 1024, 5, options);
@@ -101,7 +101,7 @@ public:
 		int64_t expsize = sizeof(value_page_t) * 12;
 		int64_t fdpsize = snf::fs::size(fdppath);
 
-		ASSERT_EQ(fdpsize, 8, "fdp size match");
+		ASSERT_EQ(fdpsize, 8LL, "fdp size match");
 		ASSERT_EQ(dbsize, expsize, "db size match");
 
 		retval = rdb.open();
