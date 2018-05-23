@@ -172,11 +172,11 @@ public:
 	}
 };
 
-template<typename Target, typename Source>
-Target narrow_cast(Source v)
+template<typename T, typename S>
+T narrow_cast(S v)
 {
-	auto r = static_cast<Target>(v);
-	if (static_cast<Source>(r) != v) {
+	auto r = static_cast<T>(v);
+	if (static_cast<S>(r) != v) {
 		throw std::runtime_error("narrowing the value causes data loss");
 	}
 	return r;
@@ -185,7 +185,11 @@ Target narrow_cast(Source v)
 class assertion
 {
 public:
-	static void eq(uint64_t lhs, uint64_t rhs, const std::string &msg,
+	template<typename T>
+	static void eq(
+		T lhs, const char *lhs_expr,
+		T rhs, const char *rhs_expr,
+		const std::string &msg,
 		const char *file, int line)
 	{
 		if (verbose || (lhs != rhs)) {
@@ -194,76 +198,23 @@ public:
 			if (!verbose) {
 				std::ostringstream oss;
 				oss << "Assertion ("
-					<< lhs
+					<< lhs_expr
 					<< "!="
-					<< rhs
-					<< ") failed";
+					<< rhs_expr
+					<< ") failed; lhs = "
+					<< lhs
+					<< ", rhs = "
+					<< rhs;
 				throw assertion_failure(oss.str(), file, line);
 			}
 		}
 	}
 
-	static void eq(int64_t lhs, int64_t rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		eq(static_cast<uint64_t>(lhs), static_cast<uint64_t>(rhs), msg, file, line);
-	}
-
-	static void eq(uint32_t lhs, uint32_t rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		eq(static_cast<uint64_t>(lhs), static_cast<uint64_t>(rhs), msg, file, line);
-	}
-
-	static void eq(int lhs, int rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		eq(static_cast<uint64_t>(lhs), static_cast<uint64_t>(rhs), msg, file, line);
-	}
-
-	static void eq(double lhs, double rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		if (verbose || (lhs != rhs)) {
-			std::cerr << msg << std::endl;
-
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs
-					<< "!="
-					<< rhs
-					<< ") failed";
-				throw assertion_failure(oss.str(), file, line);
-			}
-		}
-	}
-
-	static void eq(float lhs, float rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		eq(narrow_cast<double>(lhs), narrow_cast<double>(rhs), msg, file, line);
-	}
-
-	static void eq(const void *lhs, const void *rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		if (verbose || (lhs != rhs)) {
-			std::cerr << msg << std::endl;
-
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs
-					<< "!="
-					<< rhs
-					<< ") failed";
-				throw assertion_failure(oss.str(), file, line);
-			}
-		}
-	}
-
-	static void ne(uint64_t lhs, uint64_t rhs, const std::string &msg,
+	template<typename T>
+	static void ne(
+		T lhs, const char *lhs_expr,
+		T rhs, const char *rhs_expr,
+		const std::string &msg,
 		const char *file, int line)
 	{
 		if (verbose || (lhs == rhs)) {
@@ -272,76 +223,22 @@ public:
 			if (!verbose) {
 				std::ostringstream oss;
 				oss << "Assertion ("
-					<< lhs
+					<< lhs_expr
 					<< "=="
-					<< rhs
-					<< ") failed";
+					<< rhs_expr
+					<< ") failed; lhs = "
+					<< lhs
+					<< ", rhs = "
+					<< rhs;
 				throw assertion_failure(oss.str(), file, line);
 			}
 		}
 	}
 
-	static void ne(int64_t lhs, int64_t rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		ne(static_cast<uint64_t>(lhs), static_cast<uint64_t>(rhs), msg, file, line);
-	}
-
-	static void ne(uint32_t lhs, uint32_t rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		ne(static_cast<uint64_t>(lhs), static_cast<uint64_t>(rhs), msg, file, line);
-	}
-
-	static void ne(int lhs, int rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		ne(static_cast<uint64_t>(lhs), static_cast<uint64_t>(rhs), msg, file, line);
-	}
-
-	static void ne(double lhs, double rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		if (verbose || (lhs == rhs)) {
-			std::cerr << msg << std::endl;
-
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs
-					<< "=="
-					<< rhs
-					<< ") failed";
-				throw assertion_failure(oss.str(), file, line);
-			}
-		}
-	}
-
-	static void ne(float lhs, float rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		ne(narrow_cast<double>(lhs), narrow_cast<double>(rhs), msg, file, line);
-	}
-
-	static void ne(const void *lhs, const void *rhs, const std::string &msg,
-		const char *file, int line)
-	{
-		if (verbose || (lhs == rhs)) {
-			std::cerr << msg << std::endl;
-
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs
-					<< "=="
-					<< rhs
-					<< ") failed";
-				throw assertion_failure(oss.str(), file, line);
-			}
-		}
-	}
-
-	static void mem_eq(const void *lhs, const void *rhs, size_t n, const std::string &msg,
+	static void mem_eq(
+		const void *lhs, const char *lhs_expr,
+		const void *rhs, const char *rhs_expr,
+		size_t n, const std::string &msg,
 		const char *file, int line)
 	{
 		if (verbose || (memcmp(lhs, rhs, n) != 0)) {
@@ -350,16 +247,19 @@ public:
 			if (!verbose) {
 				std::ostringstream oss;
 				oss << "Assertion ("
-					<< lhs
+					<< lhs_expr
 					<< "!="
-					<< rhs
+					<< rhs_expr
 					<< ") failed";
 				throw assertion_failure(oss.str(), file, line);
 			}
 		}
 	}
 
-	static void mem_ne(const void *lhs, const void *rhs, size_t n, const std::string &msg,
+	static void mem_ne(
+		const void *lhs, const char *lhs_expr,
+		const void *rhs, const char *rhs_expr,
+		size_t n, const std::string &msg,
 		const char *file, int line)
 	{
 		if (verbose || (memcmp(lhs, rhs, n) == 0)) {
@@ -368,9 +268,9 @@ public:
 			if (!verbose) {
 				std::ostringstream oss;
 				oss << "Assertion ("
-					<< lhs
+					<< lhs_expr
 					<< "=="
-					<< rhs
+					<< rhs_expr
 					<< ") failed";
 				throw assertion_failure(oss.str(), file, line);
 			}
@@ -378,10 +278,14 @@ public:
 	}
 };
 
-#define ASSERT_EQ(N1, N2, STR)        snf::tf::assertion::eq(N1, N2, STR, __FILE__, __LINE__)
-#define ASSERT_NE(N1, N2, STR)        snf::tf::assertion::ne(N1, N2, STR, __FILE__, __LINE__)
-#define ASSERT_MEM_EQ(S1, S2, N, STR) snf::tf::assertion::mem_eq(S1, S2, N, STR, __FILE__, __LINE__)
-#define ASSERT_MEM_NE(S1, S2, N, STR) snf::tf::assertion::mem_ne(S1, S2, N, STR, __FILE__, __LINE__)
+#define ASSERT_EQ(T, N1, N2, STR)       \
+	snf::tf::assertion::eq<T>(N1, #N1, N2, #N2, STR, __FILE__, __LINE__)
+#define ASSERT_NE(T, N1, N2, STR)       \
+	snf::tf::assertion::ne<T>(N1, #N1, N2, #N2, STR, __FILE__, __LINE__)
+#define ASSERT_MEM_EQ(S1, S2, N, STR)   \
+	snf::tf::assertion::mem_eq(S1, #S1, S2, #S2, N, STR, __FILE__, __LINE__)
+#define ASSERT_MEM_NE(S1, S2, N, STR)   \
+	snf::tf::assertion::mem_ne(S1, #S1, S2, #S2, N, STR, __FILE__, __LINE__)
 
 } // namespace tf
 } // namespace snf

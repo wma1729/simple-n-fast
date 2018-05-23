@@ -78,6 +78,8 @@ main(int argc, const char **argv)
 				std::cerr << "argument to -tests missing" << std::endl;
 				return usage(prog);
 			}
+		} else if (strcasecmp("-v", argv[i]) == 0) {
+			snf::tf::verbose = true;
 		} else if (strcasecmp("-h", argv[i]) == 0) {
 			usage(prog);
 			break;

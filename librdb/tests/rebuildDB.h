@@ -23,17 +23,17 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(conf, nullptr, "check config");
+		ASSERT_NE(const snf::config *, conf, nullptr, "check config");
 		const char *dbPath = conf->get("DBPATH");
-		ASSERT_NE(dbPath, nullptr, "get DBPATH from config");
+		ASSERT_NE(const char *, dbPath, nullptr, "get DBPATH from config");
 		const char *dbName = conf->get("DBNAME");
-		ASSERT_NE(dbName, nullptr, "get DBNAME from config");
+		ASSERT_NE(const char *, dbName, nullptr, "get DBNAME from config");
 
 		RdbOptions options;
 		Rdb rdb(dbPath, dbName, 1024, 5, options);
 
 		int retval = rdb.open();
-		ASSERT_EQ(retval, E_ok, "rdb open");
+		ASSERT_EQ(int, retval, E_ok, "rdb open");
 
 		struct KV {
 			const char *key;
@@ -68,28 +68,28 @@ public:
 
 			m_strm << "rdb set: key = " << kvpair[i].key
 				<< ", value = " << kvpair[i].value;
-			ASSERT_EQ(retval, E_ok, m_strm.str());
+			ASSERT_EQ(int, retval, E_ok, m_strm.str());
 			m_strm.str("");
 		}
 
 		retval = rdb.remove("a", 1);
-		ASSERT_EQ(retval, E_ok, "rdb remove: key = a");
+		ASSERT_EQ(int, retval, E_ok, "rdb remove: key = a");
 
 		retval = rdb.remove("bb", 2);
-		ASSERT_EQ(retval, E_ok, "rdb remove: key = bb");
+		ASSERT_EQ(int, retval, E_ok, "rdb remove: key = bb");
 
 		retval = rdb.remove("ccc", 3);
-		ASSERT_EQ(retval, E_ok, "rdb remove: key = ccc");
+		ASSERT_EQ(int, retval, E_ok, "rdb remove: key = ccc");
 
 		retval = rdb.remove("dddd", 4);
-		ASSERT_EQ(retval, E_ok, "rdb remove: key = dddd");
+		ASSERT_EQ(int, retval, E_ok, "rdb remove: key = dddd");
 		m_strm.str("");
 
 		retval = rdb.close();
-		ASSERT_EQ(retval, E_ok, "rdb close");
+		ASSERT_EQ(int, retval, E_ok, "rdb close");
 
 		retval = rdb.rebuild();
-		ASSERT_EQ(retval, E_ok, "rdb rebuild");
+		ASSERT_EQ(int, retval, E_ok, "rdb rebuild");
 
 		char dbpath[MAXPATHLEN + 1];
 		char fdppath[MAXPATHLEN + 1];
@@ -101,11 +101,11 @@ public:
 		int64_t expsize = sizeof(value_page_t) * 12;
 		int64_t fdpsize = snf::fs::size(fdppath);
 
-		ASSERT_EQ(fdpsize, 8LL, "fdp size match");
-		ASSERT_EQ(dbsize, expsize, "db size match");
+		ASSERT_EQ(int64_t, fdpsize, 8, "fdp size match");
+		ASSERT_EQ(int64_t, dbsize, expsize, "db size match");
 
 		retval = rdb.open();
-		ASSERT_EQ(retval, E_ok, "rdb open again");
+		ASSERT_EQ(int, retval, E_ok, "rdb open again");
 
 		for (int i = 0; i < 16; ++i) {
 			retval = rdb.remove(kvpair[i].key, kvpair[i].klen);
@@ -113,12 +113,12 @@ public:
 				(strcmp("bb", kvpair[i].key) == 0) ||
 				(strcmp("ccc", kvpair[i].key) == 0) ||
 				(strcmp("dddd", kvpair[i].key) == 0)) {
-				m_strm << "already deleted key" << kvpair[i].key;
-				ASSERT_EQ(retval, E_not_found, m_strm.str());
+				m_strm << "already deleted key " << kvpair[i].key;
+				ASSERT_EQ(int, retval, E_not_found, m_strm.str());
 				m_strm.str("");
 			} else {
 				m_strm << "delete key " << kvpair[i].key;
-				ASSERT_EQ(retval, E_ok, m_strm.str());
+				ASSERT_EQ(int, retval, E_ok, m_strm.str());
 				m_strm.str("");
 			}
 		}

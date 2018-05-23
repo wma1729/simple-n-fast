@@ -26,7 +26,7 @@ test:
 	@if not exist log mkdir log
 	@echo DBPATH = $(MAKEDIR)\db >> rdbts.conf
 	@echo DBNAME = testdb >> rdbts.conf
-	@$(P)\rdbts.exe -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf
+	@$(P)\rdbts.exe -name "librdb-test-suite" -desc "test suite for librdb" -config rdbts.conf -v
 
 install:
 

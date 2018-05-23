@@ -58,23 +58,23 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		ASSERT_NE(conf, nullptr, "check config");
+		ASSERT_NE(const snf::config *, conf, nullptr, "check config");
 		const char *dbPath = conf->get("DBPATH");
-		ASSERT_NE(dbPath, nullptr, "get DBPATH from config");
+		ASSERT_NE(const char *, dbPath, nullptr, "get DBPATH from config");
 		const char *dbName = conf->get("DBNAME");
-		ASSERT_NE(dbName, nullptr, "get DBNAME from config");
+		ASSERT_NE(const char *, dbName, nullptr, "get DBNAME from config");
 
 		RdbOptions options;
 		options.setMemoryUsage(1);
 		Rdb rdb(dbPath, dbName, 4096, 10, options);
 
 		int retval = rdb.open();
-		ASSERT_EQ(retval, E_ok, "rdb open");
+		ASSERT_EQ(int, retval, E_ok, "rdb open");
 
 		struct test_value value = { "dummydata", 1 };
 
 		retval = rdb.set("dummykey", 8, (const char *)&value, (int)sizeof(value));
-		ASSERT_EQ(retval, E_ok, "rdb set: key = dummykey");
+		ASSERT_EQ(int, retval, E_ok, "rdb set: key = dummykey");
 
 		char buf1[32];
 		int  buf1len = (int)(sizeof(buf1) - 1);
@@ -82,30 +82,30 @@ public:
 		int  buf2len = (int)(sizeof(buf2) - 1);
 
 		retval = rdb.get("dummykey", 8, buf1, &buf1len);
-		ASSERT_EQ(retval, E_ok, "rdb get: key = dummykey");
-		ASSERT_EQ(buf1len, (int)sizeof(value), "value length match");
+		ASSERT_EQ(int, retval, E_ok, "rdb get: key = dummykey");
+		ASSERT_EQ(int, buf1len, (int)sizeof(value), "value length match");
 
 		MyUpdater *mupdater = new MyUpdater();
 
 		retval = rdb.set("dummykey", 8, "dummydata", 9, mupdater);
-		ASSERT_EQ(retval, E_ok, "rdb update: key = dummykey");
+		ASSERT_EQ(int, retval, E_ok, "rdb update: key = dummykey");
 
 		retval = rdb.get("dummykey", 8, buf1, &buf1len);
-		ASSERT_EQ(retval, E_ok, "rdb get: key = dummykey");
-		ASSERT_EQ(buf1len, (int)sizeof(value), "value length match");
+		ASSERT_EQ(int, retval, E_ok, "rdb get: key = dummykey");
+		ASSERT_EQ(int, buf1len, (int)sizeof(value), "value length match");
 
 		mupdater->getUpdatedValue(buf2, &buf2len);
-		ASSERT_EQ(buf1len, buf2len, "db & updater - value length match");
+		ASSERT_EQ(int, buf1len, buf2len, "db & updater - value length match");
 		ASSERT_MEM_EQ(buf1, buf2, buf1len, "db & updater - value match");
 
 		struct test_value *nvalue = (struct test_value *)buf1;
-		ASSERT_EQ(nvalue->refcnt, 2, "reference count match");
+		ASSERT_EQ(int, nvalue->refcnt, 2, "reference count match");
 
 		retval = rdb.remove("dummykey", 8);
-		ASSERT_EQ(retval, E_ok, "rdb remove: key = dummykey");
+		ASSERT_EQ(int, retval, E_ok, "rdb remove: key = dummykey");
 
 		retval = rdb.close();
-		ASSERT_EQ(retval, E_ok, "rdb close");
+		ASSERT_EQ(int, retval, E_ok, "rdb close");
 
 		delete mupdater;
 
