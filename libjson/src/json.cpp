@@ -92,9 +92,6 @@ object::str(const member_t &kvpair, bool pretty, int indent) const
 {
 	std::ostringstream oss;
 
-	if (pretty)
-		oss << std::string(indent, ' ');
-
 	oss	<< "\""
 		<< string_escape(kvpair.first)
 		<< "\" : "
@@ -116,7 +113,7 @@ object::str(bool pretty, int indent) const
 		}
 
 		if (pretty)
-			oss << std::endl;
+			oss << std::endl << std::string(indent + 2, ' ');
 		else
 			oss << " ";
 
@@ -210,7 +207,7 @@ array::str(bool pretty, int indent) const
 		}
 
 		if (pretty)
-			oss << std::endl;
+			oss << std::endl << std::string(indent + 2, ' ');
 		else
 			oss << " ";
 
@@ -544,10 +541,7 @@ value::str(bool pretty, int indent) const
 		break;
 
 	case T::T_BOOLEAN:
-		if (m_val.b_val)
-			oss << "true";
-		else
-			oss << "false";
+		oss << std::boolalpha << m_val.b_val << std::noboolalpha;
 		break;
 
 	case T::T_INTEGER:

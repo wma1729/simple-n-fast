@@ -1,0 +1,32 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/jsonts.o
+
+INCL = ${INCLCOM} ${INCLJSON} ${INCLTF}
+
+all: platform ${P}/jsonts
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/jsonts: ${OBJS} ${LIBJSON} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+test:
+ifeq (${DBG},-g)
+	@valgrind --quiet --leak-check=full --show-leak-kinds=all ${P}/jsonts -name "libjson-test-suite" -desc "test suite for libjson" -v
+else
+	@${P}/jsonts -name "libjson-test-suite" -desc "test suite for libjson" -v
+endif
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/jsonts

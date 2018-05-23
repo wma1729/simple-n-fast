@@ -192,21 +192,27 @@ public:
 		const std::string &msg,
 		const char *file, int line)
 	{
-		if (verbose || (lhs != rhs)) {
+		bool msg_logged = false;
+		if (verbose) {
+			msg_logged = true;
 			std::cerr << msg << std::endl;
+		}
 
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs_expr
-					<< "!="
-					<< rhs_expr
-					<< ") failed; lhs = "
-					<< lhs
-					<< ", rhs = "
-					<< rhs;
-				throw assertion_failure(oss.str(), file, line);
+		if (lhs != rhs) {
+			if (!msg_logged) {
+				std::cerr << msg << std::endl;
 			}
+
+			std::ostringstream oss;
+			oss << "Assertion ("
+				<< lhs_expr
+				<< "!="
+				<< rhs_expr
+				<< ") failed; lhs = "
+				<< lhs
+				<< ", rhs = "
+				<< rhs;
+			throw assertion_failure(oss.str(), file, line);
 		}
 	}
 
@@ -217,21 +223,27 @@ public:
 		const std::string &msg,
 		const char *file, int line)
 	{
-		if (verbose || (lhs == rhs)) {
+		bool msg_logged = false;
+		if (verbose) {
+			msg_logged = true;
 			std::cerr << msg << std::endl;
+		}
 
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs_expr
-					<< "=="
-					<< rhs_expr
-					<< ") failed; lhs = "
-					<< lhs
-					<< ", rhs = "
-					<< rhs;
-				throw assertion_failure(oss.str(), file, line);
+		if ((lhs == rhs)) {
+			if (!msg_logged) {
+				std::cerr << msg << std::endl;
 			}
+
+			std::ostringstream oss;
+			oss << "Assertion ("
+				<< lhs_expr
+				<< "=="
+				<< rhs_expr
+				<< ") failed; lhs = "
+				<< lhs
+				<< ", rhs = "
+				<< rhs;
+			throw assertion_failure(oss.str(), file, line);
 		}
 	}
 
@@ -241,18 +253,24 @@ public:
 		size_t n, const std::string &msg,
 		const char *file, int line)
 	{
-		if (verbose || (memcmp(lhs, rhs, n) != 0)) {
+		bool msg_logged = false;
+		if (verbose) {
+			msg_logged = true;
 			std::cerr << msg << std::endl;
+		}
 
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs_expr
-					<< "!="
-					<< rhs_expr
-					<< ") failed";
-				throw assertion_failure(oss.str(), file, line);
+		if (memcmp(lhs, rhs, n) != 0) {
+			if (!msg_logged) {
+				std::cerr << msg << std::endl;
 			}
+
+			std::ostringstream oss;
+			oss << "Assertion ("
+				<< lhs_expr
+				<< "!="
+				<< rhs_expr
+				<< ") failed";
+			throw assertion_failure(oss.str(), file, line);
 		}
 	}
 
@@ -262,18 +280,24 @@ public:
 		size_t n, const std::string &msg,
 		const char *file, int line)
 	{
-		if (verbose || (memcmp(lhs, rhs, n) == 0)) {
+		bool msg_logged = false;
+		if (verbose) {
+			msg_logged = true;
 			std::cerr << msg << std::endl;
+		}
 
-			if (!verbose) {
-				std::ostringstream oss;
-				oss << "Assertion ("
-					<< lhs_expr
-					<< "=="
-					<< rhs_expr
-					<< ") failed";
-				throw assertion_failure(oss.str(), file, line);
+		if (memcmp(lhs, rhs, n) == 0) {
+			if (!msg_logged) {
+				std::cerr << msg << std::endl;
 			}
+
+			std::ostringstream oss;
+			oss << "Assertion ("
+				<< lhs_expr
+				<< "=="
+				<< rhs_expr
+				<< ") failed";
+			throw assertion_failure(oss.str(), file, line);
 		}
 	}
 };
