@@ -60,7 +60,7 @@ protected:
 	int64_t elapsed() const { return duration_cast<microseconds>(m_end - m_begin).count(); }
 public:
 	test() : m_st(0), m_failure(false) {}
-	virtual ~test() { if (m_st) delete m_st; }
+	virtual ~test() { delete m_st; }
 
 	virtual const char *name() const = 0;
 	virtual const char *description() const = 0;
@@ -121,17 +121,17 @@ public:
 
 	~test_suite()
 	{
-		if (m_et) delete m_et;
-		for (auto t : m_tests)
-			if (t)
-				delete t;
+		for (auto t : m_tests) {
+			delete t;
+		}
 		m_tests.clear();
-		
+		delete m_et;
 	}
 
 	void add(test *test)
 	{
-		m_tests.push_back(test);
+		if (test)
+			m_tests.push_back(test);
 	}
 
 	virtual const char *name() const
@@ -146,8 +146,6 @@ public:
 
 	virtual bool execute(const snf::config *config)
 	{
-		m_st = DBG_NEW local_time;
-
 		for (auto t : m_tests) {
 			if (t) {
 				if (!t->run(config)) {

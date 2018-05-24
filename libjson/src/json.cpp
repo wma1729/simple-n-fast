@@ -350,6 +350,13 @@ value::move(value &&v)
 }
 
 const value &
+value::operator= (std::nullptr_t)
+{
+	clean(*this);
+	return *this;
+}
+
+const value &
 value::operator= (bool b)
 {
 	clean(*this);

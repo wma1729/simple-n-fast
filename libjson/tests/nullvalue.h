@@ -45,6 +45,12 @@ public:
 		ASSERT_EQ(const std::string &, object_2.str(true), expr_2, m_strm.str());
 		m_strm.str("");
 
+		nv_1 = snf::json::from_string(expr_2);
+		m_strm << "json object from string";
+		ASSERT_EQ(const std::string &, nv_1.str(true), expr_2, m_strm.str());
+		m_strm.str("");
+
+		nv_1 = nullptr;
 		snf::json::array array_1 { nv_1 };
 		snf::json::array array_2; array_2.add(nv_2);
 
@@ -68,6 +74,16 @@ public:
 
 		m_strm << "array_2 (pretty):" << std::endl << expr_2;
 		ASSERT_EQ(const std::string &, array_2.str(true), expr_2, m_strm.str());
+		m_strm.str("");
+
+		nv_1 = snf::json::from_string(expr_2);
+		m_strm << "json array from string";
+		ASSERT_EQ(const std::string &, nv_1.str(true), expr_2, m_strm.str());
+		m_strm.str("");
+
+		nv_1 = nullptr;
+		m_strm << "null value is identifiable";
+		ASSERT_EQ(bool, nv_1.is_null(), true, m_strm.str());
 		m_strm.str("");
 
 		return true;

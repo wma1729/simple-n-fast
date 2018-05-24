@@ -213,6 +213,7 @@ lexer::get_string()
 		} else if (c == '"') {
 			m_token.t_kind = kind::k_string;
 			m_token.t_value = std::move(str);
+			break;
 		} else {
 			str += c;
 		}
@@ -227,7 +228,7 @@ lexer::get()
 	char c;
 
 	m_token.t_kind = kind::k_none;
-	m_token.t_value.reset();
+	m_token.t_value = nullptr;
 
 	try {
 		while (true) {

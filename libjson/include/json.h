@@ -149,12 +149,13 @@ public:
 	value(const object &o) : m_type(T::T_OBJECT), m_val(o) {}
 	value(object &&o) : m_type(T::T_OBJECT), m_val(std::move(o)) {}
 	value(array *a) : m_type(T::T_ARRAY), m_val(a) {}
-	value(const array &a) : m_type(T::T_OBJECT), m_val(a) {}
-	value(array &&a) : m_type(T::T_OBJECT), m_val(std::move(a)) {}
+	value(const array &a) : m_type(T::T_ARRAY), m_val(a) {}
+	value(array &&a) : m_type(T::T_ARRAY), m_val(std::move(a)) {}
 	value(const value &v) { copy(v); }
 	value(value &&v) { move(std::move(v)); }
 	~value() { clean(*this); }
 
+	const value & operator= (std::nullptr_t);
 	const value & operator= (bool);
 	const value & operator= (int64_t);
 	const value & operator= (double);
@@ -183,8 +184,6 @@ public:
 	const std::string &get_string() const;
 	const object &get_object() const;
 	const array &get_array() const;
-
-	void reset() { clean(*this); }
 
 	std::string str(bool, int indent = 0) const;
 };
