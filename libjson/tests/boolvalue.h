@@ -1,33 +1,33 @@
 #include "json.h"
 
-class null_value : public snf::tf::test
+class bool_value : public snf::tf::test
 {
 public:
-	null_value() : snf::tf::test() {}
-	~null_value() {}
+	bool_value() : snf::tf::test() {}
+	~bool_value() {}
 
 	virtual const char *name() const
 	{
-		return "NullValue";
+		return "BooleanValue";
 	}
 
 	virtual const char *description() const
 	{
-		return "Tests null values in objects and array";
+		return "Tests boolean values in objects and array";
 	}
 
 	virtual bool execute(const snf::config *conf)
 	{
-		snf::json::value nv_1;
-		ASSERT_EQ(const std::string &, nv_1.str(false), "null", "check for null value");
+		snf::json::value tv(true);
+		ASSERT_EQ(const std::string &, tv.str(false), "true", "check for true value");
 
-		snf::json::value nv_2;
+		snf::json::value fv(false);
+		ASSERT_EQ(const std::string &, fv.str(false), "false", "check for false value");
 
-		snf::json::object object_1 { std::make_pair("nv", nv_1) };
-		snf::json::object object_2; object_2.add("nv", nv_2);
+		snf::json::object object_1 { std::make_pair("tv", tv) };
 
-		std::string expr_1 = "{ \"nv\" : null }";
-		std::string expr_2 = "{\n  \"nv\" : null\n}";
+		std::string expr_1 = "{ \"tv\" : true }";
+		std::string expr_2 = "{\n  \"tv\" : true\n}";
 
 		m_strm << "object_1:" << std::endl << expr_1;
 		ASSERT_EQ(const std::string &, object_1.str(false), expr_1, m_strm.str());
@@ -37,6 +37,11 @@ public:
 		ASSERT_EQ(const std::string &, object_1.str(true), expr_2, m_strm.str());
 		m_strm.str("");
 
+		snf::json::object object_2; object_2.add("fv", fv);
+
+		expr_1 = "{ \"fv\" : false }";
+		expr_2 = "{\n  \"fv\" : false\n}";
+
 		m_strm << "object_2:" << std::endl << expr_1;
 		ASSERT_EQ(const std::string &, object_2.str(false), expr_1, m_strm.str());
 		m_strm.str("");
@@ -45,17 +50,18 @@ public:
 		ASSERT_EQ(const std::string &, object_2.str(true), expr_2, m_strm.str());
 		m_strm.str("");
 
-		nv_1 = snf::json::from_string(expr_2);
+		fv = snf::json::from_string(expr_2);
 		m_strm << "json object from string";
-		ASSERT_EQ(const std::string &, nv_1.str(true), expr_2, m_strm.str());
+		ASSERT_EQ(const std::string &, fv.str(true), expr_2, m_strm.str());
 		m_strm.str("");
 
-		nv_1 = nullptr;
-		snf::json::array array_1 { nv_1 };
-		snf::json::array array_2; array_2.add(nv_2);
+		tv = true;
+		fv = false;
 
-		expr_1 = "[ null ]";
-		expr_2 = "[\n  null\n]";
+		snf::json::array array_1 { tv };
+
+		expr_1 = "[ true ]";
+		expr_2 = "[\n  true\n]";
 
 		m_strm << "array_1:" << std::endl << expr_1;
 		ASSERT_EQ(const std::string &, array_1.str(false), expr_1, m_strm.str());
@@ -65,6 +71,11 @@ public:
 		ASSERT_EQ(const std::string &, array_1.str(true), expr_2, m_strm.str());
 		m_strm.str("");
 
+		snf::json::array array_2; array_2.add(fv);
+
+		expr_1 = "[ false ]";
+		expr_2 = "[\n  false\n]";
+
 		m_strm << "array_2:" << std::endl << expr_1;
 		ASSERT_EQ(const std::string &, array_2.str(false), expr_1, m_strm.str());
 		m_strm.str("");
@@ -73,14 +84,25 @@ public:
 		ASSERT_EQ(const std::string &, array_2.str(true), expr_2, m_strm.str());
 		m_strm.str("");
 
-		nv_1 = snf::json::from_string(expr_1);
+		fv = snf::json::from_string(expr_1);
 		m_strm << "json array from string";
-		ASSERT_EQ(const std::string &, nv_1.str(false), expr_1, m_strm.str());
+		ASSERT_EQ(const std::string &, fv.str(false), expr_1, m_strm.str());
 		m_strm.str("");
 
-		nv_1 = nullptr;
-		m_strm << "null value is identifiable";
-		ASSERT_EQ(bool, nv_1.is_null(), true, m_strm.str());
+		tv = true;
+		fv = false;
+
+		m_strm << "boolean value is identifiable";
+		ASSERT_EQ(bool, tv.is_boolean(), true, m_strm.str());
+		ASSERT_EQ(bool, fv.is_boolean(), true, m_strm.str());
+		m_strm.str("");
+
+		m_strm << "value is true";
+		ASSERT_EQ(bool, tv.get_boolean(), true, m_strm.str());
+		m_strm.str("");
+
+		m_strm << "value is false";
+		ASSERT_EQ(bool, fv.get_boolean(), false, m_strm.str());
 		m_strm.str("");
 
 		return true;

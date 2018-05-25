@@ -190,16 +190,8 @@ public:
 		const std::string &msg,
 		const char *file, int line)
 	{
-		bool msg_logged = false;
-		if (verbose) {
-			msg_logged = true;
-			std::cerr << msg << std::endl;
-		}
-
 		if (lhs != rhs) {
-			if (!msg_logged) {
-				std::cerr << msg << std::endl;
-			}
+			std::cerr << msg << " ... OUCH" << std::endl;
 
 			std::ostringstream oss;
 			oss << "Assertion ("
@@ -212,6 +204,9 @@ public:
 				<< rhs;
 			throw assertion_failure(oss.str(), file, line);
 		}
+
+		if (verbose)
+			std::cerr << msg << " ... OK" << std::endl;
 	}
 
 	template<typename T>
@@ -221,16 +216,8 @@ public:
 		const std::string &msg,
 		const char *file, int line)
 	{
-		bool msg_logged = false;
-		if (verbose) {
-			msg_logged = true;
-			std::cerr << msg << std::endl;
-		}
-
 		if ((lhs == rhs)) {
-			if (!msg_logged) {
-				std::cerr << msg << std::endl;
-			}
+			std::cerr << msg << " ... OUCH" << std::endl;
 
 			std::ostringstream oss;
 			oss << "Assertion ("
@@ -243,6 +230,9 @@ public:
 				<< rhs;
 			throw assertion_failure(oss.str(), file, line);
 		}
+
+		if (verbose)
+			std::cerr << msg << " ... OK" << std::endl;
 	}
 
 	static void mem_eq(
@@ -251,16 +241,8 @@ public:
 		size_t n, const std::string &msg,
 		const char *file, int line)
 	{
-		bool msg_logged = false;
-		if (verbose) {
-			msg_logged = true;
-			std::cerr << msg << std::endl;
-		}
-
 		if (memcmp(lhs, rhs, n) != 0) {
-			if (!msg_logged) {
-				std::cerr << msg << std::endl;
-			}
+			std::cerr << msg << " ... OUCH" << std::endl;
 
 			std::ostringstream oss;
 			oss << "Assertion ("
@@ -270,6 +252,9 @@ public:
 				<< ") failed";
 			throw assertion_failure(oss.str(), file, line);
 		}
+
+		if (verbose)
+			std::cerr << msg << " ... OK" << std::endl;
 	}
 
 	static void mem_ne(
@@ -278,16 +263,8 @@ public:
 		size_t n, const std::string &msg,
 		const char *file, int line)
 	{
-		bool msg_logged = false;
-		if (verbose) {
-			msg_logged = true;
-			std::cerr << msg << std::endl;
-		}
-
 		if (memcmp(lhs, rhs, n) == 0) {
-			if (!msg_logged) {
-				std::cerr << msg << std::endl;
-			}
+			std::cerr << msg << " ... OUCH" << std::endl;
 
 			std::ostringstream oss;
 			oss << "Assertion ("
@@ -297,6 +274,9 @@ public:
 				<< ") failed";
 			throw assertion_failure(oss.str(), file, line);
 		}
+
+		if (verbose)
+			std::cerr << msg << " ... OK" << std::endl;
 	}
 };
 
