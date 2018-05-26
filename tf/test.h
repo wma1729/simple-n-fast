@@ -170,16 +170,6 @@ public:
 	}
 };
 
-template<typename T, typename S>
-T narrow_cast(S v)
-{
-	auto r = static_cast<T>(v);
-	if (static_cast<S>(r) != v) {
-		throw std::runtime_error("narrowing the value causes data loss");
-	}
-	return r;
-}
-
 class assertion
 {
 public:

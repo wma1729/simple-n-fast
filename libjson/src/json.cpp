@@ -226,6 +226,9 @@ array::str(bool pretty, int indent) const
 
 value::V::V() : i_val(0) {}
 value::V::V(bool b) : b_val(b) {}
+value::V::V(int8_t i) : i_val(i) {}
+value::V::V(int16_t i) : i_val(i) {}
+value::V::V(int32_t i) : i_val(i) {}
 value::V::V(int64_t i) : i_val(i) {}
 value::V::V(double d) : d_val(d) {}
 
@@ -362,6 +365,33 @@ value::operator= (bool b)
 	clean(*this);
 	m_type = T::T_BOOLEAN;
 	m_val.b_val = b;
+	return *this;
+}
+
+const value &
+value::operator= (int8_t i)
+{
+	clean(*this);
+	m_type = T::T_INTEGER;
+	m_val.i_val = i;
+	return *this;
+}
+
+const value &
+value::operator= (int16_t i)
+{
+	clean(*this);
+	m_type = T::T_INTEGER;
+	m_val.i_val = i;
+	return *this;
+}
+
+const value &
+value::operator= (int32_t i)
+{
+	clean(*this);
+	m_type = T::T_INTEGER;
+	m_val.i_val = i;
 	return *this;
 }
 

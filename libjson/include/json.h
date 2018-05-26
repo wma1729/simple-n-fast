@@ -115,8 +115,11 @@ private:
 	union V
 	{
 		V();
-		V(bool);
-		V(int64_t);
+		explicit V(bool);
+		explicit V(int8_t);
+		explicit V(int16_t);
+		explicit V(int32_t);
+		explicit V(int64_t);
 		V(double);
 		V(const char *);
 		V(const std::string &);
@@ -140,9 +143,12 @@ private:
 
 public:
 	value() : m_type(T::T_NULL), m_val() {}
-	value(bool b) : m_type(T::T_BOOLEAN), m_val(b) {}
-	value(int64_t i) : m_type(T::T_INTEGER), m_val(i) {}
-	value(double d) : m_type(T::T_REAL), m_val(d) {}
+	explicit value(bool b) : m_type(T::T_BOOLEAN), m_val(b) {}
+	explicit value(int8_t i) : m_type(T::T_INTEGER), m_val(i) {}
+	explicit value(int16_t i) : m_type(T::T_INTEGER), m_val(i) {}
+	explicit value(int32_t i) : m_type(T::T_INTEGER), m_val(i) {}
+	explicit value(int64_t i) : m_type(T::T_INTEGER), m_val(i) {}
+	explicit value(double d) : m_type(T::T_REAL), m_val(d) {}
 	value(const std::string &s) : m_type(T::T_STRING), m_val(s) {}
 	value(std::string &&s) : m_type(T::T_STRING), m_val(std::move(s)) {}
 	value(object *o) : m_type(T::T_OBJECT), m_val(o) {}
@@ -157,6 +163,9 @@ public:
 
 	const value & operator= (std::nullptr_t);
 	const value & operator= (bool);
+	const value & operator= (int8_t);
+	const value & operator= (int16_t);
+	const value & operator= (int32_t);
 	const value & operator= (int64_t);
 	const value & operator= (double);
 	const value & operator= (const std::string &);
