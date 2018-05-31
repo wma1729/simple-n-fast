@@ -3,6 +3,8 @@
 #include "nullvalue.h"
 #include "boolvalue.h"
 #include "intvalue.h"
+#include "realvalue.h"
+#include "strvalue.h"
 
 namespace snf {
 namespace tf {
@@ -11,6 +13,8 @@ test *test_list[] = {
 	DBG_NEW null_value(),
 	DBG_NEW bool_value(),
 	DBG_NEW int_value(),
+	DBG_NEW real_value(),
+	DBG_NEW str_value(),
 	0
 };
 

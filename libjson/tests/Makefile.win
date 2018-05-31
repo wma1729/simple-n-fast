@@ -19,7 +19,7 @@ $(P)\jsonts.exe: $(OBJS) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
 {.}.cpp{$(P)}.obj:
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $< /Fo$@
+	$(CC) $(CFLAGS) /utf-8 $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $< /Fo$@
 
 test:
 	@$(P)\jsonts.exe -name "libjson-test-suite" -desc "test suite for libjson" -v

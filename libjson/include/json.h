@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <istream>
 #include <stdexcept>
+#include "misc.h"
 
 namespace snf {
 namespace json {
@@ -98,6 +99,26 @@ public:
 	std::string str(bool, int indent = 0) const;
 };
 
+template<typename T1, typename T2 = void>
+using EnableIfBoolean = typename std::enable_if<
+			std::is_same<T1, bool>::value, T2
+			>::type;
+
+template<typename T1, typename T2 = void>
+using EnableIfIntegral = typename std::enable_if<
+			std::is_integral<T1>::value && !std::is_same<T1, bool>::value, T2
+			>::type;
+
+template<typename T1, typename T2 = void>
+using EnableIfReal = typename std::enable_if<
+			std::is_floating_point<T1>::value, T2
+			>::type;
+
+template<typename T1, typename T2 = void>
+using EnableIfString = typename std::enable_if<
+			std::is_convertible<T1, std::string>::value, T2
+			>::type;
+
 class value
 {
 private:
@@ -114,21 +135,35 @@ private:
 
 	union V
 	{
-		V();
-		explicit V(bool);
-		explicit V(int8_t);
-		explicit V(int16_t);
-		explicit V(int32_t);
-		explicit V(int64_t);
-		V(double);
-		V(const char *);
-		V(const std::string &);
-		V(std::string &&);
-		V(const object &);
-		V(object &&);
-		V(const array &);
-		V(array &&);
+		V() : n_val(nullptr) {}
+		V(bool b) : b_val(b) {}
+		V(int64_t i) : i_val(i) {}
+		V(double d) : d_val(d) {}
 
+		V(const char *s)
+		{
+			std::string &&str = string_unescape(s);
+			s_val = new std::string(str);
+		}
+
+		V(const std::string &s)
+		{
+			std::string &&str = string_unescape(s);
+			s_val = new std::string(str);
+		}
+
+		V(std::string &&s)
+		{
+			std::string &&str = string_unescape(s);
+			s_val = new std::string(std::move(str));
+		}
+
+		V(const object &o) : o_val(new object(o)) {}
+		V(object &&o) : o_val(new object(std::move(o))) {}
+		V(const array &a) : a_val(new array(a)) {}
+		V(array &&a) : a_val(new array(std::move(a))) {}
+
+		std::nullptr_t n_val;
 		bool b_val;
 		int64_t i_val;
 		double d_val;
@@ -143,14 +178,27 @@ private:
 
 public:
 	value() : m_type(T::T_NULL), m_val() {}
-	explicit value(bool b) : m_type(T::T_BOOLEAN), m_val(b) {}
-	explicit value(int8_t i) : m_type(T::T_INTEGER), m_val(i) {}
-	explicit value(int16_t i) : m_type(T::T_INTEGER), m_val(i) {}
-	explicit value(int32_t i) : m_type(T::T_INTEGER), m_val(i) {}
-	explicit value(int64_t i) : m_type(T::T_INTEGER), m_val(i) {}
-	explicit value(double d) : m_type(T::T_REAL), m_val(d) {}
-	value(const std::string &s) : m_type(T::T_STRING), m_val(s) {}
-	value(std::string &&s) : m_type(T::T_STRING), m_val(std::move(s)) {}
+
+	template<typename B>
+	value(B b, EnableIfBoolean<B> * = 0)
+		: m_type(T::T_BOOLEAN)
+		, m_val(b) {}
+
+	template<typename I>
+	value(I i, EnableIfIntegral<I> * = 0)
+		: m_type(T::T_INTEGER)
+		, m_val(static_cast<int64_t>(i)) {}
+
+	template<typename R>
+	value(R d, EnableIfReal<R> * = 0)
+		: m_type(T::T_REAL)
+		, m_val(static_cast<double>(d)) {}
+
+	template<typename S>
+	value(S && s, EnableIfString<S> * = 0)
+		: m_type(T::T_STRING)
+		, m_val(std::forward<S>(s)) {}
+
 	value(object *o) : m_type(T::T_OBJECT), m_val(o) {}
 	value(const object &o) : m_type(T::T_OBJECT), m_val(o) {}
 	value(object &&o) : m_type(T::T_OBJECT), m_val(std::move(o)) {}
@@ -162,14 +210,44 @@ public:
 	~value() { clean(*this); }
 
 	const value & operator= (std::nullptr_t);
-	const value & operator= (bool);
-	const value & operator= (int8_t);
-	const value & operator= (int16_t);
-	const value & operator= (int32_t);
-	const value & operator= (int64_t);
-	const value & operator= (double);
-	const value & operator= (const std::string &);
-	const value & operator= (std::string &&);
+
+	template<typename B>
+	EnableIfBoolean<B, const value &> operator= (B b)
+	{
+		clean(*this);
+		m_type = T::T_BOOLEAN;
+		m_val.b_val = b;
+		return *this;
+	}
+
+	template<typename I>
+	EnableIfIntegral<I, const value &> operator= (I i)
+	{
+		clean(*this);
+		m_type = T::T_INTEGER;
+		m_val.i_val = static_cast<int64_t>(i);
+		return *this;
+	}
+
+	template<typename R>
+	EnableIfReal<R, const value &> operator= (R r)
+	{
+		clean(*this);
+		m_type = T::T_REAL;
+		m_val.d_val = static_cast<double>(r);
+		return *this;
+	}
+
+	template<typename S>
+	EnableIfString<S, const value &> operator= (S && s)
+	{
+		clean(*this);
+		std::string &&str = string_unescape(std::forward<S>(s));
+		m_type = T::T_STRING;
+		m_val.s_val = new std::string(std::move(str));
+		return *this;
+	}
+
 	const value & operator= (const object &);
 	const value & operator= (object &&);
 	const value & operator= (const array &);

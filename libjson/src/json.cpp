@@ -224,37 +224,6 @@ array::str(bool pretty, int indent) const
 	return oss.str();
 }
 
-value::V::V() : i_val(0) {}
-value::V::V(bool b) : b_val(b) {}
-value::V::V(int8_t i) : i_val(i) {}
-value::V::V(int16_t i) : i_val(i) {}
-value::V::V(int32_t i) : i_val(i) {}
-value::V::V(int64_t i) : i_val(i) {}
-value::V::V(double d) : d_val(d) {}
-
-value::V::V(const char *s)
-{
-	std::string &&str = string_unescape(s);
-	s_val = new std::string(str);
-}
-
-value::V::V(const std::string &s)
-{
-	std::string &&str = string_unescape(s);
-	s_val = new std::string(str);
-}
-
-value::V::V(std::string &&s)
-{
-	std::string &&str = string_unescape(s);
-	s_val = new std::string(std::move(str));
-}
-
-value::V::V(const object &o) : o_val(new object(o)) {}
-value::V::V(object &&o) : o_val(new object(std::move(o))) {}
-value::V::V(const array &a) : a_val(new array(a)) {}
-value::V::V(array &&a) : a_val(new array(std::move(a))) {}
-
 void
 value::clean(value &v)
 {
@@ -353,83 +322,9 @@ value::move(value &&v)
 }
 
 const value &
-value::operator= (std::nullptr_t)
+value::operator= (std::nullptr_t np)
 {
 	clean(*this);
-	return *this;
-}
-
-const value &
-value::operator= (bool b)
-{
-	clean(*this);
-	m_type = T::T_BOOLEAN;
-	m_val.b_val = b;
-	return *this;
-}
-
-const value &
-value::operator= (int8_t i)
-{
-	clean(*this);
-	m_type = T::T_INTEGER;
-	m_val.i_val = i;
-	return *this;
-}
-
-const value &
-value::operator= (int16_t i)
-{
-	clean(*this);
-	m_type = T::T_INTEGER;
-	m_val.i_val = i;
-	return *this;
-}
-
-const value &
-value::operator= (int32_t i)
-{
-	clean(*this);
-	m_type = T::T_INTEGER;
-	m_val.i_val = i;
-	return *this;
-}
-
-const value &
-value::operator= (int64_t i)
-{
-	clean(*this);
-	m_type = T::T_INTEGER;
-	m_val.i_val = i;
-	return *this;
-}
-
-const value &
-value::operator= (double d)
-{
-	clean(*this);
-	m_type = T::T_REAL;
-	m_val.d_val = d;
-	return *this;
-}
-
-const value &
-value::operator= (const std::string &s)
-{
-	clean(*this);
-	std::string &&str = string_unescape(s);
-	m_type = T::T_STRING;
-	m_val.s_val = new std::string(str);
-	return *this;
-}
-
-const value &
-value::operator= (std::string &&s)
-{
-	clean(*this);
-	std::string &&str = string_unescape(s);
-	m_type = T::T_STRING;
-	m_val.s_val = new std::string(std::move(str));
 	return *this;
 }
 

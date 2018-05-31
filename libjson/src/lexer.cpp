@@ -166,11 +166,11 @@ lexer::get_number()
 			nstr += c;
 		}
 
-		ungetc(c);
-
 		if (no_exp_value)
 			throw parsing_error("no exponent value found", m_row, m_col);
 	}
+
+	ungetc(c);
 
 	if (dot || exp) {
 		m_token.t_kind = kind::k_real;
@@ -258,7 +258,7 @@ lexer::get()
 				ungetc(c);
 				get_false();
 			} else if ((c == '-') || digit(c)) {
-				m_is.unget();
+				ungetc(c);
 				get_number();
 			} else if (c == '"') {
 				get_string();

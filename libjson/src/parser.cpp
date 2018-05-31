@@ -71,6 +71,8 @@ parse_array(lexer &lex)
 			break;
 		else if (t.t_kind != kind::k_comma)
 			throw parsing_error(", or ] expected", lex.row(), lex.col());
+		else
+			t = lex.get();
 	}
 
 	val = std::move(arr);
@@ -124,6 +126,8 @@ parse_object(lexer &lex)
 			break;
 		else if (t.t_kind != kind::k_comma)
 			throw parsing_error(", or } expected", lex.row(), lex.col());
+		else
+			t = lex.get();
 	}
 
 	val = std::move(obj);
