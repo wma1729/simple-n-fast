@@ -35,15 +35,13 @@ object::operator=(object &&o)
 value &
 object::operator[] (const std::string &key)
 {
-	std::string &&k = string_unescape(key);
-	return m_members[k];
+	return m_members[string_unescape(key)];
 }
 
 object &
 object::add(const std::string &key, const value &val)
 {
-	std::string &&k = string_unescape(key);
-	m_members.insert(std::make_pair(k, val));
+	m_members.insert(std::make_pair(string_unescape(key), val));
 	return *this;
 }
 
@@ -57,15 +55,13 @@ object::add(const member_t &kvpair)
 bool
 object::contains(const std::string &key) const
 {
-	std::string &&k = string_unescape(key);
-	return (m_members.end() != m_members.find(k));
+	return (m_members.end() != m_members.find(string_unescape(key)));
 }
 
 const value &
 object::get(const std::string &key) const
 {
-	std::string &&k = string_unescape(key);
-	auto i = m_members.find(k);
+	auto i = m_members.find(string_unescape(key));
 	if (i == m_members.end()) {
 		std::ostringstream oss;
 		oss << "key " << key << " not found in JSON object!";
@@ -78,8 +74,7 @@ object::get(const std::string &key) const
 const value &
 object::get(const std::string &key, const value &default_value) const
 {
-	std::string &&k = string_unescape(key);
-	auto i = m_members.find(k);
+	auto i = m_members.find(string_unescape(key));
 	if (i == m_members.end()) {
 		return default_value;
 	} else {
@@ -229,18 +224,15 @@ value::clean(value &v)
 {
 	switch (v.m_type) {
 	case T::T_STRING:
-		if (v.m_val.s_val)
-			delete v.m_val.s_val;
+		delete v.m_val.s_val;
 		break;
 
 	case T::T_OBJECT:
-		if (v.m_val.o_val)
-			delete v.m_val.o_val;
+		delete v.m_val.o_val;
 		break;
 
 	case T::T_ARRAY:
-		if (v.m_val.a_val)
-			delete v.m_val.a_val;
+		delete v.m_val.a_val;
 		break;
 
 	default:
@@ -288,6 +280,10 @@ value::copy(const value &v)
 void
 value::move(value &&v)
 {
+	clean(*this);
+
+	m_type = v.m_type;
+
 	switch (v.m_type) {
 	case T::T_BOOLEAN:
 		m_val.b_val = v.m_val.b_val;
@@ -302,22 +298,25 @@ value::move(value &&v)
 		break;
 
 	case T::T_STRING:
-		m_val.s_val = new std::string(std::move(*v.m_val.s_val));
+		m_val.s_val = v.m_val.s_val;
+		v.m_val.s_val = nullptr;
 		break;
 
 	case T::T_OBJECT:
-		m_val.o_val = new object(std::move(*v.m_val.o_val));
+		m_val.o_val = v.m_val.o_val;
+		v.m_val.o_val = nullptr;
 		break;
 
 	case T::T_ARRAY:
-		m_val.a_val = new array(std::move(*v.m_val.a_val));
+		m_val.a_val = v.m_val.a_val;
+		v.m_val.o_val = nullptr;
 		break;
 
 	default:
 		m_val.i_val = 0;
 		break;
 	}
-	m_type = v.m_type;
+
 	clean(v);
 }
 

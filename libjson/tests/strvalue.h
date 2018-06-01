@@ -55,6 +55,61 @@ public:
 		m_strm << "check utf-8 string " << sv_1.str(false);
 		ASSERT_EQ(const std::string &, sv_1.str(false), "\"£\"", m_strm.str());
 		m_strm.str("");
+
+		snf::json::object obj {
+			std::make_pair("key_1", "value_1"),
+			std::make_pair("key_2", "value_2")
+		};
+
+		std::string expr_1 =
+R"({ "key_1" : "value_1", "key_2" : "value_2" })";
+
+		std::string expr_2 =
+R"({
+  "key_1" : "value_1",
+  "key_2" : "value_2"
+})";
+
+		m_strm << "obj: " << std::endl << obj.str(false);
+		ASSERT_EQ(const std::string &, obj.str(false), expr_1, m_strm.str());
+		m_strm.str("");
+
+		m_strm << "obj (pretty): " << std::endl << obj.str(true);
+		ASSERT_EQ(const std::string &, obj.str(true), expr_2, m_strm.str());
+		m_strm.str("");
+
+		snf::json::value sv = snf::json::from_string(expr_2);
+		m_strm << "json object from string";
+		ASSERT_EQ(const std::string &, sv.str(true), expr_2, m_strm.str());
+		m_strm.str("");
+
+		snf::json::array arr {
+			"value_1",
+			"value_2"
+		};
+
+		expr_1 =
+R"([ "value_1", "value_2" ])";
+
+		expr_2 =
+R"([
+  "value_1",
+  "value_2"
+])";
+
+		m_strm << "arr: " << std::endl << arr.str(false);
+		ASSERT_EQ(const std::string &, arr.str(false), expr_1, m_strm.str());
+		m_strm.str("");
+
+		m_strm << "arr (pretty): " << std::endl << arr.str(true);
+		ASSERT_EQ(const std::string &, arr.str(true), expr_2, m_strm.str());
+		m_strm.str("");
+
+		sv = snf::json::from_string(expr_1);
+		m_strm << "json array from string";
+		ASSERT_EQ(const std::string &, sv.str(false), expr_1, m_strm.str());
+		m_strm.str("");
+
 		return true;
 	}
 };

@@ -142,20 +142,17 @@ private:
 
 		V(const char *s)
 		{
-			std::string &&str = string_unescape(s);
-			s_val = new std::string(str);
+			s_val = new std::string(string_unescape(s));
 		}
 
 		V(const std::string &s)
 		{
-			std::string &&str = string_unescape(s);
-			s_val = new std::string(str);
+			s_val = new std::string(string_unescape(s));
 		}
 
 		V(std::string &&s)
 		{
-			std::string &&str = string_unescape(s);
-			s_val = new std::string(std::move(str));
+			s_val = new std::string(std::move(string_unescape(s)));
 		}
 
 		V(const object &o) : o_val(new object(o)) {}
@@ -242,9 +239,8 @@ public:
 	EnableIfString<S, const value &> operator= (S && s)
 	{
 		clean(*this);
-		std::string &&str = string_unescape(std::forward<S>(s));
 		m_type = T::T_STRING;
-		m_val.s_val = new std::string(std::move(str));
+		m_val.s_val = new std::string(std::move(string_unescape(std::forward<S>(s))));
 		return *this;
 	}
 
