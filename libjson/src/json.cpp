@@ -6,63 +6,31 @@
 namespace snf {
 namespace json {
 
-object::object(std::initializer_list<member_t> kvpairs)
-{
-	for (auto &i : kvpairs)
-		m_members.insert(i);
-}
-
-const object &
-object::operator=(const object &o)
-{
-	if (this != &o) {
-		m_members.clear();
-		m_members = o.m_members;
-	}
-	return *this;
-}
-
-object &
-object::operator=(object &&o)
-{
-	if (this != &o) {
-		m_members.clear();
-		m_members = std::move(o.m_members);
-	}
-	return *this;
-}
-
-value &
-object::operator[] (const std::string &key)
-{
-	return m_members[string_unescape(key)];
-}
-
 object &
 object::add(const std::string &key, const value &val)
 {
-	m_members.insert(std::make_pair(string_unescape(key), val));
+	insert(std::make_pair(string_unescape(key), val));
 	return *this;
 }
 
 object &
-object::add(const member_t &kvpair)
+object::add(const value_type &kvpair)
 {
-	m_members.insert(kvpair);
+	insert(kvpair);
 	return *this;
 }
 
 bool
 object::contains(const std::string &key) const
 {
-	return (m_members.end() != m_members.find(string_unescape(key)));
+	return (end() != find(string_unescape(key)));
 }
 
 const value &
 object::get(const std::string &key) const
 {
-	auto i = m_members.find(string_unescape(key));
-	if (i == m_members.end()) {
+	auto i = find(string_unescape(key));
+	if (i == end()) {
 		std::ostringstream oss;
 		oss << "key " << key << " not found in JSON object!";
 		throw std::runtime_error(oss.str());
@@ -74,8 +42,8 @@ object::get(const std::string &key) const
 const value &
 object::get(const std::string &key, const value &default_value) const
 {
-	auto i = m_members.find(string_unescape(key));
-	if (i == m_members.end()) {
+	auto i = find(string_unescape(key));
+	if (i == end()) {
 		return default_value;
 	} else {
 		return i->second;
@@ -83,7 +51,7 @@ object::get(const std::string &key, const value &default_value) const
 }
 
 std::string
-object::str(const member_t &kvpair, bool pretty, int indent) const
+object::str(const value_type &kvpair, bool pretty, int indent) const
 {
 	std::ostringstream oss;
 
@@ -102,8 +70,8 @@ object::str(bool pretty, int indent) const
 
 	oss << "{";
 
-	for (auto i = m_members.begin(); i != m_members.end(); ++i) {
-		if (i != m_members.begin()) {
+	for (auto i = begin(); i != end(); ++i) {
+		if (i != begin()) {
 			oss << ",";
 		}
 
@@ -125,65 +93,24 @@ object::str(bool pretty, int indent) const
 	return oss.str();
 }
 
-array::array(std::initializer_list<value> elements)
-{
-	for (auto &i : elements)
-		m_elements.emplace_back(i);
-}
-
-const array &
-array::operator=(const array &a)
-{
-	if (this != &a) {
-		m_elements.clear();
-		m_elements = a.m_elements;
-	}
-	return *this;
-}
-
-array &
-array::operator=(array &&a)
-{
-	if (this != &a) {
-		m_elements.clear();
-		m_elements = std::move(a.m_elements);
-	}
-	return *this;
-}
-
-value &
-array::operator[] (size_t index)
-{
-	if (!valid(index))
-		if (index >= size())
-			m_elements.resize(index + 1);
-	return m_elements[index];
-}
-
 array &
 array::add(const value &elem)
 {
-	m_elements.emplace_back(elem);
+	emplace_back(elem);
 	return *this;
 }
 
 const value &
 array::get(size_t index) const
 {
-	if (valid(index)) {
-		return m_elements[index];
-	} else {
-		std::ostringstream oss;
-		oss << "index " << index << " is out of range in JSON array!";
-		throw std::range_error(oss.str().c_str());
-	}
+	return at(index);
 }
 
 const value &
 array::get(size_t index, const value &default_value) const
 {
 	if (valid(index)) {
-		return m_elements[index];
+		return at(index);
 	} else {
 		return default_value;
 	}
@@ -196,8 +123,8 @@ array::str(bool pretty, int indent) const
 
 	oss << "[";
 
-	for (auto i = m_elements.begin(); i != m_elements.end(); ++i) {
-		if (i != m_elements.begin()) {
+	for (auto i = begin(); i != end(); ++i) {
+		if (i != begin()) {
 			oss << ",";
 		}
 

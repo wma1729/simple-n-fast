@@ -1,5 +1,6 @@
 #include "misc.h"
 #include "utf.h"
+#include "json.h"
 #include <sstream>
 
 namespace snf {

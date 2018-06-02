@@ -49,9 +49,6 @@ constexpr bool uxdigit(char c)
 	return ((c >= 'A') && (c <= 'F'));
 }
 
-std::string string_unescape(const std::string &);
-std::string string_escape(const std::string &);
-
 } // json
 } // snf
 

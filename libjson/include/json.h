@@ -12,6 +12,9 @@
 namespace snf {
 namespace json {
 
+std::string string_unescape(const std::string &);
+std::string string_escape(const std::string &);
+
 class parsing_error : public std::runtime_error
 {
 private:
@@ -39,58 +42,33 @@ public:
 
 class value;
 
-class object
+class object : public std::map<std::string, value>
 {
 private:
-	std::map<std::string, value> m_members;
-	using member_t = typename std::map<std::string, value>::value_type;
-	using const_iterator_t = typename std::map<std::string, value>::const_iterator;
-
-	std::string str(const member_t &, bool, int) const;
+	using value_type = std::map<std::string, value>::value_type;
+	std::string str(const value_type &, bool, int) const;
 
 public:
-	object() = default;
-	object(std::initializer_list<member_t>);
-	object(const object &o) : m_members(o.m_members) {}
-	object(object &&o) : m_members(std::move(o.m_members)) {}
-
-	const object & operator=(const object &);
-	object & operator=(object &&);
-	value & operator[] (const std::string &);
+	using std::map<std::string, value>::map;
 
 	object & add(const std::string &, const value &);
-	object & add(const member_t &);
-
-	size_t size() const { return m_members.size(); }
+	object & add(const value_type &);
 
 	bool contains(const std::string &) const;
+
 	const value & get(const std::string &) const;
 	const value & get(const std::string &, const value &) const;
-
-	const_iterator_t begin() const { return m_members.begin(); }
-	const_iterator_t end() const { return m_members.end(); }
 
 	std::string str(bool, int indent = 0) const;
 };
 
-class array
+class array : public std::vector<value>
 {
-private:
-	std::vector<value> m_elements;
-
 public:
-	array() = default;
-	array(std::initializer_list<value>);
-	array(const array &a) : m_elements(a.m_elements) {}
-	array(array &&a) : m_elements(std::move(a.m_elements)) {}
-
-	const array & operator=(const array &);
-	array & operator=(array &&);
-	value & operator[] (size_t);
+	using std::vector<value>::vector;
 
 	array & add(const value &);
 
-	size_t size() const { return m_elements.size(); }
 	bool valid(size_t index) const { return ((index >= 0) && (index < size())); }
 
 	const value & get(size_t) const;
