@@ -33,7 +33,7 @@ object::get(const std::string &key) const
 	if (i == end()) {
 		std::ostringstream oss;
 		oss << "key " << key << " not found in JSON object!";
-		throw std::runtime_error(oss.str());
+		throw std::out_of_range(oss.str());
 	} else {
 		return i->second;
 	}
@@ -103,7 +103,13 @@ array::add(const value &elem)
 const value &
 array::get(size_t index) const
 {
-	return at(index);
+	if (valid(index)) {
+		return at(index);
+	} else {
+		std::ostringstream oss;
+		oss << "index " << index << " is out of range in JSON array!";
+		throw std::out_of_range(oss.str());
+	}
 }
 
 const value &
