@@ -172,7 +172,7 @@ value::clean(value &v)
 		break;
 	}
 	v.m_type = T::T_NULL;
-	v.m_val.i_val = 0L;
+	v.m_val.n_val = nullptr;
 }
 
 void
@@ -204,7 +204,7 @@ value::copy(const value &v)
 		break;
 
 	default:
-		m_val.i_val = 0;
+		m_val.n_val = nullptr;
 		break;
 	}
 	m_type = v.m_type;
@@ -246,7 +246,7 @@ value::move(value &&v)
 		break;
 
 	default:
-		m_val.i_val = 0;
+		m_val.n_val = nullptr;
 		break;
 	}
 

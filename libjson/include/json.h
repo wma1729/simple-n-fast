@@ -169,19 +169,24 @@ public:
 		: m_type(T::T_REAL)
 		, m_val(static_cast<double>(d)) {}
 
-	template<typename S>
-	value(S && s, EnableIfString<S> * = 0)
-		: m_type(T::T_STRING)
-		, m_val(std::forward<S>(s)) {}
+	value(const char *s)
+	{
+		if (s == nullptr) {
+			m_type = T::T_NULL;
+		} else {
+			m_type = T::T_STRING;
+			m_val.s_val = new std::string(string_unescape(s));
+		}
+	}
 
-	value(object *o) : m_type(T::T_OBJECT), m_val(o) {}
+	value(const std::string &s) : m_type(T::T_STRING), m_val(s) {}
+	value(std::string &&s) : m_type(T::T_STRING), m_val(std::move(s)) {}
 	value(const object &o) : m_type(T::T_OBJECT), m_val(o) {}
 	value(object &&o) : m_type(T::T_OBJECT), m_val(std::move(o)) {}
-	value(array *a) : m_type(T::T_ARRAY), m_val(a) {}
 	value(const array &a) : m_type(T::T_ARRAY), m_val(a) {}
 	value(array &&a) : m_type(T::T_ARRAY), m_val(std::move(a)) {}
 	value(const value &v) { copy(v); }
-	value(value &&v) { move(std::move(v)); }
+	value(value &&v) : m_type(v.m_type) { move(std::move(v)); }
 	~value() { clean(*this); }
 
 	const value & operator= (std::nullptr_t);

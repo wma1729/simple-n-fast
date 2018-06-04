@@ -5,6 +5,7 @@
 #include "intvalue.h"
 #include "realvalue.h"
 #include "strvalue.h"
+#include "genvalue.h"
 
 namespace snf {
 namespace tf {
@@ -15,6 +16,7 @@ test *test_list[] = {
 	DBG_NEW int_value(),
 	DBG_NEW real_value(),
 	DBG_NEW str_value(),
+	DBG_NEW gen_value(),
 	0
 };
 
