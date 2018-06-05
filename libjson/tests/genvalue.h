@@ -18,19 +18,19 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		snf::json::value v_1 ({
-			std::make_pair("key1", "str_1"),
-			std::make_pair("key2", true),
-			std::make_pair("key3", false),
-			std::make_pair("key4", 456),
-			std::make_pair("key5", 1.2e+10),
-			std::make_pair("key6", snf::json::value {} ),
-			std::make_pair("key7",
-				snf::json::array {
-					"str_2", true, false, 123, 3.14, snf::json::value {}
+		OBJECT v_1 {
+			KVPAIR("key1", "str_1"),
+			KVPAIR("key2", true),
+			KVPAIR("key3", false),
+			KVPAIR("key4", 456),
+			KVPAIR("key5", 1.2e+10),
+			KVPAIR("key6", nullptr),
+			KVPAIR("key7",
+				ARRAY {
+					"str_2", true, false, 123, 3.14, nullptr
 				}
 			)
-		});
+		};
 
 		std::string expr_1 =
 R"({ "key1" : "str_1", "key2" : true, "key3" : false, "key4" : 456, "key5" : 1.2e+10, "key6" : null, "key7" : [ "str_2", true, false, 123, 3.14, null ] })";

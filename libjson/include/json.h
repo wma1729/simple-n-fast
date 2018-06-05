@@ -7,7 +7,6 @@
 #include <initializer_list>
 #include <istream>
 #include <stdexcept>
-#include "misc.h"
 
 namespace snf {
 namespace json {
@@ -60,6 +59,12 @@ public:
 	const value & get(const std::string &, const value &) const;
 
 	std::string str(bool, int indent = 0) const;
+
+	friend std::ostream & operator<<(std::ostream & os, const object & o)
+	{
+		os << o.str(false);
+		return os;
+	}
 };
 
 class array : public std::vector<value>
@@ -75,6 +80,12 @@ public:
 	const value & get(size_t, const value &) const;
 
 	std::string str(bool, int indent = 0) const;
+
+	friend std::ostream & operator<<(std::ostream & os, const array & a)
+	{
+		os << a.str(false);
+		return os;
+	}
 };
 
 template<typename T1, typename T2 = void>
@@ -252,11 +263,21 @@ public:
 	const array &get_array() const;
 
 	std::string str(bool, int indent = 0) const;
+
+	friend std::ostream & operator<<(std::ostream & os, const value & v)
+	{
+		os << v.str(false);
+		return os;
+	}
 };
 
 value from_string(const std::string &);
 value from_file(const std::string &);
 value from_stream(std::istream &);
+
+#define KVPAIR       std::make_pair
+#define OBJECT       snf::json::object
+#define ARRAY        snf::json::array
 
 } // json
 } // snf
