@@ -66,6 +66,41 @@ R"({
 		ASSERT_EQ(const std::string &, v_2.str(false), expr_1, "object matches");
 		ASSERT_EQ(const std::string &, v_2.str(true), expr_2, "pretty object matches");
 
+		ARRAY v_3 {
+			12345.6,
+			true,
+			nullptr,
+			OBJECT {
+				KVPAIR("key1", "val_1"),
+				KVPAIR("key2", 6983467)
+			}
+		};
+
+		expr_1 = R"([ 12345.6, true, null, { "key1" : "val_1", "key2" : 6983467 } ])";
+		expr_2 =
+R"([
+  12345.6,
+  true,
+  null,
+  {
+    "key1" : "val_1",
+    "key2" : 6983467
+  }
+])";
+
+		m_strm << "array: " << v_3.str(false);
+		ASSERT_EQ(const std::string &, v_3.str(false), expr_1, m_strm.str());
+		m_strm.str("");
+
+		m_strm << "array(pretty): " << v_3.str(true);
+		ASSERT_EQ(const std::string &, v_3.str(true), expr_2, m_strm.str());
+		m_strm.str("");
+
+		snf::json::value v_4 = snf::json::from_string(expr_2);
+
+		ASSERT_EQ(const std::string &, v_4.str(false), expr_1, "object matches");
+		ASSERT_EQ(const std::string &, v_4.str(true), expr_2, "pretty object matches");
+
 		return true;
 	}
 };
