@@ -121,11 +121,6 @@ utf16_decode(std::istream &is)
 			oss << "invalid UTF-16 surrogate sequence (" << std::hex << w2 << ")";
 			throw std::runtime_error(oss.str());
 		}
-	} else {
-		std::ostringstream oss;
-		oss.setf(std::ios::showbase);
-		oss << "invalid UTF-16 main sequence (" << std::hex << w1 << ")";
-		throw std::runtime_error(oss.str());
 	}
 
 	return utf8_encode(dw);
@@ -168,16 +163,15 @@ utf16_encode(std::istream &is)
 	std::ostringstream oss;
 
 	if (dw < 0x10000) {
-		oss << std::setw(4) << std::setfill('0') << std::hex
-			<< "\\u" << dw;
+		oss << "\\u" << std::setw(4) << std::setfill('0') << std::hex << dw;
 	} else {
 		int w1, w2;
 
 		dw -= 0x10000;
 		w1 = 0xD800 | ((dw & 0xFFC00) >> 10);
 		w2 = 0xDC00 | (dw & 0x003FF);
-		oss << std::setw(4) << std::setfill('0') << std::hex
-			<< "\\u" << w1 << "\\u" << w2;
+		oss << "\\u" << std::setw(4) << std::setfill('0') << std::hex << w1;
+		oss << "\\u" << std::setw(4) << std::setfill('0') << std::hex << w2;
 	}
 
 	return oss.str();

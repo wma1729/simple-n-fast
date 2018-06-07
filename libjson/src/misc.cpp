@@ -77,9 +77,9 @@ string_escape(const std::string &s)
 				str += "\\r";
 			} else if (c == '\t') {
 				str += "\\t";
-			} else if (c <= 0x7F) {
+			} else if (static_cast<unsigned char>(c) < 0x80) {
 				str += c;
-			} else if ((c & 0xC0) == 0xC0) {
+			} else if (static_cast<unsigned char>(c) >= 0x80) {
 				iss.putback(c);
 				str += utf16_encode(iss);
 			} else {

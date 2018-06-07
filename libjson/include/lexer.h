@@ -6,6 +6,7 @@
 namespace snf {
 namespace json {
 
+/* Kind of lexical token */
 enum class kind {
 	k_none,       // no token yet
 	k_lcb,        // left curly brace '{'
@@ -23,23 +24,24 @@ enum class kind {
 	k_eof         // end of json input
 };
 
+/* The lexical token itself */
 struct token
 {
-	kind	t_kind;
-	value	t_value;
+	kind	t_kind;     // kind of token
+	value	t_value;    // value of token, if any
 
 	token() : t_kind(kind::k_none), t_value() {}
-
 };
 
+/* Lexical analyzer */
 class lexer
 {
 private:
-	std::istream    &m_is;
-	int             m_row;
-	int             m_col;
-	int             m_lastrowcol;
-	token           m_token;
+	std::istream    &m_is;          // input stream
+	int             m_row;          // current row #
+	int             m_col;          // current column #
+	int             m_lastrowcol;   // column # in the last row
+	token           m_token;        // last token read
 
 	char getc();
 	void ungetc(char);
@@ -51,6 +53,11 @@ private:
 
 public:
 	lexer() = delete;
+
+	/*
+	 * Initializes the lexical analyzer with the input stream.
+	 * @param [in] is - reference to the input stream.
+	 */
 	lexer(std::istream &is)
 		: m_is(is)
 		, m_row(1)
@@ -62,7 +69,10 @@ public:
 
 	token & get();
 
+	/* Fetches the current row. */
 	int row() const { return m_row; }
+
+	/* Fetches the current column. */
 	int col() const { return m_col; }
 };
 

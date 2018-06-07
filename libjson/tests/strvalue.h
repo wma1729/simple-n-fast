@@ -36,24 +36,36 @@ public:
 		sv_3 = str_2;
 		ASSERT_EQ(const std::string &, sv_3.str(false), "\"test_string_2\"", "string content check");
 
-		sv_1 = "\u81ea\u7531.txt";
-		m_strm << "check utf-8 string " << sv_1.str(false);
-		ASSERT_EQ(const std::string &, sv_1.str(false), "\"自由.txt\"", m_strm.str());
+		sv_1 = "\\u81ea\\u7531.txt";
+		m_strm << "check utf-8 string (unescaped): " << sv_1.get_string();
+		ASSERT_EQ(const std::string &, sv_1.get_string(), "自由.txt", m_strm.str());
+		m_strm.str("");
+		m_strm << "check utf-8 string (escaped): " << sv_1.str(false);
+		ASSERT_EQ(const std::string &, sv_1.str(false), "\"\\u81ea\\u7531.txt\"", m_strm.str());
 		m_strm.str("");
 
-		sv_1 = "a\u005Cb";
-		m_strm << "check utf-8 string " << sv_1.str(false);
-		ASSERT_EQ(const std::string &, sv_1.str(false), "\"a\\b\"", m_strm.str());
+		sv_1 = "a\\u005Cb";
+		m_strm << "check utf-8 string (unescaped): " << sv_1.get_string();
+		ASSERT_EQ(const std::string &, sv_1.get_string(), "a\\b", m_strm.str());
+		m_strm.str("");
+		m_strm << "check utf-8 string (escaped): " << sv_1.str(false);
+		ASSERT_EQ(const std::string &, sv_1.str(false), "\"a\\\\b\"", m_strm.str());
 		m_strm.str("");
 
-		sv_1 = "\u00e9es permettant \u2019acc\u00e9der \u00e0 des donn\u00e9es issues de";
-		m_strm << "check utf-8 string " << sv_1.str(false);
-		ASSERT_EQ(const std::string &, sv_1.str(false), "\"ées permettant ’accéder à des données issues de\"", m_strm.str());
+		sv_1 = "\\u00e9es permettant \\u2019acc\\u00e9der \\u00e0 des donn\\u00e9es issues de";
+		m_strm << "check utf-8 string (unescaped): " << sv_1.get_string();
+		ASSERT_EQ(const std::string &, sv_1.get_string(), "ées permettant ’accéder à des données issues de", m_strm.str());
+		m_strm.str("");
+		m_strm << "check utf-8 string (escaped): " << sv_1.str(false);
+		ASSERT_EQ(const std::string &, sv_1.str(false), "\"\\u00e9es permettant \\u2019acc\\u00e9der \\u00e0 des donn\\u00e9es issues de\"", m_strm.str());
 		m_strm.str("");
 
 		sv_1 = "\u00a3";
-		m_strm << "check utf-8 string " << sv_1.str(false);
-		ASSERT_EQ(const std::string &, sv_1.str(false), "\"£\"", m_strm.str());
+		m_strm << "check utf-8 string (unescaped): " << sv_1.get_string();
+		ASSERT_EQ(const std::string &, sv_1.get_string(), "£", m_strm.str());
+		m_strm.str("");
+		m_strm << "check utf-8 string (escaped): " << sv_1.str(false);
+		ASSERT_EQ(const std::string &, sv_1.str(false), "\"\\u00a3\"", m_strm.str());
 		m_strm.str("");
 
 		snf::json::object obj {
