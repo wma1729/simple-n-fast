@@ -6,6 +6,11 @@
 namespace snf {
 namespace json {
 
+/*
+ * Escapes a string. Escape characters including escaped multibyte
+ * characters in \uxxxx format are replaced with the raw utf characters.
+ * @throw std::invalid_argument
+ */
 std::string
 string_unescape(const std::string &s)
 {
@@ -35,7 +40,7 @@ string_unescape(const std::string &s)
 						break;
 
 					default:
-						throw std::runtime_error("invalid escape sequence");
+						throw std::invalid_argument("invalid escape sequence");
 						break;
 				}
 			} else {
@@ -50,6 +55,11 @@ string_unescape(const std::string &s)
 	return str;
 }
 
+/*
+ * Un-escapes a string. Special characters including raw multibyte utf
+ * characters are escaped.
+ * @throw std::invalid_argument
+ */
 std::string
 string_escape(const std::string &s)
 {
@@ -83,7 +93,7 @@ string_escape(const std::string &s)
 				iss.putback(c);
 				str += utf16_encode(iss);
 			} else {
-				throw std::runtime_error("invalid code point");
+				throw std::invalid_argument("invalid code point");
 			}
 		}
 	} catch (const std::ios::failure &) {

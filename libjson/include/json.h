@@ -11,9 +11,41 @@
 namespace snf {
 namespace json {
 
+/*
+ * Unescapes the input string i.e. all the escape
+ * characters including the utf espace characters
+ * of the form \uxxxx, where x is the hex digit are
+ * un-escaped to their raw form.
+ * @throw - std::invalid_argument
+ * @return un-escaped (raw) string.
+ */
 std::string string_unescape(const std::string &);
+
+/*
+ * Escapes the input string i.e. all the special
+ * characters including multi-byte utf characters
+ * are escaped so they are printable/transferable.
+ * @throw - std::invalid_argument
+ * @return escaped string.
+ */
 std::string string_escape(const std::string &);
 
+/*
+ * Notes on string storage:
+ * All the strings are stored in their raw form in
+ * memory. Only while dumping i.e. using << operator
+ * or str() method of the value, or the object, or
+ * the array class, the strings are escaped. To get
+ * the raw form, use get_string() method of the
+ * value class.
+ */
+
+/*
+ * Exception thrown when a parsing error is
+ * encountered. Where possible, the corresponding
+ * row and column number are encapsulated in the
+ * exception.
+ */
 class parsing_error : public std::runtime_error
 {
 private:
@@ -41,6 +73,11 @@ public:
 
 class value;
 
+/*
+ * JSON object. Implemented as a C++ map. All std::map
+ * operations are available to use on the JSON object.
+ * A few additional methods are provided for convenience.
+ */
 class object : public std::map<std::string, value>
 {
 private:
@@ -67,6 +104,11 @@ public:
 	}
 };
 
+/*
+ * JSON array. Implemented as a C++ vector. All std::vector
+ * operations are available to use on the JSON array.
+ * A few additional methods are provided for convenience.
+ */
 class array : public std::vector<value>
 {
 public:
@@ -88,26 +130,40 @@ public:
 	}
 };
 
+/* Enable the template for boolean types. */
 template<typename T1, typename T2 = void>
 using EnableIfBoolean = typename std::enable_if<
 			std::is_same<T1, bool>::value, T2
 			>::type;
 
+/* Enable the template for integral types, excluding booleans. */
 template<typename T1, typename T2 = void>
 using EnableIfIntegral = typename std::enable_if<
 			std::is_integral<T1>::value && !std::is_same<T1, bool>::value, T2
 			>::type;
 
+/* Enable the template for real types. */
 template<typename T1, typename T2 = void>
 using EnableIfReal = typename std::enable_if<
 			std::is_floating_point<T1>::value, T2
 			>::type;
 
+/* Enable the template for string types. */
 template<typename T1, typename T2 = void>
 using EnableIfString = typename std::enable_if<
 			std::is_convertible<T1, std::string>::value, T2
 			>::type;
 
+/*
+ * JSON value. It can hold
+ * - null
+ * - boolean
+ * - integer (all integers are stored as 64-bit signed integers)
+ * - real (all real values are stored as double)
+ * - string
+ * - JSON object
+ * - JSON array
+ */
 class value
 {
 private:
@@ -196,7 +252,7 @@ public:
 	value(object &&o) : m_type(T::T_OBJECT), m_val(std::move(o)) {}
 	value(const array &a) : m_type(T::T_ARRAY), m_val(a) {}
 	value(array &&a) : m_type(T::T_ARRAY), m_val(std::move(a)) {}
-	value(const value &v) { copy(v); }
+	value(const value &v) : m_type(v.m_type) { copy(v); }
 	value(value &&v) : m_type(v.m_type) { move(std::move(v)); }
 	~value() { clean(*this); }
 

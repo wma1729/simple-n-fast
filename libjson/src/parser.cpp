@@ -10,6 +10,13 @@ static value parse_array(lexer &);
 static value parse_object(lexer &);
 static value parse(lexer &);
 
+/*
+ * Generates the JSON value from its string representation.
+ * @throw std::invalid_argument
+ * @throw std::ios_base::failure
+ * @throw snf::json::parsing_error
+ * @return the JSON value.
+ */
 value
 from_string(const std::string &s)
 {
@@ -18,7 +25,13 @@ from_string(const std::string &s)
 	return from_stream(iss);
 }
 
-// can throw ios_base::failure exception
+/*
+ * Generates the JSON value from the file's content.
+ * @throw std::invalid_argument
+ * @throw std::ios_base::failure
+ * @throw snf::json::parsing_error
+ * @return the JSON value.
+ */
 value
 from_file(const std::string &f)
 {
@@ -28,6 +41,13 @@ from_file(const std::string &f)
 	return from_stream(ifs);
 }
 
+/*
+ * Generates the JSON value from the input stream.
+ * @throw std::invalid_argument
+ * @throw std::ios_base::failure
+ * @throw snf::json::parsing_error
+ * @return the JSON value.
+ */
 value
 from_stream(std::istream &is)
 {
@@ -35,6 +55,12 @@ from_stream(std::istream &is)
 	return parse(lex);
 }
 
+/*
+ * Parses JSON array.
+ * @throw std::invalid_argument
+ * @throw snf::json::parsing_error
+ * @return the JSON value.
+ */
 static value
 parse_array(lexer &lex)
 {
@@ -79,6 +105,12 @@ parse_array(lexer &lex)
 	return val;
 }
 
+/*
+ * Parses JSON object.
+ * @throw std::invalid_argument
+ * @throw snf::json::parsing_error
+ * @return the JSON value.
+ */
 static value
 parse_object(lexer &lex)
 {
@@ -134,6 +166,12 @@ parse_object(lexer &lex)
 	return val;
 }
 
+/*
+ * Parses JSON value.
+ * @throw std::invalid_argument
+ * @throw snf::json::parsing_error
+ * @return the JSON value.
+ */
 static value
 parse(lexer &lex)
 {

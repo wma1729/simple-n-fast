@@ -19,6 +19,8 @@ namespace json {
  * 2     |  U+0080 |   U+07FF | 110xxxxx | 10xxxxxx |          |
  * 3     |  U+0800 |   U+FFFF | 1110xxxx | 10xxxxxx | 10xxxxxx |
  * 4     | U+10000 | U+10FFFF | 11110xxx | 10xxxxxx | 10xxxxxx | 10xxxxxx
+ *
+ * @throw std::invalid_argument
  */
 static std::string
 utf8_encode(uint32_t codepoint)
@@ -29,7 +31,7 @@ utf8_encode(uint32_t codepoint)
 		std::ostringstream oss;
 		oss.setf(std::ios::showbase);
 		oss << "invalid code point (" << std::hex << codepoint << ")";
-		throw std::runtime_error(oss.str());
+		throw std::invalid_argument(oss.str());
 	} else if (codepoint < 0x80) {
 		str += static_cast<char>(codepoint);
 	} else if (codepoint < 0x800) {
@@ -84,6 +86,8 @@ utf16_decode_seq(std::istream &is)
 }
 
 /*
+ * Decodes a utf string. \uxxxx is replaced with the raw utf characters.
+ *
  * Surrogates are characters in the Unicode range U+D800 - U+DFFF (2048 code points):
  * - U+D800 - U+DBFF (1,024 code points): high surrogates
  * - U+DC00 - U+DFFF (1,024 code points): low surrogates
@@ -93,6 +97,8 @@ utf16_decode_seq(std::istream &is)
  * two 16 bits units:
  * - an high surrogate (in range U+D800 - U+DBFF) followed by
  * - a low surrogate (in range U+DC00 - U+DFFF).
+ *
+ * @throw std::invalid_argument
  */
 std::string
 utf16_decode(std::istream &is)
@@ -103,7 +109,7 @@ utf16_decode(std::istream &is)
 
 	w1 = utf16_decode_seq(is);
 	if (w1 == -1)
-		throw std::runtime_error("invalid UTF-16 main sequence");
+		throw std::invalid_argument("invalid UTF-16 main sequence");
 
 	dw = w1;
 
@@ -111,7 +117,7 @@ utf16_decode(std::istream &is)
 
 		w2 = utf16_decode_seq(is);
 		if (w2 == -1)
-			throw std::runtime_error("invalid UTF-16 surrogate sequence");
+			throw std::invalid_argument("invalid UTF-16 surrogate sequence");
 
 		if ((w2 >= 0xDC00) && (w1 <= 0xDFFF)) {
 			dw = ((w1 - 0xD800) << 10) + (w2 - 0xDC00) + 0x10000;
@@ -119,13 +125,17 @@ utf16_decode(std::istream &is)
 			std::ostringstream oss;
 			oss.setf(std::ios::showbase);
 			oss << "invalid UTF-16 surrogate sequence (" << std::hex << w2 << ")";
-			throw std::runtime_error(oss.str());
+			throw std::invalid_argument(oss.str());
 		}
 	}
 
 	return utf8_encode(dw);
 }
 
+/*
+ * Encodes a utf string. The raw utf characters are replaced with \uxxxx.
+ * @throw std::invalid_argument
+ */
 std::string
 utf16_encode(std::istream &is)
 {
@@ -156,7 +166,7 @@ utf16_encode(std::istream &is)
 			std::ostringstream oss;
 			oss.setf(std::ios::showbase);
 			oss << "invalid UTF-8 sequence (" << std::hex << c << ")";
-			throw std::runtime_error(oss.str());
+			throw std::invalid_argument(oss.str());
 		}
 	}
 

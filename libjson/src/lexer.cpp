@@ -8,6 +8,10 @@
 namespace snf {
 namespace json {
 
+/*
+ * Gets a character from the input stream.
+ * Row/column number are updated.
+ */
 char
 lexer::getc()
 {
@@ -25,6 +29,10 @@ lexer::getc()
 	return c;
 }
 
+/*
+ * Puts back a character into the input stream.
+ * Row/column number are updated.
+ */
 void
 lexer::ungetc(char c)
 {
@@ -38,6 +46,10 @@ lexer::ungetc(char c)
 	}
 }
 
+/*
+ * Reads the null token.
+ * @throw snf::json::parsing_error
+ */
 void
 lexer::get_null()
 {
@@ -53,6 +65,10 @@ lexer::get_null()
 	}
 }
 
+/*
+ * Reads the true token.
+ * @throw snf::json::parsing_error
+ */
 void
 lexer::get_true()
 {
@@ -69,6 +85,10 @@ lexer::get_true()
 	}
 }
 
+/*
+ * Reads the false token.
+ * @throw snf::json::parsing_error
+ */
 void
 lexer::get_false()
 {
@@ -85,6 +105,10 @@ lexer::get_false()
 	}
 }
 
+/*
+ * Reads the number token. It could be integer or real.
+ * @throw snf::json::parsing_error
+ */
 void
 lexer::get_number()
 {
@@ -181,6 +205,11 @@ lexer::get_number()
 	}
 }
 
+/*
+ * Reads the string token. The string is un-escaped.
+ * @throw std::invalid_argument
+ * @throw snf::json::parsing_error
+ */
 void
 lexer::get_string()
 {
@@ -222,6 +251,11 @@ lexer::get_string()
 	return;
 }
 
+/*
+ * Gets the next token from the input stream.
+ * @throw std::invalid_argument
+ * @throw snf::json::parsing_error
+ */
 token &
 lexer::get()
 {

@@ -6,6 +6,12 @@
 namespace snf {
 namespace json {
 
+/*
+ * Adds the key/value pair to the JSON object.
+ * The key is first un-escaped.
+ * @throw std::invalid_argument
+ * @return reference to the current object.
+ */
 object &
 object::add(const std::string &key, const value &val)
 {
@@ -13,6 +19,11 @@ object::add(const std::string &key, const value &val)
 	return *this;
 }
 
+/*
+ * Add the key/value pair to the JSON object.
+ * Assumption is that the key/value are already un-escaped.
+ * @return reference to the current object.
+ */
 object &
 object::add(const value_type &kvpair)
 {
@@ -20,12 +31,21 @@ object::add(const value_type &kvpair)
 	return *this;
 }
 
+/*
+ * Does the object contains the key?
+ * The key is un-escaped before the search.
+ */
 bool
 object::contains(const std::string &key) const
 {
 	return (end() != find(string_unescape(key)));
 }
 
+/*
+ * Gets the JSON value for the specified key.
+ * If key is not found, an exception is thrown.
+ * @throw std::out_of_range
+ */
 const value &
 object::get(const std::string &key) const
 {
@@ -39,6 +59,10 @@ object::get(const std::string &key) const
 	}
 }
 
+/*
+ * Gets the JSON value for the specified key.
+ * If key is not found, the default_value is returned.
+ */
 const value &
 object::get(const std::string &key, const value &default_value) const
 {
@@ -50,6 +74,13 @@ object::get(const std::string &key, const value &default_value) const
 	}
 }
 
+/*
+ * Gets the string representation of the key/value pair
+ * of the JSON object. Both the key and value (if the value
+ * is indeed a string) are escaped.
+ * @throw std::invalid_argument
+ * @return the string representation of the JSON object member.
+ */
 std::string
 object::str(const value_type &kvpair, bool pretty, int indent) const
 {
@@ -63,6 +94,12 @@ object::str(const value_type &kvpair, bool pretty, int indent) const
 	return oss.str();
 }
 
+/*
+ * Gets the string representation of the whole of the
+ * JSON object. Keys and string values are escaped.
+ * @throw std::invalid_argument
+ * @return the string representation of the JSON object.
+ */
 std::string
 object::str(bool pretty, int indent) const
 {
@@ -93,6 +130,9 @@ object::str(bool pretty, int indent) const
 	return oss.str();
 }
 
+/*
+ * Adds a value to the JSON array.
+ */
 array &
 array::add(const value &elem)
 {
@@ -100,6 +140,11 @@ array::add(const value &elem)
 	return *this;
 }
 
+/*
+ * Gets the JSON value at the specified index.
+ * If the index is invalid, an exception is thrown.
+ * @throw std::out_of_range
+ */
 const value &
 array::get(size_t index) const
 {
@@ -112,6 +157,10 @@ array::get(size_t index) const
 	}
 }
 
+/*
+ * Gets the JSON value at the specified index.
+ * If the index is invalid, the default_value is returned.
+ */
 const value &
 array::get(size_t index, const value &default_value) const
 {
@@ -122,6 +171,12 @@ array::get(size_t index, const value &default_value) const
 	}
 }
 
+/*
+ * Gets the string representation of the whole of the
+ * JSON array. String values are escaped.
+ * @throw std::invalid_argument
+ * @return the string representation of the JSON array.
+ */
 std::string
 array::str(bool pretty, int indent) const
 {
@@ -152,6 +207,7 @@ array::str(bool pretty, int indent) const
 	return oss.str();
 }
 
+/* Cleanup the existing value */
 void
 value::clean(value &v)
 {
@@ -175,9 +231,14 @@ value::clean(value &v)
 	v.m_val.n_val = nullptr;
 }
 
+/* Copy the content of the specified value to this */
 void
 value::copy(const value &v)
 {
+	clean(*this);
+
+	m_type = v.m_type;
+
 	switch (v.m_type) {
 	case T::T_BOOLEAN:
 		m_val.b_val = v.m_val.b_val;
@@ -207,9 +268,9 @@ value::copy(const value &v)
 		m_val.n_val = nullptr;
 		break;
 	}
-	m_type = v.m_type;
 }
 
+/* Move the content of the specified value to this */
 void
 value::move(value &&v)
 {
@@ -249,10 +310,12 @@ value::move(value &&v)
 		m_val.n_val = nullptr;
 		break;
 	}
-
-	clean(v);
 }
 
+/*
+ * Assigns null to the JSON value.
+ * @return the reference to the current value.
+ */
 const value &
 value::operator= (std::nullptr_t np)
 {
@@ -260,6 +323,10 @@ value::operator= (std::nullptr_t np)
 	return *this;
 }
 
+/*
+ * Assigns object to the JSON value.
+ * @return the reference to the current value.
+ */
 const value &
 value::operator= (const object &o)
 {
@@ -269,6 +336,10 @@ value::operator= (const object &o)
 	return *this;
 }
 
+/*
+ * Assigns object to the JSON value (using move semantics).
+ * @return the reference to the current value.
+ */
 const value &
 value::operator= (object &&o)
 {
@@ -278,6 +349,10 @@ value::operator= (object &&o)
 	return *this;
 }
 
+/*
+ * Assigns array to the JSON value.
+ * @return the reference to the current value.
+ */
 const value &
 value::operator= (const array &a)
 {
@@ -287,6 +362,10 @@ value::operator= (const array &a)
 	return *this;
 }
 
+/*
+ * Assigns array to the JSON value (using move semantics).
+ * @return the reference to the current value.
+ */
 const value &
 value::operator= (array &&a)
 {
@@ -296,6 +375,10 @@ value::operator= (array &&a)
 	return *this;
 }
 
+/*
+ * Assigns specified value to the JSON value.
+ * @return the reference to the current value.
+ */
 const value &
 value::operator= (const value &v)
 {
@@ -304,6 +387,11 @@ value::operator= (const value &v)
 	return *this;
 }
 
+/*
+ * Assigns specified value to the JSON value
+ * (using move semantics).
+ * @return the reference to the current value.
+ */
 const value &
 value::operator= (value &&v)
 {
@@ -312,6 +400,9 @@ value::operator= (value &&v)
 	return *this;
 }
 
+/*
+ * Index operator for JSON object.
+ */
 value &
 value::operator[] (const std::string &key)
 {
@@ -323,6 +414,9 @@ value::operator[] (const std::string &key)
 	return m_val.o_val->operator[](key);
 }
 
+/*
+ * Index operator for JSON array.
+ */
 value &
 value::operator[] (size_t index)
 {
@@ -334,6 +428,12 @@ value::operator[] (size_t index)
 	return m_val.a_val->operator[](index);
 }
 
+/*
+ * Gets the boolean value. If the value is not a boolean,
+ * an exception is thrown. is_boolean can be used to
+ * determine if the value is a boolean.
+ * @throw std::logic_error
+ */
 bool
 value::get_boolean() const
 {
@@ -344,6 +444,12 @@ value::get_boolean() const
 	}
 }
 
+/*
+ * Gets the integer value. If the value is not an integer,
+ * an exception is thrown. is_integer can be used to
+ * determine if the value is an integer.
+ * @throw std::logic_error
+ */
 int64_t
 value::get_integer() const
 {
@@ -354,6 +460,12 @@ value::get_integer() const
 	}
 }
 
+/*
+ * Gets the real value. If the value is not a real number,
+ * an exception is thrown. is_real can be used to
+ * determine if the value is a real number.
+ * @throw std::logic_error
+ */
 double
 value::get_real() const
 {
@@ -364,6 +476,13 @@ value::get_real() const
 	}
 }
 
+/*
+ * Gets the string value. If the value is not a string,
+ * an exception is thrown. is_string can be used to
+ * determine if the value is a string. This is the only
+ * method that returns the raw (un-escaped) string.
+ * @throw std::logic_error
+ */
 const std::string &
 value::get_string() const
 {
@@ -374,6 +493,12 @@ value::get_string() const
 	}
 }
 
+/*
+ * Gets the object value. If the value is not an object,
+ * an exception is thrown. is_object can be used to
+ * determine if the value is an object.
+ * @throw std::logic_error
+ */
 const object &
 value::get_object() const
 {
@@ -384,6 +509,12 @@ value::get_object() const
 	}
 }
 
+/*
+ * Gets the array value. If the value is not an array,
+ * an exception is thrown. is_array can be used to
+ * determine if the value is an array.
+ * @throw std::logic_error
+ */
 const array &
 value::get_array() const
 {
@@ -394,6 +525,12 @@ value::get_array() const
 	}
 }
 
+/*
+ * Gets the string representation of the JSON value.
+ * Keys and string values are escaped.
+ * @throw std::invalid_argument
+ * @return the string representation of the JSON object.
+ */
 std::string
 value::str(bool pretty, int indent) const
 {
