@@ -2,6 +2,7 @@
 #include "misc.h"
 #include <sstream>
 #include <stdexcept>
+#include <iomanip>
 
 namespace snf {
 namespace json {
@@ -550,7 +551,7 @@ value::str(bool pretty, int indent) const
 		break;
 
 	case T::T_REAL:
-		oss << m_val.d_val;
+		oss << std::defaultfloat << m_val.d_val;
 		break;
 
 	case T::T_STRING:

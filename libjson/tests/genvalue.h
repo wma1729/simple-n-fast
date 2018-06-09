@@ -18,7 +18,7 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		OBJECT v_1 {
+		snf::json::value v_1 = OBJECT {
 			KVPAIR("key1", "str_1"),
 			KVPAIR("key2", true),
 			KVPAIR("key3", false),
@@ -66,7 +66,7 @@ R"({
 		ASSERT_EQ(const std::string &, v_2.str(false), expr_1, "object matches");
 		ASSERT_EQ(const std::string &, v_2.str(true), expr_2, "pretty object matches");
 
-		ARRAY v_3 {
+		snf::json::value v_3 = ARRAY {
 			12345.6,
 			true,
 			nullptr,

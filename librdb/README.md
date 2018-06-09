@@ -35,7 +35,7 @@ So theoretically, we will need one hash lookup and 24 searches to find a key in 
 
 #### Constructor
 
-Look at `include/rdb/rdb.h` for reference.
+Look at `include/rdb.h` for reference.
 
 ```C++
 Rdb(const std::string &dbPath, const std::string &dbName);
