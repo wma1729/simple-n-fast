@@ -55,9 +55,9 @@ local_time::local_time()
 int64_t
 epoch(unit u)
 {
-	if (u == unit::seconds) {
+	if (u == unit::second) {
 		return time(0);
-	} else if (u == unit::milliseconds) {
+	} else if (u == unit::millisecond) {
 #if defined(_WIN32)
 
 		SYSTEMTIME      st;

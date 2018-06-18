@@ -1,13 +1,9 @@
-include Makefile.constants
+include ../Makefile.constants
 
-DIRS = libcom jdaemon librdb libjson liblog
+DIRS = src
 
 all:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
-
-cscope:
-	/bin/rm cscope.out
-	cscope -b -R -u -Iinclude -slibcom -sjdaemon -slibrdb
 
 install:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done

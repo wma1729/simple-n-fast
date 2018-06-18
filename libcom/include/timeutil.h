@@ -6,9 +6,9 @@
 
 namespace snf {
 
-enum class unit { milliseconds, seconds };
+enum class unit { millisecond, second };
 
-int64_t epoch(unit u = unit::seconds);
+int64_t epoch(unit u = unit::second);
 
 /**
  * Local time. Hides platform variations.
@@ -42,14 +42,15 @@ public:
 	int month()       const { return m_month; }
 	int day()         const { return m_day; }
 	int hour()        const { return m_hour; }
-	int minute()      const { return m_second; }
+	int minute()      const { return m_minute; }
+	int second()      const { return m_second; }
 	int millisecond() const { return m_msec; }
 
 	int64_t epoch(unit u) const
 	{
-		if (u == unit::milliseconds)
+		if (u == unit::millisecond)
 			return m_epoch;
-		else if (u == unit::seconds)
+		else if (u == unit::second)
 			return m_epoch / 1000;
 		else
 			return -1;

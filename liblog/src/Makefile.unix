@@ -1,0 +1,27 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/logrec.o \
+	${P}/logmgr.o \
+	${P}/default.o
+
+INCL = ${INCLCOM} ${INCLLOG}
+
+all: platform ${P}/liblog.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/liblog.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/liblog.a

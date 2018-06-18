@@ -1,0 +1,29 @@
+include ..\..\Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS =  $(P)\logrec.obj \
+	$(P)\logmgr.obj \
+	$(P)\default.obj
+
+INCL = $(INCLCOM) $(INCLLOG)
+
+PDB = $(P)\liblog.pdb
+
+all: platform $(P)\log.lib
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\log.lib: $(OBJS)
+	$(AR) $(ARFLAGS) $** /OUT:$@
+
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $(*B).cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\log.lib $(PDB)
