@@ -4,7 +4,6 @@
 #include <string>
 #include <iostream>
 #include "logsev.h"
-#include "logmgr.h"
 #include "common.h"
 #include "timeutil.h"
 
@@ -28,6 +27,8 @@ private:
 	severity            m_severity;
 	std::ostringstream  m_text;
 
+	using record_terminator = record &(record &);
+
 public:
 	record(const char *ctx, const char *cls,
 		const char *file, const char *fcn,
@@ -37,13 +38,13 @@ public:
 		, m_tid(gettid())
 		, m_severity(sev)
 	{
-		if ((ctx != 0) && (*ctx != '\0'))
+		if (ctx && *ctx)
 			m_context = ctx;
-		if ((cls != 0) && (*cls != '\0'))
+		if (cls && *cls)
 			m_class = cls;
-		if ((file != 0) && (*file != '\0'))
+		if (file && *file)
 			m_file = file;
-		if ((fcn != 0) && (*fcn != '\0'))
+		if (fcn && *fcn)
 			m_function = fcn;
 	}
 
@@ -51,18 +52,12 @@ public:
 
 	std::string format(const char *) const;
 
-	static record & endl(record &rec)
-	{
-		snf::log::manager::instance().log(rec);
-		return rec;
-	}
+	static record & endl(record &);
+
+	record & operator<< (record_terminator terminator) { return terminator(*this); }
 
 	template<typename T>
-	record & operator<< (const T t)
-	{
-		m_text << t;
-		return *this;
-	}
+	record & operator<< (const T t) { m_text << t; return *this; }
 };
 
 #define LOCATION		__FILE__, __func__, __LINE__
@@ -71,35 +66,35 @@ public:
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
-					snf::log::severity::ERROR       \
+					snf::log::severity::error       \
 				}
 
 #define WARNING_STRM(CTX, CLS)	snf::log::record {                      \
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
-					snf::log::severity::WARNING     \
+					snf::log::severity::warning     \
 				}
 
 #define INFO_STRM(CTX, CLS)	snf::log::record {                      \
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
-					snf::log::severity::INFO        \
+					snf::log::severity::info        \
 				}
 
 #define DEBUG_STRM(CTX, CLS)	snf::log::record {                      \
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
-					snf::log::severity::DEBUG       \
+					snf::log::severity::debug       \
 				}
 
 #define TRACE_STRM(CTX, CLS)	snf::log::record {                      \
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
-					snf::log::severity::TRACE       \
+					snf::log::severity::trace       \
 				}
 
 /**

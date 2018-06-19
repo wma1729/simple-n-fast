@@ -1,8 +1,19 @@
 #include "logrec.h"
+#include "logmgr.h"
 #include <iomanip>
 
 namespace snf {
 namespace log {
+
+/**
+ * Log message terminator.
+ */
+record &
+record::endl(record &rec)
+{
+	snf::log::manager::instance().log(rec);
+	return rec;
+}
 
 /**
  * Formats the log record for printing. The following format
@@ -55,6 +66,7 @@ record::format(const char *fmt) const
 
 				case 't':
 					oss << m_tid;
+					break;
 
 				case 's':
 					oss << severity_string(m_severity);

@@ -9,12 +9,12 @@ namespace log {
  */
 enum class severity
 {
-	ALL,
-	TRACE,
-	DEBUG,
-	INFO,
-	WARNING,
-	ERROR
+	all,
+	trace,
+	debug,
+	info,
+	warning,
+	error
 };
 
 /**
@@ -25,11 +25,11 @@ severity_string(severity sev)
 {
 	switch (sev)
 	{
-		case severity::TRACE:   return "TRC";
-		case severity::DEBUG:   return "DBG";
-		case severity::INFO:    return "INF";
-		case severity::WARNING: return "WRN";
-		case severity::ERROR:   return "ERR";
+		case severity::trace:   return "TRC";
+		case severity::debug:   return "DBG";
+		case severity::info:    return "INF";
+		case severity::warning: return "WRN";
+		case severity::error:   return "ERR";
 		default:                return "UNK";
 	}
 }

@@ -1,0 +1,32 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/logts.o
+
+INCL = ${INCLCOM} ${INCLLOG} ${INCLTF}
+
+all: platform ${P}/logts
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/logts: ${OBJS} ${LIBLOG} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+test:
+ifeq (${DBG},-g)
+	@valgrind --quiet --leak-check=full --show-leak-kinds=all ${P}/logts -name "liblog-test-suite" -desc "test suite for liblog" -v
+else
+	@${P}/logts -name "liblog-test-suite" -desc "test suite for liblog" -v
+endif
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/logts

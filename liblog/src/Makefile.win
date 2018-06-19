@@ -6,7 +6,7 @@ include ..\..\Makefile.constants
 
 OBJS =  $(P)\logrec.obj \
 	$(P)\logmgr.obj \
-	$(P)\default.obj
+	$(P)\logger.obj
 
 INCL = $(INCLCOM) $(INCLLOG)
 

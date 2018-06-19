@@ -1,10 +1,50 @@
 #include "logsev.h"
-#include "logrec.h"
+#include "logmgr.h"
+#include "logger.h"
 
 #include <cstdarg>
 
 namespace snf {
 namespace log {
+
+int
+manager::add_logger(logger *l)
+{
+	std::lock_guard<std::mutex> g(m_lock);
+	int id = m_next_id++;
+	m_loggers.insert(std::make_pair(id, l));
+	return id;
+}
+
+void
+manager::remove_logger(int id)
+{
+	std::lock_guard<std::mutex> g(m_lock);
+	m_loggers.erase(id);
+}
+
+void
+manager::log(const record &rec)
+{
+	int logger_cnt = 0;
+
+	{
+		std::lock_guard<std::mutex> g(m_lock);
+		std::map<int, logger *>::const_iterator I;
+		for (I = m_loggers.begin(); I != m_loggers.end(); ++I) {
+			logger_cnt++;
+			I->second->log(rec);
+		}
+	}
+
+	if (logger_cnt == 0) {
+		if (m_def_logger == nullptr) {
+			m_def_logger = new default_logger;
+		}
+
+		m_def_logger->log(rec);
+	}
+}
 
 void
 manager::log(severity sev, const char *ctx, const char *cls,

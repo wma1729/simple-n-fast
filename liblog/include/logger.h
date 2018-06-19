@@ -1,18 +1,30 @@
 #ifndef _SNF_LOGGER_H_
 #define _SNF_LOGGER_H_
 
-#include "logrec.h"
 #include "logsev.h"
+#include "logrec.h"
 
 namespace snf {
 namespace log {
 
+/**
+ * Base logger. Every logger must override this.
+ */
 class logger
 {
 public:
-	virtual bool is_default() const = 0;
 	virtual severity get_severity() const = 0;
 	virtual void log(const record &) = 0;
+};
+
+/**
+ * The default logger when no logger is registered.
+ */
+class default_logger : public logger
+{
+public:
+	severity get_severity() const override { return severity::all; }
+	void log(const record &rec);
 };
 
 } // namespace log
