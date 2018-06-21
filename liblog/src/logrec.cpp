@@ -5,6 +5,35 @@
 namespace snf {
 namespace log {
 
+record::record(const char *ctx, const char *cls,
+	const char *file, const char *fcn,
+	int line, severity sev)
+	: m_lineno(line)
+	, m_pid(manager::instance().get_pid())
+	, m_tid(gettid())
+	, m_severity(sev)
+{
+	if (ctx && *ctx)
+		m_context = ctx;
+	else
+		m_context = "no-context";
+
+	if (cls && *cls)
+		m_class = cls;
+	else
+		m_class = "no-class";
+
+	if (file && *file)
+		m_file = file;
+	else
+		m_file = "no-file";
+
+	if (fcn && *fcn)
+		m_function = fcn;
+	else
+		m_function = "no-function";
+}
+
 /**
  * Log message terminator.
  */
@@ -73,31 +102,19 @@ record::format(const char *fmt) const
 					break;
 
 				case 'C':
-					if (m_context.empty())
-						oss << "no-context";
-					else
-						oss << m_context;
+					oss << m_context;
 					break;
 
 				case 'c':
-					if (m_class.empty())
-						oss << "no-class";
-					else
-						oss << m_class;
+					oss << m_class;
 					break;
 
 				case 'F':
-					if (m_file.empty())
-						oss << "no-file";
-					else
-						oss << m_file;
+					oss << m_file;
 					break;
 
 				case 'f':
-					if (m_function.empty())
-						oss << "no-function";
-					else
-						oss << m_function;
+					oss << m_function;
 					break;
 
 				case 'l':

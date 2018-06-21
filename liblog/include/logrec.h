@@ -2,6 +2,7 @@
 #define _SNF_LOGREC_H_
 
 #include <string>
+#include <sstream>
 #include <iostream>
 #include "logsev.h"
 #include "common.h"
@@ -27,37 +28,25 @@ private:
 	severity            m_severity;
 	std::ostringstream  m_text;
 
+	// Pointer to function
 	using record_terminator = record &(record &);
 
 public:
-	record(const char *ctx, const char *cls,
-		const char *file, const char *fcn,
-		int line, severity sev)
-		: m_lineno(line)
-		, m_pid(getpid())
-		, m_tid(gettid())
-		, m_severity(sev)
-	{
-		if (ctx && *ctx)
-			m_context = ctx;
-		if (cls && *cls)
-			m_class = cls;
-		if (file && *file)
-			m_file = file;
-		if (fcn && *fcn)
-			m_function = fcn;
-	}
-
-	severity get_severity() const { return m_severity; }
-
-	std::string format(const char *) const;
-
+	// Static function of type record_terminator
 	static record & endl(record &);
 
-	record & operator<< (record_terminator terminator) { return terminator(*this); }
+	record(const char *, const char *, const char *, const char *, int, severity);
+	~record() {}
 
-	template<typename T>
-	record & operator<< (const T t) { m_text << t; return *this; }
+	severity get_severity() const { return m_severity; }
+	std::string format(const char *) const;
+
+	record & operator<< (record_terminator terminator)
+	{
+		return terminator(*this);
+	}
+
+	template<typename T> record & operator<< (const T t) { m_text << t; return *this; }
 };
 
 #define LOCATION		__FILE__, __func__, __LINE__

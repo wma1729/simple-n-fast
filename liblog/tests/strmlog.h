@@ -2,6 +2,9 @@
 
 class strm_log : public snf::tf::test
 {
+private:
+	static constexpr const char *class_name = "strm_log";
+
 public:
 	strm_log() : snf::tf::test() {}
 	~strm_log() {}
@@ -18,17 +21,30 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		ERROR_STRM(nullptr, "strm_log") << "this is the error log message"
+		std::string text = "";
+
+		ERROR_STRM(nullptr, class_name)
+			<< "this is the " << 1 << "st log message"
 			<< snf::log::record::endl;
-		WARNING_STRM(nullptr, "strm_log") << "this is the warning log message"
+		WARNING_STRM(nullptr, class_name)
+			<< "this is the " << 2 << "nd log message"
 			<< snf::log::record::endl;
-		// This should not appear
-		INFO_STRM(nullptr, "strm_log") << "this is the info log message"
+		INFO_STRM(nullptr, class_name)
+			<< "this is the " << 3 << "rd log message"
 			<< snf::log::record::endl;
-		DEBUG_STRM(nullptr, "strm_log") << "this is the debug log message"
+		DEBUG_STRM(nullptr, class_name)
+			<< "this is the " << 4 << "th log message"
 			<< snf::log::record::endl;
-		TRACE_STRM(nullptr, "strm_log") << "this is the trace log message"
+		TRACE_STRM(nullptr, class_name)
+			<< "this is the " << 5 << "th log message"
 			<< snf::log::record::endl;
+
+		LOG_ERROR(nullptr, class_name, "this is the %d%s log message", 6, "th");
+		LOG_WARNING(nullptr, class_name, "this is the %d%s log message", 7, "th");
+		LOG_INFO(nullptr, class_name, "this is the %d%s log message", 8, "th");
+		LOG_DEBUG(nullptr, class_name, "this is the %d%s log message", 9, "th");
+		LOG_TRACE(nullptr, class_name, "this is the %d%s log message", 10, "th");
+
 		return true;
 	}
 };

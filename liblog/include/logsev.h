@@ -1,6 +1,8 @@
 #ifndef _SNF_LOGSEV_H_
 #define _SNF_LOGSEV_H_
 
+#include <iostream>
+
 namespace snf {
 namespace log {
 
@@ -32,6 +34,13 @@ severity_string(severity sev)
 		case severity::error:   return "ERR";
 		default:                return "UNK";
 	}
+}
+
+inline std::ostream &
+operator<< (std::ostream &os, severity sev)
+{
+	os << severity_string(sev);
+	return os;
 }
 
 } // namespace log

@@ -7,6 +7,17 @@
 namespace snf {
 namespace log {
 
+manager::~manager()
+{
+	delete m_def_logger;
+
+	std::lock_guard<std::mutex> g(m_lock);
+
+	std::map<int, logger *>::const_iterator I;
+	for (I = m_loggers.begin(); I != m_loggers.end(); ++I)
+		delete I->second;
+}
+
 int
 manager::add_logger(logger *l)
 {
@@ -61,7 +72,6 @@ manager::log(severity sev, const char *ctx, const char *cls,
 		buf[n] = '\0';
 		va_end(args);
 
-		record rec { ctx, cls, file, fcn, line, sev };
 		rec << buf;
 	}
 

@@ -13,6 +13,7 @@ namespace log {
 class logger
 {
 public:
+	virtual ~logger() {}
 	virtual severity get_severity() const = 0;
 	virtual void log(const record &) = 0;
 };
@@ -23,6 +24,7 @@ public:
 class default_logger : public logger
 {
 public:
+	virtual ~default_logger() {}
 	severity get_severity() const override { return severity::all; }
 	void log(const record &rec);
 };

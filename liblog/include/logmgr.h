@@ -13,6 +13,7 @@ class manager
 {
 private:
 	static constexpr int    BUFLEN = 8191;
+	pid_t                   m_cached_pid = 0;
 	int                     m_next_id = 0;
 	logger                  *m_def_logger = nullptr;
 	std::map<int, logger *> m_loggers;
@@ -27,11 +28,24 @@ public:
 	manager(manager &&) = delete;
 	manager & operator=(const manager &) = delete;
 	manager & operator=(manager &&) = delete;
+	~manager();
 
 	static manager & instance()
 	{
 		static manager mgr;
 		return mgr;	
+	}
+
+	pid_t get_pid()
+	{
+		if (m_cached_pid == 0)
+			m_cached_pid = getpid();
+		return m_cached_pid;
+	}
+
+	void reset_pid()
+	{
+		m_cached_pid = getpid();
 	}
 
 	int add_logger(logger *);
@@ -43,58 +57,58 @@ public:
 		const char *, int, const char *, ...);
 };
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
 
-#define LOG_ERROR(CTX, CLS, FMT, ...)   do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::error, (CTX), (CLS), (LOCATION),  \
-		(FMT), __VA_ARGS__);                                                            \
+#define LOG_ERROR(CTX, CLS, FMT, ...)   do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::error, CTX, CLS, LOCATION,    \
+		FMT, __VA_ARGS__);                                                          \
 } while (0)
 
-#define LOG_WARNING(CTX, CLS, FMT, ...) do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::warning, (CTX), (CLS), (LOCATION),\
-		(FMT), __VA_ARGS__);                                                            \
+#define LOG_WARNING(CTX, CLS, FMT, ...) do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::warning, CTX, CLS, LOCATION,  \
+		FMT, __VA_ARGS__);                                                          \
 } while (0)
 
-#define LOG_INFO(CTX, CLS, FMT, ...)    do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::info, (CTX), (CLS), (LOCATION),   \
-		(FMT), __VA_ARGS__);                                                            \
+#define LOG_INFO(CTX, CLS, FMT, ...)    do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::info, CTX, CLS, LOCATION,     \
+		FMT, __VA_ARGS__);                                                          \
 } while (0)
 
-#define LOG_DEBUG(CTX, CLS, FMT, ...)   do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::debug, (CTX), (CLS), (LOCATION),  \
-		(FMT), __VA_ARGS__);                                                            \
+#define LOG_DEBUG(CTX, CLS, FMT, ...)   do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::debug, CTX, CLS, LOCATION,    \
+		FMT, __VA_ARGS__);                                                          \
 } while (0)
 
-#define LOG_TRACE(CTX, CLS, FMT, ...)   do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::trace, (CTX), (CLS), (LOCATION),  \
-		(FMT), __VA_ARGS__);                                                            \
+#define LOG_TRACE(CTX, CLS, FMT, ...)   do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::trace, CTX, CLS, LOCATION,    \
+		FMT, __VA_ARGS__);                                                          \
 } while (0)
 
-#else // _WIN32
+#else // !_WIN32
 
-#define LOG_ERROR(CTX, CLS, FMT, ...)   do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::error, (CTX), (CLS), (LOCATION),  \
-		(FMT), ##__VA_ARGS__);                                                          \
+#define LOG_ERROR(CTX, CLS, FMT, ...)   do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::error, CTX, CLS, LOCATION,    \
+		FMT, ##__VA_ARGS__);                                                        \
 } while (0)
 
-#define LOG_WARNING(CTX, CLS, FMT, ...) do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::warning, (CTX), (CLS), (LOCATION),\
-		(FMT), ##__VA_ARGS__);                                                          \
+#define LOG_WARNING(CTX, CLS, FMT, ...) do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::warning, CTX, CLS, LOCATION,  \
+		FMT, ##__VA_ARGS__);                                                        \
 } while (0)
 
-#define LOG_INFO(CTX, CLS, FMT, ...)    do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::info, (CTX), (CLS), (LOCATION),   \
-		(FMT), ##__VA_ARGS__);                                                          \
+#define LOG_INFO(CTX, CLS, FMT, ...)    do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::info, CTX, CLS, LOCATION,     \
+		FMT, ##__VA_ARGS__);                                                        \
 } while (0)
 
-#define LOG_DEBUG(CTX, CLS, FMT, ...)   do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::debug, (CTX), (CLS), (LOCATION),  \
-		(FMT), ##__VA_ARGS__);                                                          \
+#define LOG_DEBUG(CTX, CLS, FMT, ...)   do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::debug, CTX, CLS, LOCATION,    \
+		FMT, ##__VA_ARGS__);                                                        \
 } while (0)
 
-#define LOG_TRACE(CTX, CLS, FMT, ...)   do {                                                    \
-	snf::log::manager::instance().log(snf::log::severity::trace, (CTX), (CLS), (LOCATION),  \
-		(FMT), ##__VA_ARGS__);                                                          \
+#define LOG_TRACE(CTX, CLS, FMT, ...)   do {                                                \
+	snf::log::manager::instance().log(snf::log::severity::trace, CTX, CLS, LOCATION,    \
+		FMT, ##__VA_ARGS__);                                                        \
 } while (0)
 
 #endif
