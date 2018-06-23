@@ -1,6 +1,7 @@
 #ifndef _SNF_LOGGER_H_
 #define _SNF_LOGGER_H_
 
+#include <string>
 #include "logsev.h"
 #include "logrec.h"
 
@@ -12,20 +13,63 @@ namespace log {
  */
 class logger
 {
+private:
+	severity    m_sev;
+	std::string m_fmt;
+
 public:
+	enum class type { console, file };
+
+	logger(severity sev, const std::string &fmt)
+		: m_sev(sev)
+		, m_fmt(fmt)
+	{
+	}
+
 	virtual ~logger() {}
-	virtual severity get_severity() const = 0;
+
+	virtual type get_type() const = 0;
+
+	virtual severity get_severity() const { return m_sev; }
+	virtual void set_severity(severity sev) { m_sev = sev; }
+
+	const std::string & get_format() const { return m_fmt; }
+	void set_format(const std::string &fmt) { m_fmt = fmt; }
+
 	virtual void log(const record &) = 0;
 };
 
 /**
- * The default logger when no logger is registered.
+ * The console logger.
  */
-class default_logger : public logger
+class console_logger : public logger
 {
 public:
-	virtual ~default_logger() {}
-	severity get_severity() const override { return severity::all; }
+	enum class destination {
+		out, // to standard output
+		err, // to standard error
+		var  // depends on message severity
+	};
+
+private:
+	destination m_dest;
+
+public:
+	console_logger(
+		const std::string &fmt = "%D %T %p.%t %s [%C] [%F:%c.%f.%l] %m",
+		severity sev = severity::all)
+		: logger(sev, fmt)
+		, m_dest(destination::var)
+	{
+	}
+
+	virtual ~console_logger() {}
+
+	type get_type() const { return logger::type::console; }
+
+	destination get_destination() const { return m_dest; }
+	void set_destination(destination dest) { m_dest = dest; }
+
 	void log(const record &rec);
 };
 

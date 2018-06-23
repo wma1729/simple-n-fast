@@ -50,7 +50,7 @@ manager::log(const record &rec)
 
 	if (logger_cnt == 0) {
 		if (m_def_logger == nullptr) {
-			m_def_logger = new default_logger;
+			m_def_logger = new console_logger;
 		}
 
 		m_def_logger->log(rec);
