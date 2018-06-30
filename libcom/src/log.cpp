@@ -28,7 +28,7 @@ FileLogger::open(const snf::local_time &lt)
 
 	logFile = DBG_NEW snf::file(lf, 0022);
 
-	snf::file_open_flags flags;
+	snf::file::open_flags flags;
 	flags.o_append = true;
 	flags.o_create = true;
 	flags.o_sync = true;

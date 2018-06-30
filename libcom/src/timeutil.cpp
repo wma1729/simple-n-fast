@@ -1,10 +1,6 @@
 #include "timeutil.h"
 #include <ctime>
 
-#if defined(_WIN32)
-#include <Windows.h>
-#endif
-
 namespace snf {
 
 local_time::local_time()
@@ -86,5 +82,20 @@ epoch(unit u)
 		return -1;
 	}
 }
+
+#if defined(_WIN32)
+
+int64_t
+file_time_to_epoch(const FILETIME &ft)
+{
+	int64_t epoch = ft.dwHighDateTime;
+	epoch <<= 32;
+	epoch |= ft.dwLowDateTime;
+	epoch -= 116444736000000000L;
+	if (epoch < 0L) epoch = 0L;
+	return epoch / 10000000;
+}
+
+#endif // _WIN32
 
 } // snf

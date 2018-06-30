@@ -73,7 +73,7 @@ Rdb::populateFreePages(const char *fname)
 
 	Log(DBG, caller, "preparing free disk pages in db file");
 
-	snf::file_open_flags oflags;
+	snf::file::open_flags oflags;
 	oflags.o_read = true;
 	oflags.o_write = true;
 	oflags.o_create = true;

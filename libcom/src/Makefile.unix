@@ -6,9 +6,11 @@ endif
 
 OBJS =  ${P}/common.o \
 		${P}/config.o \
-		${P}/dll.o \
 		${P}/file.o \
 		${P}/filesystem.o \
+		${P}/fattr.o \
+		${P}/dir.o \
+		${P}/dll.o \
 		${P}/i18n.o \
 		${P}/log.o \
 		${P}/timeutil.o \

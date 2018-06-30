@@ -1,6 +1,7 @@
 #ifndef _SNF_TIMEUTIL_H_
 #define _SNF_TIMEUTIL_H_
 
+#include "common.h"
 #include <sstream>
 #include <iomanip>
 
@@ -70,6 +71,10 @@ public:
 		return oss.str();
 	}
 };
+
+#if defined(_WIN32)
+int64_t file_time_to_epoch(const FILETIME &);
+#endif
 
 } // snf
 

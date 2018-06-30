@@ -14,7 +14,7 @@ OpenFile(snf::file *file, bool sync = false)
 	const char           *caller = "OpenFile";
 	int                  retval = E_ok;
 	int                  oserr = 0;
-	snf::file_open_flags oflags;
+	snf::file::open_flags oflags;
 
 	oflags.o_read = true;
 	oflags.o_write = true;

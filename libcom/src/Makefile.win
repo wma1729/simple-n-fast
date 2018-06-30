@@ -6,9 +6,11 @@ include ..\..\Makefile.constants
 
 OBJS =  $(P)\common.obj \
 		$(P)\config.obj \
-		$(P)\dll.obj \
 		$(P)\file.obj \
 		$(P)\filesystem.obj \
+		$(P)\fattr.obj \
+		$(P)\dir.obj \
+		$(P)\dll.obj \
 		$(P)\i18n.obj \
 		$(P)\log.obj \
 		$(P)\timeutil.obj \

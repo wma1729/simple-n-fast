@@ -48,7 +48,7 @@ public:
  * @return E_ok on success, -ve error code on failure.
  */
 int
-file::open(const file_open_flags &flags, mode_t mode, int *oserr)
+file::open(const open_flags &flags, mode_t mode, int *oserr)
 {
 	int retval = E_ok;
 
@@ -565,7 +565,7 @@ file::truncate(int64_t fsize, int *oserr)
  * Locks a region/section of the file. If the lock is already acquired by
  * another process, the call blocks until the other process release the lock.
  *
- * @param [in] type   - Lock type: LOCK_SHARED/LOCK_EXCLUSIVE
+ * @param [in] type   - Lock type: shared/exclusive
  * @param [in] start  - Starting offset of the region from the start of the file.
  * @param [in] len    - Length of the region in bytes.
  * @param [out] oserr - OS error code.
@@ -573,7 +573,7 @@ file::truncate(int64_t fsize, int *oserr)
  * @return E_ok on success (after acquiring the lock), -ve error code on failure.
  */
 int
-file::lock(int type, int64_t start, int64_t len, int *oserr)
+file::lock(lock_type type, int64_t start, int64_t len, int *oserr)
 {
 	int retval = E_ok;
 
@@ -593,14 +593,14 @@ file::lock(int type, int64_t start, int64_t len, int *oserr)
 
 #if defined(_WIN32)
 
-	DWORD           lckflags = LOCK_SHARED;
+	DWORD           lckflags = 0;
 	LARGE_INTEGER   theStart;
 	LARGE_INTEGER   theLen;
 	DWORD           low;
 	DWORD           high;
 	OVERLAPPED      overlapped;
 
-	if (type == LOCK_EXCLUSIVE)
+	if (type == lock_type::exclusive)
 		lckflags |= LOCKFILE_EXCLUSIVE_LOCK;
 
 	theStart.QuadPart = start;
@@ -621,17 +621,13 @@ file::lock(int type, int64_t start, int64_t len, int *oserr)
 
 	struct flock lck;
 
-	if (type == LOCK_SHARED)
+	if (type == lock_type::shared)
 	{
 		lck.l_type = F_RDLCK;
 	}
-	else if (type == LOCK_EXCLUSIVE)
+	else /* if (type == lock_type::exclusive) */
 	{
 		lck.l_type = F_WRLCK;
-	}
-	else
-	{
-		return E_invalid_arg;
 	}
 
 	lck.l_whence = SEEK_SET;
@@ -663,7 +659,7 @@ file::lock(int type, int64_t start, int64_t len, int *oserr)
  * by another process, the call returns immediately with the error code
  * E_try_again.
  *
- * @param [in]  type  - Lock type: LOCK_SHARED/LOCK_EXCLUSIVE
+ * @param [in]  type  - Lock type: shared/exclusive
  * @param [in]  start - Starting offset of the region from the start of the file.
  * @param [in]  len   - Length of the region in bytes.
  * @param [out] oserr - OS error code.
@@ -672,7 +668,7 @@ file::lock(int type, int64_t start, int64_t len, int *oserr)
  * is acquired by another process, and -ve error code on failure.
  */
 int
-file::trylock(int type, int64_t start, int64_t len, int *oserr)
+file::trylock(lock_type type, int64_t start, int64_t len, int *oserr)
 {
 	int retval = E_ok;
 
@@ -692,15 +688,15 @@ file::trylock(int type, int64_t start, int64_t len, int *oserr)
 
 #if defined(_WIN32)
 
-	DWORD           lckflags = LOCK_SHARED;
+	DWORD           lckflags = 0;
 	LARGE_INTEGER   theStart;
 	LARGE_INTEGER   theLen;
 	DWORD           low;
 	DWORD           high;
 	OVERLAPPED      overlapped;
 
-	type = LOCKFILE_FAIL_IMMEDIATELY;
-	if (type == LOCK_EXCLUSIVE)
+	lckflags = LOCKFILE_FAIL_IMMEDIATELY;
+	if (type == lock_type::exclusive)
 		lckflags |= LOCKFILE_EXCLUSIVE_LOCK;
 
 	theStart.QuadPart = start;
@@ -728,17 +724,13 @@ file::trylock(int type, int64_t start, int64_t len, int *oserr)
 
 	struct flock lck;
 
-	if (type == LOCK_SHARED)
+	if (type == lock_type::shared)
 	{
 		lck.l_type = F_RDLCK;
 	}
-	else if (type == LOCK_EXCLUSIVE)
+	else /* if (type == lock_type::exclusive) */
 	{
 		lck.l_type = F_WRLCK;
-	}
-	else
-	{
-		return E_invalid_arg;
 	}
 
 	lck.l_whence = SEEK_SET;

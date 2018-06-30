@@ -17,9 +17,10 @@
 	#define strcasecmp      _stricmp
 	#define strncasecmp     _strnicmp
 
-	using mode_t = int;
+	using mode_t = DWORD;
 	using pid_t = DWORD;
 	using tid_t = DWORD;
+	using fhandle_t = HANDLE;
 
 #else /* if !defined(_WIN32) */
 
@@ -30,6 +31,7 @@
 	#define INVALID_HANDLE_VALUE    (-1)
 
 	using tid_t = uint32_t;
+	using fhandle_t = int;
 
 #endif
 
@@ -40,6 +42,8 @@
 #if !defined(ERRSTRLEN)
 #define ERRSTRLEN       255
 #endif
+
+#define is_set(V, F)    (((V) & (F)) == (F))
 
 namespace snf {
 
