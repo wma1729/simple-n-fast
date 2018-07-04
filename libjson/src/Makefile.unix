@@ -10,7 +10,7 @@ OBJS =  ${P}/json.o \
 	${P}/misc.o \
 	${P}/utf.o
 
-INCL =  ${INCLJSON}
+INCL =  ${INCLCOM} ${INCLJSON}
 
 all: platform ${P}/libjson.a
 

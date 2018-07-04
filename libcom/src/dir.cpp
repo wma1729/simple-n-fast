@@ -68,7 +68,7 @@ directory::~directory()
 }
 
 bool
-directory::read(file_visitor visitor)
+directory::read(file_visitor visitor, void *arg)
 {
 	snf::system_error(0);
 
@@ -100,7 +100,7 @@ directory::read(file_visitor visitor)
 		if (!std::regex_match(fa.f_name, m_pattern))
 			continue;
 
-		(visitor)(fa);
+		(visitor)(arg, fa);
 		return true;
 	}
 
@@ -130,7 +130,7 @@ directory::read(file_visitor visitor)
 		file_attr fa(m_path, name);
 		fa.f_name = name;
 
-		(visitor)(fa);
+		(visitor)(arg, fa);
 		return true;
 	}
 
@@ -142,6 +142,51 @@ directory::read(file_visitor visitor)
 		std::ostringstream oss;
 		oss << "failed to read directory " << m_path;
 		throw std::system_error(syserr, std::system_category(), oss.str());
+	}
+
+	return false;
+}
+
+static void
+fill_vector(void *arg, const file_attr &fa)
+{
+	std::vector<file_attr> *favec = reinterpret_cast<std::vector<file_attr> *>(arg);
+	favec->push_back(fa);
+}
+
+bool
+read_directory(const std::string &path, const std::string &pattern, std::vector<file_attr> &favec)
+{
+	directory dir(path, pattern);
+	while (dir.read(fill_vector, &favec)) ;
+	return !favec.empty();
+}
+
+static void
+find_newest(void *arg, const file_attr &fa)
+{
+	file_attr *pfa = reinterpret_cast<file_attr *>(arg);
+	if (fa.f_type == file_type::regular) {
+		if (fa.f_ctime > pfa->f_ctime) {
+			*pfa = fa;
+		} else if (fa.f_ctime == pfa->f_ctime) {
+			if (fa.f_mtime > pfa->f_mtime) {
+				*pfa = fa;
+			}
+		}
+	}
+}
+
+bool
+read_newest(const std::string &path, const std::string &pattern, file_attr &fa)
+{
+	file_attr tmp_fa;
+	directory dir(path, pattern);
+	while (dir.read(find_newest, &tmp_fa)) ;
+
+	if (!tmp_fa.f_name.empty()) {
+		fa = tmp_fa;
+		return true;
 	}
 
 	return false;

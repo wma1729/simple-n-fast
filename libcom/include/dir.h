@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include <regex>
+#include <vector>
 #include "fattr.h"
 #if defined(_WIN32)
 	#include <direct.h>
@@ -12,7 +13,7 @@
 
 namespace snf {
 
-using file_visitor = void(const file_attr &);
+using file_visitor = void(void *, const file_attr &);
 
 class directory
 {
@@ -31,8 +32,11 @@ private:
 public:
 	directory(const std::string &, const std::string &pattern = { R"(.*)" });
 	~directory();
-	bool read(file_visitor);
+	bool read(file_visitor, void *);
 };
+
+bool read_directory(const std::string &, const std::string &, std::vector<file_attr> &);
+bool read_newest(const std::string &, const std::string &, file_attr &);
 
 } // namespace snf
 

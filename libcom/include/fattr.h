@@ -104,6 +104,24 @@ public:
 	uint32_t        f_uid;      // User ID
 	uint32_t        f_gid;      // Group ID
 
+	file_attr()
+		: f_type(file_type::unknown)
+		, f_mode(0)
+		, f_nlinks(0)
+		, f_size(0)
+		, f_inode(0)
+		, f_ctime(0)
+		, f_atime(0)
+		, f_mtime(0)
+		, f_blksize(0)
+		, f_blkcnt(0)
+		, f_dev(0)
+		, f_rdev(0)
+		, f_uid(0)
+		, f_gid(0)
+	{
+	}
+
 	file_attr(const std::string &path, const std::string &name)
 	{
 		std::ostringstream oss;

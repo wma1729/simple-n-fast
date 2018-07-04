@@ -25,6 +25,6 @@
 #define E_eof_detected          -21
 #define E_no_memory             -22
 #define E_xlate_failed          -23
-#define E_insufficient_buffer   -23
+#define E_insufficient_buffer   -24
 
 #endif // _SNF_ERROR_H_

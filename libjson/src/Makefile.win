@@ -10,7 +10,7 @@ OBJS =  $(P)\json.obj \
 		$(P)\misc.obj \
 		$(P)\utf.obj
 
-INCL =  $(INCLJSON)
+INCL =  $(INCLCOM) $(INCLJSON)
 
 PDB = $(P)\json.pdb
 

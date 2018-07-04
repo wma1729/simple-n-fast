@@ -39,6 +39,7 @@ public:
 	~record() {}
 
 	severity get_severity() const { return m_severity; }
+	snf::local_time get_timestamp() const { return m_timestamp; }
 	std::string format(const char *) const;
 
 	record & operator<< (record_terminator terminator)

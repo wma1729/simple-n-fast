@@ -6,7 +6,8 @@ endif
 
 OBJS =  ${P}/logrec.o \
 	${P}/logmgr.o \
-	${P}/logger.o
+	${P}/logger.o \
+	${P}/flogger.o
 
 INCL = ${INCLCOM} ${INCLLOG}
 

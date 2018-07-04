@@ -55,7 +55,7 @@ public:
 	 * @param [in] mask  - umask to use when opening
 	 *                     the file.
 	 */
-	file(const char *fname, mode_t mask)
+	file(const std::string &fname, mode_t mask)
 	{
 		this->fname = fname;
 		this->mask = mask;

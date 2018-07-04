@@ -254,15 +254,15 @@ value::copy(const value &v)
 		break;
 
 	case T::T_STRING:
-		m_val.s_val = new std::string(*v.m_val.s_val);
+		m_val.s_val = DBG_NEW std::string(*v.m_val.s_val);
 		break;
 
 	case T::T_OBJECT:
-		m_val.o_val = new object(*v.m_val.o_val);
+		m_val.o_val = DBG_NEW object(*v.m_val.o_val);
 		break;
 
 	case T::T_ARRAY:
-		m_val.a_val = new array(*v.m_val.a_val);
+		m_val.a_val = DBG_NEW array(*v.m_val.a_val);
 		break;
 
 	default:
@@ -333,7 +333,7 @@ value::operator= (const object &o)
 {
 	clean(*this);
 	m_type = T::T_OBJECT;
-	m_val.o_val = new object(o);
+	m_val.o_val = DBG_NEW object(o);
 	return *this;
 }
 
@@ -346,7 +346,7 @@ value::operator= (object &&o)
 {
 	clean(*this);
 	m_type = T::T_OBJECT;
-	m_val.o_val = new object(std::move(o));
+	m_val.o_val = DBG_NEW object(std::move(o));
 	return *this;
 }
 
@@ -359,7 +359,7 @@ value::operator= (const array &a)
 {
 	clean(*this);
 	m_type = T::T_ARRAY;
-	m_val.a_val = new array(a);
+	m_val.a_val = DBG_NEW array(a);
 	return *this;
 }
 
@@ -372,7 +372,7 @@ value::operator= (array &&a)
 {
 	clean(*this);
 	m_type = T::T_ARRAY;
-	m_val.a_val = new array(std::move(a));
+	m_val.a_val = DBG_NEW array(std::move(a));
 	return *this;
 }
 
@@ -410,7 +410,7 @@ value::operator[] (const std::string &key)
 	if (!is_object()) {
 		clean(*this);
 		m_type = T::T_OBJECT;
-		m_val.o_val = new object();
+		m_val.o_val = DBG_NEW object();
 	}
 	return m_val.o_val->operator[](key);
 }
@@ -424,7 +424,7 @@ value::operator[] (size_t index)
 	if (!is_array()) {
 		clean(*this);
 		m_type = T::T_ARRAY;
-		m_val.a_val = new array();
+		m_val.a_val = DBG_NEW array();
 	}
 	return m_val.a_val->operator[](index);
 }

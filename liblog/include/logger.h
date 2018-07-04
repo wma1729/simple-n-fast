@@ -56,8 +56,8 @@ private:
 
 public:
 	console_logger(
-		const std::string &fmt = "%D %T %p.%t %s [%C] [%F:%c.%f.%l] %m",
-		severity sev = severity::all)
+		severity sev = severity::all,
+		const std::string &fmt = "%D %T %p.%t %s [%C] [%F:%c.%f.%l] %m")
 		: logger(sev, fmt)
 		, m_dest(destination::var)
 	{

@@ -85,7 +85,7 @@ public:
 		ASSERT_EQ(int, retval, E_ok, "rdb get: key = dummykey");
 		ASSERT_EQ(int, buf1len, (int)sizeof(value), "value length match");
 
-		MyUpdater *mupdater = new MyUpdater();
+		MyUpdater *mupdater = DBG_NEW MyUpdater();
 
 		retval = rdb.set("dummykey", 8, "dummydata", 9, mupdater);
 		ASSERT_EQ(int, retval, E_ok, "rdb update: key = dummykey");

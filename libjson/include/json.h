@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <istream>
 #include <stdexcept>
+#include "dbg.h"
 
 namespace snf {
 namespace json {
@@ -187,23 +188,23 @@ private:
 
 		V(const char *s)
 		{
-			s_val = new std::string(string_unescape(s));
+			s_val = DBG_NEW std::string(string_unescape(s));
 		}
 
 		V(const std::string &s)
 		{
-			s_val = new std::string(string_unescape(s));
+			s_val = DBG_NEW std::string(string_unescape(s));
 		}
 
 		V(std::string &&s)
 		{
-			s_val = new std::string(std::move(string_unescape(s)));
+			s_val = DBG_NEW std::string(std::move(string_unescape(s)));
 		}
 
-		V(const object &o) : o_val(new object(o)) {}
-		V(object &&o) : o_val(new object(std::move(o))) {}
-		V(const array &a) : a_val(new array(a)) {}
-		V(array &&a) : a_val(new array(std::move(a))) {}
+		V(const object &o) : o_val(DBG_NEW object(o)) {}
+		V(object &&o) : o_val(DBG_NEW object(std::move(o))) {}
+		V(const array &a) : a_val(DBG_NEW array(a)) {}
+		V(array &&a) : a_val(DBG_NEW array(std::move(a))) {}
 
 		std::nullptr_t n_val;
 		bool b_val;
@@ -242,7 +243,7 @@ public:
 			m_type = T::T_NULL;
 		} else {
 			m_type = T::T_STRING;
-			m_val.s_val = new std::string(string_unescape(s));
+			m_val.s_val = DBG_NEW std::string(string_unescape(s));
 		}
 	}
 
@@ -290,7 +291,7 @@ public:
 	{
 		clean(*this);
 		m_type = T::T_STRING;
-		m_val.s_val = new std::string(std::move(string_unescape(std::forward<S>(s))));
+		m_val.s_val = DBG_NEW std::string(std::move(string_unescape(std::forward<S>(s))));
 		return *this;
 	}
 
