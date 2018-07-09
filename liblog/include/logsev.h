@@ -1,6 +1,7 @@
 #ifndef _SNF_LOGSEV_H_
 #define _SNF_LOGSEV_H_
 
+#include "common.h"
 #include <iostream>
 
 namespace snf {

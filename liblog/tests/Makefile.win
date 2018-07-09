@@ -4,22 +4,24 @@ include ../../Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-OBJS =  $(P)\logts.obj
+LOGTS_OBJS =  $(P)\logts.obj
+LOGTESTER_OBJS =  $(P)\logtester.obj
 
 INCL = $(INCLCOM) $(INCLLOG) $(INCLTF)
 
-PDB = $(P)\logts.pdb
-
-all: platform $(P)\logts.exe
+all: platform $(P)\logts.exe  $(P)\logtester.exe
 
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\logts.exe: $(OBJS) $(LIBLOG) $(LIBCOM)
+$(P)\logts.exe: $(LOGTS_OBJS) $(LIBLOG) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
+
+$(P)\logtester.exe: $(LOGTESTER_OBJS) $(LIBLOG) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
 {.}.cpp{$(P)}.obj:
-	$(CC) $(CFLAGS) /utf-8 $(DBG) $(DEFINES) $(INCL) /Fd$(PDB) $< /Fo$@
+	$(CC) $(CFLAGS) /utf-8 $(DBG) $(DEFINES) $(INCL) $< /Fo$@
 
 test:
 	@$(P)\logts.exe -name "liblog-test-suite" -desc "test suite for liblog" -v
@@ -27,4 +29,4 @@ test:
 install:
 
 clean:
-	@del /q $(OBJS) $(PDB) $(P)\logts.*
+	@del /q $(LOGTS_OBJS) $(LOGTESTER_OBJS) $(P)\*.pdb $(P)\logts.* $(P)\logtester.*

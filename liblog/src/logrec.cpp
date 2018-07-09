@@ -61,15 +61,15 @@ record::endl(record &rec)
  * %m - message
  */
 std::string
-record::format(const char *fmt) const
+record::format(const std::string &fmt) const
 {
 	std::ostringstream oss;
-	const char *ptr = fmt;
+	size_t i = 0;
 
-	while (ptr && *ptr) {
-		if (*ptr == '%') {
-			ptr++;
-			switch (*ptr) {
+	while (i < fmt.length()) {
+		if (fmt[i] == '%') {
+			++i;
+			switch (fmt[i]) {
 				case '%':
 					oss << '%';
 					break;
@@ -126,13 +126,13 @@ record::format(const char *fmt) const
 					break;
 
 				default:
-					oss << '%' << *ptr;
+					oss << '%' << fmt[i];
 					break;
 			}
 		} else {
-			oss << *ptr;
+			oss << fmt[i];
 		}
-		ptr++;
+		++i;
 	}
 
 	return oss.str();

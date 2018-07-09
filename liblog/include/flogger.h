@@ -26,24 +26,40 @@ private:
 public:
 	rotation(scheme s = scheme::none) : m_scheme(s), m_size(104857600) {}
 
-	bool daily() const
-	{
-		scheme s = 
-			static_cast<scheme>(static_cast<int>(m_scheme) & static_cast<int>(scheme::daily));
-		return (s == scheme::daily);
-	}
-
-	bool by_size() const
-	{
-		scheme s =
-			static_cast<scheme>(static_cast<int>(m_scheme) & static_cast<int>(scheme::by_size));
-		return (s == scheme::by_size);
-	}
-
+	bool daily() const;
+	bool by_size() const;
 	int64_t size() const { return m_size; }
 	void size(int64_t size) { m_size = size; }
 	
 };
+
+inline rotation::scheme
+operator| (const rotation::scheme &s1, const rotation::scheme &s2)
+{
+	int v1 = static_cast<int>(s1);
+	int v2 = static_cast<int>(s2);
+	return static_cast<rotation::scheme>(v1 | v2);
+}
+
+inline rotation::scheme
+operator& (const rotation::scheme &s1, const rotation::scheme &s2)
+{
+	int v1 = static_cast<int>(s1);
+	int v2 = static_cast<int>(s2);
+	return static_cast<rotation::scheme>(v1 & v2);
+}
+
+inline bool
+rotation::daily() const
+{
+	return (m_scheme & scheme::daily) == scheme::daily;
+}
+
+inline bool
+rotation::by_size() const
+{
+	return (m_scheme & scheme::by_size) == scheme::by_size;
+}
 
 class retention
 {
@@ -118,7 +134,13 @@ public:
 	{
 	}
 
-	virtual ~file_logger();
+	virtual ~file_logger()
+	{
+		std::lock_guard<std::mutex> guard(m_file_lock);
+		delete m_file;
+		delete m_retention;
+		delete m_rotation;
+	}
 
 	type get_type() const { return logger::type::file; }
 

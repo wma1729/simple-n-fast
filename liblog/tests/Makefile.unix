@@ -4,16 +4,20 @@ ifndef P
 $(error P is not set)
 endif
 
-OBJS =  ${P}/logts.o
+LOGTS_OBJS =  ${P}/logts.o
+LOGTESTER_OBJS = ${P}/logtester.o
 
 INCL = ${INCLCOM} ${INCLLOG} ${INCLTF}
 
-all: platform ${P}/logts
+all: platform ${P}/logts ${P}/logtester
 
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/logts: ${OBJS} ${LIBLOG} ${LIBCOM}
+${P}/logts: ${LOGTS_OBJS} ${LIBLOG} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/logtester: ${LOGTESTER_OBJS} ${LIBLOG} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
@@ -29,4 +33,4 @@ endif
 install:
 
 clean:
-	@/bin/rm -rf ${OBJS} ${P}/logts
+	@/bin/rm -rf ${LOGTS_OBJS} ${LOGTESTER_OBJS} ${P}/logts ${P}/logtester

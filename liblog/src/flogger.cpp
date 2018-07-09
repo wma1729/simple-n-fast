@@ -138,6 +138,7 @@ file_logger::name(const snf::file_attr &fa, const snf::local_time &lt)
 		return name(lt);
 
 	// found a file; can we reuse it?
+
 	std::string date_str, seq_str;
 	parse_name(fa.f_name, date_str, seq_str);
 
@@ -156,11 +157,15 @@ file_logger::name(const snf::file_attr &fa, const snf::local_time &lt)
 		}
 	}
 
-	if (rotate_by_size(fa.f_size) && !seq_str.empty()) {
-		m_seqno = std::stoi(seq_str) + 1;
-		return name(lt);
+	if (!seq_str.empty()) {
+		m_seqno = std::stoi(seq_str);
+		if (rotate_by_size(fa.f_size)) {
+			m_seqno++;
+			return name(lt);
+		}
 	}
 
+	m_size = fa.f_size;
 	return fa.f_name;
 }
 
@@ -258,7 +263,7 @@ file_logger::log(const record &rec)
 		rotate(rec.get_timestamp());
 	}
 
-	std::string line = std::move(rec.format(get_format().c_str()));
+	std::string line = std::move(rec.format(get_format()));
 	line.append(1, '\n');
 
 	int bwritten;

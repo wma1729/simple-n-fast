@@ -54,6 +54,9 @@ manager::log(const record &rec)
 		}
 
 		m_def_logger->log(rec);
+	} else if (m_def_logger) {
+		delete m_def_logger;
+		m_def_logger = nullptr;
 	}
 }
 

@@ -167,12 +167,8 @@ find_newest(void *arg, const file_attr &fa)
 {
 	file_attr *pfa = reinterpret_cast<file_attr *>(arg);
 	if (fa.f_type == file_type::regular) {
-		if (fa.f_ctime > pfa->f_ctime) {
+		if (fa.f_mtime > pfa->f_mtime) {
 			*pfa = fa;
-		} else if (fa.f_ctime == pfa->f_ctime) {
-			if (fa.f_mtime > pfa->f_mtime) {
-				*pfa = fa;
-			}
 		}
 	}
 }

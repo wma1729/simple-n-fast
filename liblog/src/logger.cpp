@@ -7,7 +7,7 @@ void
 console_logger::log(const record &rec)
 {
 	if (should_log(rec, get_severity())) {
-		std::string line = std::move(rec.format(get_format().c_str()));
+		std::string line = std::move(rec.format(get_format()));
 		if (get_destination() == destination::out)
 			std::cout << line << std::endl;
 		else if (get_destination() == destination::err)
