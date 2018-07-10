@@ -146,7 +146,7 @@ file_logger::name(const snf::file_attr &fa, const snf::local_time &lt)
 	int month = -1;
 	int day   = -1;
 
-	if (rotate_daily() && !date_str.empty()) {
+	if (!date_str.empty()) {
 		year  = std::stoi(date_str.substr(0, 4));
 		month = std::stoi(date_str.substr(4, 2));
 		day   = std::stoi(date_str.substr(6, 2));
