@@ -6,6 +6,9 @@
 
 namespace snf {
 
+/*
+ * Initialize file attribute using the specified file path.
+ */
 void
 file_attr::init(const std::string &path)
 {
@@ -48,6 +51,9 @@ file_attr::init(const std::string &path)
 #endif
 }
 
+/*
+ * Initialize file attribute using the specified file handle.
+ */
 void
 file_attr::init(fhandle_t hdl)
 {

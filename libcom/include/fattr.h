@@ -84,7 +84,13 @@ public:
 	uint64_t        f_nlinks;   // Number of hard links to the file
 	int64_t         f_size;     // File size in bytes
 	uint64_t        f_inode;    // File inode
-	int64_t         f_ctime;    // File create time
+
+	/**
+	 * On Unix platforms, it is the file change time.
+	 * On Windows, it is the file creation time.
+	 */
+	int64_t         f_ctime;
+
 	int64_t         f_atime;    // File access time
 	int64_t         f_mtime;    // File modification time
 	int64_t         f_blksize;  // Block size for file system I/O
@@ -104,6 +110,7 @@ public:
 	uint32_t        f_uid;      // User ID
 	uint32_t        f_gid;      // Group ID
 
+	/* Default constructor */
 	file_attr()
 		: f_type(file_type::unknown)
 		, f_mode(0)
@@ -122,6 +129,13 @@ public:
 	{
 	}
 
+	/*
+	 * Initialize the file attribute object. Not all file
+	 * attributes are fetched on Windows.
+	 * @param [in] path the file path.
+	 * @param [in] name the file name.
+	 * @throws std::system_error, std::runtime_error.
+	 */
 	file_attr(const std::string &path, const std::string &name)
 	{
 		std::ostringstream oss;
@@ -129,11 +143,23 @@ public:
 		init(oss.str());
 	}
 
+	/*
+	 * Initialize the file attribute object. Not all file
+	 * attributes are fetched on Windows.
+	 * @param [in] path the full file path.
+	 * @throws std::system_error, std::runtime_error.
+	 */
 	file_attr(const std::string &path)
 	{
 		init(path);
 	}
 
+	/*
+	 * Initialize the file attribute object. On Windows, this
+	 * fetches the most details.
+	 * @param [in] hdl handle to open file.
+	 * @throws std::system_error, std::runtime_error.
+	 */
 	file_attr(fhandle_t hdl)
 	{
 		init(hdl);
@@ -141,6 +167,12 @@ public:
 
 #if defined(_WIN32)
 
+	/*
+	 * Initialize the file attribute object.
+	 * @param [in] fd WIN32_FIND_DATA usually obtained from
+	 *                FindFirstFile[Ex]/FindNextFile.
+	 * @throws throw std::runtime_error
+	 */
 	file_attr(const WIN32_FIND_DATAW &fd)
 	{
 		init(fd);
@@ -148,13 +180,17 @@ public:
 
 #else // !_WIN32
 
+	/*
+	 * Initialize the file attribute object.
+	 * @param [in] st struct stat obtained from stat/fstat/lstat
+	 *                system call on Unix platforms.
+	 */
 	file_attr(const struct stat &st)
 	{
 		init(st);
 	}
 
 #endif
-
 };
 
 } // namespace snf

@@ -3,6 +3,14 @@
 
 namespace snf {
 
+/*
+ * Construct the directory object using the directory path and the pattern.
+ * The files matching the pattern will be fetched later using read().
+ * @param [in] path    the directory path
+ * @param [in] pattern the file matching pattern. The default pattern is
+ *                     .* meaning match every file name.
+ * #throws std::system_error, std::runtime_error
+ */
 directory::directory(const std::string &path, const std::string &pattern)
 	: m_path(path)
 	, m_pattern(pattern)
@@ -48,6 +56,7 @@ directory::directory(const std::string &path, const std::string &pattern)
 #endif
 }
 
+/* Finalizes the directory object. The system directory handle is closed. */
 directory::~directory()
 {
 #if defined(_WIN32)
@@ -67,6 +76,18 @@ directory::~directory()
 #endif
 }
 
+/*
+ * Reads the next file entry matching the pattern specified
+ * in the constructor. For each matching file name, the vistor
+ * is invoked with the specified context and the file attribute
+ * of the file read i.e. (*visitor)(arg, fa), where fa is the
+ * file_attr type.
+ * @param [in] visitor the pointer to the file visitor function.
+ * @param [in] arg     the caller specific context/argument.
+ * @throws std::system_error
+ * @return true if a file is successfully read, false in case
+ * of reaching end-of-directory.
+ */
 bool
 directory::read(file_visitor visitor, void *arg)
 {
@@ -154,6 +175,17 @@ fill_vector(void *arg, const file_attr &fa)
 	favec->push_back(fa);
 }
 
+/*
+ * Read all the files matching the pattern in directory
+ * into the specified vector.
+ * @param [in]  path    the directory path.
+ * @param [in]  pattern the file matching pattern. The default pattern is
+ *                      .* meaning match every file name.
+ * @param [out] favec   the vector of file (file_attr) read.
+ * @throws std::system_error, std::runtime_error.
+ * @return true if successful and at least 1 file is read,
+ * false otherwise.
+ */
 bool
 read_directory(const std::string &path, const std::string &pattern, std::vector<file_attr> &favec)
 {
@@ -173,6 +205,18 @@ find_newest(void *arg, const file_attr &fa)
 	}
 }
 
+/*
+ * Read the newest file matching the pattern in directory. This is
+ * pretty rudimentary. It simply picks a regular file with the greatest
+ * modification time.
+ * @param [in]  path    the directory path.
+ * @param [in]  pattern the file matching pattern. The default pattern is
+ *                      .* meaning match every file name.
+ * @param [out] fa      the file attribute of the matching file.
+ * @throws std::system_error, std::runtime_error.
+ * @return true if successful and the file is read,
+ * false otherwise.
+ */
 bool
 read_newest(const std::string &path, const std::string &pattern, file_attr &fa)
 {
