@@ -22,6 +22,7 @@ private:
 	std::string         m_file;
 	std::string         m_function;
 	int                 m_lineno;
+	int                 m_error;
 	snf::local_time     m_timestamp;
 	pid_t               m_pid;
 	tid_t               m_tid;
@@ -35,7 +36,7 @@ public:
 	// Static function of type record_terminator
 	static record & endl(record &);
 
-	record(const char *, const char *, const char *, const char *, int, severity);
+	record(const char *, const char *, const char *, const char *, int, int, severity);
 	~record() {}
 
 	severity get_severity() const { return m_severity; }
@@ -52,10 +53,20 @@ public:
 
 #define LOCATION		__FILE__, __func__, __LINE__
 
+#define SYSERR_STRM(CTX, CLS, ERR)                                      \
+				snf::log::record {                      \
+					CTX,                            \
+					CLS,                            \
+					LOCATION,                       \
+					ERR,                            \
+					snf::log::severity::error       \
+				}
+
 #define ERROR_STRM(CTX, CLS)	snf::log::record {                      \
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
+					0,                              \
 					snf::log::severity::error       \
 				}
 
@@ -63,6 +74,7 @@ public:
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
+					0,                              \
 					snf::log::severity::warning     \
 				}
 
@@ -70,6 +82,7 @@ public:
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
+					0,                              \
 					snf::log::severity::info        \
 				}
 
@@ -77,6 +90,7 @@ public:
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
+					0,                              \
 					snf::log::severity::debug       \
 				}
 
@@ -84,6 +98,7 @@ public:
 					CTX,                            \
 					CLS,                            \
 					LOCATION,                       \
+					0,                              \
 					snf::log::severity::trace       \
 				}
 

@@ -38,12 +38,16 @@ public:
 		TRACE_STRM(nullptr, class_name)
 			<< "this is the " << 5 << "th log message"
 			<< snf::log::record::endl;
+		SYSERR_STRM(nullptr, class_name, 11)
+			<< "this is the " << 6 << "th log message"
+			<< snf::log::record::endl;
 
-		LOG_ERROR(nullptr, class_name, "this is the %d%s log message", 6, "th");
-		LOG_WARNING(nullptr, class_name, "this is the %d%s log message", 7, "th");
-		LOG_INFO(nullptr, class_name, "this is the %d%s log message", 8, "th");
-		LOG_DEBUG(nullptr, class_name, "this is the %d%s log message", 9, "th");
-		LOG_TRACE(nullptr, class_name, "this is the %d%s log message", 10, "th");
+		LOG_SYSERR(nullptr, class_name, 12, "this is the %d%s log message", 7, "th");
+		LOG_ERROR(nullptr, class_name, "this is the %d%s log message", 8, "th");
+		LOG_WARNING(nullptr, class_name, "this is the %d%s log message", 9, "th");
+		LOG_INFO(nullptr, class_name, "this is the %d%s log message", 10, "th");
+		LOG_DEBUG(nullptr, class_name, "this is the %d%s log message", 11, "th");
+		LOG_TRACE(nullptr, class_name, "this is the %d%s log message", 12, "th");
 
 		return true;
 	}

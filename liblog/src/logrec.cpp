@@ -7,8 +7,9 @@ namespace log {
 
 record::record(const char *ctx, const char *cls,
 	const char *file, const char *fcn,
-	int line, severity sev)
+	int line, int error, severity sev)
 	: m_lineno(line)
+	, m_error(error)
 	, m_pid(manager::instance().get_pid())
 	, m_tid(gettid())
 	, m_severity(sev)
@@ -123,6 +124,11 @@ record::format(const std::string &fmt) const
 
 				case 'm':
 					oss << m_text.str();
+					if (m_error != 0) {
+						char errstr[ERRSTRLEN + 1];
+						oss << ": " << syserr(errstr, ERRSTRLEN, m_error)
+							<< " (" << m_error << ")";
+					}
 					break;
 
 				default:
