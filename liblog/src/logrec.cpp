@@ -5,20 +5,10 @@
 namespace snf {
 namespace log {
 
-record::record(const char *ctx, const char *cls,
-	const char *file, const char *fcn,
-	int line, int error, severity sev)
-	: m_lineno(line)
-	, m_error(error)
-	, m_pid(manager::instance().get_pid())
-	, m_tid(gettid())
-	, m_severity(sev)
+void
+record::init(const char *cls, const char *file, const char *fcn, int line,
+	int error, severity sev)
 {
-	if (ctx && *ctx)
-		m_context = ctx;
-	else
-		m_context = "no-context";
-
 	if (cls && *cls)
 		m_class = cls;
 	else
@@ -33,6 +23,12 @@ record::record(const char *ctx, const char *cls,
 		m_function = fcn;
 	else
 		m_function = "no-function";
+
+	m_lineno = line;
+	m_error = error;
+	m_pid = manager::instance().get_pid();
+	m_tid = gettid();
+	m_severity = sev;
 }
 
 /**
@@ -54,7 +50,6 @@ record::endl(record &rec)
  * %p - pid
  * %t - tid
  * %s - severity
- * %C - context
  * %c - class
  * %F - file
  * %f - function
@@ -100,10 +95,6 @@ record::format(const std::string &fmt) const
 
 				case 's':
 					oss << severity_string(m_severity);
-					break;
-
-				case 'C':
-					oss << m_context;
 					break;
 
 				case 'c':

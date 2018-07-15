@@ -65,10 +65,8 @@ public:
 	 */
 	int setMemoryUsage(int memusage)
 	{
-		const char  *caller = "setMemoryUsage";
-
 		if ((memusage < 2) || (memusage > 150)) {
-			Log(ERR, caller,
+			LOG_ERROR("RdbOptions",
 				"invalid memory usage (%d); should be in the range [2, 150]",
 				memusage);
 			return E_invalid_arg;
@@ -187,15 +185,15 @@ private:
 		int kpsize,
 		int htsize)
 	{
-		Assert((kpsize >= MIN_KEY_PAGE_SIZE), __FILE__, __LINE__,
+		ASSERT((kpsize >= MIN_KEY_PAGE_SIZE), "Rdb", 0,
 			"invalid page size (%d); should at least be %d",
 			kpsize, MIN_KEY_PAGE_SIZE);
 
-		Assert(((kpsize % KEY_PAGE_HDR_SIZE) == 0), __FILE__, __LINE__,
+		ASSERT(((kpsize % KEY_PAGE_HDR_SIZE) == 0), "Rdb", 0,
 			"page size (%d) is not a multiple of %d",
 			kpsize, KEY_PAGE_HDR_SIZE);
 
-		Assert((htsize > 0), __FILE__, __LINE__,
+		ASSERT((htsize > 0), "Rdb", 0,
 			"invalid hash table size (%d)", htsize);
 
 		this->path = path;

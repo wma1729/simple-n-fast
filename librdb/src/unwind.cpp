@@ -22,7 +22,7 @@ UnwindStack::execute()
 
 		unwind_block_t &blk = stk.top();
 
-		Assert((blk.file != 0), __FILE__, __LINE__,
+		ASSERT((blk.file != 0), "UnwindStack", 0,
 			"file manager is not set");
 
 		kf = dynamic_cast<KeyFile *> (blk.file);
@@ -30,7 +30,7 @@ UnwindStack::execute()
 			vf = dynamic_cast<ValueFile *> (blk.file);
 		}
 
-		Assert(((kf != 0) || (vf != 0)), __FILE__, __LINE__,
+		ASSERT(((kf != 0) || (vf != 0)), "UnwindStack", 0,
 			"file manager is neither key or value file manager");
 
 		switch (blk.op) {
@@ -46,14 +46,14 @@ UnwindStack::execute()
 				break;
 
 			case WRITE_NEXT_OFFSET:
-				Assert((kf != 0), __FILE__, __LINE__,
+				ASSERT((kf != 0), "UnwindStack", 0,
 					"WRITE_NEXT_BLOCK is valid only for key file manager");
 				kp = static_cast<key_page_t *> (blk.page);
 				retval = kf->writeNextOffset(blk.pageOff, kp, blk.offset);
 				break;
 
 			case WRITE_PREV_OFFSET:
-				Assert((kf != 0), __FILE__, __LINE__,
+				ASSERT((kf != 0), "UnwindStack", 0,
 					"WRITE_PREV_BLOCK is valid only for key file manager");
 				kp = static_cast<key_page_t *> (blk.page);
 				retval = kf->writePrevOffset(blk.pageOff, kp, blk.offset);
@@ -72,7 +72,7 @@ UnwindStack::execute()
 				break;
 		}
 
-		Assert((retval == E_ok), __FILE__, __LINE__,
+		ASSERT((retval == E_ok), "UnwindStack", 0,
 			"failed to unwind operation");
 
 		stk.pop();

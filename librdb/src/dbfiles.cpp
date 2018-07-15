@@ -1,6 +1,6 @@
 #include <cstddef>
 #include "dbfiles.h"
-#include "log.h"
+#include "logmgr.h"
 #include "error.h"
 
 /*
@@ -11,7 +11,6 @@
 static int
 OpenFile(snf::file *file, bool sync = false)
 {
-	const char           *caller = "OpenFile";
 	int                  retval = E_ok;
 	int                  oserr = 0;
 	snf::file::open_flags oflags;
@@ -24,9 +23,9 @@ OpenFile(snf::file *file, bool sync = false)
 
 	retval = file->open(oflags, 0600, &oserr);
 	if (retval != E_ok) {
-		Log(ERR, caller, oserr,
-			"failed to open file %s",
-			file->name());
+		ERROR_STRM(nullptr, oserr)
+			<< "failed to open file " << file->name()
+			<< snf::log::record::endl;
 	}
 
 	return retval;
@@ -40,22 +39,26 @@ OpenFile(snf::file *file, bool sync = false)
 static int
 ReadFile(snf::file *file, int64_t offset, void *buf, int toRead)
 {
-	const char  *caller = "ReadFile";
-	int         retval = E_ok;
-	int         oserr = 0;
-	int         bRead = 0;
+	int     retval = E_ok;
+	int     oserr = 0;
+	int     bRead = 0;
 
 	retval = file->read(offset, buf, toRead, &bRead, &oserr);
 	if (retval != E_ok) {
-		Log(ERR, caller, oserr,
-			"failed to read file %s at offset %" PRId64,
-			file->name(), offset);
+		ERROR_STRM(nullptr, oserr)
+			<< "failed to read file " << file->name()
+			<< " at offset " << offset
+			<< snf::log::record::endl;
 	} else if (bRead == 0) {
-		Log(DBG, caller, "end of file detected at offset %" PRId64, offset);
+		DEBUG_STRM(nullptr)
+			<< "end of file detected at offset " << offset
+			<< snf::log::record::endl;
 		retval = E_eof_detected;
 	} else if (bRead != toRead) {
-		Log(ERR, caller, "expected to read %d bytes, read only %d byte",
-			toRead, bRead);
+		ERROR_STRM(nullptr)
+			<< "expected to read " << toRead
+			<< " bytes, read only " << bRead << " bytes"
+			<< snf::log::record::endl;
 		retval = E_read_failed;
 	}
 
@@ -70,19 +73,21 @@ ReadFile(snf::file *file, int64_t offset, void *buf, int toRead)
 static int
 WriteFile(snf::file *file, int64_t offset, const void *buf, int toWrite)
 {
-	const char  *caller = "WriteFile";
-	int         retval = E_ok;
-	int         oserr = 0;
-	int         bWritten = 0;
+	int     retval = E_ok;
+	int     oserr = 0;
+	int     bWritten = 0;
 
 	retval = file->write(offset, buf, toWrite, &bWritten, &oserr);
 	if (retval != E_ok) {
-		Log(ERR, caller, oserr,
-			"failed to write file %s at offset %" PRId64,
-			file->name(), offset);
+		ERROR_STRM(nullptr, oserr)
+			<< "failed to write file " << file->name()
+			<< " at offset " << offset
+			<< snf::log::record::endl;
 	} else if (bWritten != toWrite) {
-		Log(ERR, caller, "expected to write %d bytes, wrote only %d byte",
-			toWrite, bWritten);
+		ERROR_STRM(nullptr)
+			<< "expected to write " << toWrite
+			<< " bytes, wrote only " << bWritten << " bytes"
+			<< snf::log::record::endl;
 		retval = E_write_failed;
 	}
 
@@ -178,12 +183,13 @@ KeyFile::write(int64_t offset, const void *buf, int toWrite)
 int
 KeyFile::write(int64_t *offset, const void *buf, int toWrite)
 {
-	const char  *caller = "KeyFile::write";
 	int         retval = E_ok;
 	int64_t     newOffset = fdpMgr->get();
 
 	if (newOffset < 0) {
-		Log(ERR, caller, "failed to get next free disk block");
+		ERROR_STRM("KeyFile")
+			<< "failed to get next free disk block"
+			<< snf::log::record::endl;
 		return int(newOffset);
 	}
 
@@ -211,8 +217,7 @@ KeyFile::write(int64_t *offset, const void *buf, int toWrite)
 int
 KeyFile::writeFlags(int64_t offset, key_page_t *kp, int flags)
 {
-	const char  *caller = "KeyFile::writeFlags";
-	int         retval = E_ok;
+	int retval = E_ok;
 
 	offset += offsetof(key_page_t, kp_flags);
 	retval = write(offset, &flags, int(sizeof(flags)));
@@ -221,12 +226,12 @@ KeyFile::writeFlags(int64_t offset, key_page_t *kp, int flags)
 			int oflags = kp->kp_flags;
 			kp->kp_flags = flags;
 
-			Log(DBG, caller,
+			LOG_DEBUG("KeyFile",
 				"flags for page at offset %" PRId64 " changed: old 0x%04x, new 0x%04x",
 				offset, oflags, flags);
 		}
 	} else {
-		Log(ERR, caller,
+		LOG_ERROR("KeyFile",
 			"failed to set flags to 0x%04x for page at offset %" PRId64,
 			flags, offset);
 	}
@@ -248,8 +253,7 @@ KeyFile::writeFlags(int64_t offset, key_page_t *kp, int flags)
 int
 KeyFile::writePrevOffset(int64_t offset, key_page_t *kp, int64_t prevOffset)
 {
-	const char  *caller = "KeyFile::writePrevOffset";
-	int         retval = E_ok;
+	int retval = E_ok;
 
 	offset += offsetof(key_page_t, kp_poff);
 	retval = write(offset, &prevOffset, int(sizeof(prevOffset)));
@@ -258,13 +262,13 @@ KeyFile::writePrevOffset(int64_t offset, key_page_t *kp, int64_t prevOffset)
 			int64_t opoff = kp->kp_poff;
 			kp->kp_poff = prevOffset;
 
-			Log(DBG, caller,
+			LOG_DEBUG("KeyFile",
 				"previous offset for page at offset %" PRId64
 				" changed: old %" PRId64 ", new %" PRId64,
 				offset, opoff, prevOffset);
 		}
 	} else {
-		Log(ERR, caller,
+		LOG_ERROR("KeyFile",
 			"failed to set previous offset to %" PRId64
 			" for page at offset %" PRId64,
 			prevOffset, offset);
@@ -287,8 +291,7 @@ KeyFile::writePrevOffset(int64_t offset, key_page_t *kp, int64_t prevOffset)
 int
 KeyFile::writeNextOffset(int64_t offset, key_page_t *kp, int64_t nextOffset)
 {
-	const char  *caller = "KeyFile::writeNextOffset";
-	int         retval = E_ok;
+	int retval = E_ok;
 
 	offset += offsetof(key_page_t, kp_noff);
 	retval = write(offset, &nextOffset, int(sizeof(nextOffset)));
@@ -297,13 +300,13 @@ KeyFile::writeNextOffset(int64_t offset, key_page_t *kp, int64_t nextOffset)
 			int64_t onoff = kp->kp_noff;
 			kp->kp_noff = nextOffset;
 
-			Log(DBG, caller,
+			LOG_DEBUG("KeyFile",
 				"next offset for page at offset %" PRId64
 				" changed: old %" PRId64 ", new %" PRId64,
 				offset, onoff, nextOffset);
 		}
 	} else {
-		Log(ERR, caller,
+		LOG_ERROR("KeyFile",
 			"failed to set next offset to %" PRId64
 			" for page at offset %" PRId64,
 			nextOffset, offset);
@@ -322,12 +325,12 @@ KeyFile::writeNextOffset(int64_t offset, key_page_t *kp, int64_t nextOffset)
 int
 KeyFile::freePage(int64_t offset)
 {
-	const char *caller = "KeyFile::freePage";
-
 	if (fdpMgr) {
 		return fdpMgr->free(offset);
 	} else {
-		Log(ERR, caller, "free disk page manager is not set");
+		ERROR_STRM("KeyFile")
+			<< "free disk page manager is not set"
+			<< snf::log::record::endl;
 		return E_invalid_state;
 	}
 }
@@ -403,13 +406,13 @@ ValueFile::write(int64_t offset, const value_page_t *vp)
 int
 ValueFile::write(int64_t *offset, const value_page_t *vp)
 {
-	const char  *caller = "ValueFile::write";
-	int         retval = E_ok;
-	int64_t     newOffset = fdpMgr->get();
+	int     retval = E_ok;
+	int64_t newOffset = fdpMgr->get();
 
 	if (newOffset < 0) {
-		Log(ERR, caller,
-			"failed to get next free disk page");
+		ERROR_STRM("ValueFile")
+			<< "failed to get next free disk page"
+			<< snf::log::record::endl;
 		return int(newOffset);
 	}
 
@@ -438,8 +441,7 @@ ValueFile::write(int64_t *offset, const value_page_t *vp)
 int
 ValueFile::writeFlags(int64_t offset, value_page_t *vp, int flags)
 {
-	const char  *caller = "ValueFile::writeFlags";
-	int         retval = E_ok;
+	int retval = E_ok;
 
 	{
 		std::lock_guard<std::mutex> guard(mutex);
@@ -451,7 +453,7 @@ ValueFile::writeFlags(int64_t offset, value_page_t *vp, int flags)
 		if (vp)
 			vp->vp_flags = flags;
 	} else {
-		Log(ERR, caller, "failed to set flags to 0x%04x", flags);
+		LOG_ERROR("ValueFile", "failed to set flags to 0x%04x", flags);
 	}
 
 	return retval;
@@ -467,12 +469,12 @@ ValueFile::writeFlags(int64_t offset, value_page_t *vp, int flags)
 int
 ValueFile::freePage(int64_t offset)
 {
-	const char *caller = "ValueFile::freePage";
-
 	if (fdpMgr) {
 		return fdpMgr->free(offset);
 	} else {
-		Log(ERR, caller, "free disk page manager is not set");
+		ERROR_STRM("ValueFile")
+			<< "free disk page manager is not set"
+			<< snf::log::record::endl;
 		return E_invalid_state;
 	}
 }

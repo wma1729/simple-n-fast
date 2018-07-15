@@ -17,7 +17,7 @@ OBJS =  ${P}/cache.o \
 
 DRVROBJS = ${P}/rdbdrvr.o
 
-INCL = ${INCLCOM} ${INCLRDB}
+INCL = ${INCLCOM} ${INCLLOG} ${INCLRDB}
 
 LIBS = -lpthread
 
@@ -29,7 +29,7 @@ platform:
 ${P}/librdb.a: ${OBJS}
 	${AR} ${ARFLAGS} $@ $^
 
-${P}/rdbdrvr: ${DRVROBJS} ${P}/librdb.a ${LIBCOM}
+${P}/rdbdrvr: ${DRVROBJS} ${P}/librdb.a ${LIBLOG} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp

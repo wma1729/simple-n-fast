@@ -12,9 +12,7 @@ OBJS =  $(P)\common.obj \
 		$(P)\dir.obj \
 		$(P)\dll.obj \
 		$(P)\i18n.obj \
-		$(P)\log.obj \
-		$(P)\timeutil.obj \
-		$(P)\util.obj
+		$(P)\timeutil.obj
 
 INCL = $(INCLCOM)
 

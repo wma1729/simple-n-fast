@@ -15,12 +15,11 @@
 int
 Rdb::populateHashTable()
 {
-	const char  *caller = "Rdb::populateHashTable";
 	int         retval = E_ok;
 	int64_t     offset = 0;
 	key_page_t  kp;
 
-	Log(DBG, caller, "preparing hash table and free disk pages in index file");
+	LOG_DEBUG("Rdb", "preparing hash table and free disk pages in index file");
 
 	keyFile->setFreeDiskPageMgr(DBG_NEW FreeDiskPageMgr(kpSize));
 
@@ -63,7 +62,6 @@ Rdb::populateHashTable()
 int
 Rdb::populateFreePages(const char *fname)
 {
-	const char  *caller = "Rdb::populateFreePages";
 	int         retval = E_ok;
 	int         oserr = 0;
 	int         flags;
@@ -71,7 +69,7 @@ Rdb::populateFreePages(const char *fname)
 	int64_t     vfsize = -1L;
 	int64_t     offset;
 
-	Log(DBG, caller, "preparing free disk pages in db file");
+	LOG_DEBUG("Rdb", "preparing free disk pages in db file");
 
 	snf::file::open_flags oflags;
 	oflags.o_read = true;
@@ -80,7 +78,7 @@ Rdb::populateFreePages(const char *fname)
 
 	retval = file->open(oflags, 0600, &oserr);
 	if (retval != E_ok) {
-		Log(ERR, caller, oserr,
+		LOG_SYSERR("Rdb", oserr,
 			"failed to open free disk page file %s", fname);
 		return retval;
 	}
@@ -145,7 +143,6 @@ Rdb::populateFreePages(const char *fname)
 int
 Rdb::processKeyPages(key_info_t *ki, op_t op)
 {
-	const char      *caller = "Rdb::processKeyPages";
 	int             retval = E_ok;
 	key_page_t      *kp = 0;
 	int64_t         nextOffset = hashTable->getOffset(ki->ki_hash);
@@ -160,7 +157,7 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 		if (kpn->kpn_kp == 0) {
 			retval = cache->update(kpn, nextOffset);
 			if (retval != E_ok) {
-				Log(ERR, caller,
+				LOG_ERROR("Rdb",
 					"failed to read key page at offset %" PRId64,
 					nextOffset);
 			}
@@ -181,24 +178,24 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 				if (ki->ki_kidx >= 0) {
 					ki->ki_kpn = kpn;
 					if (op == GET) {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key found: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						ki->ki_voff = kp->kp_keys[ki->ki_kidx].kr_voff;
 						return E_ok;
 					} else if (kp->kp_vcount > 0) {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key deleted: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						return keyFile->write(nextOffset, kp, kpSize);
 					} else {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key found: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"release page at offset %" PRId64,
 							nextOffset);
 						return E_ok;
@@ -209,7 +206,7 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 					KeyRecords keyRec(kp, kpSize); 
 					ki->ki_kidx = keyRec.put(ki);
 					if (ki->ki_kidx >= 0) {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key inserted: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
@@ -233,7 +230,7 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 		if (retval == E_ok) {
 			hashTable->addKeyPageNode(ki->ki_hash, kpn);
 		} else {
-			Log(ERR, caller,
+			LOG_ERROR("Rdb",
 				"failed to read key page at offset %" PRId64,
 				nextOffset);
 		}
@@ -253,24 +250,24 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 				if (ki->ki_kidx >= 0) {
 					ki->ki_kpn = kpn;
 					if (op == GET) {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key found: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						ki->ki_voff = kp->kp_keys[ki->ki_kidx].kr_voff;
 						return E_ok;
 					} else if (kp->kp_vcount > 0) {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key deleted: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
 						return keyFile->write(nextOffset, kp, kpSize);
 					} else {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key found: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"release page at offset %" PRId64,
 							nextOffset);
 						return E_ok;
@@ -281,7 +278,7 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 					KeyRecords keyRec(kp, kpSize); 
 					ki->ki_kidx = keyRec.put(ki);
 					if (ki->ki_kidx >= 0) {
-						Log(DBG, caller,
+						LOG_DEBUG("Rdb",
 							"key inserted: page offset = %" PRId64
 							", key index = %d",
 							nextOffset, ki->ki_kidx);
@@ -314,7 +311,6 @@ Rdb::processKeyPages(key_info_t *ki, op_t op)
 int
 Rdb::addNewPage(key_info_t *ki)
 {
-	const char      *caller = "Rdb::addNewPage";
 	int             retval = E_ok;
 	int64_t         pageOffset = -1L;
 	key_page_node_t *kpn;
@@ -322,7 +318,7 @@ Rdb::addNewPage(key_info_t *ki)
 
 	retval = cache->get(kpn, -1L);
 	if (retval != E_ok) {
-		Log(ERR, caller, "failed to get a free key page");
+		LOG_ERROR("Rdb", "failed to get a free key page");
 		return retval;
 	}
 
@@ -334,15 +330,15 @@ Rdb::addNewPage(key_info_t *ki)
 
 	KeyRecords keyRec(kp, kpSize);
 	ki->ki_kidx = keyRec.put(ki);
-	Assert((ki->ki_kidx >= 0), __FILE__, __LINE__,
+	ASSERT((ki->ki_kidx >= 0), "Rdb", 0,
 		"incorrect key index");
 
 	retval = keyFile->write(&pageOffset, kp, kpSize);
 	if (retval != E_ok) {
-		Log(ERR, caller, "failed to write key to %s",
+		LOG_ERROR("Rdb", "failed to write key to %s",
 			keyFile->name());
 	} else {
-		Log(DBG, caller,
+		LOG_DEBUG("Rdb",
 			"new page inserted: page offset = %" PRId64 ", key index = %d",
 			pageOffset, ki->ki_kidx);
 
@@ -426,16 +422,14 @@ Rdb::removeBackupFile(const char *oldName)
 int
 Rdb::setKeyPageSize(int kpsize)
 {
-	const char  *caller = "Rdb::setKetPageSize";
-
 	if (kpsize < MIN_KEY_PAGE_SIZE) {
-		Log(ERR, caller, "invalid page size (%d); should at least be %d",
+		LOG_ERROR("Rdb", "invalid page size (%d); should at least be %d",
 			kpsize, MIN_KEY_PAGE_SIZE);
 		return E_invalid_arg;
 	}
 
 	if ((kpsize % KEY_PAGE_HDR_SIZE) != 0) {
-		Log(ERR, caller, "page size (%d) is not a multiple of %d",
+		LOG_ERROR("Rdb", "page size (%d) is not a multiple of %d",
 			kpsize, KEY_PAGE_HDR_SIZE);
 		return E_invalid_arg;
 	}
@@ -445,7 +439,7 @@ Rdb::setKeyPageSize(int kpsize)
 		this->kpSize = kpsize;
 		return E_ok;
 	} else {
-		Log(ERR, caller, "DB is open; cannot set key page size");
+		LOG_ERROR("Rdb", "DB is open; cannot set key page size");
 		return E_invalid_state;
 	}
 }
@@ -462,10 +456,8 @@ Rdb::setKeyPageSize(int kpsize)
 int
 Rdb::setHashTableSize(int htsize)
 {
-	const char  *caller = "Rdb::setHashTableSize";
-
 	if (htsize <= 0) {
-		Log(ERR, caller,
+		LOG_ERROR("Rdb",
 			"invalid hash table size (%d)", htSize);
 		return E_invalid_arg;
 	}
@@ -475,7 +467,7 @@ Rdb::setHashTableSize(int htsize)
 		this->htSize = NextPrime(htSize);
 		return E_ok;
 	} else {
-		Log(ERR, caller, "DB is open; cannot set hash table size");
+		LOG_ERROR("Rdb", "DB is open; cannot set hash table size");
 		return E_invalid_state;
 	}
 }
@@ -595,29 +587,28 @@ Rdb::get(
 	char *value,
 	int *vlen)
 {
-	const char      *caller = "Rdb::get";
 	int             retval;
 	int             hindex = -1;
 	value_page_t    vp;
 	key_info_t      ki;
 
 	if ((key == 0) || (*key == '\0')) {
-		Log(ERR, caller, "invalid key specified");
+		LOG_ERROR("Rdb", "invalid key specified");
 		return E_invalid_arg;
 	}
 
 	if (klen <= 0) {
-		Log(ERR, caller, "invalid key length specified");
+		LOG_ERROR("Rdb", "invalid key length specified");
 		return E_invalid_arg;
 	}
 
 	if (value == 0) {
-		Log(ERR, caller, "invalid value specified");
+		LOG_ERROR("Rdb", "invalid value specified");
 		return E_invalid_arg;
 	}
 
 	if ((vlen == 0) || (*vlen <= 0)) {
-		Log(ERR, caller, "invalid value length specified");
+		LOG_ERROR("Rdb", "invalid value length specified");
 		return E_invalid_arg;
 	}
 
@@ -627,7 +618,7 @@ Rdb::get(
 	}
 
 	hindex = hash(key, klen, htSize);
-	Assert(((hindex >= 0) && (hindex < htSize)), __FILE__, __LINE__,
+	ASSERT(((hindex >= 0) && (hindex < htSize)), "Rdb", 0,
 		"invalid hash value (%d)", hindex);
 
 	HTLockGuard guard(hashTable, hindex, false);
@@ -636,18 +627,27 @@ Rdb::get(
 
 	retval = processKeyPages(&ki, GET);
 	if (retval == E_ok) {
-		ValidateKeyInfo(&ki, __FILE__, __LINE__);
+		ASSERT((ki.ki_kpn != 0), "Rdb", 0,
+			"found the key but key page node is not set");
+		ASSERT((ki.ki_kpn->kpn_kp != 0), "Rdb", 0,
+			"found the key but key page is not set");
+		ASSERT((ki.ki_kpn->kpn_kpoff != -1), "Rdb", 0,
+			"found the key but key page offset is not set");
+		ASSERT((ki.ki_kidx != -1), "Rdb", 0,
+			"found the key but key index in page is not set");
+		ASSERT((ki.ki_voff != -1), "Rdb", 0,
+			"found the key but value page offset is not set");
 
 		retval = valueFile->read(ki.ki_voff, &vp);
 		if (retval != E_ok) {
-			Log(ERR, caller, "failed to read value page at offset %" PRId64 " from %s",
+			LOG_ERROR("Rdb", "failed to read value page at offset %" PRId64 " from %s",
 				ki.ki_voff, valueFile->name());
 		} else {
-			Assert(!IsValuePageDeleted(&vp), __FILE__, __LINE__,
+			ASSERT(!IsValuePageDeleted(&vp), "Rdb", 0,
 				"value is already deleted");
-			Assert((klen == vp.vp_klen), __FILE__, __LINE__,
+			ASSERT((klen == vp.vp_klen), "Rdb", 0,
 				"key length mismatch (expected %d, found %d)", klen, vp.vp_klen);
-			Assert((memcmp(key, vp.vp_key, klen) == 0), __FILE__, __LINE__,
+			ASSERT((memcmp(key, vp.vp_key, klen) == 0), "Rdb", 0,
 				"key mismatch");
 
 			if (vp.vp_vlen > *vlen) {
@@ -702,7 +702,6 @@ Rdb::set(
 	int vlen,
 	Updater *updater)
 {
-	const char      *caller = "Rdb::set";
 	int             retval;
 	int             hindex = -1;
 	value_page_t    vp;
@@ -710,22 +709,22 @@ Rdb::set(
 	UnwindStack     ustk;
 
 	if ((key == 0) || (*key == '\0')) {
-		Log(ERR, caller, "invalid key specified");
+		LOG_ERROR("Rdb", "invalid key specified");
 		return E_invalid_arg;
 	}
 
 	if (klen <= 0) {
-		Log(ERR, caller, "invalid key length specified");
+		LOG_ERROR("Rdb", "invalid key length specified");
 		return E_invalid_arg;
 	}
 
 	if ((value == 0) || (*value == '\0')) {
-		Log(ERR, caller, "invalid value specified");
+		LOG_ERROR("Rdb", "invalid value specified");
 		return E_invalid_arg;
 	}
 
 	if (vlen <= 0) {
-		Log(ERR, caller, "invalid value length specified");
+		LOG_ERROR("Rdb", "invalid value length specified");
 		return E_invalid_arg;
 	}
 
@@ -735,7 +734,7 @@ Rdb::set(
 	}
 
 	hindex = hash(key, klen, htSize);
-	Assert(((hindex >= 0) && (hindex < htSize)), __FILE__, __LINE__,
+	ASSERT(((hindex >= 0) && (hindex < htSize)), "Rdb", 0,
 		"invalid hash value (%d)", hindex);
 
 	HTLockGuard guard(hashTable, hindex, true);
@@ -746,23 +745,32 @@ Rdb::set(
 
 	retval = processKeyPages(&ki, GET);
 	if (retval == E_ok) {
-		ValidateKeyInfo(&ki, __FILE__, __LINE__);
+		ASSERT((ki.ki_kpn != 0), "Rdb", 0,
+			"found the key but key page node is not set");
+		ASSERT((ki.ki_kpn->kpn_kp != 0), "Rdb", 0,
+			"found the key but key page is not set");
+		ASSERT((ki.ki_kpn->kpn_kpoff != -1), "Rdb", 0,
+			"found the key but key page offset is not set");
+		ASSERT((ki.ki_kidx != -1), "Rdb", 0,
+			"found the key but key index in page is not set");
+		ASSERT((ki.ki_voff != -1), "Rdb", 0,
+			"found the key but value page offset is not set");
 
-		Log(DBG, caller, "key exists");
+		LOG_DEBUG("Rdb", "key exists");
 
 		if (updater) {
-			Log(DBG, caller, "updating the value");
+			LOG_DEBUG("Rdb", "updating the value");
 
 			retval = valueFile->read(ki.ki_voff, &vp);
 			if (retval != E_ok) {
-				Log(ERR, caller, "failed to read value page at offset %" PRId64 " from %s",
+				LOG_ERROR("Rdb", "failed to read value page at offset %" PRId64 " from %s",
 					ki.ki_voff, valueFile->name());
 			} else {
-				Assert(!IsValuePageDeleted(&vp), __FILE__, __LINE__,
+				ASSERT(!IsValuePageDeleted(&vp), "Rdb", 0,
 					"value is already deleted");
-				Assert((klen == vp.vp_klen), __FILE__, __LINE__,
+				ASSERT((klen == vp.vp_klen), "Rdb", 0,
 					"key length mismatch (expected %d, found %d)", klen, vp.vp_klen);
-				Assert((memcmp(key, vp.vp_key, klen) == 0), __FILE__, __LINE__,
+				ASSERT((memcmp(key, vp.vp_key, klen) == 0), "Rdb", 0,
 					"key mismatch");
 
 				retval = updater->update(vp.vp_value, vp.vp_vlen);
@@ -775,17 +783,17 @@ Rdb::set(
 		if (retval == E_ok) {
 			retval = valueFile->write(ki.ki_voff, &vp);
 			if (retval != E_ok) {
-				Log(ERR, caller, "failed to write value to %s",
+				LOG_ERROR("Rdb", "failed to write value to %s",
 					valueFile->name());
 			}
 		}
 	} else if (retval == E_not_found) {
 
-		Log(DBG, caller, "writing a new value");
+		LOG_DEBUG("Rdb", "writing a new value");
 
 		retval = valueFile->write(&(ki.ki_voff), &vp);
 		if (retval != E_ok) {
-			Log(ERR, caller, "failed to write value to %s",
+			LOG_ERROR("Rdb", "failed to write value to %s",
 				valueFile->name());
 		} else {
 			ustk.freePage(valueFile, ki.ki_voff);
@@ -821,7 +829,6 @@ Rdb::remove(
 	const char *key,
 	int klen)
 {
-	const char  *caller = "Rdb::remove";
 	int         retval;
 	int         hindex = -1;
 	key_info_t  ki;
@@ -829,12 +836,12 @@ Rdb::remove(
 	UnwindStack ustk;
 
 	if ((key == 0) || (*key == '\0')) {
-		Log(ERR, caller, "invalid key specified");
+		LOG_ERROR("Rdb", "invalid key specified");
 		return E_invalid_arg;
 	}
 
 	if (klen <= 0) {
-		Log(ERR, caller, "invalid key length specified");
+		LOG_ERROR("Rdb", "invalid key length specified");
 		return E_invalid_arg;
 	}
 
@@ -844,7 +851,7 @@ Rdb::remove(
 	}
 
 	hindex = hash(key, klen, htSize);
-	Assert(((hindex >= 0) && (hindex < htSize)), __FILE__, __LINE__,
+	ASSERT(((hindex >= 0) && (hindex < htSize)), "Rdb", 0,
 		"invalid hash value (%d)", hindex);
 
 	HTLockGuard guard(hashTable, hindex, true);
@@ -853,28 +860,37 @@ Rdb::remove(
 
 	retval = processKeyPages(&ki, GET);
 	if (retval == E_ok) {
-		ValidateKeyInfo(&ki, __FILE__, __LINE__);
+		ASSERT((ki.ki_kpn != 0), "Rdb", 0,
+			"found the key but key page node is not set");
+		ASSERT((ki.ki_kpn->kpn_kp != 0), "Rdb", 0,
+			"found the key but key page is not set");
+		ASSERT((ki.ki_kpn->kpn_kpoff != -1), "Rdb", 0,
+			"found the key but key page offset is not set");
+		ASSERT((ki.ki_kidx != -1), "Rdb", 0,
+			"found the key but key index in page is not set");
+		ASSERT((ki.ki_voff != -1), "Rdb", 0,
+			"found the key but value page offset is not set");
 
 		// Mark the value page as deleted
 		retval = valueFile->writeFlags(ki.ki_voff, 0, VPAGE_DELETED);
 		if (retval != E_ok) {
-			Log(ERR, caller, "failed to mark value page as deleted");
+			LOG_ERROR("Rdb", "failed to mark value page as deleted");
 		} else {
 			ustk.writeFlags(valueFile, 0, ki.ki_voff, 0);
 
 			SetKeyInfo(&dki, key, klen, hindex);
 
 			retval = processKeyPages(&dki, DEL);
-			Assert((retval == E_ok), __FILE__, __LINE__,
+			ASSERT((retval == E_ok), "Rdb", 0,
 				"unable to delete the key that was recently located");
 
-			Assert((ki.ki_kpn == dki.ki_kpn), __FILE__, __LINE__,
+			ASSERT((ki.ki_kpn == dki.ki_kpn), "Rdb", 0,
 				"found and deleted key page node mismatch");
-			Assert((ki.ki_kpn->kpn_kp == dki.ki_kpn->kpn_kp), __FILE__, __LINE__,
+			ASSERT((ki.ki_kpn->kpn_kp == dki.ki_kpn->kpn_kp), "Rdb", 0,
 				"found and deleted key page mismatch");
-			Assert((ki.ki_kpn->kpn_kpoff == dki.ki_kpn->kpn_kpoff), __FILE__, __LINE__,
+			ASSERT((ki.ki_kpn->kpn_kpoff == dki.ki_kpn->kpn_kpoff), "Rdb", 0,
 				"found and deleted key page offset mismatch");
-			Assert((ki.ki_kidx == dki.ki_kidx), __FILE__, __LINE__,
+			ASSERT((ki.ki_kidx == dki.ki_kidx), "Rdb", 0,
 				"found and deleted key index mismatch");
 
 			// The key is deleted now
@@ -891,7 +907,7 @@ Rdb::remove(
 				next_kpoff = dki.ki_kpn->kpn_kp->kp_noff;
 				next_kpn = dki.ki_kpn->kpn_next;
 
-				Log(DBG, caller,
+				LOG_DEBUG("Rdb",
 					"previous page offset = %" PRId64
 					", next page offset = %" PRId64,
 					prev_kpoff, next_kpoff);
@@ -905,7 +921,7 @@ Rdb::remove(
 					if (retval == E_ok) {
 						hashTable->addKeyPageNode(dki.ki_hash, next_kpn);
 					} else {
-						Log(ERR, caller,
+						LOG_ERROR("Rdb",
 							"failed to read key page at offset %" PRId64,
 							next_kpoff);
 					}
@@ -924,7 +940,7 @@ Rdb::remove(
 					retval = keyFile->writeFlags(dki.ki_kpn->kpn_kpoff,
 								dki.ki_kpn->kpn_kp, KPAGE_DELETED);
 					if (retval != E_ok) {
-						Log(ERR, caller,
+						LOG_ERROR("Rdb",
 							"failed to mark key page at offset %" PRId64 " as deleted",
 							dki.ki_kpn->kpn_kpoff);
 					} else {
@@ -938,7 +954,7 @@ Rdb::remove(
 							offset = prev_kp->kp_noff;
 							retval = keyFile->writeNextOffset(prev_kpoff, prev_kp, next_kpoff);
 							if (retval != E_ok) {
-								Log(ERR, caller, "failed to update key page at offset %" PRId64
+								LOG_ERROR("Rdb", "failed to update key page at offset %" PRId64
 									" to %s", prev_kpoff, keyFile->name());
 							} else {
 								ustk.writeNextOffset(keyFile, prev_kp, prev_kpoff, offset);
@@ -950,7 +966,7 @@ Rdb::remove(
 							offset = next_kp->kp_poff;
 							retval = keyFile->writePrevOffset(next_kpoff, next_kp, prev_kpoff);
 							if (retval != E_ok) {
-								Log(ERR, caller, "failed to update key page at offset %" PRId64
+								LOG_ERROR("Rdb", "failed to update key page at offset %" PRId64
 									" to %s", next_kpoff, keyFile->name());
 							} else {
 								ustk.writePrevOffset(keyFile, next_kp, next_kpoff, offset);
@@ -1002,7 +1018,6 @@ Rdb::remove(
 int
 Rdb::rebuild()
 {
-	const char      *caller = "Rdb::rebuild";
 	int             retval = E_ok;
 	char            idxPath[MAXPATHLEN + 1];
 	char            dbPath[MAXPATHLEN + 1];
@@ -1015,7 +1030,7 @@ Rdb::rebuild()
 	{
 		std::lock_guard<std::mutex> guard1(openMutex);
 		if (opened) {
-			Log(ERR, caller, "DB is open; close it before rebuilding");
+			LOG_ERROR("Rdb", "DB is open; close it before rebuilding");
 			return E_invalid_state;
 		}
 

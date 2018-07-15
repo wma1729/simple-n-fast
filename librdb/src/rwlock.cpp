@@ -1,5 +1,5 @@
 #include "rwlock.h"
-#include "log.h"
+#include "logmgr.h"
 #include "error.h"
 
 /**
@@ -13,7 +13,7 @@ RWLock::RWLock()
 	InitializeSRWLock(&lock);
 #else
 	int error = pthread_rwlock_init(&lock, 0);
-	Assert((error == 0), __FILE__, __LINE__, error,
+	ASSERT((error == 0), "RWLock", error,
 		"failed to initialize read-write lock");
 #endif
 }
@@ -23,14 +23,14 @@ RWLock::RWLock()
  */
 RWLock::~RWLock()
 {
-	Assert((cnt == 0), __FILE__, __LINE__,
+	ASSERT((cnt == 0), "RWLock", 0,
 		"someone is holding the lock");
 
 #if defined(_WIN32)
 	// Nothing to do here
 #else
 	int error = pthread_rwlock_destroy(&lock);
-	Assert((error == 0), __FILE__, __LINE__, error,
+	ASSERT((error == 0), "RWLock", error,
 		"failed to destroy read-write lock");
 #endif
 }
@@ -45,13 +45,11 @@ RWLock::~RWLock()
 int
 RWLock::unlock(int *oserr)
 {
-	const char  *caller = "RWLock::unlock";
-	int         error = 0;
-
-	error = pthread_rwlock_unlock(&lock);
+	int error = pthread_rwlock_unlock(&lock);
 	if (error != 0) {
-		Log(ERR, caller, error,
-			"failed to unlock read-write lock");
+		ERROR_STRM("RWLock", error)
+			<< "failed to unlock read-write lock"
+			<< snf::log::record::endl;
 		return E_unlock_failed;
 	}
 
@@ -78,14 +76,12 @@ RWLock::rdlock(int *oserr)
 #if defined(_WIN32)
 	AcquireSRWLockShared(&lock);
 #else
-	const char  *caller = "RWLock::rdlock";
-	int         error = 0;
-
-	error = pthread_rwlock_rdlock(&lock);
+	int error = pthread_rwlock_rdlock(&lock);
 	if (error != 0) {
 		if (oserr) *oserr = error;
-		Log(ERR, caller, error,
-			"failed to lock in read mode");
+		ERROR_STRM("RWLock", error)
+			<< "failed to lock in read mode"
+			<< snf::log::record::endl;
 		return E_lock_failed;
 	}
 #endif
@@ -118,19 +114,18 @@ RWLock::tryrdlock(int *oserr)
 		return E_try_again;
 	}
 #else
-	const char  *caller = "RWLock::tryrdlock";
-	int         error = 0;
-
-	error = pthread_rwlock_tryrdlock(&lock);
+	int error = pthread_rwlock_tryrdlock(&lock);
 	if (error != 0) {
 		if (oserr) *oserr = error;
 		if ((error == EBUSY) || (error == EAGAIN)) {
-			Log(DBG, caller, error,
-				"failed to lock in read mode, try again");
+			DEBUG_STRM("RWLock")
+				<< "failed to lock in read mode, try again"
+				<< snf::log::record::endl;
 			return E_try_again;
 		} else {
-			Log(ERR, caller, error,
-				"failed to lock in read mode");
+			ERROR_STRM("RWLock", error)
+				<< "failed to lock in read mode"
+				<< snf::log::record::endl;
 			return E_lock_failed;
 		}
 	}
@@ -188,13 +183,11 @@ RWLock::wrlock(int *oserr)
 #if defined(_WIN32)
 	AcquireSRWLockExclusive(&lock);
 #else
-	const char  *caller = "RWLock::wrlock";
-	int         error = 0;
-
-	error = pthread_rwlock_wrlock(&lock);
+	int error = pthread_rwlock_wrlock(&lock);
 	if (error != 0) {
-		Log(ERR, caller, error,
-			"failed to lock in write mode");
+		ERROR_STRM("RWLock", error)
+			<< "failed to lock in write mode"
+			<< snf::log::record::endl;
 		return E_lock_failed;
 	}
 #endif
@@ -226,18 +219,17 @@ RWLock::trywrlock(int *oserr)
 		return E_try_again;
 	}
 #else
-	const char  *caller = "RWLock::trywrlock";
-	int         error = 0;
-
-	error = pthread_rwlock_trywrlock(&lock);
+	int error = pthread_rwlock_trywrlock(&lock);
 	if (error != 0) {
 		if ((error == EBUSY) || (error == EAGAIN)) {
-			Log(DBG, caller, error,
-				"failed to lock in write mode, try again");
+			DEBUG_STRM("RWLock")
+				<< "failed to lock in write mode, try again"
+				<< snf::log::record::endl;
 			return E_try_again;
 		} else {
-			Log(ERR, caller, error,
-				"failed to lock in write mode");
+			ERROR_STRM("RWLock", error)
+				<< "failed to lock in write mode"
+				<< snf::log::record::endl;
 			return E_lock_failed;
 		}
 	}

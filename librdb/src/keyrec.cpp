@@ -1,4 +1,5 @@
 #include "keyrec.h"
+#include "logmgr.h"
 
 #define LEFT_OF(N)      kp->kp_keys[N].kr_left
 #define RIGHT_OF(N)     kp->kp_keys[N].kr_right
@@ -41,12 +42,13 @@ KeyRecords::getFree() const
 short
 KeyRecords::getKeyRecord(const key_info_t *ki)
 {
-	const char  *who = "KeyRecords::getKeyRecord";
 	short       idx = getFree();
 	key_rec_t   *krec;
 
 	if (idx < 0) {
-		Log(ERR, who, "no free key records available");
+		ERROR_STRM("KeyRecords")
+			<< "no free key records available"
+			<< snf::log::record::endl;
 		return idx;
 	}
 
@@ -75,7 +77,7 @@ KeyRecords::getKeyRecord(const key_info_t *ki)
 void
 KeyRecords::freeKeyRecord(short idx)
 {
-	Assert(((idx >= 0) && (idx < numOfKeys)), __FILE__, __LINE__,
+	ASSERT(((idx >= 0) && (idx < numOfKeys)), "KeyRecords", 0,
 		"invalid key record offset");
 
 	key_rec_t *krec = &(kp->kp_keys[idx]);

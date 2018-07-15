@@ -61,10 +61,10 @@ manager::log(const record &rec)
 }
 
 void
-manager::log(severity sev, const char *ctx, const char *cls,
-	const char *file, const char *fcn, int line, int error, const char *fmt, ...)
+manager::log(severity sev, const char *cls, const char *file, const char *fcn, int line,
+	int error, const char *fmt, ...)
 {
-	record rec { ctx, cls, file, fcn, line, error, sev };
+	record rec { cls, file, fcn, line, error, sev };
 
 	if (fmt && *fmt) {
 		char buf[BUFLEN + 1];

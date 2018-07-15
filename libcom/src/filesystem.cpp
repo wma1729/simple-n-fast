@@ -1,11 +1,11 @@
 #include "common.h"
 #include "filesystem.h"
 #include "error.h"
-#include "log.h"
 #include "i18n.h"
 #include <ctype.h>
 
 #if !defined(_WIN32)
+#include <sys/stat.h>
 #include <pwd.h>
 #endif
 

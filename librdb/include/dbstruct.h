@@ -2,7 +2,7 @@
 #define _SNF_RDB_DBSTRUCT_H_
 
 #include "common.h"
-#include "log.h"
+#include "logmgr.h"
 
 #ifndef KEY_PAGE_HDR_SIZE
 #define KEY_PAGE_HDR_SIZE   64
@@ -136,21 +136,6 @@ SetKeyInfo(key_info_t *ki, const char *key, int klen, int hash)
 	ki->ki_lkp = 0;
 	ki->ki_lkpoff = -1L;
 	ki->ki_kidx = -1;
-}
-
-inline void
-ValidateKeyInfo(const key_info_t *ki, const char *file, int line)
-{
-	Assert((ki->ki_kpn != 0), file, line,
-		"found the key but key page node is not set");
-	Assert((ki->ki_kpn->kpn_kp != 0), file, line,
-		"found the key but key page is not set");
-	Assert((ki->ki_kpn->kpn_kpoff != -1), file, line,
-		"found the key but key page offset is not set");
-	Assert((ki->ki_kidx != -1), file, line,
-		"found the key but key index in page is not set");
-	Assert((ki->ki_voff != -1), file, line,
-		"found the key but value page offset is not set");
 }
 
 /* 256 bytes value/data page */

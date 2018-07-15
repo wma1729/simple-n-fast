@@ -118,7 +118,7 @@ public:
 		  index(i),
 		  exclusive(excl)
 	{
-		Assert((hashTable != 0), __FILE__, __LINE__,
+		ASSERT((hashTable != 0), "HTLockGuard", 0,
 			"invalid hash table");
 
 		if (exclusive)

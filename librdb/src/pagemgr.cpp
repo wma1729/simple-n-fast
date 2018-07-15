@@ -4,7 +4,7 @@
 
 #include "pagemgr.h"
 #include "error.h"
-#include "log.h"
+#include "logmgr.h"
 
 /**
  * Get the physical memory size in bytes.
@@ -29,8 +29,6 @@ GetMemorySize()
 PageMgr::PageMgr(int pageSize, int memUsage)
 	: pageSize(pageSize)
 {
-	const char *caller = "PageMgr::PageMgr";
-
 	pool = 0;
 	poolSize = (GetMemorySize() * memUsage) / 100;
 
@@ -46,14 +44,18 @@ PageMgr::PageMgr(int pageSize, int memUsage)
 		}
 	} while (pool == 0);
 
-	Assert((pool != 0), __FILE__, __LINE__, errno,
+	ASSERT((pool != 0), nullptr, errno,
 		"unable to allocate memory (%" PRId64 ") for page pool", poolSize);
 
 	numOfPages = (int) (poolSize / pageSize);
 	numOfFreePages = numOfPages;
 
-	Log(DBG, caller, "poolSize = %" PRId64, poolSize);
-	Log(DBG, caller, "numOfPages = %d", numOfPages);
+	DEBUG_STRM("PageMgr")
+		<< "poolSize = " << poolSize
+		<< snf::log::record::endl;
+	DEBUG_STRM("PageMgr")
+		<< "numOfPages = " << numOfPages
+		<< snf::log::record::endl;
 
 #if !defined(_WIN32)
 	posix_madvise(pool, poolSize, MADV_WILLNEED);
@@ -92,12 +94,12 @@ PageMgr::free(void *addr)
 	char *caddr = (char *)addr;
 	ptrdiff_t diff;
 
-	Assert(((caddr >= pool) && (caddr < (pool + poolSize))), __FILE__, __LINE__,
+	ASSERT(((caddr >= pool) && (caddr < (pool + poolSize))), "PageMgr", 0,
 		"out-of-bound memory address (0x%x), range [0x%x, 0x%x)",
 		caddr, pool, pool + poolSize);
 
 	diff = caddr - pool;
-	Assert(((diff % pageSize) == 0), __FILE__, __LINE__,
+	ASSERT(((diff % pageSize) == 0), "PageMgr", 0,
 		"address (%p) is not correctly aligned",
 		addr);
 

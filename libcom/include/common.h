@@ -45,6 +45,16 @@
 
 #define is_set(V, F)    (((V) & (F)) == (F))
 
+#define STUPID_WINDOWS(ARG)     ARG
+
+#define VA_ARGS_CNT_(_1, _2, _3, _4, _5, N, ...) N
+#define VA_ARGS_CNT(...)            STUPID_WINDOWS(VA_ARGS_CNT_(__VA_ARGS__, 5, 4, 3, 2, 1))
+
+#define EXPAND_MACRO_(MACRO, NARGS) MACRO ## NARGS
+#define EXPAND_MACRO(MACRO, NARGS)  EXPAND_MACRO_(MACRO, NARGS)
+
+#define CALL_MACRO(MACRO, ...)      EXPAND_MACRO(MACRO, VA_ARGS_CNT(__VA_ARGS__))(__VA_ARGS__)
+
 namespace snf {
 
 template<typename T, typename S>

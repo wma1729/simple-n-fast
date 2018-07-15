@@ -7,7 +7,7 @@ include ..\Makefile.constants
 DOBJS = $(P)\jdaemonizer.obj
 ROBJS = $(P)\accountrights.obj
 
-INCL = $(INCLCOM)
+INCL = $(INCLCOM) $(INCLLOG)
 JVM_INCL = /I"$(JAVA_HOME)\include" /I"$(JAVA_HOME)\include\win32"
 
 all: platform $(P)\jdaemonizer.exe $(P)\accountrights.exe
@@ -15,10 +15,10 @@ all: platform $(P)\jdaemonizer.exe $(P)\accountrights.exe
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\jdaemonizer.exe: $(DOBJS) $(LIBCOM)
+$(P)\jdaemonizer.exe: $(DOBJS) $(LIBLOG) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Advapi32.lib /Fe$@
 
-$(P)\accountrights.exe: $(ROBJS) $(LIBCOM)
+$(P)\accountrights.exe: $(ROBJS) $(LIBLOG) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Advapi32.lib /Fe$@
 
 $(DOBJS): jdaemonizer.cpp

@@ -1,5 +1,5 @@
 #include "fdpmgr.h"
-#include "log.h"
+#include "logmgr.h"
 #include "error.h"
 
 /*
@@ -18,19 +18,21 @@ FreeDiskPageMgr::addOffsetToFile(int64_t offset)
 	int retval = E_ok;
 
 	if (file) {
-		const char  *caller = "FreeDiskPageMgr::addOffsetToFile";
-		int         oserr = 0;
-		int         toWrite = int(sizeof(offset));
-		int         bWritten = 0;
+		int     oserr = 0;
+		int     toWrite = int(sizeof(offset));
+		int     bWritten = 0;
 
 		retval = file->write(&offset, toWrite, &bWritten, &oserr);
 		if (retval != E_ok) {
-			Log(ERR, caller, oserr,
-				"failed to write free disk page offset (%" PRId64 ") to file %s",
-				offset, file->name());
+			ERROR_STRM("FreeDiskPageMgr", oserr)
+				<< "failed to write free disk page offset " << offset
+				<< " to file " << file->name()
+				<< snf::log::record::endl;
 		} else if (bWritten != toWrite) {
-			Log(ERR, caller, "expected to write %d bytes, written only %d bytes",
-				toWrite, bWritten);
+			ERROR_STRM("FreeDiskPageMgr")
+				<< "expected to write " << toWrite
+				<< " bytes, written only " << bWritten << " bytes"
+				<< snf::log::record::endl;
 			retval = E_write_failed;
 		} else {
 			fsize += sizeof(offset);
@@ -53,15 +55,16 @@ FreeDiskPageMgr::removeOffsetFromFile()
 	int retval = 0;
 
 	if (file) {
-		const char  *caller = "FreeDiskPageMgr::removeOffsetFromFile";
-		int         oserr = 0;
+		int oserr = 0;
 
 		fsize -= sizeof(int64_t);
 		retval = file->truncate(fsize, &oserr);
 		if (retval != E_ok) {
 			fsize += sizeof(int64_t);
-			Log(ERR, caller, "failed to remove last free disk page offset from file %s",
-				file->name());
+			ERROR_STRM("FreeDiskPageMgr", oserr)
+				<< "failed to remove last free disk page offset from file "
+				<< file->name()
+				<< snf::log::record::endl;
 		}
 	}
 
@@ -84,7 +87,6 @@ FreeDiskPageMgr::init()
 	int retval = E_ok;
 
 	if (file) {
-		const char  *caller = "FreeDiskPageMgr::init";
 		int         oserr = 0;
 		int64_t     offset = 0L;
 		int         toRead = int(sizeof(offset));
@@ -92,23 +94,26 @@ FreeDiskPageMgr::init()
 
 		retval = file->seek(0L, &oserr);
 		if (retval != E_ok) {
-			Log(ERR, caller, oserr,
-				"unable to seek to the start of the file %s",
-				file->name());
+			ERROR_STRM("FreeDiskPageMgr", oserr)
+				<< "unable to seek to the start of the file "
+				<< file->name()
+				<< snf::log::record::endl;
 		} else {
 			do {
 				retval = file->read(&offset, toRead, &bRead, &oserr);
 				if (retval != E_ok) {
-					Log(ERR, caller, oserr,
-						"failed to read offset from file %s at offset %" PRId64,
-						file->name(), fsize);
+					ERROR_STRM("FreeDiskPageMgr", oserr)
+						<< "failed to read offset from file " << file->name()
+						<< " at offset " << fsize
+						<< snf::log::record::endl;
 				} else if (bRead == 0) {
 					retval = E_eof_detected;
 					break;
 				} else if (bRead != toRead) {
-					Log(ERR, caller,
-						"expected to read %d bytes, read only %d bytes",
-						toRead, bRead);
+					ERROR_STRM("FreeDiskPageMgr")
+						<< "expected to read " << toRead
+						<< " bytes, read only " << bRead << " bytes"
+						<< snf::log::record::endl;
 					retval = E_write_failed;
 				} else {
 					fsize += bRead;
@@ -140,7 +145,7 @@ FreeDiskPageMgr::get()
 {
 	std::lock_guard<std::mutex> guard(mutex);
 
-	Assert(!nextFreeOffset.empty(), __FILE__, __LINE__,
+	ASSERT(!nextFreeOffset.empty(), "FreeDiskPageMgr", 0,
 		"empty offset stack");
 
 	int64_t next = nextFreeOffset.top();
@@ -181,9 +186,9 @@ FreeDiskPageMgr::get()
 int
 FreeDiskPageMgr::free(int64_t offset)
 {
-	Assert((offset >= 0), __FILE__, __LINE__,
+	ASSERT((offset >= 0), "FreeDiskPageMgr", 0,
 		"invalid offset (%" PRId64 ") specified", offset);
-	Assert(((offset % pageSize) == 0), __FILE__, __LINE__,
+	ASSERT(((offset % pageSize) == 0), "FreeDiskPageMgr", 0,
 		"offset (%" PRId64 ") is not correctly aligned", offset);
 
 	std::lock_guard<std::mutex> guard(mutex);
@@ -209,13 +214,14 @@ int
 FreeDiskPageMgr::reset()
 {
 	if (file) {
-		const char  *caller = "FreeDiskPageMgr::reset";
-		int         oserr = 0;
+		int oserr = 0;
 
 		int retval = file->truncate(0L, &oserr);
 		if (retval != E_ok) {
-			Log(ERR, caller, oserr, "failed to truncate file %s to size 0",
-				file->name());
+			ERROR_STRM("FreeDiskPageMgr", oserr)
+				<< "failed to truncate file " << file->name()
+				<< " to size 0"
+				<< snf::log::record::endl;
 			return retval;
 		}
 		fsize = 0;

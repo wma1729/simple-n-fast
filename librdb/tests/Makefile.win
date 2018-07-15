@@ -6,7 +6,7 @@ include ../../Makefile.constants
 
 OBJS =  $(P)\rdbts.obj
 
-INCL = $(INCLCOM) $(INCLRDB) $(INCLTF)
+INCL = $(INCLCOM) $(INCLLOG) $(INCLRDB) $(INCLTF)
 
 PDB = $(P)\rdbts.pdb
 
@@ -15,7 +15,7 @@ all: platform $(P)\rdbts.exe
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\rdbts.exe: $(OBJS) $(LIBCOM) $(LIBRDB)
+$(P)\rdbts.exe: $(OBJS) $(LIBRDB) $(LIBLOG) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
 {.}.cpp{$(P)}.obj:

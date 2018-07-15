@@ -3,7 +3,7 @@
 #endif
 
 #include "hashtable.h"
-#include "log.h"
+#include "logmgr.h"
 #include "error.h"
 
 /*
@@ -14,7 +14,7 @@
 void
 HashTable::initHashEntry(hash_entry_t *hent)
 {
-	Assert((hent != 0), __FILE__, __LINE__,
+	ASSERT((hent != 0), "HashTable", 0,
 		"invalid hash entry");
 
 	hent->offset = -1L;
@@ -33,13 +33,13 @@ HashTable::initHashEntry(hash_entry_t *hent)
 int
 HashTable::allocate(int size)
 {
-	const char	*who = "HashTable::allocate";
-	size_t		len = size * sizeof(hash_entry_t);
+	size_t	len = size * sizeof(hash_entry_t);
 
 	ht = (hash_entry_t *)malloc(len);
 	if (ht == 0) {
-		Log(ERR, who, errno,
-			"failed to allocate memory for hash table");
+		ERROR_STRM("HashTable", errno)
+			<< "failed to allocate memory for hash table"
+			<< snf::log::record::endl;
 		return E_no_memory;
 	} else {
 #if !defined(_WIN32)
@@ -62,7 +62,7 @@ HashTable::allocate(int size)
 void
 HashTable::rdlock(int index)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -74,12 +74,12 @@ HashTable::rdlock(int index)
 		hent->rwlock = rwlockPool->get();
 	}
 
-	Assert((hent->rwlock != 0), __FILE__, __LINE__,
+	ASSERT((hent->rwlock != 0), "HashTable", 0,
 		"failed to get read write lock");
 
 	int error = 0;
 	int r = hent->rwlock->rdlock(&error);
-	Assert((r == E_ok), __FILE__, __LINE__, error,
+	ASSERT((r == E_ok), "HashTable", error,
 		"failed to get read lock on %d", index);
 }
 
@@ -92,7 +92,7 @@ HashTable::rdlock(int index)
 void
 HashTable::rdunlock(int index)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -118,7 +118,7 @@ HashTable::rdunlock(int index)
 void
 HashTable::wrlock(int index)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -130,12 +130,12 @@ HashTable::wrlock(int index)
 		hent->rwlock = rwlockPool->get();
 	}
 
-	Assert((hent->rwlock != 0), __FILE__, __LINE__,
+	ASSERT((hent->rwlock != 0), "HashTable", 0,
 		"failed to get read write lock");
 
 	int error = 0;
 	int r = hent->rwlock->wrlock(&error);
-	Assert((r == E_ok), __FILE__, __LINE__, error,
+	ASSERT((r == E_ok), "HashTable", error,
 		"failed to get write lock on %d", index);
 }
 
@@ -148,7 +148,7 @@ HashTable::wrlock(int index)
 void
 HashTable::wrunlock(int index)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -174,7 +174,7 @@ HashTable::wrunlock(int index)
 int64_t
 HashTable::getOffset(int index)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -191,7 +191,7 @@ HashTable::getOffset(int index)
 void
 HashTable::setOffset(int index, int64_t offset)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -211,7 +211,7 @@ HashTable::setOffset(int index, int64_t offset)
 int
 HashTable::addKeyPageNode(int index, key_page_node_t *kpn)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -241,13 +241,13 @@ HashTable::addKeyPageNode(int index, key_page_node_t *kpn)
 void
 HashTable::removeKeyPageNode(int index, key_page_node_t *kpn)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
 	hash_entry_t *hent = ht + index;
 
-	Assert(((hent->head != 0) && (hent->tail != 0)), __FILE__, __LINE__,
+	ASSERT(((hent->head != 0) && (hent->tail != 0)), "HashTable", 0,
 		"key page list is empty");
 
 	if (kpn->kpn_prev) {
@@ -278,7 +278,7 @@ HashTable::removeKeyPageNode(int index, key_page_node_t *kpn)
 key_page_node_t *
 HashTable::getKeyPageNodeList(int index)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 
@@ -294,7 +294,7 @@ HashTable::getKeyPageNodeList(int index)
 void
 HashTable::freeKeyPageNodeList(int index)
 {
-	Assert(((index >= 0) && (index < htsize)), __FILE__, __LINE__,
+	ASSERT(((index >= 0) && (index < htsize)), "HashTable", 0,
 		"out-of-bound hash table index (%d), range [%d, %d)",
 		index, 0, htsize);
 

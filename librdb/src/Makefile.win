@@ -17,7 +17,7 @@ OBJS =  $(P)\cache.obj \
 
 DRVROBJS = $(P)\rdbdrvr.obj
 
-INCL = $(INCLCOM) $(INCLRDB)
+INCL = $(INCLCOM) $(INCLLOG) $(INCLRDB)
 
 LIBRDBPDB = $(P)\librdb.pdb
 LIBRDBDRVRPDB = $(P)\rdbdrvr.pdb
@@ -30,7 +30,7 @@ platform:
 $(P)\rdb.lib: $(OBJS)
 	$(AR) $(ARFLAGS) $** /OUT:$@
 
-$(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBCOM)
+$(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBLOG) $(LIBCOM)
 	$(CC) $(DBG) /Fd$(LIBRDBDRVRPDB) $** /Fe$@
 
 $(OBJS): $(*B).cpp

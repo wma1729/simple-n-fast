@@ -1,8 +1,8 @@
 #include "rdb.h"
-#include "log.h"
+#include "logmgr.h"
+#include "flogger.h"
 
-extern Logger *TheLogger;
-extern bool   TheVerbosity;
+static bool   Verbosity;
 
 static int
 usage(const char *prog)
@@ -145,14 +145,22 @@ main(int argc, const char **argv)
 				return usage(prog);
 			}
 		} else if (strcmp("-v", argv[i]) == 0) {
-			TheVerbosity = true;
+			Verbosity = true;
 		} else {
 			return usage(prog);
 		}
 	}
 
 	if (!logPath.empty()) {
-		TheLogger = DBG_NEW FileLogger(logPath.c_str(), TheVerbosity);
+		snf::log::severity sev = snf::log::severity::info;
+		if (Verbosity)
+			sev = snf::log::severity::trace;
+
+		snf::log::file_logger *flog = DBG_NEW snf::log::file_logger {
+						logPath,
+						sev };
+		flog->make_path(true);
+		snf::log::manager::instance().add_logger(flog);
 	}
 
 	if ((cmd == NIL) && !rebuild) {

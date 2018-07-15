@@ -128,7 +128,7 @@ public:
 	file_logger(
 		const std::string &path,
 		severity sev,
-		const std::string &fmt = "%D %T %p.%t %s [%C] [%F:%c.%f.%l] %m")
+		const std::string &fmt = "%D %T %p.%t [%s] [%C] [%F:%c.%f.%l] %m")
 		: logger(sev, fmt)
 		, m_path(path)
 	{

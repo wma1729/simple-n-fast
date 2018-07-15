@@ -8,14 +8,14 @@ OBJS =  ${P}/rdbts.o
 
 LIBS = -lpthread
 
-INCL = ${INCLCOM} ${INCLRDB} ${INCLTF}
+INCL = ${INCLCOM} ${INCLLOG} ${INCLRDB} ${INCLTF}
 
 all: platform ${P}/rdbts
 
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/rdbts: ${OBJS} ${LIBRDB} ${LIBCOM}
+${P}/rdbts: ${OBJS} ${LIBRDB} ${LIBLOG} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp

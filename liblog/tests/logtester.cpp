@@ -143,19 +143,19 @@ main(int argc, const char **argv)
 	snf::log::manager::instance().add_logger(flog);
 
 	for (int i = 0; i < num; ++i) {
-		ERROR_STRM(nullptr, nullptr)
+		ERROR_STRM(nullptr)
 			<< i << ": error message"
 			<< snf::log::record::endl;
-		WARNING_STRM(nullptr, nullptr)
+		WARNING_STRM(nullptr)
 			<< i << ": warning message"
 			<< snf::log::record::endl;
-		INFO_STRM(nullptr, nullptr)
+		INFO_STRM(nullptr)
 			<< i << ": info message"
 			<< snf::log::record::endl;
-		DEBUG_STRM(nullptr, nullptr)
+		DEBUG_STRM(nullptr)
 			<< i << ": debug message"
 			<< snf::log::record::endl;
-		TRACE_STRM(nullptr, nullptr)
+		TRACE_STRM(nullptr)
 			<< i << ": trace message"
 			<< snf::log::record::endl;
 		std::this_thread::sleep_for(std::chrono::seconds { interval });

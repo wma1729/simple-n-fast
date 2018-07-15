@@ -10,13 +10,13 @@ static SERVICE_STATUS           ServiceStatus;
 static VOID
 UpdateScm(DWORD state, DWORD status)
 {
-	const char  *caller = "UpdateScm";
-
 	ServiceStatus.dwCurrentState = state;
 	ServiceStatus.dwWin32ExitCode = status;
 
 	if (!SetServiceStatus(ServiceStatusHandle, &ServiceStatus)) {
-		Log(ERR, caller, GetLastError(), "SetServiceStatus() failed");
+		ERROR_STRM(nullptr, snf::system_error())
+			<< "SetServiceStatus() failed"
+			<< snf::log::record::endl;
 	}
 
 	return;
@@ -55,10 +55,12 @@ ServiceCtrlHandler(DWORD status)
 static VOID WINAPI
 SeviceMain(DWORD argc, LPTSTR *argv)
 {
-	const char  *caller = "ServiceMain";
-	DWORD       status;
+	DWORD   status;
 
-	Log(INF, caller, "starting service");
+	INFO_STRM(nullptr)
+		<< "starting service"
+		<< snf::log::record::endl;
+
 	LogDaemonArgs();
 
 	ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
@@ -73,7 +75,9 @@ SeviceMain(DWORD argc, LPTSTR *argv)
 							TheDaemonArgs.name.c_str(),
 							ServiceCtrlHandler);
 	if ((SERVICE_STATUS_HANDLE)0 == ServiceStatusHandle) {
-		Log(ERR, caller, GetLastError(), "RegisterServiceCtrlHandler() failed");
+		ERROR_STRM(nullptr, snf::system_error())
+			<< "RegisterServiceCtrlHandler() failed"
+			<< snf::log::record::endl;
 		return;
 	}
 
@@ -83,15 +87,19 @@ SeviceMain(DWORD argc, LPTSTR *argv)
 		/* update service control manager */
 		UpdateScm(SERVICE_RUNNING, 0);
 
-		Log(INF, caller, "service running");
+		INFO_STRM(nullptr)
+			<< "service running"
+			<< snf::log::record::endl;
 
 		/* wait for the stop event */
 		status = WaitForSingleObject(ServiceStopEvent, INFINITE);
 		if (status != WAIT_OBJECT_0) {
-			Log(ERR, caller, "WaitForSingleObject() failed with 0x%x", status);
+			LOG_ERROR(nullptr, "WaitForSingleObject() failed with 0x%x", status);
 		}
 	} else {
-		Log(ERR, caller, "failed to call Java code");
+		ERROR_STRM(nullptr)
+			<< "failed to call Java code"
+			<< snf::log::record::endl;
 	}
 
 	CloseHandle(ServiceStopEvent);
@@ -99,15 +107,17 @@ SeviceMain(DWORD argc, LPTSTR *argv)
 
 	if (TheJVM) {
 		TheJVM->DestroyJavaVM();
-		Log(DBG, caller, "JVM destroyed");
+		DEBUG_STRM(nullptr)
+			<< "JVM destroyed"
+			<< snf::log::record::endl;
 	}
 
 	/* update service control manager */
 	UpdateScm(SERVICE_STOPPED, status);
 
-	Log(INF, caller, "service stopped");
-
-	delete TheLogger;
+	INFO_STRM(nullptr)
+		<< "service stopped"
+		<< snf::log::record::endl;
 
 	return;
 }
@@ -120,7 +130,6 @@ SeviceMain(DWORD argc, LPTSTR *argv)
 static int
 DaemonStop(void)
 {
-	const char  *caller = "DaemonStop";
 	int         retval = 0;
 	SC_HANDLE   hscm;
 	SC_HANDLE   hsvc;
@@ -134,30 +143,36 @@ DaemonStop(void)
 			if (QueryServiceStatus(hsvc, &svcStat)) {
 				if ((svcStat.dwCurrentState == SERVICE_STOP_PENDING) ||
 					(svcStat.dwCurrentState == SERVICE_STOPPED)) {
-					Log(DBG, caller, "already stopped or stopping");
+					DEBUG_STRM(nullptr)
+						<< "already stopped or stopping"
+						<< snf::log::record::endl;
 				} else {
 					if (!ControlService(hsvc, SERVICE_CONTROL_STOP, &svcStat)) {
-						Log(DBG, caller, GetLastError(),
-							"ControlService() failed");
+						ERROR_STRM(nullptr, snf::system_error())
+							<< "ControlService() failed"
+							<< snf::log::record::endl;
 						retval = 1;
 					}
 				}
 			} else {
-				Log(ERR, caller, GetLastError(),
-					"QueryServiceStatus() failed");
+				ERROR_STRM(nullptr, snf::system_error())
+					<< "QueryServiceStatus() failed"
+					<< snf::log::record::endl;
 				retval = 1;
 			}
 			CloseServiceHandle(hsvc);
 		} else {
-			Log(ERR, caller, GetLastError(),
-				"OpenService() failed");
+			ERROR_STRM(nullptr, snf::system_error())
+				<< "OpenService() failed"
+				<< snf::log::record::endl;
 			retval = 1;
 		}
 
 		CloseServiceHandle(hscm);
 	} else {
-		Log(ERR, caller, GetLastError(),
-			"OpenSCManager() failed");
+		ERROR_STRM(nullptr, snf::system_error())
+			<< "OpenSCManager() failed"
+			<< snf::log::record::endl;
 		retval = 1;
 	}
 
@@ -176,20 +191,19 @@ DaemonStop(void)
 int
 Daemonize(void)
 {
-	const char  *caller = "Daemonize";
-	int         len;
-	char        stopEvent[MAX_PATH + 1];
+	int     len;
+	char    stopEvent[MAX_PATH + 1];
 
-	FileLogger *fileLogger = DBG_NEW FileLogger(TheDaemonArgs.logPath.c_str(), TheVerbosity);
-	fileLogger->makeLogPath();
-	TheLogger = fileLogger;
+	AddFileLogger();
 
 	len = snprintf(stopEvent, MAX_PATH, "Global\\TerminateEvent_%s", TheDaemonArgs.name.c_str());
 	stopEvent[len] = '\0';
 
 	ServiceStopEvent = CreateEvent(NULL, FALSE, FALSE, stopEvent);
 	if (ServiceStopEvent == 0) {
-		Log(ERR, caller, GetLastError(), "CreateEvent(%s) failed", stopEvent);
+		ERROR_STRM(nullptr, snf::system_error())
+			<< "CreateEvent(" << stopEvent << ") failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
@@ -200,7 +214,9 @@ Daemonize(void)
 	};
 
 	if (!StartServiceCtrlDispatcher(dispatchTable)) {
-		Log(ERR, caller, GetLastError(), "StartServiceCtrlDispatcher() failed");
+		ERROR_STRM(nullptr, snf::system_error())
+			<< "StartServiceCtrlDispatcher() failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 

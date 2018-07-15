@@ -65,7 +65,6 @@ DaemonSignalHandler(void *)
 static int
 DaemonAlreadyRunning(bool *running)
 {
-	const char      *caller = "DaemonAlreadyRunning";
 	int             retval = 0;
 	int             fd;
 	struct flock    fl;
@@ -74,8 +73,9 @@ DaemonAlreadyRunning(bool *running)
 
 	fd = open(TheDaemonArgs.pidPath.c_str(), O_CREAT | O_RDWR, 0644);
 	if (fd < 0) {
-		Log(ERR, caller, errno, "open(%s) failed",
-			TheDaemonArgs.pidPath.c_str());
+		ERROR_STRM(nullptr, errno)
+			<< "open(" << TheDaemonArgs.pidPath << ") failed"
+			<< snf::log::record::endl;
 		return 1;
 	} else {
 		fl.l_type = F_WRLCK;
@@ -88,8 +88,9 @@ DaemonAlreadyRunning(bool *running)
 				*running = true;
 				retval = 0;
 			} else {
-				Log(ERR, caller, errno, "lock(%s) failed",
-					TheDaemonArgs.pidPath.c_str());
+				ERROR_STRM(nullptr, errno)
+					<< "lock(" << TheDaemonArgs.pidPath << ") failed"
+					<< snf::log::record::endl;
 				retval = 1;
 			}
 			close(fd);
@@ -97,14 +98,18 @@ DaemonAlreadyRunning(bool *running)
 			char	buf[32];
 
 			if (ftruncate(fd, 0) < 0) {
-				Log(ERR, caller, errno, "ftruncate() failed");
+				ERROR_STRM(nullptr, errno)
+					<< "ftruncate(" << TheDaemonArgs.pidPath << ") failed"
+					<< snf::log::record::endl;
 				retval = 1;
 			} else {
 				int nbytes = snprintf(buf, sizeof(buf) - 1, "%d", getpid());
 				buf[nbytes] = '\0';			
 
 				if (write(fd, buf, nbytes) < 0) {
-					Log(ERR, caller, errno, "write() failed");
+					ERROR_STRM(nullptr, errno)
+						<< "write(" << TheDaemonArgs.pidPath << ") failed"
+						<< snf::log::record::endl;
 				}
 			}
 
@@ -124,32 +129,33 @@ DaemonAlreadyRunning(bool *running)
 static int
 DaemonStop(void)
 {
-	const char  *caller = "DaemonStop";
-	int         retval = 0;
-	FILE        *fp = 0;
-	int         i, pid;
+	int     retval = 0;
+	FILE    *fp = 0;
+	int     i, pid;
 
 	fp = fopen(TheDaemonArgs.pidPath.c_str(), "r");
 	if (fp) {
 		i = fscanf(fp, "%d", &pid);
 		if (i != 1) {
-			Log(ERR, caller, errno,
-				"unable to read pid from file %s",
-				TheDaemonArgs.pidPath.c_str());
+			ERROR_STRM(nullptr, errno)
+				<< "unable to read pid from file "
+				<< TheDaemonArgs.pidPath
+				<< snf::log::record::endl;
 			retval = 1;
 		} else {
 			if (kill(pid, SIGTERM) < 0) {
-				Log(ERR, caller, errno,
-					"unable to kill process %d", pid);
+				ERROR_STRM(nullptr, errno)
+					<< "unable to kill process " << pid
+					<< snf::log::record::endl;
 				retval = 1;
 			}
 		}
 
 		fclose(fp);
 	} else {
-		Log(ERR, caller, errno,
-			"unable to open file %s",
-			TheDaemonArgs.pidPath.c_str());
+		ERROR_STRM(nullptr, errno)
+			<< "unable to open file " << TheDaemonArgs.pidPath
+			<< snf::log::record::endl;
 		retval = 1;
 	}
 
@@ -175,7 +181,6 @@ DaemonStop(void)
 static int
 Daemonize(void)
 {
-	const char      *caller = "Daemonize";
 	int             retval = 0;
 	int             fd = -1;
 	bool            alreadyRunning;
@@ -187,7 +192,9 @@ Daemonize(void)
 
 	pid = fork();
 	if (pid < 0) {
-		Log(ERR, caller, errno, "fork() failed");
+		ERROR_STRM(nullptr, errno)
+			<< "fork() failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
@@ -195,18 +202,23 @@ Daemonize(void)
 		exit(0);
 
 	if (setsid() < 0) {
-		Log(ERR, caller, errno, "setsid() failed");
+		ERROR_STRM(nullptr, errno)
+			<< "setsid() failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
 	if (chdir(TheDaemonArgs.home.c_str()) < 0) {
-		Log(ERR, caller, errno, "chdir(%s) failed",
-			TheDaemonArgs.home.c_str());
+		ERROR_STRM(nullptr, errno)
+			<< "chdir(" << TheDaemonArgs.home << ") failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
 	if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-		Log(ERR, caller, errno, "getrlimit() failed");
+		ERROR_STRM(nullptr, errno)
+			<< "getrlimit() failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
@@ -223,19 +235,23 @@ Daemonize(void)
 	dup2(fd, 1);
 	dup2(fd, 2);
 
-	FileLogger *fileLogger = DBG_NEW FileLogger(TheDaemonArgs.logPath.c_str(), TheVerbosity);
-	fileLogger->makeLogPath();
-	TheLogger = fileLogger;
+	AddFileLogger();
 
-	Log(INF, caller, "starting daemon");
+	INFO_STRM(nullptr)
+		<< "starting daemon"
+		<< snf::log::record::endl;
+
 	LogDaemonArgs();
 
 	retval = DaemonAlreadyRunning(&alreadyRunning);
 	if (retval != 0) {
 		return retval;
 	} else if (alreadyRunning) {
-		Log(WRN, caller, "another instance of %s already running",
-			TheDaemonArgs.name.c_str());
+		WARNING_STRM(nullptr)
+			<< "another instance of "
+			<< TheDaemonArgs.name
+			<< " is already running"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
@@ -246,37 +262,50 @@ Daemonize(void)
 
 	retval = pthread_sigmask(SIG_BLOCK, &DaemonSignalSet, NULL);
 	if (retval != 0) {
-		Log(ERR, caller, retval, "pthread_sigmask() failed");
+		ERROR_STRM(nullptr, retval)
+			<< "pthread_sigmask() failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
 	retval = pthread_create(&tid, 0, DaemonSignalHandler, 0);
 	if (retval != 0) {
-		Log(ERR, caller, retval, "pthread_create() failed");
+		ERROR_STRM(nullptr, retval)
+			<< "pthread_create() failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
 	if (StartDaemon() == JNI_OK) {
-		Log(INF, caller, "daemon running");
+		INFO_STRM(nullptr)
+			<< "daemon running"
+			<< snf::log::record::endl;
+
 	} else {
-		Log(ERR, caller, "failed to call Java code");
+		ERROR_STRM(nullptr)
+			<< "failed to call Java code"
+			<< snf::log::record::endl;
 		pthread_kill(tid, SIGTERM);
 	}
 
 	retval = pthread_join(tid, 0);
 	if (retval != 0) {
-		Log(ERR, caller, retval, "pthread_join() failed");
+		ERROR_STRM(nullptr, retval)
+			<< "pthread_join() failed"
+			<< snf::log::record::endl;
 		return 1;
 	}
 
 	if (TheJVM) {
 		TheJVM->DestroyJavaVM();
-		Log(DBG, caller, "JVM destroyed");
+		DEBUG_STRM(nullptr)
+			<< "JVM destroyed"
+			<< snf::log::record::endl;
 	}
 
-	Log(INF, caller, "daemon stopped");
-
-	delete TheLogger;
+	INFO_STRM(nullptr)
+		<< "daemon stopped"
+		<< snf::log::record::endl;
 
 	return 0;
 }

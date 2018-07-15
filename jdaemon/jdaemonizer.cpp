@@ -4,7 +4,8 @@
 #include "config.h"
 #include "dll.h"
 #include "filesystem.h"
-#include "log.h"
+#include "logmgr.h"
+#include "flogger.h"
 #include "error.h"
 
 struct DaemonArgs {
@@ -20,9 +21,7 @@ struct DaemonArgs {
 	std::string             stopMethod;     // stop method in stop class
 };
 
-extern Logger       *TheLogger;
-extern bool         TheVerbosity;
-
+static bool         Verbosity;
 static DaemonArgs   TheDaemonArgs;
 static JavaVM       *TheJVM;
 
@@ -34,24 +33,59 @@ typedef jint (JNICALL *create_jvm_t)(JavaVM **, void**, void *);
 static void
 LogDaemonArgs(void)
 {
-	const char  *caller = "DaemonArgs";
-	int         i = 0;
+	INFO_STRM(nullptr)
+		<< "name = " << TheDaemonArgs.name
+		<< snf::log::record::endl;
+	INFO_STRM(nullptr)
+		<< "home = " << TheDaemonArgs.home
+		<< snf::log::record::endl;
+	INFO_STRM(nullptr)
+		<< "pidPath = " << TheDaemonArgs.pidPath
+		<< snf::log::record::endl;
+	INFO_STRM(nullptr)
+		<< "logPath = " << TheDaemonArgs.logPath
+		<< snf::log::record::endl;
+	INFO_STRM(nullptr)
+		<< "jvmLibPath = " << TheDaemonArgs.jvmLibPath
+		<< snf::log::record::endl;
 
-	Log(INF, caller, "name = %s", TheDaemonArgs.name.c_str());
-	Log(INF, caller, "home = %s", TheDaemonArgs.home.c_str());
-	Log(INF, caller, "pidPath = %s", TheDaemonArgs.pidPath.c_str());
-	Log(INF, caller, "logPath = %s", TheDaemonArgs.logPath.c_str());
-	Log(INF, caller, "jvmLibPath = %s", TheDaemonArgs.jvmLibPath.c_str());
-
+	int i = 0;
 	std::list<std::string>::const_iterator I;
 	for (I = TheDaemonArgs.jvmOptions.begin(); I != TheDaemonArgs.jvmOptions.end(); ++I) {
-		Log(INF, caller, "jvmOptions[%d] = %s", i++, I->c_str());
+		INFO_STRM(nullptr)
+			<< "jvmOptions[" << i++ << "] = " << *I
+			<< snf::log::record::endl;
 	}
 
-	Log(INF, caller, "startClass = %s", TheDaemonArgs.startClass.c_str());
-	Log(INF, caller, "startMethod = %s", TheDaemonArgs.startMethod.c_str());
-	Log(INF, caller, "stopClass = %s", TheDaemonArgs.stopClass.c_str());
-	Log(INF, caller, "stopMethod = %s", TheDaemonArgs.stopMethod.c_str());
+	INFO_STRM(nullptr)
+		<< "startClass = " << TheDaemonArgs.startClass
+		<< snf::log::record::endl;
+	INFO_STRM(nullptr)
+		<< "startMethod = " << TheDaemonArgs.startMethod
+		<< snf::log::record::endl;
+	INFO_STRM(nullptr)
+		<< "stopClass = " << TheDaemonArgs.stopClass
+		<< snf::log::record::endl;
+	INFO_STRM(nullptr)
+		<< "stopMethod = " << TheDaemonArgs.stopMethod
+		<< snf::log::record::endl;
+}
+
+/*
+ * Add file logger.
+ */
+static void
+AddFileLogger()
+{
+	snf::log::severity sev = snf::log::severity::info;
+	if (Verbosity)
+		sev = snf::log::severity::trace;
+
+	snf::log::file_logger *flog = DBG_NEW snf::log::file_logger {
+					TheDaemonArgs.logPath,
+					sev };
+	flog->make_path(true);
+	snf::log::manager::instance().add_logger(flog);
 }
 
 /*
@@ -67,20 +101,19 @@ LogDaemonArgs(void)
 static jint
 CallJavaMethod(JNIEnv *env, const char *className, const char *methodName, const char *signature)
 {
-	const char  *caller = "CallJavaMethod";
-	jint        retval = JNI_OK;
+	jint retval = JNI_OK;
 
-	Log(DBG, caller, "calling %s.%s%s",
+	LOG_DEBUG(nullptr, "calling %s.%s%s",
 			className, methodName, signature);
 
 	jclass klass = env->FindClass(className);
 	if (klass == 0) {
-		Log(ERR, caller, "failed to find class %s", className);
+		LOG_ERROR(nullptr, "failed to find class %s", className);
 		retval = JNI_ERR;
 	} else {
 		jmethodID mid = env->GetStaticMethodID(klass, methodName, signature);
 		if (mid == 0) {
-			Log(ERR, caller, "failed to find method %s%s",
+			LOG_ERROR(nullptr, "failed to find method %s%s",
 				methodName, signature);
 			retval = JNI_ERR;
 		} else {
@@ -90,16 +123,16 @@ CallJavaMethod(JNIEnv *env, const char *className, const char *methodName, const
 
 	if (env->ExceptionOccurred()) {
 		env->ExceptionClear();
-		Log(ERR, caller, "exception occurred!");
+		LOG_ERROR(nullptr, "exception occurred!");
 		if (retval == JNI_OK)
 			retval = JNI_ERR;
 	}
 
 	if (retval != JNI_OK) {
-		Log(ERR, caller, "failed to call %s%s in class %s",
-						methodName,
-						signature,
-						className);
+		LOG_ERROR(nullptr, "failed to call %s%s in class %s",
+					methodName,
+					signature,
+					className);
 	}
 
 	return retval;
@@ -112,7 +145,6 @@ CallJavaMethod(JNIEnv *env, const char *className, const char *methodName, const
 static jint
 StartDaemon(void)
 {
-	const char      *caller = "StartDaemon";
 	int             i = 0, count;
 	jint            retval = JNI_OK;
 	JNIEnv          *env;
@@ -125,7 +157,9 @@ StartDaemon(void)
 		return JNI_ERR;
 	}
 
-	Log(DBG, caller, "successfully loaded %s", TheDaemonArgs.jvmLibPath.c_str());
+	DEBUG_STRM(nullptr)
+		<< "successfully loaded " << TheDaemonArgs.jvmLibPath
+		<< snf::log::record::endl;
 
 	count = (int) TheDaemonArgs.jvmOptions.size();
 	options = (JavaVMOption *)calloc(count, sizeof(JavaVMOption));
@@ -152,10 +186,14 @@ StartDaemon(void)
 	free(options);
 
 	if (retval != JNI_OK) {
-		Log(ERR, caller, "failed to create Java VM: %d", retval);
+		ERROR_STRM(nullptr)
+			<< "failed to create JVM: " << retval
+			<< snf::log::record::endl;
 		return retval;
 	} else {
-		Log(DBG, caller, "successfully created JVM");
+		DEBUG_STRM(nullptr)
+			<< "successfully created JVM"
+			<< snf::log::record::endl; 
 	}
 
 	/*
@@ -176,7 +214,9 @@ StartDaemon(void)
 
 	jint r = TheJVM->DetachCurrentThread();
 	if (r != JNI_OK) {
-		Log(ERR, caller, "failed to detach from the JVM");
+		ERROR_STRM(nullptr)
+			<< "failed to detach from the JVM"
+			<< snf::log::record::endl;
 		if (retval == JNI_OK)
 			retval = r;
 	}
@@ -191,16 +231,19 @@ StartDaemon(void)
 static jint
 StopDaemon(void)
 {
-	const char  *caller = "StopDaemon";
-	jint        retval = JNI_OK;
-	JNIEnv      *env;
+	jint    retval = JNI_OK;
+	JNIEnv  *env;
 
 	if (TheJVM) {
 		retval = TheJVM->AttachCurrentThread((void**)&env, NULL);
 		if (retval != JNI_OK) {
-			Log(ERR, caller, "failed to attach to the JVM");
+			ERROR_STRM(nullptr)
+				<< "failed to attach to the JVM"
+				<< snf::log::record::endl;
 		} else {
-			Log(DBG, caller, "successfully attached to the JVM");
+			DEBUG_STRM(nullptr)
+				<< "successfully attached to the JVM"
+				<< snf::log::record::endl;
 
 			/*
 			 * We are getting into the Java code. The current thread will
@@ -220,13 +263,17 @@ StopDaemon(void)
 
 			jint r = TheJVM->DetachCurrentThread();
 			if (r != JNI_OK) {
-				Log(ERR, caller, "failed to detach from the JVM");
+				ERROR_STRM(nullptr)
+					<< "failed to detach from the JVM"
+					<< snf::log::record::endl;
 				if (retval == JNI_OK)
 					retval = r;
 			}
 		}
 	} else {
-		Log(WRN, caller, "JVM not found");
+		WARNING_STRM(nullptr)
+			<< "JVM not found"
+			<< snf::log::record::endl;
 	}
 
 	return retval;
@@ -241,12 +288,14 @@ StopDaemon(void)
 static int
 Usage(const char *progName)
 {
+	std::cerr
+		<< "Usage: " << progName << " [-start|-stop|-chkconf] -config"
 #if defined(_WIN32)
-	fprintf(stderr, "Usage: %s [-start|-stop|-chkconf] -config <service_config> [-verbose]\n",
+		<< " <service_config>"
 #else
-	fprintf(stderr, "Usage: %s [-start|-stop|-chkconf] -config <daemon_config> [-verbose]\n",
+		<< " <daemon_config>"
 #endif
-		progName);
+		<< " [-verbose]" << std::endl;
 
 	return 1;
 }
@@ -261,7 +310,6 @@ main(int argc, const char **argv)
 	const char  *configName = 0;
 	const char  *ptr;
 	char        progName[MAXPATHLEN + 1];
-	char        buf[MAXPATHLEN + 1];
 
 	snf::basename(progName, MAXPATHLEN, argv[0], true);
 
@@ -275,13 +323,13 @@ main(int argc, const char **argv)
 		} else if (strcmp("-config", argv[i]) == 0) {
 			i++;
 			if (argv[i] == 0) {
-				fprintf(stderr, "%s\n", "argument to -config missing");
+				std::cerr << "argument to -config missing" << std::endl;
 				return 1;
 			} else {
 				configName = argv[i];
 			}
 		} else if (strcmp("-verbose", argv[i]) == 0) {
-			TheVerbosity = true;
+			Verbosity = true;
 		} else {
 			return Usage(progName);
 		}
@@ -290,7 +338,7 @@ main(int argc, const char **argv)
 	if (configName) {
 		config = DBG_NEW snf::config(configName);
 	} else {
-		fprintf(stderr, "%s\n", "-config option not specified");
+		std::cerr << "-config option not specified" << std::endl;
 		return 1;
 	}
 
@@ -300,8 +348,10 @@ main(int argc, const char **argv)
 	if (ptr != 0) {
 		TheDaemonArgs.home = ptr;
 	} else {
+		char buf[MAXPATHLEN + 1];
+
 		if (snf::fs::get_home(buf, MAXPATHLEN) != E_ok) {
-			fprintf(stderr, "%s\n", "failed to find HOME");
+			std::cerr << "failed to find HOME" << std::endl;
 			return 1;
 		}
 		TheDaemonArgs.home = buf;
@@ -312,26 +362,25 @@ main(int argc, const char **argv)
 		ptr = TheDaemonArgs.home.c_str();
 	}
 
-	int n = snprintf(buf, MAXPATHLEN, "%s%c.%s.pid",
-				ptr,
-				snf::pathsep(),
-				progName);
-	buf[n] = '\0';
-	TheDaemonArgs.pidPath = buf;
+	std::ostringstream oss;
+	oss << ptr << snf::pathsep() << '.' << progName << ".pid";
+
+	TheDaemonArgs.pidPath = oss.str();
 
 	TheDaemonArgs.logPath = config->get("LOG_PATH", TheDaemonArgs.home);
 
 	ptr = config->get("JVM_LIB_PATH");
 	if (ptr == 0) {
-		fprintf(stderr, "%s\n", "failed to find JVM_LIB_PATH");
+		std::cerr << "failed to find JVM_LIB_PATH" << std::endl;
 		return 1;
 	}
 
 	TheDaemonArgs.jvmLibPath = ptr;
 
 	for (int i = 0; i < 128; ++i) {
-		snprintf(buf, MAXPATHLEN, "%s_%d", "JVM_OPTIONS", i);
-		ptr = config->get(buf);
+		oss.str("");
+		oss << "JVM_OPTIONS" << '_' << i;
+		ptr = config->get(oss.str());
 		if (ptr != 0) {
 			TheDaemonArgs.jvmOptions.push_back(ptr);
 		} else {
@@ -341,7 +390,7 @@ main(int argc, const char **argv)
 
 	ptr = config->get("START_CLASS");
 	if (ptr == 0) {
-		fprintf(stderr, "%s\n", "failed to find START_CLASS");
+		std::cerr << "failed to find START_CLASS" << std::endl;
 		return 1;
 	}
 
@@ -350,7 +399,7 @@ main(int argc, const char **argv)
 
 	ptr = config->get("STOP_CLASS");
 	if (ptr == 0) {
-		fprintf(stderr, "%s\n", "failed to find STOP_CLASS");
+		std::cerr << "failed to find STOP_CLASS" << std::endl;
 		return 1;
 	}
 

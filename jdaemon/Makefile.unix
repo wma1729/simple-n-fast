@@ -5,7 +5,7 @@ $(error P is not set)
 endif
 
 OBJS = ${P}/jdaemonizer.o
-INCL = ${INCLCOM}
+INCL = ${INCLCOM} ${INCLLOG}
 LIBS = -lpthread -ldl
 
 JVM_INCL = -I${JAVA_HOME}/include
@@ -21,7 +21,7 @@ all: platform ${P}/jdaemonizer
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/jdaemonizer: ${OBJS} ${LIBCOM}
+${P}/jdaemonizer: ${OBJS} ${LIBLOG} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/jdaemonizer.o: jdaemonizer.cpp

@@ -1,5 +1,5 @@
 #include "error.h"
-#include "log.h"
+#include "logmgr.h"
 #include "cache.h"
 
 /*
@@ -129,20 +129,21 @@ LRUCache::free(cnode_t *cn)
 int
 LRUCache::getPage(key_page_t *&kp, int64_t offset)
 {
-	const char  *who = "LRUCache::getPage";
-	int         retval = E_ok;
+	int retval = E_ok;
 
 	kp = (key_page_t *)(pageMgr->get());
 	if (kp == 0) {
-		Log(ERR, who,
-			"unable to get in-memory page");
+		ERROR_STRM("LRUCache")
+			<< "unable to get in-memory page"
+			<< snf::log::record::endl;
 		retval = E_no_memory;
 	} else if (offset != -1L) {
 		retval = keyFile->read(offset, kp, kpSize);
 		if (retval != E_ok) {
-			Log(ERR, who,
-				"unable to read page at offset %" PRId64 " from %s",
-				offset, keyFile->name());
+			ERROR_STRM("LRUCache")
+				<< "unable to read page at offset " << offset
+				<< " from " << keyFile->name()
+				<< snf::log::record::endl;
 			pageMgr->free(kp);
 		}
 	}
@@ -163,22 +164,23 @@ LRUCache::getPage(key_page_t *&kp, int64_t offset)
 int
 LRUCache::get(key_page_node_t *&kpn, int64_t offset)
 {
-	const char  *who = "LRUCache::get";
 	int         retval;
 	key_page_t  *kp = 0;
 	cnode_t     *cn = 0;
 
 	cn = getCacheNode();
 	if (cn == 0) {
-		Log(ERR, who,
-			"failed to allocate memory for LRU cache node");
+		ERROR_STRM("LRUCache")
+			<< "failed to allocate memory for LRU cache node"
+			<< snf::log::record::endl;
 		return E_no_memory;
 	}
 
 	kpn = (key_page_node_t *)malloc(sizeof(key_page_node_t));
 	if (kpn == 0) {
-		Log(ERR, who,
-			"failed to allocate memory for key page node");
+		ERROR_STRM("LRUCache")
+			<< "failed to allocate memory for key page node"
+			<< snf::log::record::endl;
 		::free(cn);
 		return E_no_memory;
 	}
@@ -212,15 +214,15 @@ LRUCache::get(key_page_node_t *&kpn, int64_t offset)
 int
 LRUCache::update(key_page_node_t *kpn, int64_t offset)
 {
-	const char  *who = "LRUCache::update";
 	int         retval = E_ok;
 	key_page_t  *kp = 0;
 	cnode_t     *cn = 0;
 
 	cn = getCacheNode();
 	if (cn == 0) {
-		Log(ERR, who,
-			"failed to allocate memory for LRU cache node");
+		ERROR_STRM("LRUCache")
+			<< "failed to allocate memory for LRU cache node"
+			<< snf::log::record::endl;
 		return E_no_memory;
 	}
 
