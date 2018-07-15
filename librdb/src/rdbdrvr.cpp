@@ -7,11 +7,13 @@ static bool   Verbosity;
 static int
 usage(const char *prog)
 {
-	fprintf(stderr, "%s [-get|-set|-del|-rebuild] -path <db_path> -name <db_name>\n", prog);
-	fprintf(stderr, "        -key <key> [-value <value>]\n");
-	fprintf(stderr, "        [-htsize <hash_table_size>] [-pgsize <page_size>]\n");
-	fprintf(stderr, "        [-memusage <%%_of_memory>] [-syncdf <0|1>]\n");
-	fprintf(stderr, "        [-syncif <0|1>] [-logpath <log_path>]\n");
+	std::cerr
+		<< prog
+		<< " [-get|-set|-del|-rebuild] -path <db_path> -name <db_name>" << std::endl
+		<< "        -key <key> [-value <value>]" << std::endl
+		<< "        [-htsize <hash_table_size>] [-pgsize <page_size>]" << std::endl
+		<< "        [-memusage <%_of_memory>] [-syncdf <0|1>]" << std::endl
+		<< "        [-syncif <0|1>] [-logpath <log_path>]" << std::endl;
 	return 1;
 }
 
@@ -49,7 +51,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				path = argv[i];
 			} else {
-				fprintf(stderr, "missing argument to -path\n");
+				std::cerr << "missing argument to -path" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-name", argv[i]) == 0) {
@@ -57,7 +59,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				name = argv[i];
 			} else {
-				fprintf(stderr, "missing argument to -name\n");
+				std::cerr << "missing argument to -name" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-htsize", argv[i]) == 0) {
@@ -65,7 +67,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				htSize = atoi(argv[i]);
 			} else {
-				fprintf(stderr, "missing argument to -htsize\n");
+				std::cerr << "missing argument to -htsize" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-pgsize", argv[i]) == 0) {
@@ -73,19 +75,20 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				pgSize = atoi(argv[i]);
 			} else {
-				fprintf(stderr, "missing argument to -pgsize\n");
+				std::cerr << "missing argument to -pgsize" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-memusage", argv[i]) == 0) {
 			++i;
 			if (argv[i]) {
 				if (dbOpt.setMemoryUsage(atoi(argv[i])) != E_ok) {
-					fprintf(stderr, "invalid memory usage (%s)\n",
-						argv[i]);
+					std::cerr
+						<< "invalid memory usage ("
+						<< argv[i] << ")" << std::endl;
 					return 1;
 				}
 			} else {
-				fprintf(stderr, "missing argument to -memusage\n");
+				std::cerr << "missing argument to -memusage" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-syncdf", argv[i]) == 0) {
@@ -97,7 +100,7 @@ main(int argc, const char **argv)
 					dbOpt.syncDataFile(true);
 				}
 			} else {
-				fprintf(stderr, "missing argument to -syncdf\n");
+				std::cerr << "missing argument to -syncdf" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-syncif", argv[i]) == 0) {
@@ -109,7 +112,7 @@ main(int argc, const char **argv)
 					dbOpt.syncIndexFile(false);
 				}
 			} else {
-				fprintf(stderr, "missing argument to -syncif\n");
+				std::cerr << "missing argument to -syncif" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-pgsize", argv[i]) == 0) {
@@ -117,7 +120,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				pgSize = atoi(argv[i]);
 			} else {
-				fprintf(stderr, "missing argument to -pgsize\n");
+				std::cerr << "missing argument to -pgsize" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-key", argv[i]) == 0) {
@@ -125,7 +128,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				key = argv[i];
 			} else {
-				fprintf(stderr, "missing argument to -key\n");
+				std::cerr << "missing argument to -key" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-value", argv[i]) == 0) {
@@ -133,7 +136,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				value = argv[i];
 			} else {
-				fprintf(stderr, "missing argument to -value\n");
+				std::cerr << "missing argument to -value" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-logpath", argv[i]) == 0) {
@@ -141,7 +144,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				logPath = argv[i];
 			} else {
-				fprintf(stderr, "missing argument to -logpath\n");
+				std::cerr << "missing argument to -logpath" << std::endl;
 				return usage(prog);
 			}
 		} else if (strcmp("-v", argv[i]) == 0) {
@@ -164,17 +167,17 @@ main(int argc, const char **argv)
 	}
 
 	if ((cmd == NIL) && !rebuild) {
-		fprintf(stderr, "one of [-get|-set|-del|-rebuild] must be specified\n");
+		std::cerr << "one of [-get|-set|-del|-rebuild] must be specified" << std::endl;
 		return usage(prog);
 	}
 
 	if (path.empty()) {
-		fprintf(stderr, "database path not specified\n");
+		std::cerr << "database path not specified" << std::endl;
 		return usage(prog);
 	}
 
 	if (name.empty()) {
-		fprintf(stderr, "database name not specified\n");
+		std::cerr << "database name not specified" << std::endl;
 		return usage(prog);
 	}
 
@@ -189,7 +192,7 @@ main(int argc, const char **argv)
 
 		retval = rdb.rebuild();
 		if (retval != E_ok) {
-			fprintf(stderr, "rebuild failed with status %d\n", retval);
+			std::cerr << "rebuild failed with status" << retval << std::endl;
 			return 1;
 		}
 
@@ -197,12 +200,12 @@ main(int argc, const char **argv)
 	}
 
 	if (key.empty()) {
-		fprintf(stderr, "key not specified\n");
+		std::cerr << "key not specified" << std::endl;
 		return usage(prog);
 	}
 
 	if ((cmd == SET) && value.empty()) {
-		fprintf(stderr, "value not specified\n");
+		std::cerr << "value not specified" << std::endl;
 		return usage(prog);
 	}
 
@@ -226,9 +229,9 @@ main(int argc, const char **argv)
 						&vlen);
 				if (retval == E_ok) {
 					val[vlen] = '\0';
-					fprintf(stdout, "%s\n", val);
+					std::cout << val << std::endl;
 				} else if (retval == E_not_found) {
-					fprintf(stdout, "%s not found\n", key.c_str());
+					std::cout << key << " not found" << std::endl;
 					retval = E_ok;
 				}
 				break;
@@ -240,8 +243,7 @@ main(int argc, const char **argv)
 						value.c_str(),
 						(int)value.size());
 				if (retval == E_ok) {
-					fprintf(stdout, "%s is set to %s\n",
-						key.c_str(), value.c_str());
+					std::cout << key << " is set to " << value << std::endl;
 				}
 				break;
 
@@ -249,8 +251,7 @@ main(int argc, const char **argv)
 			default:
 				retval = rdb.remove(key.c_str(), (int) key.size());
 				if (retval == E_ok) {
-					fprintf(stdout, "%s is removed\n",
-						key.c_str());
+					std::cout << key << " is removed" << std::endl;
 				}
 				break;
 		}
@@ -259,7 +260,7 @@ main(int argc, const char **argv)
 	}
 
 	if (retval != E_ok) {
-		fprintf(stderr, "operation failed with status %d\n", retval);
+		std::cerr << "operation failed with status " << retval << std::endl;
 		retval = 1;
 	}
 

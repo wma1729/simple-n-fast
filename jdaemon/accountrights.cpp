@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <NTSecAPI.h>
-#include <cstdio>
+#include <iostream>
 #include <cstring>
 #include "common.h"
 #include "i18n.h"
@@ -28,13 +28,20 @@ static const char *Rights[] = {
 static int
 Usage(const char *progName)
 {
-	fprintf(stderr, "\nAdd/remove rights to/from the user account.\n");
-	fprintf(stderr, "Usage: %s -account <account_name> [-add|-remove] <account_right>\n", progName);
-	fprintf(stderr, "    <account_right> can be one of the following:\n");
+	std::cerr
+		<< std::endl
+		<< "Add/remove rights to/from the user account."
+		<< std::endl;
+
+	std::cerr
+		<< "Usage: " << progName
+		<< " -account <account_name> [-add|-remove] <account_right>" << std::endl;
+
+	std::cerr << "    <account_right> can be one of the following:" << std::endl;
 
 	for (int i = 0; ; ++i) {
 		if (Rights[i]) {
-			fprintf(stderr, "        %s\n", Rights[i]);
+			std::cerr << "        " << Rights[i] << std::endl;
 		} else {
 			break;
 		}
@@ -57,23 +64,34 @@ GetAccountSid(const char *account)
 			sid = (PSID)malloc(sidLen);
 			refDomain = (char *)malloc(refDomainLen);
 		} else {
-			fprintf(stderr, "LookupAccountName(%s) failed with status %d\n",
-					account, GetLastError());
+			std::cerr
+				<< "LookupAccountName("
+				<< account
+				<< ") failed with status "
+				<< GetLastError()
+				<< std::endl;
 			return 0;
 		}
 	}
 
 	if (!LookupAccountName(NULL, account, sid, &sidLen, refDomain, &refDomainLen, &sidUse)) {
-		fprintf(stderr, "LookupAccountName(%s) failed with status %d\n",
-				account, GetLastError());
+		std::cerr
+			<< "LookupAccountName("
+			<< account
+			<< ") failed with status "
+			<< GetLastError()
+			<< std::endl;
 		free(refDomain);
 		free(sid);
 		return 0;
 	}
 
 	if (verbose) {
-		fprintf(stdout, "%s (%d) is found in reference domain %s\n",
-				account, int(sidUse), refDomain);
+		std::cout
+			<< account << " ("
+			<< static_cast<int>(sidUse)
+			<< ") is found in reference domain "
+			<< refDomain << std::endl;
 	}
 
 	free(refDomain);
@@ -106,22 +124,34 @@ AddRemoveAccountRight(const char *account, const char *right, bool remove)
 			if (remove) {
 				status = LsaRemoveAccountRights(lsaHandle, sid, FALSE, accountRights, 1);
 				if (status != STATUS_SUCCESS) {
-					fprintf(stderr, "LsaRemoveAccountRights(%s, %s) failed with status %d\n",
-							account, right, LsaNtStatusToWinError(status));
+					std::cerr
+						<< "LsaRemoveAccountRights("
+						<< account << ", "
+						<< right << ") failed with status "
+						<< LsaNtStatusToWinError(status)
+						<< std::endl;
 					retval = 1;
 				} else if (verbose) {
-					fprintf(stdout, "%s right is revoked from account %s.\n",
-							right, account);
+					std::cout
+						<< right
+						<< " right is revoked from account "
+						<< account << std::endl;
 				}
 			} else {
 				status = LsaAddAccountRights(lsaHandle, sid, accountRights, 1);
 				if (status != STATUS_SUCCESS) {
-					fprintf(stderr, "LsaAddAccountRights(%s, %s) failed with status %d\n",
-							account, right, LsaNtStatusToWinError(status));
+					std::cerr
+						<< "LsaAddAccountRights("
+						<< account << ", "
+						<< right << ") failed with status "
+						<< LsaNtStatusToWinError(status)
+						<< std::endl;
 					retval = 1;
 				} else if (verbose) {
-					fprintf(stdout, "%s right is granted to account %s.\n",
-							right, account);
+					std::cout
+						<< right
+						<< " right is granted to account "
+						<< account << std::endl;
 				}
 			}
 
@@ -129,8 +159,10 @@ AddRemoveAccountRight(const char *account, const char *right, bool remove)
 
 			LsaClose(lsaHandle);
 		} else {
-			fprintf(stderr, "LsaOpenPolicy() failed with status %d\n",
-				LsaNtStatusToWinError(status));
+			std::cerr
+				<< "LsaOpenPolicy() failed with status "
+				<< LsaNtStatusToWinError(status)
+				<< std::endl;
 			retval = 1;
 		}
 
@@ -157,7 +189,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				account = argv[i];
 			} else {
-				fprintf(stderr, "%s\n", "no account specified");
+				std::cerr << "no account specified" << std::endl;
 				return Usage(progName);
 			}
 		} else if (strcmp("-add", argv[i]) == 0) {
@@ -166,7 +198,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				right = argv[i];
 			} else {
-				fprintf(stderr, "%s\n", "no account right specified");
+				std::cerr << "no account right specified" << std::endl;
 				return Usage(progName);
 			}
 		} else if (strcmp("-remove", argv[i]) == 0) {
@@ -175,7 +207,7 @@ main(int argc, const char **argv)
 			if (argv[i]) {
 				right = argv[i];
 			} else {
-				fprintf(stderr, "%s\n", "no account right specified");
+				std::cerr << "no account right specified" << std::endl;
 				return Usage(progName);
 			}
 		} else if (strcmp("-verbose", argv[i]) == 0) {
@@ -186,7 +218,7 @@ main(int argc, const char **argv)
 	}
 
 	if (account == 0) {
-		fprintf(stderr, "%s\n", "no account specified");
+		std::cerr << "no account specified" << std::endl;
 		return Usage(progName);
 	}
 
@@ -204,7 +236,10 @@ main(int argc, const char **argv)
 	}
 
 	if (!valid) {
-		fprintf(stderr, "invalid right <%s> specified\n", right);
+		std::cerr
+			<< "invalid right <"
+			<< right
+			<< "> specified" << std::endl;
 		return Usage(progName);
 	}
 
