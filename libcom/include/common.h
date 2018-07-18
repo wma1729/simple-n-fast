@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdint>
 #include <cinttypes>
+#include <cctype>
 #include <string>
 #include <sstream>
 #include "dbg.h"
@@ -65,6 +66,20 @@ T narrow_cast(S v)
 		throw std::runtime_error("narrowing the value causes data loss");
 	}
 	return r;
+}
+
+inline bool
+streq(const std::string &s1, const std::string &s2, bool ic = true)
+{
+	if (s1.size() != s2.size())
+		return false;
+
+	if (!ic)
+		return s1 == s2;
+
+	return std::equal(s1.begin(), s1.end(), s2.begin(),
+			[](char c1, char c2) { return std::toupper(c1) == std::toupper(c2); }
+		);
 }
 
 constexpr bool

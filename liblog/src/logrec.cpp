@@ -1,5 +1,6 @@
 #include "logrec.h"
 #include "logmgr.h"
+#include "json.h"
 #include <iomanip>
 
 namespace snf {
@@ -59,6 +60,14 @@ record::endl(record &rec)
 std::string
 record::format(const std::string &fmt) const
 {
+	if (snf::streq(fmt, "json-pretty")) {
+		return str(true);
+	}
+
+	if (snf::streq(fmt, "json")) {
+		return str(false);
+	}
+
 	std::ostringstream oss;
 	size_t i = 0;
 
@@ -133,6 +142,25 @@ record::format(const std::string &fmt) const
 	}
 
 	return oss.str();
+}
+
+std::string
+record::str(bool pretty) const
+{
+	snf::json::value v = snf::json::object {
+		std::make_pair("class", m_class),
+		std::make_pair("file", m_file),
+		std::make_pair("function", m_function),
+		std::make_pair("lineno", m_lineno),
+		std::make_pair("error", m_error),
+		std::make_pair("timestamp", m_timestamp.epoch(unit::millisecond)),
+		std::make_pair("pid", m_pid),
+		std::make_pair("tid", m_tid),
+		std::make_pair("severity", severity_string(m_severity)),
+		std::make_pair("text", m_text.str())
+	};
+
+	return v.str(pretty);
 }
 
 } // namespace log

@@ -21,7 +21,7 @@ all: platform ${P}/jdaemonizer
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/jdaemonizer: ${OBJS} ${LIBLOG} ${LIBCOM}
+${P}/jdaemonizer: ${OBJS} ${LIBLOG} ${LIBJSON} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/jdaemonizer.o: jdaemonizer.cpp

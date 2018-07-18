@@ -48,6 +48,46 @@ local_time::local_time()
 #endif
 }
 
+local_time::local_time(int64_t epoch, unit u)
+{
+	if (u == unit::second)
+		m_epoch = epoch * 1000;
+
+	m_msec = m_epoch % 1000;
+
+#if defined(_WIN32)
+
+	SYSTEMTIME      st;
+	FILETIME        ft;
+
+	epoch_to_file_time(ft, m_epoch / 1000);
+	FileTimeToSystemTime(&ft, &st);
+
+	m_year = st.wYear;
+	m_month = st.wMonth;
+	m_day = st.wDay;
+	m_hour = st.wHour;
+	m_minute = st.wMinute;
+	m_second = st.wSecond;
+
+#else /* !_WIN32 */
+
+	time_t      t = narrow_cast<time_t>(m_epoch / 1000);   
+	struct tm   *ptm;
+	struct tm   tmbuf;
+
+	ptm = localtime_r(&t, &tmbuf);
+
+	m_year = ptm->tm_year + 1900;
+	m_month = ptm->tm_mon + 1;
+	m_day = ptm->tm_mday;
+	m_hour = ptm->tm_hour;
+	m_minute = ptm->tm_min;
+	m_second = ptm->tm_sec;
+
+#endif
+}
+
 int64_t
 epoch(unit u)
 {
@@ -94,6 +134,14 @@ file_time_to_epoch(const FILETIME &ft)
 	epoch -= 116444736000000000L;
 	if (epoch < 0L) epoch = 0L;
 	return epoch / 10000000;
+}
+
+void
+epoch_to_file_time(FILETIME &ft, int64_t epoch)
+{
+	LONGLONG ll = Int32x32To64(epoch, 10000000) + 116444736000000000L;
+	ft.dwLowDateTime = (DWORD)ll;
+	ft.dwHighDateTime = ll >> 32;
 }
 
 #endif // _WIN32

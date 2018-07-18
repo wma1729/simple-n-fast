@@ -15,7 +15,7 @@ all: platform ${P}/rdbts
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/rdbts: ${OBJS} ${LIBRDB} ${LIBLOG} ${LIBCOM}
+${P}/rdbts: ${OBJS} ${LIBRDB} ${LIBLOG} ${LIBJSON} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp

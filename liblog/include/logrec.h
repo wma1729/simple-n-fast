@@ -69,6 +69,8 @@ public:
 	}
 
 	template<typename T> record & operator<< (const T t) { m_text << t; return *this; }
+
+	std::string str(bool pretty = false) const;
 };
 
 #define LOCATION		__FILE__, __func__, __LINE__

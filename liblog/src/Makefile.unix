@@ -9,7 +9,7 @@ OBJS =  ${P}/logrec.o \
 	${P}/logger.o \
 	${P}/flogger.o
 
-INCL = ${INCLCOM} ${INCLLOG}
+INCL = ${INCLCOM} ${INCLLOG} ${INCLJSON}
 
 all: platform ${P}/liblog.a
 

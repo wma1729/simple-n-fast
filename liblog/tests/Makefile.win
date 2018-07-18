@@ -14,10 +14,10 @@ all: platform $(P)\logts.exe  $(P)\logtester.exe
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\logts.exe: $(LOGTS_OBJS) $(LIBLOG) $(LIBCOM)
+$(P)\logts.exe: $(LOGTS_OBJS) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
-$(P)\logtester.exe: $(LOGTESTER_OBJS) $(LIBLOG) $(LIBCOM)
+$(P)\logtester.exe: $(LOGTESTER_OBJS) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
 
 {.}.cpp{$(P)}.obj:

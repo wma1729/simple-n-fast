@@ -7,7 +7,7 @@ static int
 usage(const char *progname)
 {
 	std::cerr
-		<< progname << "[-sev <severity>] [-path <log_path>] [-mkpath]" << std::endl
+		<< progname << " [-sev <severity>] [-path <log_path>] [-mkpath]" << std::endl
 		<< "[-mkpath] [-fmt <log_file_name_format>]" << std::endl
 		<< "[-rotation_scheme <daily|by_size|daily_by_size>]" << std::endl
 		<< "[-rotation_size <size_in_bytes]" <<std::endl
@@ -129,7 +129,7 @@ main(int argc, const char **argv)
 		}
 	}
 
-	snf::log::file_logger *flog = DBG_NEW snf::log::file_logger(log_path, sev);
+	snf::log::file_logger *flog = DBG_NEW snf::log::file_logger(log_path, sev, "json-pretty");
 	flog->make_path(mk_log_path);
 	flog->set_name_format(log_fname_fmt);
 	if (scheme != snf::log::rotation::scheme::none) {

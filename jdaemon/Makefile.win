@@ -15,10 +15,10 @@ all: platform $(P)\jdaemonizer.exe $(P)\accountrights.exe
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\jdaemonizer.exe: $(DOBJS) $(LIBLOG) $(LIBCOM)
+$(P)\jdaemonizer.exe: $(DOBJS) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Advapi32.lib /Fe$@
 
-$(P)\accountrights.exe: $(ROBJS) $(LIBLOG) $(LIBCOM)
+$(P)\accountrights.exe: $(ROBJS) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Advapi32.lib /Fe$@
 
 $(DOBJS): jdaemonizer.cpp

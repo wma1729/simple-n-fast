@@ -14,10 +14,10 @@ all: platform ${P}/logts ${P}/logtester
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/logts: ${LOGTS_OBJS} ${LIBLOG} ${LIBCOM}
+${P}/logts: ${LOGTS_OBJS} ${LIBLOG} ${LIBJSON} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
-${P}/logtester: ${LOGTESTER_OBJS} ${LIBLOG} ${LIBCOM}
+${P}/logtester: ${LOGTESTER_OBJS} ${LIBLOG} ${LIBJSON} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp

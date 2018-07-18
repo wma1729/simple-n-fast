@@ -28,6 +28,7 @@ private:
 
 public:
 	local_time();
+	local_time(int64_t, unit);
 	local_time(const local_time &lt)
 		: m_year(lt.m_year)
 		, m_month(lt.m_month)
@@ -74,6 +75,7 @@ public:
 
 #if defined(_WIN32)
 int64_t file_time_to_epoch(const FILETIME &);
+void epoch_to_file_time(FILETIME &, int64_t);
 #endif
 
 } // snf

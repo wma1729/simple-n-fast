@@ -30,7 +30,7 @@ platform:
 $(P)\rdb.lib: $(OBJS)
 	$(AR) $(ARFLAGS) $** /OUT:$@
 
-$(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBLOG) $(LIBCOM)
+$(P)\rdbdrvr.exe: $(DRVROBJS) $(P)\rdb.lib $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$(LIBRDBDRVRPDB) $** /Fe$@
 
 $(OBJS): $(*B).cpp

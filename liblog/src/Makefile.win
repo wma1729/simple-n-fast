@@ -9,7 +9,7 @@ OBJS =  $(P)\logrec.obj \
 	$(P)\logger.obj \
 	$(P)\flogger.obj
 
-INCL = $(INCLCOM) $(INCLLOG)
+INCL = $(INCLCOM) $(INCLLOG) $(INCLJSON)
 
 PDB = $(P)\liblog.pdb
 
