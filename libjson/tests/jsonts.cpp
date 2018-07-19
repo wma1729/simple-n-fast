@@ -6,6 +6,7 @@
 #include "realvalue.h"
 #include "strvalue.h"
 #include "genvalue.h"
+#include "logconf.h"
 
 namespace snf {
 namespace tf {
@@ -17,6 +18,7 @@ test *test_list[] = {
 	DBG_NEW real_value(),
 	DBG_NEW str_value(),
 	DBG_NEW gen_value(),
+	DBG_NEW log_conf(),
 	0
 };
 
