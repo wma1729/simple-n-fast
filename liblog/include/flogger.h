@@ -19,18 +19,16 @@ public:
 		by_size = 0x02
 	};
 
-private:
-	scheme  m_scheme;
-	int64_t m_size;
-
-public:
 	rotation(scheme s = scheme::none) : m_scheme(s), m_size(104857600) {}
 
 	bool daily() const;
 	bool by_size() const;
 	int64_t size() const { return m_size; }
 	void size(int64_t size) { m_size = size; }
-	
+
+private:
+	scheme  m_scheme;
+	int64_t m_size;
 };
 
 inline rotation::scheme
@@ -71,16 +69,23 @@ public:
 		last_n_files
 	};
 
-private:
-	scheme  m_scheme;
-	int     m_args;
-
-public:
-	retention(scheme s = scheme::all, int args = -1) : m_scheme(s), m_args(args) {}
+	retention(scheme s = scheme::all, int args = 10) : m_scheme(s), m_args(args) {}
 
 	bool retain_by_days() const { return (m_scheme == scheme::last_n_days); }
 	bool retain_by_file_count() const { return (m_scheme == scheme::last_n_files); }
 	int get_argument() const { return m_args; }
+	void set_path(const std::string &path) { m_path = path; }
+	void set_pattern(const std::string &pattern) { m_pattern = pattern; }
+
+	void purge();
+
+private:
+	void remove_file(const std::string &, const std::string &);
+
+	scheme      m_scheme;
+	int         m_args;
+	std::string m_path;
+	std::string m_pattern;
 };
 
 class file_logger : public logger
@@ -114,9 +119,9 @@ private:
 	void open(const snf::local_time &);
 	void rotate(const snf::local_time &);
 
-	bool rotate_daily()
+	bool rotate_daily(int day)
 	{
-		return (m_rotation && m_rotation->daily());
+		return (m_rotation && m_rotation->daily() && (day != m_last_day));
 	}
 
 	bool rotate_by_size(int64_t fsize)

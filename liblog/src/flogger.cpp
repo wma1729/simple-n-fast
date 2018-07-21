@@ -8,6 +8,51 @@
 namespace snf {
 namespace log {
 
+void
+retention::remove_file(const std::string &path, const std::string &fname)
+{
+	std::ostringstream oss;
+	oss << path << snf::pathsep() << fname;
+	std::string file = oss.str();
+	snf::fs::remove_file(file.c_str());
+}
+
+void
+retention::purge()
+{
+	std::vector<file_attr> fa_vec;
+
+	if (!read_directory(m_path, m_pattern, fa_vec))
+		return;
+
+	std::sort(fa_vec.begin(), fa_vec.end(),
+		[](const file_attr &fa1, const file_attr &fa2) {
+			return fa1.f_mtime > fa2.f_mtime;
+		}
+	);
+
+	if (retain_by_file_count()) {
+		int files_to_keep = m_args; 
+
+		for (auto &fa : fa_vec) {
+			if (files_to_keep == 0) {
+				remove_file(m_path, fa.f_name);
+			} else {
+				files_to_keep--;
+			}
+		}
+	} else if (retain_by_days()) {
+		int64_t now = epoch();
+		int64_t older_time = now - (m_args * 24 * 60 * 60);
+
+		for (auto &fa : fa_vec) {
+			if (fa.f_mtime < older_time) {
+				remove_file(m_path, fa.f_name);
+			}
+		}
+	}
+}
+
 std::string
 file_logger::regex_pattern(bool capture, int *date_index, int *seq_index)
 {
@@ -206,11 +251,18 @@ void
 file_logger::open(const snf::local_time &lt)
 {
 	snf::file_attr fa;
+	std::string pattern = std::move(regex_pattern());
 
 	init_name_format();
 
-	read_newest(m_path, regex_pattern(), fa);
+	read_newest(m_path, pattern, fa);
 	m_name = std::move(name(fa, lt));
+
+	if (m_retention) {
+		m_retention->set_path(m_path);
+		m_retention->set_pattern(pattern);
+		m_retention->purge();
+	}
 
 	if (E_ok == open())
 		m_last_day = lt.day();
@@ -221,7 +273,7 @@ file_logger::rotate(const snf::local_time &lt)
 {
 	bool rotate = false;
 
-	if (rotate_daily() && (m_last_day != lt.day())) {
+	if (rotate_daily(lt.day())) {
 		// rotate
 		rotate = true;
 		m_seqno = 0;
@@ -234,6 +286,10 @@ file_logger::rotate(const snf::local_time &lt)
 	if (rotate) {
 		close();
 		m_name = std::move(name(lt));
+
+		if (m_retention)
+			m_retention->purge();
+
 		if (E_ok == open())
 			m_last_day = lt.day();
 	}
@@ -262,6 +318,9 @@ file_logger::log(const record &rec)
 	} else {
 		rotate(rec.get_timestamp());
 	}
+
+	if (!m_file)
+		return;
 
 	std::string line = std::move(rec.format(get_format()));
 	line.append(1, '\n');
