@@ -12,6 +12,7 @@ namespace log {
 class rotation
 {
 public:
+	static const int64_t default_size = 104857600;
 	enum class scheme : int
 	{
 		none = 0x00,
@@ -19,7 +20,9 @@ public:
 		by_size = 0x02
 	};
 
-	rotation(scheme s = scheme::none) : m_scheme(s), m_size(104857600) {}
+	static scheme string_to_scheme(const std::string &);
+
+	rotation(scheme s = scheme::none) : m_scheme(s), m_size(default_size) {}
 
 	bool daily() const;
 	bool by_size() const;
@@ -40,11 +43,23 @@ operator| (const rotation::scheme &s1, const rotation::scheme &s2)
 }
 
 inline rotation::scheme
+operator|= (rotation::scheme &s1, const rotation::scheme &s2)
+{
+	return s1 = s1 | s2;
+}
+
+inline rotation::scheme
 operator& (const rotation::scheme &s1, const rotation::scheme &s2)
 {
 	int v1 = static_cast<int>(s1);
 	int v2 = static_cast<int>(s2);
 	return static_cast<rotation::scheme>(v1 & v2);
+}
+
+inline rotation::scheme
+operator&= (rotation::scheme &s1, const rotation::scheme &s2)
+{
+	return s1 = s1 & s2;
 }
 
 inline bool
@@ -62,6 +77,7 @@ rotation::by_size() const
 class retention
 {
 public:
+	static const int default_argument = 10;
 	enum class scheme : int
 	{
 		all,
@@ -69,7 +85,9 @@ public:
 		last_n_files
 	};
 
-	retention(scheme s = scheme::all, int args = 10) : m_scheme(s), m_args(args) {}
+	static scheme string_to_scheme(const std::string &);
+
+	retention(scheme s = scheme::all, int args = default_argument) : m_scheme(s), m_args(args) {}
 
 	bool retain_by_days() const { return (m_scheme == scheme::last_n_days); }
 	bool retain_by_file_count() const { return (m_scheme == scheme::last_n_files); }
@@ -106,7 +124,7 @@ private:
 	void init_name_format()
 	{
 		if (m_name_fmt.empty())
-			m_name_fmt = "%D_%N.log";
+			m_name_fmt = default_name_format;
 	}
 
 	std::string regex_pattern(bool capture = false,
@@ -130,10 +148,13 @@ private:
 	}
 
 public:
+	static constexpr const char *default_format = "%D %T %p.%t [%s] [%C] [%F:%c.%f.%l] %m";
+	static constexpr const char *default_name_format = "%D_%N.log";
+
 	file_logger(
 		const std::string &path,
 		severity sev,
-		const std::string &fmt = "%D %T %p.%t [%s] [%C] [%F:%c.%f.%l] %m")
+		const std::string &fmt = default_format)
 		: logger(sev, fmt)
 		, m_path(path)
 	{

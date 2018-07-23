@@ -7,7 +7,7 @@ include ../../Makefile.constants
 LOGTS_OBJS =  $(P)\logts.obj
 LOGTESTER_OBJS =  $(P)\logtester.obj
 
-INCL = $(INCLCOM) $(INCLLOG) $(INCLTF)
+INCL = $(INCLCOM) $(INCLJSON) $(INCLLOG) $(INCLTF)
 
 all: platform $(P)\logts.exe  $(P)\logtester.exe
 

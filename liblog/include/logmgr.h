@@ -5,6 +5,7 @@
 #include <mutex>
 #include "logrec.h"
 #include "logger.h"
+#include "json.h"
 
 namespace snf {
 namespace log {
@@ -22,6 +23,8 @@ private:
 	manager()
 	{
 	}
+
+	void load(const snf::json::object &);
 
 public:
 	manager(const manager &) = delete;
@@ -47,6 +50,8 @@ public:
 	{
 		m_cached_pid = getpid();
 	}
+
+	void load(const std::string &, const std::string &);
 
 	int add_logger(logger *);
 	void remove_logger(int);

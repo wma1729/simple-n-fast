@@ -8,6 +8,44 @@
 namespace snf {
 namespace log {
 
+rotation::scheme
+rotation::string_to_scheme(const std::string &str)
+{
+	rotation::scheme s = rotation::scheme::none;
+
+	if (str.empty())
+		return s;
+
+	std::stringstream ss(str);
+
+	while (ss.good()) {
+		std::string substr;
+		std::getline(ss, substr, '|');
+
+		if (snf::trim(substr) == "daily") {
+			s |= rotation::scheme::daily;
+		} else if (snf::trim(substr) == "by_size") {
+			s |= rotation::scheme::by_size;
+		}
+	}
+
+	return s;
+}
+
+retention::scheme
+retention::string_to_scheme(const std::string &s)
+{
+	if (s.empty())
+		return retention::scheme::all;
+
+	if (s == "last_n_files")
+		return retention::scheme::last_n_files;
+	else if (s == "last_n_days")
+		return retention::scheme::last_n_days;
+	else
+		return retention::scheme::all;
+}
+
 void
 retention::remove_file(const std::string &path, const std::string &fname)
 {

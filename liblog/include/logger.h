@@ -45,19 +45,17 @@ public:
 class console_logger : public logger
 {
 public:
+	static constexpr const char *default_format = "[%s] [%f] %m";
+
 	enum class destination {
 		out, // to standard output
 		err, // to standard error
 		var  // depends on message severity
 	};
 
-private:
-	destination m_dest;
-
-public:
 	console_logger(
 		severity sev = severity::all,
-		const std::string &fmt = "[%s] [%f] %m")
+		const std::string &fmt = default_format)
 		: logger(sev, fmt)
 		, m_dest(destination::var)
 	{
@@ -71,6 +69,10 @@ public:
 	void set_destination(destination dest) { m_dest = dest; }
 
 	void log(const record &rec);
+
+private:
+	destination m_dest;
+
 };
 
 } // namespace log

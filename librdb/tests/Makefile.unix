@@ -8,7 +8,7 @@ OBJS =  ${P}/rdbts.o
 
 LIBS = -lpthread
 
-INCL = ${INCLCOM} ${INCLLOG} ${INCLRDB} ${INCLTF}
+INCL = ${INCLCOM} ${INCLJSON} ${INCLLOG} ${INCLRDB} ${INCLTF}
 
 all: platform ${P}/rdbts
 

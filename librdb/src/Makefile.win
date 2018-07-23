@@ -17,7 +17,7 @@ OBJS =  $(P)\cache.obj \
 
 DRVROBJS = $(P)\rdbdrvr.obj
 
-INCL = $(INCLCOM) $(INCLLOG) $(INCLRDB)
+INCL = $(INCLCOM) $(INCLJSON) $(INCLLOG) $(INCLRDB)
 
 LIBRDBPDB = $(P)\librdb.pdb
 LIBRDBDRVRPDB = $(P)\rdbdrvr.pdb
