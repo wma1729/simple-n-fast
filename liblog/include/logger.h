@@ -20,6 +20,11 @@ private:
 public:
 	enum class type { console, file };
 
+	/**
+	 * Initializes logger object.
+	 * @param [in] sev - log severity
+	 * @param [in] fmt - log format.
+	 */
 	logger(severity sev, const std::string &fmt)
 		: m_sev(sev)
 		, m_fmt(fmt)
@@ -40,7 +45,12 @@ public:
 };
 
 /**
- * The console logger.
+ * The console logger. Supports only a few attributes:
+ * - type (console)
+ * - severity (valid log severity)
+ * - format (logging format)
+ * - destination (error and warning messages go to stderr,
+ *   and the remaining ones go to stdout by default).
  */
 class console_logger : public logger
 {
@@ -48,9 +58,9 @@ public:
 	static constexpr const char *default_format = "[%s] [%f] %m";
 
 	enum class destination {
-		out, // to standard output
-		err, // to standard error
-		var  // depends on message severity
+		out, // everything to standard output
+		err, // everything to standard error
+		var  // depends on message severity (default)
 	};
 
 	console_logger(

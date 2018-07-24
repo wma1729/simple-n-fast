@@ -12,23 +12,23 @@ namespace snf {
 namespace log {
 
 /**
- * A single log message.
+ * A single log record.
  */
 class record
 {
 private:
-	std::string         m_class;
-	std::string         m_file;
-	std::string         m_function;
-	int                 m_lineno;
-	int                 m_error;
-	snf::local_time     m_timestamp;
-	pid_t               m_pid;
-	tid_t               m_tid;
-	severity            m_severity;
-	std::ostringstream  m_text;
+	std::string         m_class;        // class name (user specified)
+	std::string         m_file;         // file name, __FILE__ 
+	std::string         m_function;     // function name, __func__
+	int                 m_lineno;       // line number, __LINE__
+	int                 m_error;        // system error (user specified)
+	snf::local_time     m_timestamp;    // local time stamp
+	pid_t               m_pid;          // process ID
+	tid_t               m_tid;          // thread ID
+	severity            m_severity;     // severity (user specified)
+	std::ostringstream  m_text;         // actual log text (user specified)
 
-	// Pointer to function
+	// Pointer to function (for endl implementation)
 	using record_terminator = record &(record &);
 
 	void init(const char *, const char *, const char *, int, int, severity);
@@ -61,15 +61,11 @@ public:
 
 	severity get_severity() const { return m_severity; }
 	snf::local_time get_timestamp() const { return m_timestamp; }
-	std::string format(const std::string &) const;
 
-	record & operator<< (record_terminator terminator)
-	{
-		return terminator(*this);
-	}
-
+	record & operator<< (record_terminator terminator) { return terminator(*this); }
 	template<typename T> record & operator<< (const T t) { m_text << t; return *this; }
 
+	std::string format(const std::string &) const;
 	std::string str(bool pretty = false) const;
 };
 
@@ -77,9 +73,11 @@ public:
 
 /*
  * All the macros ending with _STRM takes at least one paramaters
- * which is the class name. ERROR_STRM and WARNING_STRM can take
- * one additional parameter which is the errno/GetLastError().
- * Do not use macros ending with number 1 or 2.
+ * which is the class name. This is user specified. There is no
+ * portable way (or at least I am not aware of it) to fetch this
+ * automatically. ERROR_STRM and WARNING_STRM can take one
+ * additional parameter which is the errno/GetLastError().
+ * Do not use macros ending with number 1 or 2 directly.
  */
 
 #define ERROR_STRM2(CLS, ERR)	snf::log::record {                      \
@@ -92,7 +90,6 @@ public:
 #define ERROR_STRM1(CLS)	snf::log::record {                      \
 					CLS,                            \
 					LOCATION,                       \
-					0,                              \
 					snf::log::severity::error       \
 				}
 
@@ -108,7 +105,6 @@ public:
 #define WARNING_STRM1(CLS)	snf::log::record {                      \
 					CLS,                            \
 					LOCATION,                       \
-					0,                              \
 					snf::log::severity::warning     \
 				}
 
@@ -117,21 +113,18 @@ public:
 #define INFO_STRM(CLS)		snf::log::record {                      \
 					CLS,                            \
 					LOCATION,                       \
-					0,                              \
 					snf::log::severity::info        \
 				}
 
 #define DEBUG_STRM(CLS)		snf::log::record {                      \
 					CLS,                            \
 					LOCATION,                       \
-					0,                              \
 					snf::log::severity::debug       \
 				}
 
 #define TRACE_STRM(CLS)		snf::log::record {                      \
 					CLS,                            \
 					LOCATION,                       \
-					0,                              \
 					snf::log::severity::trace       \
 				}
 

@@ -9,15 +9,25 @@
 namespace snf {
 namespace log {
 
+/**
+ * Defines log rotation scheme. Rotation simply means rolling over
+ * to the new logs. It has (at least here) nothing to do with log
+ * archiving. The sole purpose it to keep the log file size under
+ * control. The rotation scheme coupled with retention scheme can
+ * help manage log files. The logs can be rotated:
+ * - daily i.e. every day at midnight when the day changes.
+ * - based on size i.e. every N bytes.
+ * - combination of both (whichever hits first).
+ */
 class rotation
 {
 public:
 	static const int64_t default_size = 104857600;
 	enum class scheme : int
 	{
-		none = 0x00,
-		daily = 0x01,
-		by_size = 0x02
+		none = 0x00,    // no log rotation at all
+		daily = 0x01,   // every day at midnight when the day changes
+		by_size = 0x02  // based on log file size
 	};
 
 	static scheme string_to_scheme(const std::string &);
@@ -26,6 +36,7 @@ public:
 
 	bool daily() const;
 	bool by_size() const;
+
 	int64_t size() const { return m_size; }
 	void size(int64_t size) { m_size = size; }
 
@@ -74,6 +85,13 @@ rotation::by_size() const
 	return (m_scheme & scheme::by_size) == scheme::by_size;
 }
 
+/**
+ * Defines log retention scheme. Retention means how much logs to
+ * retain. The retention scheme could be:
+ * - all (retain all logs)
+ * - last_n_days (retain logs for last n days)
+ * - last_n_files (retail last n log files)
+ */
 class retention
 {
 public:
@@ -87,11 +105,15 @@ public:
 
 	static scheme string_to_scheme(const std::string &);
 
-	retention(scheme s = scheme::all, int args = default_argument) : m_scheme(s), m_args(args) {}
+	retention(scheme s = scheme::all, int arg = default_argument)
+		: m_scheme(s), m_argument(arg) {}
 
 	bool retain_by_days() const { return (m_scheme == scheme::last_n_days); }
 	bool retain_by_file_count() const { return (m_scheme == scheme::last_n_files); }
-	int get_argument() const { return m_args; }
+
+	int get_argument() const { return m_argument; }
+	void set_argument(int arg) { m_argument = arg; }
+
 	void set_path(const std::string &path) { m_path = path; }
 	void set_pattern(const std::string &pattern) { m_pattern = pattern; }
 
@@ -101,7 +123,7 @@ private:
 	void remove_file(const std::string &, const std::string &);
 
 	scheme      m_scheme;
-	int         m_args;
+	int         m_argument;
 	std::string m_path;
 	std::string m_pattern;
 };
@@ -111,6 +133,7 @@ class file_logger : public logger
 private:
 	std::string m_path;
 	bool        m_make_path = false;
+	bool        m_sync = false;
 	std::string m_name_fmt;
 	std::string m_name;
 	int64_t     m_size = 0;
@@ -174,6 +197,9 @@ public:
 
 	bool make_path() const { return m_make_path; }
 	void make_path(bool mp) { m_make_path = mp; }
+
+	bool sync() const { return m_sync; }
+	void sync(bool s) { m_sync = s; }
 
 	const std::string & get_name_format() const { return m_name_fmt; }
 	void set_name_format(const std::string &fmt) { m_name_fmt = fmt; }

@@ -92,6 +92,12 @@ manager::load(const snf::json::object &obj)
 				logger->make_path(v.get_boolean());
 		}
 
+		if (obj.contains("sync")) {
+			const snf::json::value &v = obj.get("sync");
+			if (v.is_boolean())
+				logger->sync(v.get_boolean());
+		}
+
 		if (obj.contains("name_format")) {
 			const snf::json::value &v = obj.get("name_format");
 			if (v.is_string())

@@ -12,7 +12,7 @@ namespace log {
  */
 enum class severity
 {
-	all,
+	all,	// not a real log severity
 	trace,
 	debug,
 	info,
@@ -38,7 +38,7 @@ severity_string(severity sev)
 }
 
 /**
- * String to log severity.
+ * String representation to log severity.
  */
 inline severity
 string_to_severity(const char *s)
@@ -60,6 +60,9 @@ string_to_severity(const char *s)
 	return snf::log::severity::all;
 }
 
+/**
+ * Simple stream read operator for log severity.
+ */
 inline std::ostream &
 operator<< (std::ostream &os, severity sev)
 {

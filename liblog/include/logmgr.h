@@ -10,6 +10,11 @@
 namespace snf {
 namespace log {
 
+/**
+ * Log manager: singleton.
+ * Manages all the loggers. Also provides a way to load
+ * loggers via configuration file.
+ */
 class manager
 {
 private:

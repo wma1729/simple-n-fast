@@ -22,9 +22,11 @@ rotation::string_to_scheme(const std::string &str)
 		std::string substr;
 		std::getline(ss, substr, '|');
 
-		if (snf::trim(substr) == "daily") {
+		std::string tsubstr = std::move(snf::trim(substr));
+
+		if (tsubstr == "daily") {
 			s |= rotation::scheme::daily;
-		} else if (snf::trim(substr) == "by_size") {
+		} else if (tsubstr == "by_size") {
 			s |= rotation::scheme::by_size;
 		}
 	}
@@ -70,7 +72,7 @@ retention::purge()
 	);
 
 	if (retain_by_file_count()) {
-		int files_to_keep = m_args; 
+		int files_to_keep = m_argument; 
 
 		for (auto &fa : fa_vec) {
 			if (files_to_keep == 0) {
@@ -81,7 +83,7 @@ retention::purge()
 		}
 	} else if (retain_by_days()) {
 		int64_t now = epoch();
-		int64_t older_time = now - (m_args * 24 * 60 * 60);
+		int64_t older_time = now - (m_argument * 24 * 60 * 60);
 
 		for (auto &fa : fa_vec) {
 			if (fa.f_mtime < older_time) {
@@ -263,7 +265,7 @@ file_logger::open()
 	snf::file::open_flags flags;
 	flags.o_append = true;
 	flags.o_create = true;
-	flags.o_sync = true;
+	flags.o_sync = m_sync;
 
 	int retval = m_file->open(flags, 0600);
 	if (E_ok != retval) {
