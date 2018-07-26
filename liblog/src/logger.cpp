@@ -3,6 +3,10 @@
 namespace snf {
 namespace log {
 
+/**
+ * Logs the log record to the console.
+ * @param rec [in] - the log record too log.
+ */
 void
 console_logger::log(const record &rec)
 {

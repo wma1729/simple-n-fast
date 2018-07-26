@@ -8,6 +8,10 @@
 namespace snf {
 namespace log {
 
+/**
+ * Converts the string representation of rotation
+ * scheme to its corresponding enum form.
+ */
 rotation::scheme
 rotation::string_to_scheme(const std::string &str)
 {
@@ -34,6 +38,10 @@ rotation::string_to_scheme(const std::string &str)
 	return s;
 }
 
+/**
+ * Converts the string representation of retention
+ * scheme to its corresponding enum form.
+ */
 retention::scheme
 retention::string_to_scheme(const std::string &s)
 {
@@ -48,6 +56,11 @@ retention::string_to_scheme(const std::string &s)
 		return retention::scheme::all;
 }
 
+/**
+ * Removes a log file.
+ * @param path  [in] - the directory containing the file.
+ * @param fname [in] - the log file name.
+ */
 void
 retention::remove_file(const std::string &path, const std::string &fname)
 {
@@ -57,14 +70,19 @@ retention::remove_file(const std::string &path, const std::string &fname)
 	snf::fs::remove_file(file.c_str());
 }
 
+/**
+ * Purges the old log files.
+ */
 void
 retention::purge()
 {
 	std::vector<file_attr> fa_vec;
 
+	// read all the files matching the log file pattern
 	if (!read_directory(m_path, m_pattern, fa_vec))
 		return;
 
+	// sort the file list based on time
 	std::sort(fa_vec.begin(), fa_vec.end(),
 		[](const file_attr &fa1, const file_attr &fa2) {
 			return fa1.f_mtime > fa2.f_mtime;
@@ -93,6 +111,17 @@ retention::purge()
 	}
 }
 
+/**
+ * Generate the regular expression pattern for the log file name format.
+ * @param capture    [in]  - generate regular expression pattern that can
+ *                           capture date and/or sequence
+ * @param date_index [out] - the capture index for date. -1 if %D for date
+ *                           is not found.
+ * @param seq_index  [out] - the capture index for sequence. -1 if %N for
+ *                           sequence is not found.
+ * @return the regular expression pattern.
+ * @throws std::invalid_argument
+ */
 std::string
 file_logger::regex_pattern(bool capture, int *date_index, int *seq_index)
 {
@@ -153,6 +182,12 @@ file_logger::regex_pattern(bool capture, int *date_index, int *seq_index)
 	return oss.str();
 }
 
+/**
+ * Parse the log file name and extract date and sequence number if any.
+ * @param file_name [in]  - the file name to parse
+ * @param date      [out] - the date string from the log file name
+ * @param seq       [out] - the sequence string from the log file name
+ */
 void
 file_logger::parse_name(const std::string &file_name, std::string &date, std::string &seq)
 {
@@ -177,6 +212,11 @@ file_logger::parse_name(const std::string &file_name, std::string &date, std::st
 	}
 }
 
+/**
+ * Get the log file name.
+ * @param lt [in] - the local time at the time of log file creation
+ * @return the log file name.
+ */
 std::string
 file_logger::name(const snf::local_time &lt)
 {
@@ -216,6 +256,12 @@ file_logger::name(const snf::local_time &lt)
 	return oss.str();
 }
 
+/**
+ * Get the log file name based on the last file read and the local time.
+ * @param fa [in] - the file attributes of the last log file
+ * @param lt [in] - the local time at the time of log file creation
+ * @return the log file name
+ */
 std::string
 file_logger::name(const snf::file_attr &fa, const snf::local_time &lt)
 {
@@ -254,6 +300,9 @@ file_logger::name(const snf::file_attr &fa, const snf::local_time &lt)
 	return fa.f_name;
 }
 
+/*
+ * Open the log file.
+ */
 int
 file_logger::open()
 {
@@ -276,6 +325,9 @@ file_logger::open()
 	return retval;
 }
 
+/*
+ * Close the log file.
+ */
 void 
 file_logger::close()
 {
@@ -287,6 +339,11 @@ file_logger::close()
 	}
 }
 
+/*
+ * Open the log file. The old files are purged
+ * before opening the log file.
+ * @param lt [in] - the local time.
+ */
 void
 file_logger::open(const snf::local_time &lt)
 {
@@ -308,6 +365,12 @@ file_logger::open(const snf::local_time &lt)
 		m_last_day = lt.day();
 }
 
+/*
+ * Rotate the log file i.e close the already opened
+ * log file and open the next log file. The old files
+ * are purged before opening the log file.
+ * @param lt [in] - the local time.
+ */
 void
 file_logger::rotate(const snf::local_time &lt)
 {
@@ -335,6 +398,10 @@ file_logger::rotate(const snf::local_time &lt)
 	}
 }
 
+/**
+ * Logs the log record to the console.
+ * @param rec [in] - the log record too log.
+ */
 void
 file_logger::log(const record &rec)
 {

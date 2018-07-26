@@ -4,7 +4,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <initializer_list>
 #include <istream>
 #include <stdexcept>
 #include "dbg.h"
@@ -95,6 +94,11 @@ public:
 
 	const value & get(const std::string &) const;
 	const value & get(const std::string &, const value &) const;
+
+	bool get_boolean(const std::string &, bool) const;
+	int64_t get_integer(const std::string &, int64_t) const;
+	double get_real(const std::string &, double) const;
+	std::string get_string(const std::string &, const std::string &) const;
 
 	std::string str(bool, int indent = 0) const;
 

@@ -5,10 +5,18 @@
 #include <mutex>
 #include "logrec.h"
 #include "logger.h"
-#include "json.h"
 
 namespace snf {
+
+// forward declaration of snf::json::object
+namespace json {
+	class object;
+}
+
 namespace log {
+
+class rotation;
+class retention;
 
 /**
  * Log manager: singleton.
@@ -29,7 +37,11 @@ private:
 	{
 	}
 
-	void load(const snf::json::object &);
+	severity get_severity(const snf::json::object &);
+	console_logger::destination get_destination(const snf::json::object &);
+	rotation *get_rotation(const snf::json::object &);
+	retention *get_retention(const snf::json::object &);
+	logger *load(const snf::json::object &);
 
 public:
 	manager(const manager &) = delete;

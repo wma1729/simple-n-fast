@@ -76,6 +76,86 @@ object::get(const std::string &key, const value &default_value) const
 }
 
 /*
+ * Gets the boolean value for the specified key.
+ * If key is not found or if it is not of type bool,
+ * the default value is returned.
+ */
+bool
+object::get_boolean(const std::string &key, bool default_value) const
+{
+	bool rval = default_value;
+
+	auto i = find(string_unescape(key));
+	if (i != end()) {
+		const value &v = i->second;
+		if (v.is_boolean())
+			rval = v.get_boolean();
+	}
+
+	return rval;
+}
+
+/*
+ * Gets the integer value for the specified key.
+ * If key is not found or if it is not of type integer,
+ * the default value is returned.
+ */
+int64_t
+object::get_integer(const std::string &key, int64_t default_value) const
+{
+	int64_t rval = default_value;
+
+	auto i = find(string_unescape(key));
+	if (i != end()) {
+		const value &v = i->second;
+		if (v.is_integer())
+			rval = v.get_integer();
+	}
+
+	return rval;
+}
+
+/*
+ * Gets the real value for the specified key.
+ * If key is not found or if it is not of type real,
+ * the default value is returned.
+ */
+double
+object::get_real(const std::string &key, double default_value) const
+{
+	double rval = default_value;
+
+	auto i = find(string_unescape(key));
+	if (i != end()) {
+		const value &v = i->second;
+		if (v.is_real())
+			rval = v.get_real();
+	}
+
+	return rval;
+}
+
+/*
+ * Gets the string value for the specified key.
+ * If key is not found or if it is not of type string,
+ * the default value is returned.
+ */
+std::string
+object::get_string(const std::string &key, const std::string &default_value) const
+{
+	std::string rval = default_value;
+
+	auto i = find(string_unescape(key));
+	if (i != end()) {
+		const value &v = i->second;
+		if (v.is_string())
+			rval = v.get_string();
+	}
+
+	return rval;
+}
+
+/*
  * Gets the string representation of the key/value pair
  * of the JSON object. Both the key and value (if the value
  * is indeed a string) are escaped.

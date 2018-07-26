@@ -6,6 +6,18 @@
 namespace snf {
 namespace log {
 
+/**
+ * Initialize the log record.
+ * @param cls   [in] - the class name.
+ *                     Use 'no-class' if nullptr is used.
+ * @param file  [in] - the file name, usually __FILE__.
+ *                     Use 'no-file' if nullptr is used.
+ * @param fnc   [in] - the function name, usually __func__.
+ *                     Use 'no-function' if nullptr is used.
+ * @param line  [in] - the line number, usually __LINE__
+ * @param error [in] - the system error number: errno/GetLastError()
+ * @param sev   [in] - log severity
+ */
 void
 record::init(const char *cls, const char *file, const char *fcn, int line,
 	int error, severity sev)
@@ -34,6 +46,7 @@ record::init(const char *cls, const char *file, const char *fcn, int line,
 
 /**
  * Log message terminator.
+ * Terminates and actually logs the message.
  */
 record &
 record::endl(record &rec)
@@ -46,6 +59,9 @@ record::endl(record &rec)
  * Formats the log record for printing. The following format
  * specifiers are supported:
  *
+ * json - Log record in json format (OR)
+ * json-pretty - Log record in pretty json format (OR)
+ * a combination of the following:
  * %D - Date YYYY/MM/DD
  * %T - Time HH:MM:SS.MSEC
  * %p - pid
@@ -56,6 +72,8 @@ record::endl(record &rec)
  * %f - function
  * %l - line
  * %m - message
+ *
+ * @returns the formatted log record, ready to be logged.
  */
 std::string
 record::format(const std::string &fmt) const
@@ -144,6 +162,9 @@ record::format(const std::string &fmt) const
 	return oss.str();
 }
 
+/**
+ * Converts log record to json representation.
+ */
 std::string
 record::str(bool pretty) const
 {
