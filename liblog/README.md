@@ -41,11 +41,11 @@ prepares a log **record** which is eventually logged by all the registered logge
 ### Log format
 
 The formatting of the log message can be controlled by some formatting keywords or printf style format specifiers. The formatting keywords supported are: *json*
-```
+```json
 { "class" : "no-class", "error" : 0, "file" : "logtester.cpp", "function" : "main", "lineno" : 66, "pid" : 195, "severity" : "ERR", "text" : "a sample error message", "tid" : 195, "timestamp" : 1532658086959 }
 ```
 or *json-pretty*
-```
+```json
 {
   "class" : "no-class",
   "error" : 0,
@@ -60,16 +60,88 @@ or *json-pretty*
 }
 ```
 The following printf style format specifiers are supported:
-* *%D* Date YYYY/MM/DD
-* *%T* Time hh:mm:ss.msec
-* *%p* Process ID
-* *%t* Thread ID
-* *%s* Log severity
-* *%c* Class name
-* *%F* File name
-* *%f* Function name
-* *%l* Line number
-* *%m* Log message/text
 
-The default format for console logger is `[%s] [%f] %m` and the default format for file logger is
-`%D %T %p.%t [%s] [%F:%c.%f.%l] %m`.
+format specifier | Interpretation
+---------------- | --------------
+%D  | Date YYYY/MM/DD
+%T  | Time hh:mm:ss.msec
+%p  | Process ID
+%t  | Thread ID
+%s  | Log severity
+%c  | Class name
+%F  | File name
+%f  | Function name
+%l  | Line number
+%m  | Log message/text
+
+The default format for console logger is `[%s] [%f] %m`
+```
+[ERR] [main] a sample error message
+```
+and the default format for file logger is `%D %T %p.%t [%s] [%F:%c.%f.%l] %m`
+```
+2018/07/27 15:05:02.876 192.192 [ERR] [logtester.cpp:no-class.main.66] a sample error message
+```
+
+### Log file name format
+
+The formatting of the log file names is also controlled by printf style format specifiers. The supported format specifiers are:
+
+format specifier | Interpretation    | Rotation Requirements
+---------------- | ----------------- | ---------------------
+%D  | YYYYMMDD  | Must be specified for **daily** rotation.
+%N  | 6 digit sequence number starting with 000000 | Must be specified for **size** based rotation.
+
+For example, a component names scheduler could use a format specifier as `scheduler_%D_%N.log`. The log file names for this component would be
+```
+scheduler_20180727_000001.log
+scheduler_20180727_000002.log
+scheduler_20180727_000003.log
+scheduler_20180728_000000.log
+scheduler_20180728_000001.log
+```
+
+### Logging interface
+
+Every file using liblog must include `logmgr.h`. If file logger is needed, `flogger.h` must be included as well.
+
+C++ stream based interface:
+```c++
+/*
+ * 1. class_name has the class name.
+ * 2. nullptr can be used for class name.
+ * 3. Note an additional parameter for WARNING_STRM
+ *    and ERROR_STRM.
+ */
+TRACE_STRM(class_name)              << "this is a trace severity log message"
+                                    << snf::log::record::endl;
+DEBUG_STRM(class_name)              << "this is a debug severity log message"
+                                    << snf::log::record::endl;
+INFO_STRM(nullptr)                  << "this is an info severity log message"
+                                    << snf::log::record::endl;
+WARNING_STRM(class_name)            << "this is a warning severity log message"
+                                    << snf::log::record::endl;
+WARNING_STRM(class_name, errno)     << "this is another warning severity log message with errno"
+                                    << snf::log::record::endl;
+ERROR_STRM(class_name)              << "this is an error severity log message"
+                                    << snf::log::record::endl;
+ERROR_STRM(nullptr, GetLastError()) << "this is another error severity log message with GetLastError()"
+                                    << snf::log::record::endl;
+```
+`snf::log::record::endl` is the record terminator/finalizer inspired by `std::endl`. It not only finalizes the log record but also pushes it to the registered loggers.
+
+printf format specifier based interface:
+```
+/*
+ * 1. class_name has the class name.
+ * 2. nullptr can be used for class name.
+ * 3. Note LOG_SYSERR takes an additional argument for error.
+ */
+LOG_TRACE(class_name, "this is %s %s log message", "a", "trace");
+LOG_DEBUG(class_name, "this is %s %s log message", "a", "debug");
+LOG_INFO(nullptr, "this is %s %s log message", "an", "info");
+LOG_WARNING(class_name, "this is %s %s log message", "a", "warning");
+LOG_ERROR(class_name, "this is %s %s log message", "an", "error");
+LOG_SYSERR(nullptr, errno, "this is %s %s log message with errno", "an", "error");
+LOG_SYSERR(class_name, GetLastError(), "this is %s %s log message with GetLastError()", "an", "error");
+```
