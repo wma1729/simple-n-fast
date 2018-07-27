@@ -171,7 +171,7 @@ private:
 	}
 
 public:
-	static constexpr const char *default_format = "%D %T %p.%t [%s] [%C] [%F:%c.%f.%l] %m";
+	static constexpr const char *default_format = "%D %T %p.%t [%s] [%F:%c.%f.%l] %m";
 	static constexpr const char *default_name_format = "%D_%N.log";
 
 	file_logger(

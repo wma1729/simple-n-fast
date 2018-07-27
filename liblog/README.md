@@ -72,4 +72,4 @@ The following printf style format specifiers are supported:
 * *%m* Log message/text
 
 The default format for console logger is `[%s] [%f] %m` and the default format for file logger is
-`%D %T %p.%t [%s] [%C] [%F:%c.%f.%l] %m`.
+`%D %T %p.%t [%s] [%F:%c.%f.%l] %m`.
