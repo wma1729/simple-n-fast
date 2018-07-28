@@ -5,7 +5,7 @@ Simple-N-Fast is a collection of tools, libraries that I develop in my free time
 * [Java Daemonizer](jdaemon/README.md) Converts Java applications to Unix daemon/Windows service.
 * [librdb](librdb/README.md) A lightweight thread-safe library to manage millions of key/value pairs.
 * [libjson](libjson/README.md) JSON library implementation for C++.
-* [liblob](liblog/README.md) A thread-safe feature-rich logging library for C++.
+* [liblog](liblog/README.md) A thread-safe feature-rich logging library for C++.
 
 ## Compilation
 1. Run `configure.sh` on Linux platforms. Run `configure.cmd` on Windows. `configure.[sh|cmd]` generates `Makefile.constants`.
