@@ -131,7 +131,7 @@ ERROR_STRM(nullptr, GetLastError()) << "this is another error severity log messa
 `snf::log::record::endl` is the record terminator/finalizer inspired by `std::endl`. It not only finalizes the log record but also pushes it to the registered loggers.
 
 printf format specifier based interface:
-```
+```c++
 /*
  * 1. class_name has the class name.
  * 2. nullptr can be used for class name.
@@ -145,3 +145,149 @@ LOG_ERROR(class_name, "this is %s %s log message", "an", "error");
 LOG_SYSERR(nullptr, errno, "this is %s %s log message with errno", "an", "error");
 LOG_SYSERR(class_name, GetLastError(), "this is %s %s log message with GetLastError()", "an", "error");
 ```
+
+### Log Manager
+
+At the heart of liblog is a logging manager. It is a singleton class. Every logging interface uses log manager to log. It provides the following functionality:
+1. Ability to add/delete loggers.
+2. Provide a default console logger when no loggers are registered.
+3. Parsing log configuration file and creating/registering loggers.
+4. Logging a log record.
+
+API | Functionality
+--- | -------------
+snf::log::manager::instance | Obtains reference to the log manager.
+snf::log::manager::add_logger | Adds/registers a logger.
+snf::log::manager::remove_logger | Removes/de-register a logger.
+snf::log::manager::load | Parses and adds loggers from configuration file.
+snf::log::manager::log | Logs the log record. The record is pushed to all the registered loggers.
+
+#### Console Logger
+
+Console logger logs to the console. It has 4 main attributes:
+1. **severity** to control log verbosity.
+2. **format** to control log format.
+3. **destination** to control where the message is logged: *out*, *err*, *var*. If the destination is *var*, **warning** and **error** messages are sent to *stderr* and the remaining ones are logged to *stdout*.
+```c++
+// Adding console logger
+snf::log::console_logger *clog = new snf::log::console_logger(
+					snf::log::severity::warning,  // default is all
+					"%D %T %p %t [%s] [%f] %m");  // default is "[%s] [%f] %m"
+clog->set_destination(snd::log::console_logger::destination::err);    // default is var
+snf::log::manager::instance().add_logger(clog);
+```
+
+#### File Logger
+
+File logger logs to files. It is more complex and provides a much richer set of functionality. Its main attributes are:
+1. **severity** to control log verbosity.
+2. **format** to control log format.
+3. **path** to find where to log.
+4. **make_path** to create **path** if it does not exist.
+5. **name_format** to control log file name format.
+6. **sync** to sync log message with data store immediately.
+7. **rotation scheme** to control log rollover.
+8. **retention scheme** to control how many log files to retain.
+```c++
+// Adding file logger
+snf::log::file_logger *flog = new snf::log::file_logger(
+					log_path                      // default is "."
+					snf::log::severity::warning,  // default is all
+					"%D %T %p %t [%s] [%f] %m");  // default is "%D %T %p.%t [%s] [%F:%c.%f.%l] %m"
+flog->make_path(true);                                                // default is false
+flog->set_name_format("scheduler_%D_%N.log");                         // default is "%D_%N.log"
+flog->sync(true);                                                     // default is flase
+// flog->set_rotation(rot);                                           // discussed later
+// flog->set_retention(ret);                                          // discussed later
+snf::log::manager::instance().add_logger(flog);
+```
+
+#### Log Rotation
+
+Log files can be huge in size making it difficult to open, process, and analyze. It is a good idea to rollover to newer files periodically. A few options are provided:
+1. No rotation `snf::log::rotation::scheme::none`.
+2. Rotate daily at midnight `snf::log::rotation::scheme::daily`. Log name format must have %D in it.
+3. Rotate based on log file size `snf::log::rotation::scheme::by_day`. Log name format must have %N in it.
+4. A combination of *2* and *3*. Log name format must have %D and %N in it.
+```c++
+snf::log::rotation *rot_by_day = new snf::log::rotation(
+					snf::log::rotation::scheme::daily);   // default is none
+snf::log::rotation *rot_by_size = new snf::log::rotation(
+					snf::log::rotation::scheme::by_size,
+					100000);                              // default is 100MB
+snf::log::rotation *rot_by_day_and_size = new snf::log::rotation(
+					snf::log::rotation::scheme::daily |
+					snf::log::rotation::scheme::by_size,
+					100000);
+flog->set_rotation(rot_by_day_and_size);
+delete rot_by_size;
+delete rot_by_day;
+// do not delete rot_by_day_and_size. file logger is responsible for deleting it.
+```
+
+#### Log retention
+
+Log files can be huge in numbers as well. It is a good idea to retain only the last few files. The options provided for this are:
+1. Retain all `snf::log::retention::scheme::all`.
+2. Retain files for last N days `snf::log::retention::scheme::last_n_days`.
+3. Retain last N files `snf::log::retention::scheme::last_n_files`.
+
+The logs are merged every time a new log file is opened i.e. when the log file is first opened and when the log rotation occurs.
+```c++
+snf::log::retention ret_n_days = new snf::log::retention(
+					snf::log::retention::scheme::log_n_days, // default is all
+                                        3);                                      // default is 10 days
+snf::log::retention ret_n_files = new snf::log::retention(
+					snf::log::retention::scheme::log_n_files, // default is all
+                                        20);                                      // default is 10 days
+flog->set_retention(ret_n_days);
+delete ret_n_files;
+// do not delete ret_n_days. file logger is responsible for deleting it.
+```
+
+### Log Configuration
+
+Creating logger manually is fine for local testing. But for production environment, it is often convenient to specify configuration via file. liblog supports JSON configuration file. The configuration file is a JSON record with multiple objects, one for each component/module/process:
+```jsob
+{
+    "component_1" : [ list_of_loggers ],
+    "component_2" : [ list_of_loggers ]
+}
+```
+
+Here is an example for one component, by the name *schedulera*, only. There are two loggers registered for *scheduler* : the console logger and the file based logger.
+```json
+{
+    "scheduler" : [
+        {
+            "type" : "console",
+            "severity" : "INFO",
+            "format" : "json-pretty",
+            "destination" : "stdout"
+        },
+        {
+            "type" : "file",
+            "severity" : "TRACE",
+            "format" : "json",
+            "name_format" : "scheduler_%D_%N.log",
+            "path" : ".",
+            "make_path" : false,
+            "sync" : true,
+            "rotation" : {
+                    "scheme" : "daily | by_size",
+                    "size" : 500000
+            },
+            "retention" : {
+                    "scheme" : "last_n_files",
+                    "argument" : 5
+            }
+        }
+    ]
+}
+```
+The scheduler component should load the configuration file as following:
+```c++
+snf::log::manager::instance().load(conf_file, "scheduler");
+```
+and proceed with logging. One call is all that is needed to set up the logging subsystem in this case.
+
