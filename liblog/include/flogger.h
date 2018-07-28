@@ -211,6 +211,7 @@ public:
 	void set_retention(retention *r) { delete m_retention; m_retention = r; }
 
 	void log(const record &);
+	void reset();
 };
 
 } // namespace log

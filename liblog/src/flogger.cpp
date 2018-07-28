@@ -438,5 +438,15 @@ file_logger::log(const record &rec)
 	}
 }
 
+/**
+ * Reset the logger.
+ */
+void
+file_logger::reset()
+{
+	std::lock_guard<std::mutex> guard(m_file_lock);
+	close();
+}
+
 } // namespace log
 } // namespace snf

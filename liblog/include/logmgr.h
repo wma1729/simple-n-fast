@@ -63,11 +63,6 @@ public:
 		return m_cached_pid;
 	}
 
-	void reset_pid()
-	{
-		m_cached_pid = getpid();
-	}
-
 	void load(const std::string &, const std::string &);
 
 	int add_logger(logger *);
@@ -77,6 +72,8 @@ public:
 
 	void log(severity, const char *, const char *,
 		const char *, int, int, const char *, ...);
+
+	void reset();
 };
 
 #if defined(_WIN32)

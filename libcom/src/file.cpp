@@ -125,6 +125,8 @@ file::open(const open_flags &flags, mode_t mode, int *oserr)
 		oflags = O_RDONLY;
 	}
 
+	oflags |= O_CLOEXEC;
+
 	if (flags.o_create) {
 		oflags |= O_CREAT;
 	}

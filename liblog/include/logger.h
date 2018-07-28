@@ -42,6 +42,8 @@ public:
 	void set_format(const std::string &fmt) { m_fmt = fmt; }
 
 	virtual void log(const record &) = 0;
+
+	virtual void reset() {}
 };
 
 /**

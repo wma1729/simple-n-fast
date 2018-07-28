@@ -290,5 +290,21 @@ manager::log(severity sev, const char *cls, const char *file, const char *fcn, i
 	rec << record::endl;
 }
 
+/**
+ * Reset all loggers.
+ */
+void
+manager::reset()
+{
+	m_cached_pid = get_pid();
+
+	std::lock_guard<std::mutex> g(m_lock);
+
+	std::map<int, logger *>::const_iterator I;
+	for (I = m_loggers.begin(); I != m_loggers.end(); ++I)
+		I->second->reset();
+}
+
+
 } // namespace log
 } // namespace snf

@@ -291,3 +291,11 @@ snf::log::manager::instance().load(conf_file, "scheduler");
 ```
 and proceed with logging. One call is all that is needed to set up the logging subsystem in this case.
 
+### What happens when a process forks?
+
+If a process forks and the child process exec()s immediately, there is nothing to be done. If the process
+forks and does not exec(), simply call:
+```c++
+snf::log::manager::reset()
+```
+This will reset the cached pid for the child process. It will also ask all the registered loggers to close any open file. The next time a message is logged, the file will be reopened and things should proceed smoothly. Btw, there is no file based locking yet. Multiple processes logging to the same file can cause some log corruption but the chances are remote.
