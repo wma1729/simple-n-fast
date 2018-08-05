@@ -80,11 +80,13 @@ if [ "$PLAT" = "Linux" ]; then
 		INCLRDB = -I`pwd`/librdb/include
 		INCLJSON = -I`pwd`/libjson/include
 		INCLLOG = -I`pwd`/liblog/include
+		INCLNET = -I`pwd`/libnet/include
 		INCLTF = -I`pwd`/tf
 		LIBCOM = `pwd`/libcom/src/$BLDPLAT/libcom.a
 		LIBRDB = `pwd`/librdb/src/$BLDPLAT/librdb.a
 		LIBJSON = `pwd`/libjson/src/$BLDPLAT/libjson.a
 		LIBLOG = `pwd`/liblog/src/$BLDPLAT/liblog.a
+		LIBNET = `pwd`/libnet/src/$BLDPLAT/libnet.a
 LINUX_CONFIG
 
 else

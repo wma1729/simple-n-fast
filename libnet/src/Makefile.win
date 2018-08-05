@@ -1,0 +1,27 @@
+include ..\..\Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS =  $(P)\net.obj $(P)\ia.obj
+
+INCL = $(INCLNET) $(INCLLOG) $(INCLCOM)
+
+LIBNETPDB = $(P)\libnet.pdb
+
+all: platform $(P)\net.lib
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\net.lib: $(OBJS)
+	$(AR) $(ARFLAGS) $** /OUT:$@
+
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBRDBPDB) $(*B).cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\rdb.lib $(LIBNETPDB)

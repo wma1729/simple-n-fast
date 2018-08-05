@@ -1,0 +1,25 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/net.o ${P}/ia.o
+
+INCL = ${INCLNET} ${INCLLOG} ${INCLCOM}
+
+all: platform ${P}/libnet.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/libnet.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/libnet.a

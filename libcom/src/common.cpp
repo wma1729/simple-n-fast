@@ -27,7 +27,16 @@ syserr(char *str, size_t len, int err)
 
 #if defined(_WIN32)
 
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, str, (DWORD)len, NULL);
+	FormatMessage(
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS |
+		FORMAT_MESSAGE_MAX_WIDTH_MASK,
+		NULL,
+		err,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		str,
+		static_cast<DWORD>(len),
+		NULL);
 	if (str[0] == '\0') {
 		char *s = strerror(err);
 		if(s != NULL) {

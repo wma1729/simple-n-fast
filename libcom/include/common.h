@@ -138,6 +138,18 @@ gettid(void)
 #endif
 }
 
+inline bool
+is_big_endian()
+{
+	union {
+		short s;
+		char  c[sizeof(short)];
+	} u;
+
+	u.s = 0x0102;
+	return ((u.c[0] == 1) && (u.c[1] == 2));
+}
+
 const char *syserr(char *, size_t, int);
 const char *basename(char *, size_t, const char *, bool stripExt = false);
 std::string trim(const std::string &);
