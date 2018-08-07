@@ -4,7 +4,7 @@ include ..\..\Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-OBJS =  $(P)\net.obj $(P)\ia.obj
+OBJS =  $(P)\net.obj $(P)\ia.obj $(P)\sa.obj
 
 INCL = $(INCLNET) $(INCLLOG) $(INCLCOM)
 

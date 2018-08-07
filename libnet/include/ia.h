@@ -36,7 +36,7 @@ public:
 	std::string str(bool brief = true) const;
 };
 
-std::ostream &
+inline std::ostream &
 operator<<(std::ostream &os, const internet_address &ia)
 {
 	os << ia.str(false);
