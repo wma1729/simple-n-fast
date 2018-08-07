@@ -13,13 +13,13 @@ class internet_address
 private:
 	int     m_type;
 	union {
-		struct in_addr  v4_addr;
-		struct in6_addr v6_addr;
+		in_addr  v4_addr;
+		in6_addr v6_addr;
 	} m_addr;
 
 public:
-	internet_address(const struct in_addr &);
-	internet_address(const struct in6_addr &);
+	internet_address(const in_addr &);
+	internet_address(const in6_addr &);
 	internet_address(int, const std::string &);
 	internet_address(const std::string &);
 	internet_address(const internet_address &);
@@ -30,8 +30,8 @@ public:
 	bool is_ipv4() const { return (m_type == AF_INET); }
 	bool is_ipv6() const { return (m_type == AF_INET6); }
 
-	const struct in_addr *get_ipv4() const;
-	const struct in6_addr *get_ipv6() const;
+	const in_addr *get_ipv4() const;
+	const in6_addr *get_ipv6() const;
 
 	std::string str(bool brief = true) const;
 };

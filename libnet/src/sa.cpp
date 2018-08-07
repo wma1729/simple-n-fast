@@ -9,21 +9,21 @@ void
 socket_address::init(const internet_address &ia, in_port_t port)
 {
 	if (ia.is_ipv4()) {
-		memset(&(m_addr.v4_addr), 0, sizeof(struct sockaddr_in));
+		memset(&(m_addr.v4_addr), 0, sizeof(sockaddr_in));
 
 		m_addr.v4_addr.sin_family = AF_INET;
 		m_addr.v4_addr.sin_port = ntoh(port);
 		memcpy(&(m_addr.v4_addr.sin_addr), ia.get_ipv4(),
-			sizeof(struct in_addr));
+			sizeof(in_addr));
 	} else if (ia.is_ipv6()) {
-		memset(&(m_addr.v6_addr), 0, sizeof(struct sockaddr_in6));
+		memset(&(m_addr.v6_addr), 0, sizeof(sockaddr_in6));
 
 		m_addr.v6_addr.sin6_family = AF_INET6;
 		m_addr.v6_addr.sin6_port = ntoh(port);
 		memcpy(&(m_addr.v6_addr.sin6_addr), ia.get_ipv6(),
-			sizeof(struct in6_addr));
+			sizeof(in6_addr));
 	} else {
-		throw std::runtime_error("invalid internet address");
+		throw std::invalid_argument("invalid internet address");
 	}
 }
 
@@ -44,14 +44,14 @@ socket_address::socket_address(const std::string &addrstr, in_port_t port)
 	init(ia, port);
 }
 
-socket_address::socket_address(const struct sockaddr_in &sin)
+socket_address::socket_address(const sockaddr_in &sin)
 {
-	memcpy(&(m_addr.v4_addr), &sin, sizeof(struct sockaddr_in));
+	memcpy(&(m_addr.v4_addr), &sin, sizeof(sockaddr_in));
 }
 
-socket_address::socket_address(const struct sockaddr_in6 &sin6)
+socket_address::socket_address(const sockaddr_in6 &sin6)
 {
-	memcpy(&(m_addr.v6_addr), &sin6, sizeof(struct sockaddr_in6));
+	memcpy(&(m_addr.v6_addr), &sin6, sizeof(sockaddr_in6));
 }
 
 socket_address::socket_address(const socket_address &sa)
@@ -83,16 +83,16 @@ socket_address::operator==(const socket_address &sa) const
 	} else if (m_addr.v6_addr.sin6_family == AF_INET6) {
 		const uint8_t *p1 = m_addr.v6_addr.sin6_addr.s6_addr;
 		const uint8_t *p2 = sa.m_addr.v6_addr.sin6_addr.s6_addr;
-		if (memcmp(p1, p2, sizeof(struct in6_addr)) != 0)
+		if (memcmp(p1, p2, sizeof(in6_addr)) != 0)
 			return false;
 	} else {
-		throw std::runtime_error("invalid address family");
+		throw std::invalid_argument("invalid address family");
 	}
 
 	return true;
 }
 
-const struct in_addr *
+const in_addr *
 socket_address::get_ipv4() const
 {
 	if (is_ipv4())
@@ -100,7 +100,7 @@ socket_address::get_ipv4() const
 	return nullptr;
 }
 
-const struct in6_addr *
+const in6_addr *
 socket_address::get_ipv6() const
 {
 	if (is_ipv6())

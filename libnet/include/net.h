@@ -39,7 +39,7 @@ T hton(T b)
 			return b;
 		return swap(b);
 	}
-	throw std::runtime_error("invalid data type");
+	throw std::invalid_argument("invalid data type");
 }
 
 template<typename T>
@@ -54,7 +54,7 @@ T ntoh(T b)
 			return b;
 		return swap(b);
 	}
-	throw std::runtime_error("invalid data type");
+	throw std::invalid_argument("invalid data type");
 }
 
 } // namespace net

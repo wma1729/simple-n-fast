@@ -5,13 +5,13 @@
 namespace snf {
 namespace net {
 
-internet_address::internet_address(const struct in_addr &addr)
+internet_address::internet_address(const in_addr &addr)
 	: m_type(AF_INET)
 {
 	m_addr.v4_addr = addr;
 }
 
-internet_address::internet_address(const struct in6_addr &addr)
+internet_address::internet_address(const in6_addr &addr)
 	: m_type(AF_INET6)
 {
 	m_addr.v6_addr = addr;
@@ -43,8 +43,8 @@ internet_address::internet_address(int type, const std::string &addrstr)
 
 internet_address::internet_address(const std::string &addrstr)
 {
-	struct in_addr      i4a;
-	struct in6_addr     i6a;
+	in_addr      i4a;
+	in6_addr     i6a;
 
 	int r = inet_pton(AF_INET, addrstr.c_str(), &i4a);
 	if (r == 1) {
@@ -101,13 +101,13 @@ internet_address::operator==(const internet_address &ia) const
 	if (m_type == AF_INET6) {
 		const uint8_t *p1 = m_addr.v6_addr.s6_addr;
 		const uint8_t *p2 = ia.m_addr.v6_addr.s6_addr;
-		return (memcmp(p1, p2, sizeof(struct in6_addr)) == 0);
+		return (memcmp(p1, p2, sizeof(in6_addr)) == 0);
 	}
 
 	return false;
 }
 
-const struct in_addr *
+const in_addr *
 internet_address::get_ipv4() const
 {
 	if (is_ipv4())
@@ -115,7 +115,7 @@ internet_address::get_ipv4() const
 	return nullptr;
 }
 
-const struct in6_addr *
+const in6_addr *
 internet_address::get_ipv6() const
 {
 	if (is_ipv6())

@@ -24,8 +24,8 @@ public:
 	socket_address(const internet_address &, in_port_t);
 	socket_address(int, const std::string &, in_port_t);
 	socket_address(const std::string &, in_port_t);
-	socket_address(const struct sockaddr_in &);
-	socket_address(const struct sockaddr_in6 &);
+	socket_address(const sockaddr_in &);
+	socket_address(const sockaddr_in6 &);
 	socket_address(const socket_address &);
 
 	const socket_address & operator=(const socket_address &);
@@ -34,8 +34,8 @@ public:
 	bool is_ipv4() const { return (m_addr.v4_addr.sin_family == AF_INET); }
 	bool is_ipv6() const { return (m_addr.v6_addr.sin6_family == AF_INET6); }
 
-	const struct in_addr *get_ipv4() const;
-	const struct in6_addr *get_ipv6() const;
+	const in_addr *get_ipv4() const;
+	const in6_addr *get_ipv6() const;
 
 	const sockaddr_in *get_sa_v4() const;
 	const sockaddr_in6 *get_sa_v6() const;
