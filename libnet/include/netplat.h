@@ -6,25 +6,14 @@
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 
-typedef uint16_t in_port_t;
+using in_port_t = uint16_t;
 
 #else // !_WIN32
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-
-inline int
-net_error(void)
-{
-	return errno;
-}
-
-inline void
-net_error(int e)
-{
-	errno = e;
-}
+#include <netdb.h>
 
 #endif // _WIN32
 

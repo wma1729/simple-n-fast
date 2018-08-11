@@ -10,6 +10,8 @@ namespace net {
 
 class internet_address;
 
+enum class socket_type { tcp, udp };
+
 class socket_address
 {
 private:
@@ -44,6 +46,12 @@ public:
 	in_port_t get_port() const;
 
 	std::string str(bool brief = true) const;
+
+	static socket_address get_server(int, socket_type, const std::string &);
+	static socket_address get_server(int, socket_type, in_port_t);
+	static socket_address get_client(int, socket_type,
+					const std::string &, const std::string &);
+	static socket_address get_client(int, socket_type, const std::string &, in_port_t);
 };
 
 inline std::ostream &

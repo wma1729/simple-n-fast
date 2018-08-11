@@ -1,6 +1,8 @@
 #include "sa.h"
 #include "ia.h"
 #include "net.h"
+#include "addrinfo.h"
+#include <algorithm>
 
 namespace snf {
 namespace net {
@@ -183,6 +185,114 @@ socket_address::str(bool brief) const
 	}
 
 	return s;
+}
+
+socket_address
+socket_address::get_server(int family, socket_type type, const std::string &svc)
+{
+	struct addrinfo *res = nullptr;
+	struct addrinfo hints;
+
+	if (svc.empty())
+		throw std::invalid_argument("service/port must be specified");
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+
+	std::string::const_iterator I;
+	I = std::find_if(svc.begin(), svc.end(), [](char c) { return !std::isdigit(c); });
+	if (I == svc.end()) {
+		hints.ai_flags = AI_NUMERICSERV;
+	}
+
+	hints.ai_family = family;
+	hints.ai_socktype = (type == socket_type::tcp) ? SOCK_STREAM : SOCK_DGRAM;
+	hints.ai_protocol = (type == socket_type::tcp) ? IPPROTO_TCP : IPPROTO_UDP;
+
+	snf::net::internal::get_address_info(nullptr, svc.c_str(), &hints, &res);
+
+	if (res) {
+		if (res->ai_family == AF_INET) {
+			sockaddr_in *sin = reinterpret_cast<sockaddr_in *>(res->ai_addr);
+			socket_address sa { *sin };
+			freeaddrinfo(res);
+			return sa;
+		} else if (res->ai_family == AF_INET6) {
+			sockaddr_in6 *sin6 = reinterpret_cast<sockaddr_in6 *>(res->ai_addr);
+			socket_address sa { *sin6 };
+			freeaddrinfo(res);
+			return sa;
+		} else {
+			std::ostringstream oss;
+			oss << "invalid address family (" << res->ai_family << ")";
+			freeaddrinfo(res);
+			throw std::runtime_error(oss.str());
+		}
+	} else {
+		throw std::runtime_error("empty result address info");
+	}
+}
+
+socket_address
+socket_address::get_server(int family, socket_type type, in_port_t port)
+{
+	std::string portstr = std::to_string(port);
+	return get_server(family, type, portstr);
+}
+
+socket_address
+socket_address::get_client(int family, socket_type type,
+			const std::string &host, const std::string &svc)
+{
+	struct addrinfo *res = nullptr;
+	struct addrinfo hints;
+
+	if (svc.empty())
+		throw std::invalid_argument("service/port must be specified");
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags = AI_ADDRCONFIG;
+
+	std::string::const_iterator I;
+	I = std::find_if(svc.begin(), svc.end(), [](char c) { return !std::isdigit(c); });
+	if (I == svc.end()) {
+		hints.ai_flags = AI_NUMERICSERV;
+	}
+
+	hints.ai_family = family;
+	hints.ai_socktype = (type == socket_type::tcp) ? SOCK_STREAM : SOCK_DGRAM;
+	hints.ai_protocol = (type == socket_type::tcp) ? IPPROTO_TCP : IPPROTO_UDP;
+
+	snf::net::internal::get_address_info(host.c_str(), svc.c_str(), &hints, &res);
+
+	if (res) {
+		if (res->ai_family == AF_INET) {
+			sockaddr_in *sin = reinterpret_cast<sockaddr_in *>(res->ai_addr);
+			socket_address sa { *sin };
+			freeaddrinfo(res);
+			return sa;
+		} else if (res->ai_family == AF_INET6) {
+			sockaddr_in6 *sin6 = reinterpret_cast<sockaddr_in6 *>(res->ai_addr);
+			socket_address sa { *sin6 };
+			freeaddrinfo(res);
+			return sa;
+		} else {
+			std::ostringstream oss;
+			oss << "invalid address family (" << res->ai_family << ")";
+			freeaddrinfo(res);
+			throw std::runtime_error(oss.str());
+		}
+	} else {
+		throw std::runtime_error("empty result address info");
+	}
+}
+
+socket_address
+socket_address::get_client(int family, socket_type type,
+			const std::string &host, in_port_t port)
+{
+	std::string portstr = std::to_string(port);
+	return get_client(family, type, host, portstr);
 }
 
 } // namespace net

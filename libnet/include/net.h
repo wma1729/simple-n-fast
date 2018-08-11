@@ -2,8 +2,8 @@
 #define _SNF_NET_H_
 
 #include "common.h"
-#include <stdexcept>
 #include "netplat.h"
+#include <stdexcept>
 
 namespace snf {
 namespace net {
@@ -19,12 +19,12 @@ error(void)
 }
 
 inline void
-error(int err)
+error(int e)
 {
 #if defined(_WIN32)
-	::WSASetLastError(err);
+	::WSASetLastError(e);
 #else
-	errno = err;
+	errno = e;
 #endif
 }
 
