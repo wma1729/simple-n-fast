@@ -8,6 +8,26 @@
 namespace snf {
 namespace net {
 
+inline int
+error(void)
+{
+#if defined(_WIN32)
+	return ::WSAGetLastError();
+#else
+	return errno;
+#endif
+}
+
+inline void
+error(int err)
+{
+#if defined(_WIN32)
+	::WSASetLastError(err);
+#else
+	errno = err;
+#endif
+}
+
 bool initialize();
 void finalize();
 

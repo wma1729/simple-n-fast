@@ -1,6 +1,8 @@
-#include "common.h"
 #include "ia.h"
+#include "net.h"
+#include "addrinfo.h"
 #include <stdexcept>
+#include <cstring>
 
 namespace snf {
 namespace net {
@@ -124,6 +126,13 @@ internet_address::get_ipv6() const
 }
 
 std::string
+internet_address::get_canonical_name() const
+{
+	std::string addrstr = std::move(str(true));
+	return snf::net::get_canonical_name(addrstr);
+}
+
+std::string
 internet_address::str(bool brief) const
 {
 	char        addrstr[INET6_ADDRSTRLEN];
@@ -140,7 +149,7 @@ internet_address::str(bool brief) const
 	}
 
 	if (paddr == nullptr) {
-                throw std::system_error(snf::system_error(),
+                throw std::system_error(snf::net::error(),
 					std::system_category(),
 					"inet_ntop() failed");
 	}
@@ -164,6 +173,12 @@ internet_address::str(bool brief) const
 	}
 
 	return s;
+}
+
+std::vector<internet_address>
+internet_address::get(const std::string &host)
+{
+	return snf::net::get_internet_addresses(host);
 }
 
 } // namespace net

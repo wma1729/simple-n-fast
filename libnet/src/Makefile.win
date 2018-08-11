@@ -4,7 +4,7 @@ include ..\..\Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-OBJS =  $(P)\net.obj $(P)\ia.obj $(P)\sa.obj
+OBJS =  $(P)\net.obj $(P)\ia.obj $(P)\sa.obj $(P)\addrinfo.obj
 
 INCL = $(INCLNET) $(INCLLOG) $(INCLCOM)
 
@@ -24,4 +24,4 @@ $(OBJS): $(*B).cpp
 install:
 
 clean:
-	@del /q $(OBJS) $(P)\rdb.lib $(LIBNETPDB)
+	@del /q $(OBJS) $(LIBNETPDB)

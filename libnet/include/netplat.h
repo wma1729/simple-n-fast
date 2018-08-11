@@ -14,6 +14,18 @@ typedef uint16_t in_port_t;
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+inline int
+net_error(void)
+{
+	return errno;
+}
+
+inline void
+net_error(int e)
+{
+	errno = e;
+}
+
 #endif // _WIN32
 
 #endif // _SNF_NET_PLAT_H_

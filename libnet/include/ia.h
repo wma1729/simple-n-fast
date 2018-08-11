@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 #include "netplat.h"
 
 namespace snf {
@@ -33,7 +34,11 @@ public:
 	const in_addr *get_ipv4() const;
 	const in6_addr *get_ipv6() const;
 
+	std::string get_canonical_name() const;
+
 	std::string str(bool brief = true) const;
+
+	static std::vector<internet_address> get(const std::string &);
 };
 
 inline std::ostream &
