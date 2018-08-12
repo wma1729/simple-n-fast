@@ -253,6 +253,12 @@ socket_address::get_client(int family, socket_type type,
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags = AI_ADDRCONFIG;
 
+	try {
+		internet_address ia { host };
+		hints.ai_flags |= AI_NUMERICHOST;
+	} catch (std::runtime_error) {
+	}
+
 	std::string::const_iterator I;
 	I = std::find_if(svc.begin(), svc.end(), [](char c) { return !std::isdigit(c); });
 	if (I == svc.end()) {

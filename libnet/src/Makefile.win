@@ -24,4 +24,4 @@ $(OBJS): $(*B).cpp
 install:
 
 clean:
-	@del /q $(OBJS) $(LIBNETPDB)
+	@del /q $(OBJS) $(P)\net.lib $(LIBNETPDB)

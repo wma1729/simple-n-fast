@@ -1,5 +1,4 @@
 #include "addrinfo.h"
-#include "ia.h"
 
 #if !defined(_WIN32)
 #include "aiec.h"
@@ -24,12 +23,6 @@ get_address_info(
 	const int max_tries = 10;
 	int cur_tries = 0;
 	int status = 0;
-
-	try {
-		internet_address ia { host };
-		hints->ai_flags |= AI_NUMERICHOST;
-	} catch (std::runtime_error) {
-	}
 
 	do {
 		status = getaddrinfo(host, svc, hints, res);
