@@ -187,10 +187,11 @@ socket_address::str(bool brief) const
 	return s;
 }
 
-socket_address
+std::vector<socket_address>
 socket_address::get_server(int family, socket_type type, const std::string &svc)
 {
 	struct addrinfo *res = nullptr;
+	struct addrinfo *ptr = nullptr;
 	struct addrinfo hints;
 
 	if (svc.empty())
@@ -198,53 +199,52 @@ socket_address::get_server(int family, socket_type type, const std::string &svc)
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+	if (family == AF_INET6)
+		hints.ai_flags |= AI_V4MAPPED;
 
 	std::string::const_iterator I;
 	I = std::find_if(svc.begin(), svc.end(), [](char c) { return !std::isdigit(c); });
 	if (I == svc.end()) {
-		hints.ai_flags = AI_NUMERICSERV;
+		hints.ai_flags |= AI_NUMERICSERV;
 	}
 
 	hints.ai_family = family;
 	hints.ai_socktype = (type == socket_type::tcp) ? SOCK_STREAM : SOCK_DGRAM;
-	hints.ai_protocol = (type == socket_type::tcp) ? IPPROTO_TCP : IPPROTO_UDP;
 
 	snf::net::internal::get_address_info(nullptr, svc.c_str(), &hints, &res);
 
-	if (res) {
-		if (res->ai_family == AF_INET) {
+	std::vector<socket_address> sa_vec;
+
+	for (ptr = res; ptr != nullptr; ptr = ptr->ai_next) {
+		if (ptr->ai_family == AF_INET) {
 			sockaddr_in *sin = reinterpret_cast<sockaddr_in *>(res->ai_addr);
 			socket_address sa { *sin };
-			freeaddrinfo(res);
-			return sa;
+			sa_vec.push_back(sa);
 		} else if (res->ai_family == AF_INET6) {
 			sockaddr_in6 *sin6 = reinterpret_cast<sockaddr_in6 *>(res->ai_addr);
 			socket_address sa { *sin6 };
-			freeaddrinfo(res);
-			return sa;
-		} else {
-			std::ostringstream oss;
-			oss << "invalid address family (" << res->ai_family << ")";
-			freeaddrinfo(res);
-			throw std::runtime_error(oss.str());
+			sa_vec.push_back(sa);
 		}
-	} else {
-		throw std::runtime_error("empty result address info");
 	}
+
+	freeaddrinfo(res);
+
+	return sa_vec;
 }
 
-socket_address
+std::vector<socket_address>
 socket_address::get_server(int family, socket_type type, in_port_t port)
 {
 	std::string portstr = std::to_string(port);
 	return get_server(family, type, portstr);
 }
 
-socket_address
+std::vector<socket_address>
 socket_address::get_client(int family, socket_type type,
 			const std::string &host, const std::string &svc)
 {
 	struct addrinfo *res = nullptr;
+	struct addrinfo *ptr = nullptr;
 	struct addrinfo hints;
 
 	if (svc.empty())
@@ -252,6 +252,9 @@ socket_address::get_client(int family, socket_type type,
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags = AI_ADDRCONFIG;
+
+	if (family == AF_INET6)
+		hints.ai_flags |= AI_V4MAPPED;
 
 	try {
 		internet_address ia { host };
@@ -262,38 +265,34 @@ socket_address::get_client(int family, socket_type type,
 	std::string::const_iterator I;
 	I = std::find_if(svc.begin(), svc.end(), [](char c) { return !std::isdigit(c); });
 	if (I == svc.end()) {
-		hints.ai_flags = AI_NUMERICSERV;
+		hints.ai_flags |= AI_NUMERICSERV;
 	}
 
 	hints.ai_family = family;
 	hints.ai_socktype = (type == socket_type::tcp) ? SOCK_STREAM : SOCK_DGRAM;
-	hints.ai_protocol = (type == socket_type::tcp) ? IPPROTO_TCP : IPPROTO_UDP;
 
 	snf::net::internal::get_address_info(host.c_str(), svc.c_str(), &hints, &res);
 
-	if (res) {
-		if (res->ai_family == AF_INET) {
+	std::vector<socket_address> sa_vec;
+
+	for (ptr = res; ptr != nullptr; ptr = ptr->ai_next) {
+		if (ptr->ai_family == AF_INET) {
 			sockaddr_in *sin = reinterpret_cast<sockaddr_in *>(res->ai_addr);
 			socket_address sa { *sin };
-			freeaddrinfo(res);
-			return sa;
+			sa_vec.push_back(sa);
 		} else if (res->ai_family == AF_INET6) {
 			sockaddr_in6 *sin6 = reinterpret_cast<sockaddr_in6 *>(res->ai_addr);
 			socket_address sa { *sin6 };
-			freeaddrinfo(res);
-			return sa;
-		} else {
-			std::ostringstream oss;
-			oss << "invalid address family (" << res->ai_family << ")";
-			freeaddrinfo(res);
-			throw std::runtime_error(oss.str());
+			sa_vec.push_back(sa);
 		}
-	} else {
-		throw std::runtime_error("empty result address info");
 	}
+
+	freeaddrinfo(res);
+
+	return sa_vec;
 }
 
-socket_address
+std::vector<socket_address>
 socket_address::get_client(int family, socket_type type,
 			const std::string &host, in_port_t port)
 {

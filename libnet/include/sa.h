@@ -2,6 +2,7 @@
 #define _SNF_SA_H_
 
 #include <string>
+#include <vector>
 #include <sstream>
 #include "netplat.h"
 
@@ -47,11 +48,12 @@ public:
 
 	std::string str(bool brief = true) const;
 
-	static socket_address get_server(int, socket_type, const std::string &);
-	static socket_address get_server(int, socket_type, in_port_t);
-	static socket_address get_client(int, socket_type,
-					const std::string &, const std::string &);
-	static socket_address get_client(int, socket_type, const std::string &, in_port_t);
+	static std::vector<socket_address> get_server(int, socket_type, const std::string &);
+	static std::vector<socket_address> get_server(int, socket_type, in_port_t);
+	static std::vector<socket_address> get_client(int, socket_type,
+				const std::string &, const std::string &);
+	static std::vector<socket_address> get_client(int, socket_type,
+				const std::string &, in_port_t);
 };
 
 inline std::ostream &
