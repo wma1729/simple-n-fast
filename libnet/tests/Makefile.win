@@ -1,0 +1,25 @@
+include ../../Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+NETTESTER_OBJS =  $(P)\nettester.obj
+
+INCL = $(INCLCOM) $(INCLLOG) $(INCLNET)
+
+all: platform $(P)\nettester.exe
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\nettester.exe: $(NETTESTER_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
+
+{.}.cpp{$(P)}.obj:
+	$(CC) $(CFLAGS) /utf-8 $(DBG) $(DEFINES) $(INCL) $< /Fo$@
+
+install:
+
+clean:
+	@del /q $(NETTESTER_OBJS) $(P)\*.pdb $(P)\nettester.*
