@@ -11,7 +11,7 @@ namespace net {
 class host
 {
 private:
-	std::string                     m_canonical_name;
+	std::string                     m_canonical;
 	std::vector<std::string>        m_names;
 	std::vector<internet_address>   m_ias;
 
@@ -22,7 +22,7 @@ public:
 	host(const std::string &);
 	host(const std::string &, int);
 
-	const std::string &get_canonical_name() const { return m_canonical_name; }
+	const std::string &get_canonical_name() const { return m_canonical; }
 	const std::vector<std::string> &get_names() const { return m_names; }
 	const std::vector<internet_address> &get_internet_addresses() const { return m_ias; }
 };

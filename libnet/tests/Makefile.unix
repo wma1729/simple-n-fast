@@ -4,16 +4,16 @@ ifndef P
 $(error P is not set)
 endif
 
-NETTESTER_OBJS = ${P}/nettester.o
+HOSTADDR_OBJS = ${P}/hostaddr.o
 
 INCL = ${INCLCOM} ${INCLNET} ${INCLLOG}
 
-all: platform ${P}/nettester
+all: platform ${P}/hostaddr
 
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/nettester: ${NETTESTER_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
+${P}/hostaddr: ${HOSTADDR_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
@@ -22,4 +22,4 @@ ${P}/%.o: %.cpp
 install:
 
 clean:
-	@/bin/rm -rf ${NETTESTER_OBJS} ${P}/nettester
+	@/bin/rm -rf ${HOSTADDR_OBJS} ${P}/hostaddr

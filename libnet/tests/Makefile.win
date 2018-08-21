@@ -4,16 +4,16 @@ include ../../Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-NETTESTER_OBJS =  $(P)\nettester.obj
+HOSTADDR_OBJS =  $(P)\hostaddr.obj
 
 INCL = $(INCLCOM) $(INCLLOG) $(INCLNET)
 
-all: platform $(P)\nettester.exe
+all: platform $(P)\hostaddr.exe
 
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\nettester.exe: $(NETTESTER_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+$(P)\hostaddr.exe: $(HOSTADDR_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
 {.}.cpp{$(P)}.obj:
@@ -22,4 +22,4 @@ $(P)\nettester.exe: $(NETTESTER_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 install:
 
 clean:
-	@del /q $(NETTESTER_OBJS) $(P)\*.pdb $(P)\nettester.*
+	@del /q $(HOSTADDR_OBJS) $(P)\*.pdb $(P)\hostaddr.*

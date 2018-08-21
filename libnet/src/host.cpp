@@ -30,7 +30,7 @@ host::init(const std::string &h, int ai_flags)
 
 	for (ptr = res; ptr != nullptr; ptr = ptr->ai_next) {
 		if (ptr->ai_canonname && (ptr->ai_canonname[0] != '\0')) {
-			m_canonical_name = ptr->ai_canonname;
+			m_canonical = ptr->ai_canonname;
 			add_name(ptr->ai_canonname);
 		}
 

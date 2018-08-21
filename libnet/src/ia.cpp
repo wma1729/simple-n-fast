@@ -126,33 +126,6 @@ internet_address::get_ipv6() const
 }
 
 std::string
-internet_address::get_canonical_name() const
-{
-	std::string addrstr = std::move(str(true));
-	struct addrinfo *res = nullptr;
-	struct addrinfo *ptr = nullptr;
-	struct addrinfo hints;
-	std::string hostname;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_flags = AI_CANONNAME;
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	snf::net::internal::get_address_info(addrstr.c_str(), nullptr, &hints, &res);
-
-	for (ptr = res; ptr != nullptr; ptr = ptr->ai_next) {
-		if (ptr->ai_canonname) {
-			hostname = ptr->ai_canonname;
-			break;
-		}
-	}
-
-	freeaddrinfo(res);
-	return hostname;
-}
-
-std::string
 internet_address::str(bool brief) const
 {
 	char        addrstr[INET6_ADDRSTRLEN];
@@ -193,37 +166,6 @@ internet_address::str(bool brief) const
 	}
 
 	return s;
-}
-
-std::vector<internet_address>
-internet_address::get(const std::string &host)
-{
-	struct addrinfo *res = nullptr;
-	struct addrinfo *ptr = nullptr;
-	struct addrinfo hints;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	snf::net::internal::get_address_info(host.c_str(), nullptr, &hints, &res);
-
-	std::vector<internet_address> ia_vec;
-
-	for (ptr = res; ptr != nullptr; ptr = ptr->ai_next) {
-		if (ptr->ai_family == AF_INET) {
-			sockaddr_in *sin = reinterpret_cast<sockaddr_in *>(ptr->ai_addr);
-			internet_address ia { sin->sin_addr };
-			ia_vec.push_back(ia);
-		} else if (ptr->ai_family == AF_INET6) {
-			sockaddr_in6 *sin6 = reinterpret_cast<sockaddr_in6 *>(ptr->ai_addr);
-			internet_address ia { sin6->sin6_addr };
-			ia_vec.push_back(ia);
-		}
-	}
-
-	freeaddrinfo(res);
-	return ia_vec;
 }
 
 } // namespace net
