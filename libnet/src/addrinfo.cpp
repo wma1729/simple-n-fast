@@ -40,7 +40,7 @@ get_address_info(
 		oss << "failed to get address for " << host;
 
 #if defined(_WIN32)
-                throw std::system_error(
+		throw std::system_error(
 			snf::net::error(),
 			std::system_category(),
 			oss.str());

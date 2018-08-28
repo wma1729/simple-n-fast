@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "netplat.h"
+#include "sa.h"
 #include <stdexcept>
 
 namespace snf {
@@ -76,6 +77,27 @@ T ntoh(T b)
 	}
 	throw std::invalid_argument("invalid data type");
 }
+
+class socket
+{
+private:
+	sock_t          m_sock;
+	socket_type     m_type;
+	socket_address  *m_local = nullptr;
+	socket_address  *m_peer = nullptr;
+
+	const char *optstr(int, int);
+	void getopt(int, int, int *);
+	void setopt(int, int, int);
+
+public:
+	socket(sock_t);
+	socket(int, socket_type);
+
+	socket_type get_type() { return m_type; }
+	void keepalive(bool enable = true);
+	void reuseaddr(bool set = true);
+};
 
 } // namespace net
 } // namespace snf
