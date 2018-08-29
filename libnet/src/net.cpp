@@ -46,6 +46,11 @@ socket::optstr(int level, int optname)
 				case SO_TYPE: return "SO_TYPE";
 				case SO_KEEPALIVE: return "SO_KEEPALIVE";
 				case SO_REUSEADDR: return "SO_REUSEADDR";
+				case SO_LINGER: return "SO_LINGER";
+				case SO_RCVBUF: return "SO_RCVBUF";
+				case SO_SNDBUF: return "SO_SNDBUF";
+				case SO_RCVTIMEO: return "SO_RCVTIMEO";
+				case SO_SNDTIMEO: return "SO_SNDTIMEO";
 				default: break;
 			}
 			break;
@@ -65,20 +70,14 @@ socket::optstr(int level, int optname)
 }
 
 void
-socket::getopt(int level, int optname, int *value)
+socket::getopt(int level, int optname, void *value, int *vlen)
 {
 	int retval;
 
 #if defined(_WIN32)
-
-	int vlen = static_cast<int>(sizeof(*value));
-	retval = getsockopt(m_sock, level, optname, reinterpret_cast<char *>(value), &vlen);
-
+	retval = getsockopt(m_sock, level, optname, reinterpret_cast<char *>(value), vlen);
 #else
-
-	socklen_t vlen = static_cast<socklen_t>(sizeof(*value));
-	retval = getsockopt(m_sock, level, optname, value, &vlen);
-
+	retval = getsockopt(m_sock, level, optname, value, reinterpret_cast<socklen_t *>(vlen));
 #endif
 
 	if (SOCKET_ERROR == retval) {
@@ -92,20 +91,14 @@ socket::getopt(int level, int optname, int *value)
 }
 
 void
-socket::setopt(int level, int optname, int value)
+socket::setopt(int level, int optname, void *value, int vlen)
 {
 	int retval;
 
 #if defined(_WIN32)
-
-	int vlen = static_cast<int>(sizeof(value));
-	retval = setsockopt(m_sock, level, optname, reinterpret_cast<char *>(&value), vlen);
-
+	retval = setsockopt(m_sock, level, optname, reinterpret_cast<char *>(value), vlen);
 #else
-
-	socklen_t vlen = static_cast<socklen_t>(sizeof(value));
-	retval = setsockopt(m_sock, level, optname, &value, vlen);
-
+	retval = setsockopt(m_sock, level, optname, value, static_cast<socklen_t>(vlen));
 #endif
 
 	if (SOCKET_ERROR == retval) {
@@ -122,8 +115,9 @@ socket::socket(sock_t s)
 	: m_sock(s)
 {
 	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
 
-	getopt(SOL_SOCKET, SO_TYPE, &value);
+	getopt(SOL_SOCKET, SO_TYPE, &value, &vlen);
 
 	if (value == SOCK_STREAM) {
 		m_type = socket_type::tcp;
@@ -173,19 +167,147 @@ socket::socket(int family, socket_type type)
 void
 socket::keepalive(bool enable)
 {
-	if (enable)
-		setopt(SOL_SOCKET, SO_KEEPALIVE, 1);
-	else
-		setopt(SOL_SOCKET, SO_KEEPALIVE, 0);
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+
+	if (enable) {
+		value = 1;
+		setopt(SOL_SOCKET, SO_KEEPALIVE, &value, vlen);
+	} else {
+		setopt(SOL_SOCKET, SO_KEEPALIVE, &value, vlen);
+	}
 }
 
 void
 socket::reuseaddr(bool set)
 {
-	if (set)
-		setopt(SOL_SOCKET, SO_REUSEADDR, 1);
-	else
-		setopt(SOL_SOCKET, SO_REUSEADDR, 0);
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+
+	if (set) {
+		value = 1;
+		setopt(SOL_SOCKET, SO_REUSEADDR, &value, vlen);
+	} else {
+		setopt(SOL_SOCKET, SO_REUSEADDR, &value, vlen);
+	}
+}
+
+void
+socket::linger(socket::linger_type lt, int to)
+{
+	struct linger value;
+	int vlen = static_cast<int>(sizeof(value));
+
+	if (lt == socket::linger_type::dflt) {
+		value.l_onoff = 0;
+		value.l_linger = 0;
+	} else if (lt == socket::linger_type::none) {
+		value.l_onoff = 1;
+		value.l_linger = 0;
+	} else if (lt == socket::linger_type::timed) {
+		value.l_onoff = 1;
+		value.l_linger = to;
+	}
+
+	setopt(SOL_SOCKET, SO_LINGER, &value, vlen);
+}
+
+int
+socket::rcvbuf()
+{
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_RCVBUF, &value, &vlen);
+	return value;
+}
+
+void
+socket::rcvbuf(int bufsize)
+{
+	int value = bufsize;
+	int vlen = static_cast<int>(sizeof(value));
+	setopt(SOL_SOCKET, SO_RCVBUF, &value, vlen);
+}
+
+int
+socket::sndbuf()
+{
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_SNDBUF, &value, &vlen);
+	return value;
+}
+
+void
+socket::sndbuf(int bufsize)
+{
+	int value = bufsize;
+	int vlen = static_cast<int>(sizeof(value));
+	setopt(SOL_SOCKET, SO_SNDBUF, &value, vlen);
+}
+
+int64_t
+socket::rcvtimeout()
+{
+#if defined(_WIN32)
+	// SO_RCVTIMEO not supported with getsockopt
+	return -1L;
+#else
+	struct timeval value;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_RCVTIMEO, &value, &vlen);
+	return value.tv_sec * 1000 + value.tv_usec / 1000;
+#endif
+}
+
+void
+socket::rcvtimeout(int64_t to)
+{
+#if defined(_WIN32)
+	DWORD value = narrow_cast<DWORD>(to);
+	int vlen = static_cast<int>(sizeof(value));
+#else
+	struct timeval value;
+	int vlen = static_cast<int>(sizeof(value));
+
+	if (to > 1000)
+		value.tv_sec = to / 1000;
+	value.tv_usec = (to % 1000) * 1000;
+
+#endif
+	setopt(SOL_SOCKET, SO_RCVTIMEO, &value, vlen);
+}
+
+int64_t
+socket::sndtimeout()
+{
+#if defined(_WIN32)
+	// SO_SNDTIMEO not supported with getsockopt
+	return -1L;
+#else
+	struct timeval value;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_SNDTIMEO, &value, &vlen);
+	return value.tv_sec * 1000 + value.tv_usec / 1000;
+#endif
+}
+
+void
+socket::sndtimeout(int64_t to)
+{
+#if defined(_WIN32)
+	DWORD value = narrow_cast<DWORD>(to);
+	int vlen = static_cast<int>(sizeof(value));
+#else
+	struct timeval value;
+	int vlen = static_cast<int>(sizeof(value));
+
+	if (to > 1000)
+		value.tv_sec = to / 1000;
+	value.tv_usec = (to % 1000) * 1000;
+
+#endif
+	setopt(SOL_SOCKET, SO_SNDTIMEO, &value, vlen);
 }
 
 } // namespace net

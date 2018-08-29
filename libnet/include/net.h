@@ -87,16 +87,32 @@ private:
 	socket_address  *m_peer = nullptr;
 
 	const char *optstr(int, int);
-	void getopt(int, int, int *);
-	void setopt(int, int, int);
+	void getopt(int, int, void *, int *);
+	void setopt(int, int, void *, int);
 
 public:
+	enum class linger_type
+	{
+		dflt,	// default linger behaviour
+		none,	// no lingering
+		timed	// linger for the specified time
+	};
+
 	socket(sock_t);
 	socket(int, socket_type);
 
 	socket_type get_type() { return m_type; }
 	void keepalive(bool enable = true);
 	void reuseaddr(bool set = true);
+	void linger(linger_type, int to = 60);
+	int rcvbuf();
+	void rcvbuf(int);
+	int sndbuf();
+	void sndbuf(int);
+	int64_t rcvtimeout();
+	void rcvtimeout(int64_t);
+	int64_t sndtimeout();
+	void sndtimeout(int64_t);
 };
 
 } // namespace net
