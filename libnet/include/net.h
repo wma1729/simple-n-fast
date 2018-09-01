@@ -100,10 +100,14 @@ public:
 
 	socket(sock_t);
 	socket(int, socket_type);
+	~socket() { close(); }
 
 	socket_type get_type() { return m_type; }
-	void keepalive(bool enable = true);
-	void reuseaddr(bool set = true);
+	bool keepalive();
+	void keepalive(bool);
+	bool reuseaddr();
+	void reuseaddr(bool);
+	linger_type linger(int *to = nullptr);
 	void linger(linger_type, int to = 60);
 	int rcvbuf();
 	void rcvbuf(int);
@@ -113,6 +117,9 @@ public:
 	void rcvtimeout(int64_t);
 	int64_t sndtimeout();
 	void sndtimeout(int64_t);
+	bool tcpnodelay();
+	void tcpnodelay(bool);
+	void close();
 };
 
 } // namespace net

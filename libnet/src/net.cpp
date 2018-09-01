@@ -164,31 +164,56 @@ socket::socket(int family, socket_type type)
 	m_type = type;
 }
 
-void
-socket::keepalive(bool enable)
+bool
+socket::keepalive()
 {
 	int value = 0;
 	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_KEEPALIVE, &value, &vlen);
+	return (value != 0);
+}
 
-	if (enable) {
-		value = 1;
-		setopt(SOL_SOCKET, SO_KEEPALIVE, &value, vlen);
-	} else {
-		setopt(SOL_SOCKET, SO_KEEPALIVE, &value, vlen);
-	}
+void
+socket::keepalive(bool enable)
+{
+	int value = enable ? 1 : 0;
+	int vlen = static_cast<int>(sizeof(value));
+	setopt(SOL_SOCKET, SO_KEEPALIVE, &value, vlen);
+}
+
+bool
+socket::reuseaddr()
+{
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_REUSEADDR, &value, &vlen);
+	return (value != 0);
 }
 
 void
 socket::reuseaddr(bool set)
 {
-	int value = 0;
+	int value = set ? 1 : 0;
 	int vlen = static_cast<int>(sizeof(value));
+	setopt(SOL_SOCKET, SO_REUSEADDR, &value, vlen);
+}
 
-	if (set) {
-		value = 1;
-		setopt(SOL_SOCKET, SO_REUSEADDR, &value, vlen);
+socket::linger_type
+socket::linger(int *to)
+{
+	struct linger value;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_LINGER, &value, &vlen);
+
+	if (value.l_onoff == 0) {
+		return socket::linger_type::dflt;
 	} else {
-		setopt(SOL_SOCKET, SO_REUSEADDR, &value, vlen);
+		if (value.l_linger == 0) {
+			return socket::linger_type::none;
+		} else {
+			if (*to) *to = value.l_linger;
+			return socket::linger_type::timed;
+		}
 	}
 }
 
@@ -205,6 +230,8 @@ socket::linger(socket::linger_type lt, int to)
 		value.l_onoff = 1;
 		value.l_linger = 0;
 	} else if (lt == socket::linger_type::timed) {
+		if (to == 0)
+			throw std::invalid_argument("timeout value not provided for timed linger");
 		value.l_onoff = 1;
 		value.l_linger = to;
 	}
@@ -308,6 +335,45 @@ socket::sndtimeout(int64_t to)
 
 #endif
 	setopt(SOL_SOCKET, SO_SNDTIMEO, &value, vlen);
+}
+
+bool
+socket::tcpnodelay()
+{
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(IPPROTO_TCP, TCP_NODELAY, &value, &vlen);
+	return (value != 0);
+}
+
+void
+socket::tcpnodelay(bool nodelay)
+{
+	int value = nodelay ? 1 : 0;
+	int vlen = static_cast<int>(sizeof(value));
+	setopt(IPPROTO_TCP, TCP_NODELAY, &value, vlen);
+}
+
+void
+socket::close()
+{
+	if (m_sock != INVALID_SOCKET) {
+#if defined(_WIN32)
+		int retval = ::closesocket(m_sock);
+#else
+		int retval = ::close(m_sock);
+#endif
+		if (SOCKET_ERROR == retval) {
+			std::ostringstream oss;
+			oss << "failed to close socket " << static_cast<int64_t>(m_sock);
+			throw std::system_error(
+				snf::net::error(),
+				std::system_category(),
+				oss.str());
+		} else {
+			m_sock = INVALID_SOCKET;
+		}
+	}
 }
 
 } // namespace net
