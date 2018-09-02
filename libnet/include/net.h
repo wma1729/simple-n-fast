@@ -100,7 +100,7 @@ public:
 
 	socket(sock_t);
 	socket(int, socket_type);
-	~socket() { close(); }
+	~socket();
 
 	socket_type get_type() { return m_type; }
 	bool keepalive();
@@ -119,8 +119,24 @@ public:
 	void sndtimeout(int64_t);
 	bool tcpnodelay();
 	void tcpnodelay(bool);
+	void blocking(bool);
 	void close();
 };
+
+inline std::ostream &
+operator<<(std::ostream &os, socket::linger_type lt)
+{
+	if (lt == socket::linger_type::dflt)
+		os << "default";
+	else if (lt == socket::linger_type::none)
+		os << "none";
+	else if (lt == socket::linger_type::timed)
+		os << "timed";
+	else
+		os << "unknown";
+
+	return os;
+}
 
 } // namespace net
 } // namespace snf

@@ -16,6 +16,7 @@ using sock_t = SOCKET;
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <fcntl.h>
 
 using sock_t = int;
 constexpr sock_t INVALID_SOCKET = -1;

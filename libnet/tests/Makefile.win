@@ -4,11 +4,12 @@ include ../../Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-HOSTADDR_OBJS =  $(P)\hostaddr.obj
+NETTS_OBJS = $(P)\netts.obj
+HOSTADDR_OBJS = $(P)\hostaddr.obj
 
-INCL = $(INCLCOM) $(INCLLOG) $(INCLNET)
+INCL = $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLTF)
 
-all: platform $(P)\hostaddr.exe
+all: platform $(P)\hostaddr.exe $(P)\netts.exe
 
 platform:
 	@if not exist $(P) mkdir $(P)
@@ -16,10 +17,16 @@ platform:
 $(P)\hostaddr.exe: $(HOSTADDR_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
+$(P)\netts.exe: $(NETTS_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
+
 {.}.cpp{$(P)}.obj:
 	$(CC) $(CFLAGS) /utf-8 $(DBG) $(DEFINES) $(INCL) $< /Fo$@
+
+test:
+	@$(P)\netts.exe -name "libnet-test-suite" -desc "test suite for libnet" -v
 
 install:
 
 clean:
-	@del /q $(HOSTADDR_OBJS) $(P)\*.pdb $(P)\hostaddr.*
+	@del /q $(HOSTADDR_OBJS) $(NETTS_OBJS) $(P)\*.pdb $(P)\hostaddr.* $(P)\netts.*

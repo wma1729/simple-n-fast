@@ -164,6 +164,19 @@ socket::socket(int family, socket_type type)
 	m_type = type;
 }
 
+socket::~socket()
+{
+	close();
+	if (m_local) {
+		delete m_local;
+		m_local = nullptr;
+	}
+	if (m_peer) {
+		delete m_peer;
+		m_peer = nullptr;
+	}
+}
+
 bool
 socket::keepalive()
 {
@@ -211,7 +224,7 @@ socket::linger(int *to)
 		if (value.l_linger == 0) {
 			return socket::linger_type::none;
 		} else {
-			if (*to) *to = value.l_linger;
+			if (to) *to = value.l_linger;
 			return socket::linger_type::timed;
 		}
 	}
@@ -352,6 +365,41 @@ socket::tcpnodelay(bool nodelay)
 	int value = nodelay ? 1 : 0;
 	int vlen = static_cast<int>(sizeof(value));
 	setopt(IPPROTO_TCP, TCP_NODELAY, &value, vlen);
+}
+
+void
+socket::blocking(bool blk)
+{
+	int status;
+	const char *mode = blk ? "blocking" : "non-blocking";
+
+#if defined(_WIN32)
+	u_long nb = blk ? 0 : 1;
+	status = ioctlsocket(m_sock, FIONBIO, &nb);
+#else
+	int flags = fcntl(m_sock, F_GETFL, 0);
+	if (SOCKET_ERROR == flags) {
+		throw std::system_error(
+			snf::net::error(),
+			std::system_category(),
+			"failed to get socket flags");
+	}
+
+	if (blk)
+		flags &= ~O_NONBLOCK;
+	else
+		flags |= O_NONBLOCK;
+	status = fcntl(m_sock, F_SETFL, flags);
+#endif
+
+	if (SOCKET_ERROR == status) {
+		std::ostringstream oss;
+		oss << "failed to set socket mode to " << mode;
+		throw std::system_error(
+			snf::net::error(),
+			std::system_category(),
+			oss.str());
+	}
 }
 
 void

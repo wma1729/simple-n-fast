@@ -186,7 +186,7 @@ public:
 			std::ostringstream oss;
 			oss << "Assertion ("
 				<< lhs_expr
-				<< "!="
+				<< "=="
 				<< rhs_expr
 				<< ") failed; lhs = "
 				<< lhs
@@ -212,7 +212,59 @@ public:
 			std::ostringstream oss;
 			oss << "Assertion ("
 				<< lhs_expr
-				<< "=="
+				<< "!="
+				<< rhs_expr
+				<< ") failed; lhs = "
+				<< lhs
+				<< ", rhs = "
+				<< rhs;
+			throw assertion_failure(oss.str(), file, line);
+		}
+
+		if (verbose)
+			std::cerr << msg << " ... OK" << std::endl;
+	}
+
+	template<typename T>
+	static void gt(
+		T lhs, const char *lhs_expr,
+		T rhs, const char *rhs_expr,
+		const std::string &msg,
+		const char *file, int line)
+	{
+		if (lhs <= rhs) {
+			std::cerr << msg << " ... OUCH" << std::endl;
+
+			std::ostringstream oss;
+			oss << "Assertion ("
+				<< lhs_expr
+				<< ">"
+				<< rhs_expr
+				<< ") failed; lhs = "
+				<< lhs
+				<< ", rhs = "
+				<< rhs;
+			throw assertion_failure(oss.str(), file, line);
+		}
+
+		if (verbose)
+			std::cerr << msg << " ... OK" << std::endl;
+	}
+
+	template<typename T>
+	static void ge(
+		T lhs, const char *lhs_expr,
+		T rhs, const char *rhs_expr,
+		const std::string &msg,
+		const char *file, int line)
+	{
+		if (lhs < rhs) {
+			std::cerr << msg << " ... OUCH" << std::endl;
+
+			std::ostringstream oss;
+			oss << "Assertion ("
+				<< lhs_expr
+				<< ">="
 				<< rhs_expr
 				<< ") failed; lhs = "
 				<< lhs
@@ -274,6 +326,10 @@ public:
 	snf::tf::assertion::eq<T>(N1, #N1, N2, #N2, STR, __FILE__, __LINE__)
 #define ASSERT_NE(T, N1, N2, STR)       \
 	snf::tf::assertion::ne<T>(N1, #N1, N2, #N2, STR, __FILE__, __LINE__)
+#define ASSERT_GT(T, N1, N2, STR)       \
+	snf::tf::assertion::gt<T>(N1, #N1, N2, #N2, STR, __FILE__, __LINE__)
+#define ASSERT_GE(T, N1, N2, STR)       \
+	snf::tf::assertion::ge<T>(N1, #N1, N2, #N2, STR, __FILE__, __LINE__)
 #define ASSERT_MEM_EQ(S1, S2, N, STR)   \
 	snf::tf::assertion::mem_eq(S1, #S1, S2, #S2, N, STR, __FILE__, __LINE__)
 #define ASSERT_MEM_NE(S1, S2, N, STR)   \

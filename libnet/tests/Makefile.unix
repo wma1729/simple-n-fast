@@ -4,11 +4,12 @@ ifndef P
 $(error P is not set)
 endif
 
+NETTS_OBJS = ${P}/netts.o
 HOSTADDR_OBJS = ${P}/hostaddr.o
 
-INCL = ${INCLCOM} ${INCLNET} ${INCLLOG}
+INCL = ${INCLCOM} ${INCLNET} ${INCLLOG} ${INCLTF}
 
-all: platform ${P}/hostaddr
+all: platform ${P}/hostaddr ${P}/netts
 
 platform:
 	@test -d ${P} || mkdir ${P}
@@ -16,10 +17,20 @@ platform:
 ${P}/hostaddr: ${HOSTADDR_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
+${P}/netts: ${NETTS_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
 ${P}/%.o: %.cpp
 	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+test:
+ifeq (${DBG},-g)
+	@valgrind --quiet --leak-check=full --show-leak-kinds=all ${P}/netts -name "libnet-test-suite" -desc "test suite for libnet" -v
+else
+	@${P}/netts -name "libnet-test-suite" -desc "test suite for libnet" -v
+endif
 
 install:
 
 clean:
-	@/bin/rm -rf ${HOSTADDR_OBJS} ${P}/hostaddr
+	@/bin/rm -rf ${HOSTADDR_OBJS} ${NETTS_OBJS} ${P}/hostaddr ${P}/netts
