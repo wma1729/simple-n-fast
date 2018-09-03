@@ -27,6 +27,7 @@ public:
 	socket_address(const internet_address &, in_port_t);
 	socket_address(int, const std::string &, in_port_t);
 	socket_address(const std::string &, in_port_t);
+	socket_address(const sockaddr_storage &, socklen_t);
 	socket_address(const sockaddr_in &);
 	socket_address(const sockaddr_in6 &);
 	socket_address(const socket_address &);
@@ -44,7 +45,8 @@ public:
 	const sockaddr_in6 *get_sa_v6() const;
 	const sockaddr *get_sa() const;
 
-	in_port_t get_port() const;
+	in_port_t port() const;
+	void port(in_port_t);
 
 	std::string str(bool brief = true) const;
 

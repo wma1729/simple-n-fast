@@ -46,6 +46,27 @@ socket_address::socket_address(const std::string &addrstr, in_port_t port)
 	init(ia, port);
 }
 
+socket_address::socket_address(const sockaddr_storage &ss, socklen_t len)
+{
+	if (ss.ss_family == AF_INET) {
+		if (len < static_cast<socklen_t>(sizeof(sockaddr_in))) {
+			throw std::invalid_argument("invalid address length");
+		}
+
+		const sockaddr_in &sin = reinterpret_cast<const sockaddr_in &>(ss);
+		memcpy(&(m_addr.v4_addr), &sin, sizeof(sockaddr_in));
+	} else if (ss.ss_family == AF_INET6) {
+		if (len < static_cast<socklen_t>(sizeof(sockaddr_in6))) {
+			throw std::invalid_argument("invalid address length");
+		}
+
+		const sockaddr_in6 &sin6 = reinterpret_cast<const sockaddr_in6 &>(ss);
+		memcpy(&(m_addr.v6_addr), &sin6, sizeof(sockaddr_in6));
+	} else {
+		throw std::invalid_argument("invalid address family");
+	}
+}
+
 socket_address::socket_address(const sockaddr_in &sin)
 {
 	memcpy(&(m_addr.v4_addr), &sin, sizeof(sockaddr_in));
@@ -137,9 +158,15 @@ socket_address::get_sa() const
 }
 
 in_port_t
-socket_address::get_port() const
+socket_address::port() const
 {
 	return narrow_cast<in_port_t>(ntoh(m_addr.v4_addr.sin_port));
+}
+
+void
+socket_address::port(in_port_t p)
+{
+	m_addr.v4_addr.sin_port = hton(p);
 }
 
 std::string
@@ -167,7 +194,7 @@ socket_address::str(bool brief) const
 	std::ostringstream oss;
 
 	if (brief) {
-		oss << paddr << "-" << get_port();
+		oss << paddr << "-" << port();
 		s = oss.str();
 	} else {
 
@@ -180,7 +207,7 @@ socket_address::str(bool brief) const
 			oss << "unknown";
 		} 
 
-		oss << ", addr=" << paddr << ", port=" << get_port();
+		oss << ", addr=" << paddr << ", port=" << port();
 		s = oss.str();
 	}
 
