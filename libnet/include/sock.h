@@ -51,6 +51,7 @@ public:
 	const socket_address &local_address();
 	const socket_address &peer_address();
 	void close();
+	void shutdown(int);
 };
 
 inline std::ostream &

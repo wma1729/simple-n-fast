@@ -448,5 +448,33 @@ socket::close()
 	}
 }
 
+void
+socket::shutdown(int type)
+{
+	if (m_sock != INVALID_SOCKET) {
+		if (::shutdown(m_sock, type) == SOCKET_ERROR) {
+			const char *typestr;
+
+			if (type == SHUTDOWN_READ)
+				typestr = "read";
+			else if (type == SHUTDOWN_WRITE)
+				typestr = "write";
+			else if (type == SHUTDOWN_RDWR)
+				typestr = "read-write";
+			else
+				typestr = "unknown";
+
+			std::ostringstream oss;
+			oss << "failed to shutdown(" << typestr << ") socket "
+				<< static_cast<int64_t>(m_sock);
+
+			throw std::system_error(
+				snf::net::error(),
+				std::system_category(),
+				oss.str());
+		}
+	}
+}
+
 } // namespace net
 } // namespace snf
