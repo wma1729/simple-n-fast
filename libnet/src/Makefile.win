@@ -6,7 +6,7 @@ include ..\..\Makefile.constants
 
 OBJS =  $(P)\net.obj $(P)\addrinfo.obj $(P)\ia.obj $(P)\sa.obj $(P)\host.obj $(P)\sock.obj
 
-INCL = $(INCLNET) $(INCLLOG) $(INCLCOM)
+INCL = $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 
 LIBNETPDB = $(P)\libnet.pdb
 

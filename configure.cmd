@@ -86,6 +86,7 @@ ECHO INCLJSON = /I"%BLDDIR%libjson\include" >> Makefile.constants
 ECHO INCLLOG = /I"%BLDDIR%liblog\include" >> Makefile.constants
 ECHO INCLNET = /I"%BLDDIR%libnet\include" >> Makefile.constants
 ECHO INCLTF = /I"%BLDDIR%tf" >> Makefile.constants
+ECHO INCLSSL = /I"%BLDDIR%ssl\%BLDPLAT%\include" >> Makefile.constants
 ECHO LIBCOM = "%BLDDIR%libcom\src\%BLDPLAT%\com.lib" >> Makefile.constants
 ECHO LIBRDB = "%BLDDIR%librdb\src\%BLDPLAT%\rdb.lib" >> Makefile.constants
 ECHO LIBJSON = "%BLDDIR%libjson\src\%BLDPLAT%\json.lib" >> Makefile.constants

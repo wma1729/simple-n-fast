@@ -82,6 +82,7 @@ if [ "$PLAT" = "Linux" ]; then
 		INCLLOG = -I`pwd`/liblog/include
 		INCLNET = -I`pwd`/libnet/include
 		INCLTF = -I`pwd`/tf
+		INCLSSL = -I`pwd`/ssl/$BLDPLAT/include
 		LIBCOM = `pwd`/libcom/src/$BLDPLAT/libcom.a
 		LIBRDB = `pwd`/librdb/src/$BLDPLAT/librdb.a
 		LIBJSON = `pwd`/libjson/src/$BLDPLAT/libjson.a

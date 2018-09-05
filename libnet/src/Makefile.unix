@@ -6,7 +6,7 @@ endif
 
 OBJS =  ${P}/net.o ${P}/addrinfo.o ${P}/ia.o ${P}/sa.o ${P}/host.o ${P}/sock.o
 
-INCL = ${INCLNET} ${INCLLOG} ${INCLCOM}
+INCL = ${INCLNET} ${INCLLOG} ${INCLCOM} ${INCLSSL}
 
 all: platform ${P}/libnet.a
 
