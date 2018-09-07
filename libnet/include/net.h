@@ -29,7 +29,7 @@ error(int e)
 #endif
 }
 
-bool initialize();
+void initialize(bool use_ssl = false);
 void finalize();
 
 template<typename T>

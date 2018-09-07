@@ -8,6 +8,7 @@ NETTS_OBJS = ${P}/netts.o
 HOSTADDR_OBJS = ${P}/hostaddr.o
 
 INCL = ${INCLCOM} ${INCLNET} ${INCLLOG} ${INCLTF}
+LIBS = -ldl -lpthread
 
 all: platform ${P}/hostaddr ${P}/netts
 

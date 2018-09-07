@@ -43,7 +43,7 @@ dll::dll(const std::string &path, bool lazy)
 void *
 dll::symbol(const char *symbol)
 {
-	void *addr = 0;
+	void *addr = nullptr;
 
 #if defined(_WIN32)
 	addr = GetProcAddress(m_handle, symbol);

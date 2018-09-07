@@ -4,7 +4,8 @@ include ..\..\Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-OBJS =  $(P)\net.obj $(P)\addrinfo.obj $(P)\ia.obj $(P)\sa.obj $(P)\host.obj $(P)\sock.obj
+OBJS =  $(P)\net.obj $(P)\addrinfo.obj $(P)\ia.obj $(P)\sa.obj $(P)\host.obj $(P)\sock.obj \
+	$(P)\sslfcn.obj
 
 INCL = $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 

@@ -5,9 +5,9 @@
 int
 main(int argc, const char **argv)
 {
-	snf::net::initialize();
-
 	try {
+		snf::net::initialize(true);
+
 		snf::net::host h { argv[1] };
 		std::cout << "Canonical Name: " << h.get_canonical_name() << std::endl;
 
@@ -25,6 +25,9 @@ main(int argc, const char **argv)
 	} catch (std::system_error e) {
 		std::cerr << "Error Code: " << e.code() << std::endl;
 		std::cerr << "Error: " << e.what() << std::endl;
+	} catch (std::runtime_error e) {
+		std::cerr << "Error: " << e.what() << std::endl;
 	}
 
+	return 0;
 }
