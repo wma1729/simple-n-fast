@@ -10,6 +10,38 @@
 namespace snf {
 
 /**
+ * A simple wrapper around FILE object.
+ */
+class file_ptr
+{
+private:
+	FILE            *m_fp;
+	std::string     m_name;
+
+	void init(const char *n, const char *a)
+	{
+		m_fp = fopen(n, a);
+		if (m_fp == nullptr) {
+			std::ostringstream oss;
+			oss << "failed to open key file " << n;
+			throw std::system_error(
+				snf::system_error(),
+				std::system_category(),
+				oss.str());
+		}
+	}
+
+public:
+	file_ptr(const char *n, const char *a) : m_name(n) { init(n, a); }
+	file_ptr(const std::string &n, const char *a) : m_name(n) { init(n.c_str(), a); }
+	explicit file_ptr(FILE *fp) : m_fp(fp) { }
+	~file_ptr() { if (m_fp) fclose(m_fp); }
+	const char *name() const { return m_name.c_str(); }
+	operator FILE* () { return m_fp; }
+
+};
+
+/**
  * A simple class to manage file operations.
  */
 class file

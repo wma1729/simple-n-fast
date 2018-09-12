@@ -22,8 +22,8 @@ do_initialize(bool use_ssl)
 	}
 #endif
 	if (use_ssl) {
-		ssl::ssl_library::instance().get_library_init()();
-		ssl::ssl_library::instance().get_load_error_strings()();
+		ssl::ssl_library::instance().library_init()();
+		ssl::ssl_library::instance().load_error_strings()();
 		ssl_inited = true;
 	}
 	return;
@@ -40,7 +40,7 @@ void
 finalize()
 {
 	if (ssl_inited) {
-		ssl::ssl_library::instance().get_free_error_strings()();
+		ssl::ssl_library::instance().free_error_strings()();
 	}
 #if defined(_WIN32)
 	WSACleanup();
