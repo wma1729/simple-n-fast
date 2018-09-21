@@ -16,7 +16,7 @@ all:	root/private/ca.key.pem \
 	intermediate/private/ocsp.key.pem \
 	intermediate/certs/ocsp.cert.pem
 
-.PHONY: clean sign revoke gencrl
+.PHONY: clean sign revoke gencrl ocsp
 
 clean:
 	/bin/rm -rf root intermediate
@@ -90,3 +90,6 @@ endif
 
 gencrl:
 	openssl ca -batch -config intermediate-ca.conf -passin pass:$(INTERMEDIATE_KEY_PASSWD) -gencrl -out intermediate/crl/crl.pem
+
+ocsp:
+	openssl ocsp -CA intermediate/certs/chain.cert.pem -index intermediate/db/index.txt -rkey intermediate/private/ocsp.key.pem -rsigner intermediate/certs/ocsp.cert.pem -host 127.0.0.1 -port 2560 -text
