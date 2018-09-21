@@ -16,6 +16,8 @@ all:	root/private/ca.key.pem \
 	intermediate/private/ocsp.key.pem \
 	intermediate/certs/ocsp.cert.pem
 
+.PHONY: clean sign revoke gencrl
+
 clean:
 	/bin/rm -rf root intermediate
 
@@ -61,3 +63,30 @@ intermediate/certs/ocsp.cert.pem: intermediate/private/ocsp.key.pem intermediate
 	openssl req -new -config intermediate-ca.conf -key $< -keyform pem -passin pass:$(OCSP_KEY_PASSWD) -subj "/C=$(C)/ST=$(ST)/L=$(L)/O=$(O)/OU=$(OU)/CN=OCSP Responder" -out intermediate/ocsp.csr.pem
 	openssl ca -batch -config intermediate-ca.conf -passin pass:$(INTERMEDIATE_KEY_PASSWD) -notext -days 375 -extensions ocsp_ext -in intermediate/ocsp.csr.pem -out $@
 	/bin/rm -f intermediate/ocsp.csr.pem
+
+sign:
+ifndef CSR
+	$(error variable CSR, for Certificate Signing Request, is not set)
+endif
+ifndef CN
+	$(error variable CN, for Common Name, is not set)
+endif
+ifndef EXT
+	$(error variable EXT, for extension to use, is not set)
+endif
+	openssl ca -batch -config intermediate-ca.conf -passin pass:$(INTERMEDIATE_KEY_PASSWD) -notext -days 375 -extensions $(EXT) -in $(CSR) -out intermediate/newcerts/$(CN).cert.pem
+	mkdir $(CN)
+	cp intermediate/newcerts/$(CN).cert.pem $(CN)
+	cp intermediate/certs/chain.cert.pem $(CN)
+	tar cvf $(CN).tar $(CN)
+	rm -rf $(CN)
+	echo "Extract $(CN).tar to fetch certificate and CA certificate chain."
+
+revoke:
+ifndef CERT
+	$(error variable CERT, for certificate to revoke, is not set)
+endif
+	openssl ca -batch -config intermediate-ca.conf -passin pass:$(INTERMEDIATE_KEY_PASSWD) -revoke intermediate/newcerts/$(CERT)
+
+gencrl:
+	openssl ca -batch -config intermediate-ca.conf -passin pass:$(INTERMEDIATE_KEY_PASSWD) -gencrl -out intermediate/crl/crl.pem
