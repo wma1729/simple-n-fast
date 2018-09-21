@@ -51,7 +51,7 @@ ignore=${config:? "config file not specified"}
 ignore=${keyfile:? "key file not specified"}
 ignore=${outfile:? "output file not specified"}
 
-openssl req -new -config ${config} -key ${keyfile} ${passphrase} -outform pem -out ${outfile}
+openssl req -new -sha256 -config ${config} -key ${keyfile} ${passphrase} -outform pem -out ${outfile}
 
 if [ $? -eq 0 ]
 then
