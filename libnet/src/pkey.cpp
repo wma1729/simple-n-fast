@@ -1,4 +1,3 @@
-#include "file.h"
 #include "pkey.h"
 
 namespace snf {
@@ -111,12 +110,24 @@ private_key::private_key(
 	const std::string &kfile,
 	const char *passwd)
 {
-	file_ptr fp(kfile, "rb");
+	snf::file_ptr fp(kfile, "rb");
 
 	if (fmt == ssl_data_fmt::pem) {
 		init_pem(fp, passwd);
 	} else /* if (fmt == ssl_data_fmt::der) */ {
 		init_der(fp);
+	}
+}
+
+private_key::private_key(
+	ssl_data_fmt fmt,
+	const ustring &kstr,
+	const char *passwd)
+{
+	if (fmt == ssl_data_fmt::pem) {
+		init_pem(kstr.data(), kstr.size(), passwd);
+	} else /* if (fmt == ssl_data_fmt::der) */ {
+		init_der(kstr.data(), kstr.size());
 	}
 }
 

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include "file.h"
 #include "sslfcn.h"
 
 namespace snf {
@@ -13,6 +14,7 @@ class private_key
 {
 public:
 	private_key(ssl_data_fmt, const std::string &, const char *passwd = nullptr);
+	private_key(ssl_data_fmt, const ustring &, const char *passwd = nullptr);
 	private_key(ssl_data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
 	~private_key();
 

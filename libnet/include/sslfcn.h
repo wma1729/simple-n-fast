@@ -4,6 +4,7 @@
 #include "dll.h"
 #include <vector>
 #include <stdexcept>
+#include <ostream>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
@@ -49,6 +50,8 @@ enum class ssl_data_fmt
 	der = 2
 };
 
+using ustring = std::basic_string<uint8_t>;
+
 struct ssl_error
 {
 	bool fatal;
@@ -60,6 +63,22 @@ struct ssl_error
 	std::string data;
 	std::string errstr;
 };
+
+inline std::ostream &
+operator<< (std::ostream &os, const ssl_error &e)
+{
+	if (e.fatal)
+		os << "Fatal error - ";
+	else
+		os << "Non-fatal  error - ";
+	if (!e.lib.empty())     os << e.lib  << ":";
+	if (!e.file.empty())    os << e.file << ":";
+	if (!e.fcn.empty())     os << e.fcn  << ":";
+	if (e.line != 0)        os << e.line << " ";
+	if (!e.data.empty())    os << "[" << e.data << "] ";
+	os << e.errstr << "(" << e.error << ")";
+	return os;
+}
 
 class ssl_exception : public std::runtime_error
 {

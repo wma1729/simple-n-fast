@@ -7,7 +7,7 @@ include ../../Makefile.constants
 NETTS_OBJS = $(P)\netts.obj
 HOSTADDR_OBJS = $(P)\hostaddr.obj
 
-INCL = $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLTF)
+INCL = $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLSSL) $(INCLTF)
 
 all: platform $(P)\hostaddr.exe $(P)\netts.exe
 

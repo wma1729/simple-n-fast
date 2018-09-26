@@ -10,6 +10,7 @@ ssl_exception::init()
 	unsigned long code;
 	int flags = 0, line = 0;
 	const char *file = nullptr, *data = nullptr;
+	const char *ptr;
 
 	while ((code = ssl_library::instance().err_line_data()(&file, &line, &data, &flags)) != 0) {
 		ssl_error e;
@@ -17,11 +18,14 @@ ssl_exception::init()
 		e.fatal = (ERR_FATAL_ERROR(code) != 0);
 		e.error = ERR_GET_REASON(code);
 		e.line = line;
-		e.lib = ssl_library::instance().err_lib_string()(code);
-		e.fcn = ssl_library::instance().err_fcn_string()(code);
+		ptr = ssl_library::instance().err_lib_string()(code);
+		if (ptr) e.lib = ptr;
+		ptr = ssl_library::instance().err_fcn_string()(code);
+		if (ptr) e.fcn = ptr;
 		if (file) e.file = file;
 		if (data && (flags & ERR_TXT_STRING)) e.data = data;
-		e.errstr = ssl_library::instance().err_reason_string()(code);
+		ptr = ssl_library::instance().err_reason_string()(code);
+		if (ptr) e.errstr = ptr;
 
 		m_error.push_back(e);
 

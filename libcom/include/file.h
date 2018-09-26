@@ -38,7 +38,6 @@ public:
 	~file_ptr() { if (m_fp) fclose(m_fp); }
 	const char *name() const { return m_name.c_str(); }
 	operator FILE* () { return m_fp; }
-
 };
 
 /**
