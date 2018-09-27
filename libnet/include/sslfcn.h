@@ -50,8 +50,6 @@ enum class ssl_data_fmt
 	der = 2
 };
 
-using ustring = std::basic_string<uint8_t>;
-
 struct ssl_error
 {
 	bool fatal;

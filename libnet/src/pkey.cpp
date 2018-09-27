@@ -1,4 +1,5 @@
 #include "pkey.h"
+#include <iostream>
 
 namespace snf {
 namespace net {
@@ -116,18 +117,6 @@ private_key::private_key(
 		init_pem(fp, passwd);
 	} else /* if (fmt == ssl_data_fmt::der) */ {
 		init_der(fp);
-	}
-}
-
-private_key::private_key(
-	ssl_data_fmt fmt,
-	const ustring &kstr,
-	const char *passwd)
-{
-	if (fmt == ssl_data_fmt::pem) {
-		init_pem(kstr.data(), kstr.size(), passwd);
-	} else /* if (fmt == ssl_data_fmt::der) */ {
-		init_der(kstr.data(), kstr.size());
 	}
 }
 
