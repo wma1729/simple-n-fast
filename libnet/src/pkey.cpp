@@ -1,5 +1,4 @@
 #include "pkey.h"
-#include <iostream>
 
 namespace snf {
 namespace net {
@@ -174,7 +173,7 @@ private_key::operator=(const private_key &pkey)
 }
 
 private_key &
-private_key::operator==(private_key &&pkey)
+private_key::operator=(private_key &&pkey)
 {
 	if (this != &pkey) {
 		m_pkey = pkey.m_pkey;

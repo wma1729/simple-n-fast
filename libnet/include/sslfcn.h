@@ -35,6 +35,13 @@ using p_get1_ec_key = EC_KEY * (*)(EVP_PKEY *);
 using p_ec_key_free = void (*)(EC_KEY *);
 using p_ec_key_check = int (*)(const EC_KEY *);
 
+using p_d2i_x509_fp = X509 * (*)(FILE *, X509 **);
+using p_d2i_x509 = X509 * (*)(X509 **, const unsigned char **, long);
+using p_pem_read_x509 = X509 * (*)(FILE *, X509 **, pem_password_cb *, void *);
+using p_pem_read_bio_x509 = X509 * (*)(BIO *, X509 **, pem_password_cb *, void *);
+using p_x509_up_ref = int (*)(X509 *);
+using p_x509_free = void (*)(X509 *);
+
 using p_err_line_data = unsigned long (*)(const char **, int *, const char **, int *);
 using p_err_lib_string = const char * (*)(unsigned long);
 using p_err_fcn_string = const char * (*)(unsigned long);
@@ -122,6 +129,13 @@ private:
 	p_ec_key_free               m_ec_key_free = nullptr;
 	p_ec_key_check              m_ec_key_check = nullptr;
 
+	p_d2i_x509_fp               m_d2i_x509_fp = nullptr;
+	p_d2i_x509                  m_d2i_x509 = nullptr;
+	p_pem_read_x509             m_pem_read_x509 = nullptr;
+	p_pem_read_bio_x509         m_pem_read_bio_x509 = nullptr;
+	p_x509_up_ref               m_x509_up_ref = nullptr;
+	p_x509_free                 m_x509_free = nullptr;
+
 	p_err_line_data             m_err_line_data = nullptr;
 	p_err_lib_string            m_err_lib_string = nullptr;
 	p_err_fcn_string            m_err_fcn_string = nullptr;
@@ -164,6 +178,13 @@ public:
 	p_get1_ec_key get1_ec_key();
 	p_ec_key_free ec_key_free();
 	p_ec_key_check ec_key_check();
+
+	p_d2i_x509_fp d2i_x509_fp();
+	p_d2i_x509 d2i_x509();
+	p_pem_read_x509 pem_read_x509();
+	p_pem_read_bio_x509 pem_read_bio_x509();
+	p_x509_up_ref x509_up_ref();
+	p_x509_free x509_free();
 
 	p_err_line_data err_line_data();
 	p_err_lib_string err_lib_string();

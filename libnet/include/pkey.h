@@ -2,7 +2,6 @@
 #define _SNF_PKEY_H_
 
 #include <cstdint>
-#include <string>
 #include "file.h"
 #include "sslfcn.h"
 
@@ -21,7 +20,7 @@ public:
 	~private_key();
 
 	const private_key &operator=(const private_key &);
-	private_key &operator==(private_key &&);
+	private_key &operator=(private_key &&);
 
 	/* Return EVP_PKEY_XXX */
 	int type() const;
@@ -31,7 +30,6 @@ public:
 
 private:
 	EVP_PKEY        *m_pkey = nullptr;
-	ssl_data_fmt    m_kfmt;
 
 	void init_der(snf::file_ptr &);
 	void init_der(const uint8_t *, size_t);

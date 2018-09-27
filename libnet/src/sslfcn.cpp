@@ -236,6 +236,60 @@ ssl_library::ec_key_check()
 	return m_ec_key_check;
 }
 
+p_d2i_x509_fp
+ssl_library::d2i_x509_fp()
+{
+	if (!m_d2i_x509_fp)
+		m_d2i_x509_fp = reinterpret_cast<p_d2i_x509_fp>
+			(m_ssl->symbol("d2i_X509_fp"));
+	return m_d2i_x509_fp;
+}
+
+p_d2i_x509
+ssl_library::d2i_x509()
+{
+	if (!m_d2i_x509)
+		m_d2i_x509 = reinterpret_cast<p_d2i_x509>
+			(m_ssl->symbol("d2i_X509"));
+	return m_d2i_x509;
+}
+
+p_pem_read_x509
+ssl_library::pem_read_x509()
+{
+	if (!m_pem_read_x509)
+		m_pem_read_x509 = reinterpret_cast<p_pem_read_x509>
+			(m_ssl->symbol("PEM_read_X509"));
+	return m_pem_read_x509;
+}
+
+p_pem_read_bio_x509
+ssl_library::pem_read_bio_x509()
+{
+	if (!m_pem_read_bio_x509)
+		m_pem_read_bio_x509 = reinterpret_cast<p_pem_read_bio_x509>
+			(m_ssl->symbol("PEM_read_bio_X509"));
+	return m_pem_read_bio_x509;
+}
+
+p_x509_up_ref
+ssl_library::x509_up_ref()
+{
+	if (!m_x509_up_ref)
+		m_x509_up_ref = reinterpret_cast<p_x509_up_ref>
+			(m_ssl->symbol("X509_up_ref"));
+	return m_x509_up_ref;
+}
+
+p_x509_free
+ssl_library::x509_free()
+{
+	if (!m_x509_free)
+		m_x509_free = reinterpret_cast<p_x509_free>
+			(m_ssl->symbol("X509_free"));
+	return m_x509_free;
+}
+
 p_err_line_data
 ssl_library::err_line_data()
 {

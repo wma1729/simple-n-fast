@@ -5,7 +5,7 @@ $(error P is not set)
 endif
 
 OBJS =  ${P}/net.o ${P}/addrinfo.o ${P}/ia.o ${P}/sa.o ${P}/host.o ${P}/sock.o ${P}/sslfcn.o \
-	${P}/pkey.o
+	${P}/pkey.o ${P}/crt.o
 
 INCL = ${INCLNET} ${INCLLOG} ${INCLCOM} ${INCLSSL}
 
