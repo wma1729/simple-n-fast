@@ -22,6 +22,7 @@ using p_d2i_private_key_fp = EVP_PKEY * (*)(FILE *, EVP_PKEY **);
 using p_d2i_auto_private_key = EVP_PKEY * (*)(EVP_PKEY **, const unsigned char **, long);
 using p_pem_read_private_key = EVP_PKEY * (*)(FILE *, EVP_PKEY **, pem_password_cb *, void *);
 using p_pem_read_bio_private_key = EVP_PKEY * (*)(BIO *, EVP_PKEY **, pem_password_cb *, void *);
+using p_evp_pkey_up_ref = int (*)(EVP_PKEY *);
 using p_evp_pkey_base_id = int (*)(EVP_PKEY *);
 using p_evp_pkey_free = void (*)(EVP_PKEY *);
 using p_get1_rsa = RSA * (*)(EVP_PKEY *);
@@ -108,6 +109,7 @@ private:
 	p_d2i_auto_private_key      m_d2i_auto_private_key = nullptr;
 	p_pem_read_private_key      m_pem_read_private_key = nullptr;
 	p_pem_read_bio_private_key  m_pem_read_bio_private_key = nullptr;
+	p_evp_pkey_up_ref           m_evp_pkey_up_ref = nullptr;
 	p_evp_pkey_base_id          m_evp_pkey_base_id = nullptr;
 	p_evp_pkey_free             m_evp_pkey_free = nullptr;
 	p_get1_rsa                  m_get1_rsa = nullptr;
@@ -128,6 +130,8 @@ private:
 
 	ssl_library();
 
+	void cleanup() { if (m_ssl) { delete m_ssl; m_ssl = nullptr; } }
+
 public:
 	static ssl_library &instance()
 	{
@@ -135,7 +139,7 @@ public:
 		return ssllib;
 	}
 
-	~ssl_library();
+	~ssl_library() { cleanup(); }
 
 	p_library_init library_init();
 	p_load_error_strings load_error_strings();
@@ -148,6 +152,7 @@ public:
 	p_d2i_auto_private_key d2i_auto_private_key();
 	p_pem_read_private_key pem_read_private_key();
 	p_pem_read_bio_private_key pem_read_bio_private_key();
+	p_evp_pkey_up_ref evp_pkey_up_ref();
 	p_evp_pkey_base_id evp_pkey_base_id();
 	p_evp_pkey_free evp_pkey_free();
 	p_get1_rsa get1_rsa();

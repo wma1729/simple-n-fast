@@ -15,7 +15,13 @@ class private_key
 public:
 	private_key(ssl_data_fmt, const std::string &, const char *passwd = nullptr);
 	private_key(ssl_data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
+	private_key(EVP_PKEY *);
+	private_key(const private_key &);
+	private_key(private_key &&);
 	~private_key();
+
+	const private_key &operator=(const private_key &);
+	private_key &operator==(private_key &&);
 
 	/* Return EVP_PKEY_XXX */
 	int type() const;

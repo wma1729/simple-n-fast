@@ -47,12 +47,6 @@ ssl_library::ssl_library()
 	m_ssl = new snf::dll(libname);
 }
 
-ssl_library::~ssl_library()
-{
-	if (m_ssl)
-		delete m_ssl;
-}
-
 p_library_init
 ssl_library::library_init()
 {
@@ -132,6 +126,15 @@ ssl_library::pem_read_bio_private_key()
 		m_pem_read_bio_private_key = reinterpret_cast<p_pem_read_bio_private_key>
 			(m_ssl->symbol("PEM_read_bio_PrivateKey"));
 	return m_pem_read_bio_private_key;
+}
+
+p_evp_pkey_up_ref
+ssl_library::evp_pkey_up_ref()
+{
+	if (!m_evp_pkey_up_ref)
+		m_evp_pkey_up_ref = reinterpret_cast<p_evp_pkey_up_ref>
+			(m_ssl->symbol("EVP_PKEY_up_ref"));
+	return m_evp_pkey_up_ref;
 }
 
 p_evp_pkey_base_id

@@ -62,7 +62,7 @@ public:
 			size_t dlen;
 			uint8_t *data;
 
-			data= read_file("test.key.der", dlen);
+			data = read_file("test.key.der", dlen);
 			snf::net::ssl::private_key pkey3(
 				snf::net::ssl::ssl_data_fmt::der,
 				data,
@@ -85,6 +85,27 @@ public:
 			ASSERT_EQ(bool, true, true, "private key 4 creation passed");
 			pkey4.verify();
 			ASSERT_EQ(bool, true, true, "private key 4 verification passed");
+
+			EVP_PKEY *internal_key = pkey1;
+			snf::net::ssl::private_key pkey5(internal_key);
+			pkey5.verify();
+			ASSERT_EQ(bool, true, true, "private key 5 verification passed");
+
+			snf::net::ssl::private_key pkey6(pkey2);
+			pkey6.verify();
+			ASSERT_EQ(bool, true, true, "private key 6 verification passed");
+
+			snf::net::ssl::private_key pkey7(std::move(pkey3));
+			pkey7.verify();
+			ASSERT_EQ(bool, true, true, "private key 7 verification passed");
+
+			snf::net::ssl::private_key pkey8 = pkey4;
+			pkey8.verify();
+			ASSERT_EQ(bool, true, true, "private key 8 verification passed");
+
+			snf::net::ssl::private_key pkey9 = std::move(pkey4);
+			pkey9.verify();
+			ASSERT_EQ(bool, true, true, "private key 9 verification passed");
 
 			snf::net::finalize();
 		} catch (snf::net::ssl::ssl_exception ex) {

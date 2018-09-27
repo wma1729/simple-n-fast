@@ -133,6 +133,56 @@ private_key::private_key(
 	}
 }
 
+private_key::private_key(EVP_PKEY *pkey)
+{
+	if (ssl_library::instance().evp_pkey_up_ref()(pkey) != 1)
+		throw ssl_exception("failed to increment the key reference count");
+	m_pkey = pkey;
+}
+
+private_key::private_key(const private_key &pkey)
+{
+	if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
+		throw ssl_exception("failed to increment the key reference count");
+	m_pkey = pkey.m_pkey;
+}
+
+private_key::private_key(private_key &&pkey)
+{
+	m_pkey = pkey.m_pkey;
+	pkey.m_pkey = nullptr;
+}
+
+
+private_key::~private_key()
+{
+	if (m_pkey) {
+		ssl_library::instance().evp_pkey_free()(m_pkey);
+		m_pkey = nullptr;
+	}
+}
+
+const private_key &
+private_key::operator=(const private_key &pkey)
+{
+	if (this != &pkey) {
+		if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
+			throw ssl_exception("failed to increment the key reference count");
+		m_pkey = pkey.m_pkey;
+	}
+	return *this;
+}
+
+private_key &
+private_key::operator==(private_key &&pkey)
+{
+	if (this != &pkey) {
+		m_pkey = pkey.m_pkey;
+		pkey.m_pkey = nullptr;
+	}
+	return *this;
+}
+
 int
 private_key::type() const
 {
@@ -171,14 +221,6 @@ private_key::verify() const
 		default:
 			throw ssl_exception("invalid key type");
 			break;
-	}
-}
-
-private_key::~private_key()
-{
-	if (m_pkey) {
-		ssl_library::instance().evp_pkey_free()(m_pkey);
-		m_pkey = nullptr;
 	}
 }
 
