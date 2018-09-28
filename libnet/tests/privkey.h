@@ -5,24 +5,6 @@ class priv_key : public snf::tf::test
 private:
 	static constexpr const char *class_name = "priv_key";
 
-	uint8_t *read_file(const std::string &fname, size_t &fsize)
-	{
-		snf::file f(fname, 0022);
-
-		snf::file::open_flags flags;
-		flags.o_read = true;
-
-		f.open(flags);
-		fsize = static_cast<size_t>(f.size());
-		uint8_t *data = new uint8_t[fsize];
-
-		int bread = 0;
-		f.read(data, static_cast<int>(fsize), &bread);
-
-		f.close();
-
-		return data;
-	}
 public:
 	priv_key() : snf::tf::test() {}
 	~priv_key() {}
@@ -59,28 +41,31 @@ public:
 			pkey2.verify();
 			ASSERT_EQ(bool, true, true, "private key 2 verification passed");
 
-			size_t dlen;
-			uint8_t *data;
+			uint8_t *data = nullptr;
+			size_t dlen = 0;
 
-			data = read_file("test.key.der", dlen);
+			snf::read_file("test.key.der", data, &dlen);
 			snf::net::ssl::private_key pkey3(
 				snf::net::ssl::ssl_data_fmt::der,
 				data,
 				dlen);
 			delete [] data;
+			data = nullptr;
+			dlen = 0;
 
 			ASSERT_EQ(bool, true, true, "private key 3 creation passed");
 			pkey3.verify();
 			ASSERT_EQ(bool, true, true, "private key 3 verification passed");
 
-			data = read_file("test.key.pem", dlen);
-			read_file("test.key.pem", dlen);
+			snf::read_file("test.key.pem", data, &dlen);
 			snf::net::ssl::private_key pkey4(
 				snf::net::ssl::ssl_data_fmt::pem,
 				data,
 				dlen,
 				"Te5tP@55w0rd");
 			delete [] data;
+			data = nullptr;
+			dlen = 0;
 
 			ASSERT_EQ(bool, true, true, "private key 4 creation passed");
 			pkey4.verify();
@@ -107,7 +92,6 @@ public:
 			pkey9.verify();
 			ASSERT_EQ(bool, true, true, "private key 9 verification passed");
 
-			snf::net::finalize();
 		} catch (snf::net::ssl::ssl_exception ex) {
 			std::cerr << ex.what() << std::endl;
 			std::vector<snf::net::ssl::ssl_error>::const_iterator I;
@@ -120,6 +104,9 @@ public:
 			exception_caught = true;
 		} catch (std::invalid_argument ex) {
 			std::cerr << "invalid argument: " << ex.what() << std::endl;
+			exception_caught = true;
+		} catch (std::runtime_error ex) {
+			std::cerr << "runtime error: " << ex.what() << std::endl;
 			exception_caught = true;
 		}
 

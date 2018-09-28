@@ -22,6 +22,8 @@ public:
 	const x509_certificate &operator=(const x509_certificate &);
 	x509_certificate &operator=(x509_certificate &&);
 
+	operator X509* () { return m_crt; }
+
 private:
 	X509    *m_crt = nullptr;
 

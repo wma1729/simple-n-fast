@@ -23,7 +23,7 @@ private:
 		m_fp = fopen(n, a);
 		if (m_fp == nullptr) {
 			std::ostringstream oss;
-			oss << "failed to open key file " << n;
+			oss << "failed to open file " << n;
 			throw std::system_error(
 				snf::system_error(),
 				std::system_category(),
@@ -133,6 +133,64 @@ public:
 	virtual int     unlock(int64_t, int64_t len = 0, int *oserr = 0);
 	virtual int     close(int *oserr = 0);
 };
+
+template<typename T>
+int
+read_file(const std::string &name, T *&data, size_t *datalen)
+{
+	int oserr = 0;
+	int retval = 0;
+
+	file f(name, 0022);
+
+	file::open_flags flags;
+	flags.o_read = true;
+
+	retval = f.open(flags, 0600, &oserr);
+	if (retval != 0) {
+		if (oserr != 0) {
+			std::ostringstream oss;
+			oss << "failed to open file " << name;
+			throw std::system_error(oserr, std::system_category(), oss.str());
+		}
+		return retval;
+	}
+
+	int64_t fsize = f.size(&oserr);
+	if (fsize < 0) {
+		if (oserr != 0) {
+			std::ostringstream oss;
+			oss << "failed to get size of file " << name;
+			throw std::system_error(oserr, std::system_category(), oss.str());
+		}
+		return static_cast<int>(fsize);
+	} else {
+		*datalen = static_cast<size_t>(fsize);
+	}
+
+	if (*datalen) {
+		size_t nelem = *datalen / sizeof(T);
+		int bread = 0;
+		
+		data = new T[nelem];
+
+		retval = f.read(data, static_cast<int>(*datalen), &bread, &oserr);
+		if (retval != 0) {
+			if (oserr != 0) {
+				std::ostringstream oss;
+				oss << "failed to read from file " << name;
+				throw std::system_error(oserr, std::system_category(), oss.str());
+			}
+			delete [] data;
+			data = nullptr;
+			return retval;
+		}
+	}
+
+	f.close();
+
+	return retval;
+}
 
 } // namespace snf
 
