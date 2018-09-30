@@ -10,11 +10,17 @@
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/stack.h>
+#include <openssl/asn1.h>
 
 using p_library_init = int (*)(void);
 using p_load_error_strings = void (*)(void);
 using p_free_error_strings = void (*)(void);
 
+using p_bio_s_mem = const BIO_METHOD * (*)(void);
+using p_bio_new = BIO * (*)(const BIO_METHOD *);
+using p_bio_read = int (*)(BIO *, void *, int);
 using p_bio_new_mem_buf = BIO * (*)(const void *, int);
 using p_bio_free = int (*)(BIO *);
 
@@ -41,6 +47,20 @@ using p_pem_read_x509 = X509 * (*)(FILE *, X509 **, pem_password_cb *, void *);
 using p_pem_read_bio_x509 = X509 * (*)(BIO *, X509 **, pem_password_cb *, void *);
 using p_x509_up_ref = int (*)(X509 *);
 using p_x509_free = void (*)(X509 *);
+using p_x509_get_subject = X509_NAME * (*)(const X509 *);
+using p_x509_get_issuer = X509_NAME * (*)(const X509 *);
+using p_x509_name_get = int (*)(BIO *, const X509_NAME *, int, unsigned long);
+using p_x509_name_get_text_by_nid = int (*)(X509_NAME *, int, char *, int);
+using p_x509_get_ext_d2i = void * (*)(const X509 *, int, int *, int *);
+
+using p_stk_num = int (*)(const _STACK *);
+using p_stk_val = void * (*)(const _STACK *, int);
+using p_stk_deep_free = void (*)(_STACK *, void (*)(void *));
+using p_gen_name_free = void (*)(void *);
+
+using p_asn1_string_type = int (*)(const ASN1_STRING *);
+using p_asn1_string_len = int (*)(const ASN1_STRING *);
+using p_asn1_string_val = const unsigned char * (*)(const ASN1_STRING *);
 
 using p_err_line_data = unsigned long (*)(const char **, int *, const char **, int *);
 using p_err_lib_string = const char * (*)(unsigned long);
@@ -109,6 +129,9 @@ private:
 	p_load_error_strings        m_load_error_strings = nullptr;
 	p_free_error_strings        m_free_error_strings = nullptr;
 
+	p_bio_s_mem                 m_bio_s_mem = nullptr;
+	p_bio_new                   m_bio_new = nullptr;
+	p_bio_read                  m_bio_read = nullptr;
 	p_bio_new_mem_buf           m_bio_new_mem_buf = nullptr;
 	p_bio_free                  m_bio_free = nullptr;
 
@@ -135,6 +158,20 @@ private:
 	p_pem_read_bio_x509         m_pem_read_bio_x509 = nullptr;
 	p_x509_up_ref               m_x509_up_ref = nullptr;
 	p_x509_free                 m_x509_free = nullptr;
+	p_x509_get_subject          m_x509_get_subject = nullptr;
+	p_x509_get_issuer           m_x509_get_issuer = nullptr;
+	p_x509_name_get             m_x509_name_get = nullptr;
+	p_x509_name_get_text_by_nid m_x509_name_get_text_by_nid = nullptr;
+	p_x509_get_ext_d2i          m_x509_get_ext_d2i = nullptr;
+
+	p_stk_num                   m_stk_num = nullptr;
+	p_stk_val                   m_stk_val = nullptr;
+	p_stk_deep_free             m_stk_deep_free = nullptr;
+	p_gen_name_free             m_gen_name_free = nullptr;
+
+	p_asn1_string_type          m_asn1_string_type = nullptr;
+	p_asn1_string_len           m_asn1_string_len = nullptr;
+	p_asn1_string_val           m_asn1_string_val = nullptr;
 
 	p_err_line_data             m_err_line_data = nullptr;
 	p_err_lib_string            m_err_lib_string = nullptr;
@@ -159,6 +196,9 @@ public:
 	p_load_error_strings load_error_strings();
 	p_free_error_strings free_error_strings();
 
+	p_bio_s_mem bio_s_mem();
+	p_bio_new bio_new();
+	p_bio_read bio_read();
 	p_bio_new_mem_buf bio_new_mem_buf();
 	p_bio_free bio_free();
 
@@ -185,6 +225,20 @@ public:
 	p_pem_read_bio_x509 pem_read_bio_x509();
 	p_x509_up_ref x509_up_ref();
 	p_x509_free x509_free();
+	p_x509_get_subject x509_get_subject();
+	p_x509_get_issuer x509_get_issuer();
+	p_x509_name_get x509_name_get();
+	p_x509_name_get_text_by_nid x509_name_get_text_by_nid();
+	p_x509_get_ext_d2i x509_get_ext_d2i();
+
+	p_stk_num stk_num();
+	p_stk_val stk_val();
+	p_stk_deep_free stk_deep_free();
+	p_gen_name_free gen_name_free();
+
+	p_asn1_string_type asn1_string_type();
+	p_asn1_string_len asn1_string_len();
+	p_asn1_string_val asn1_string_val();
 
 	p_err_line_data err_line_data();
 	p_err_lib_string err_lib_string();

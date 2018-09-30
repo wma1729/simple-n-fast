@@ -2,12 +2,18 @@
 #define _SNF_CRT_H_
 
 #include <string>
+#include <vector>
 #include "file.h"
 #include "sslfcn.h"
 
 namespace snf {
 namespace net {
 namespace ssl {
+
+struct alternate_name {
+	std::string type;
+	std::string name;
+};
 
 class x509_certificate
 {
@@ -24,8 +30,17 @@ public:
 
 	operator X509* () { return m_crt; }
 
+	const std::string &subject();
+	const std::string &issuer();
+	const std::string &common_name();
+	const std::vector<alternate_name> &alternate_names();
+
 private:
-	X509    *m_crt = nullptr;
+	X509                            *m_crt = nullptr;
+	std::string                     m_subject;
+	std::string                     m_issuer;
+	std::string                     m_cn;
+	std::vector<alternate_name>     m_alt_names;
 
 	void init_der(snf::file_ptr &);
 	void init_der(const uint8_t *, size_t);

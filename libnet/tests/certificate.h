@@ -85,6 +85,28 @@ public:
 			snf::net::ssl::x509_certificate cert9 = std::move(cert4);
 			ASSERT_EQ(bool, true, true, "certificate 9 creation passed");
 
+			std::string cn = "unittest.simplenfast.org";
+			ASSERT_EQ(const std::string &, cn, cert9.common_name(), "common name matches");
+			std::string sub = "C = US, ST = Minnesota, L = Mahtomedi, O = www.simplenfast.org, OU = Department of Perennial Learning, CN = unittest.simplenfast.org";
+			ASSERT_EQ(const std::string &, sub, cert9.subject(), "subject matches");
+
+			std::string iss = "C = US, ST = Minnesota, O = www.simplenfast.org, OU = Department of Perennial Learning, CN = IntermediateCA";
+			ASSERT_EQ(const std::string &, iss, cert9.issuer(), "issuer matches");
+
+			const std::vector<snf::net::ssl::alternate_name> &altnames =
+				cert9.alternate_names();
+			ASSERT_EQ(size_t, altnames.size(), 3, "alternate names size matched");
+
+			std::vector<snf::net::ssl::alternate_name>::const_iterator I;
+			for (I = altnames.begin(); I != altnames.end(); ++I) {
+				if (I->type == "DNS")
+					ASSERT_EQ(const std::string &, I->name, "localhost", "DNS name matches");
+				else if (I->type == "IP")
+					ASSERT_EQ(const std::string &, I->name, "127.0.0.1", "IP address matches");
+				else if (I->type == "URI")
+					ASSERT_EQ(const std::string &, I->name, "http://127.0.0.1/", "URI matches");
+			}
+
 		} catch (snf::net::ssl::ssl_exception ex) {
 			std::cerr << ex.what() << std::endl;
 			std::vector<snf::net::ssl::ssl_error>::const_iterator I;
