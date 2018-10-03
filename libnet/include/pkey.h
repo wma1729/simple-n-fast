@@ -9,18 +9,18 @@ namespace snf {
 namespace net {
 namespace ssl {
 
-class private_key
+class pkey
 {
 public:
-	private_key(ssl_data_fmt, const std::string &, const char *passwd = nullptr);
-	private_key(ssl_data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
-	private_key(EVP_PKEY *);
-	private_key(const private_key &);
-	private_key(private_key &&);
-	~private_key();
+	pkey(ssl_data_fmt, const std::string &, const char *passwd = nullptr);
+	pkey(ssl_data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
+	pkey(EVP_PKEY *);
+	pkey(const pkey &);
+	pkey(pkey &&);
+	~pkey();
 
-	const private_key &operator=(const private_key &);
-	private_key &operator=(private_key &&);
+	const pkey &operator=(const pkey &);
+	pkey &operator=(pkey &&);
 
 	/* Return EVP_PKEY_XXX */
 	int type() const;

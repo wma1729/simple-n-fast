@@ -26,14 +26,14 @@ public:
 		try {
 			snf::net::initialize(true);
 
-			snf::net::ssl::private_key pkey1(
+			snf::net::ssl::pkey pkey1(
 				snf::net::ssl::ssl_data_fmt::der,
 				"test.key.der");
 			ASSERT_EQ(bool, true, true, "private key 1 creation passed");
 			pkey1.verify();
 			ASSERT_EQ(bool, true, true, "private key 1 verification passed");
 
-			snf::net::ssl::private_key pkey2(
+			snf::net::ssl::pkey pkey2(
 				snf::net::ssl::ssl_data_fmt::pem,
 				"test.key.pem",
 				"Te5tP@55w0rd");
@@ -45,7 +45,7 @@ public:
 			size_t dlen = 0;
 
 			snf::read_file("test.key.der", data, &dlen);
-			snf::net::ssl::private_key pkey3(
+			snf::net::ssl::pkey pkey3(
 				snf::net::ssl::ssl_data_fmt::der,
 				data,
 				dlen);
@@ -58,7 +58,7 @@ public:
 			ASSERT_EQ(bool, true, true, "private key 3 verification passed");
 
 			snf::read_file("test.key.pem", data, &dlen);
-			snf::net::ssl::private_key pkey4(
+			snf::net::ssl::pkey pkey4(
 				snf::net::ssl::ssl_data_fmt::pem,
 				data,
 				dlen,
@@ -72,23 +72,23 @@ public:
 			ASSERT_EQ(bool, true, true, "private key 4 verification passed");
 
 			EVP_PKEY *internal_key = pkey1;
-			snf::net::ssl::private_key pkey5(internal_key);
+			snf::net::ssl::pkey pkey5(internal_key);
 			pkey5.verify();
 			ASSERT_EQ(bool, true, true, "private key 5 verification passed");
 
-			snf::net::ssl::private_key pkey6(pkey2);
+			snf::net::ssl::pkey pkey6(pkey2);
 			pkey6.verify();
 			ASSERT_EQ(bool, true, true, "private key 6 verification passed");
 
-			snf::net::ssl::private_key pkey7(std::move(pkey3));
+			snf::net::ssl::pkey pkey7(std::move(pkey3));
 			pkey7.verify();
 			ASSERT_EQ(bool, true, true, "private key 7 verification passed");
 
-			snf::net::ssl::private_key pkey8 = pkey4;
+			snf::net::ssl::pkey pkey8 = pkey4;
 			pkey8.verify();
 			ASSERT_EQ(bool, true, true, "private key 8 verification passed");
 
-			snf::net::ssl::private_key pkey9 = std::move(pkey4);
+			snf::net::ssl::pkey pkey9 = std::move(pkey4);
 			pkey9.verify();
 			ASSERT_EQ(bool, true, true, "private key 9 verification passed");
 

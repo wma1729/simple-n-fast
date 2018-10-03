@@ -5,7 +5,7 @@ namespace net {
 namespace ssl {
 
 void
-private_key::init_der(snf::file_ptr &fp)
+pkey::init_der(snf::file_ptr &fp)
 {
 	m_pkey = ssl_library::instance().d2i_private_key_fp()(fp, nullptr);
 	if (m_pkey == nullptr) {
@@ -16,7 +16,7 @@ private_key::init_der(snf::file_ptr &fp)
 }
 
 void
-private_key::init_der(const uint8_t *key, size_t keylen)
+pkey::init_der(const uint8_t *key, size_t keylen)
 {
 	const uint8_t *kptr = key;
 
@@ -27,7 +27,7 @@ private_key::init_der(const uint8_t *key, size_t keylen)
 }
 
 void
-private_key::init_pem(snf::file_ptr &fp, const char *passwd)
+pkey::init_pem(snf::file_ptr &fp, const char *passwd)
 {
 	char *pwd = const_cast<char *>(passwd);
 
@@ -40,7 +40,7 @@ private_key::init_pem(snf::file_ptr &fp, const char *passwd)
 }
 
 void
-private_key::init_pem(const uint8_t *key, size_t keylen, const char *passwd)
+pkey::init_pem(const uint8_t *key, size_t keylen, const char *passwd)
 {
 	char *pwd = const_cast<char *>(passwd);
 
@@ -54,7 +54,7 @@ private_key::init_pem(const uint8_t *key, size_t keylen, const char *passwd)
 }
 
 void
-private_key::verify_rsa() const
+pkey::verify_rsa() const
 {
 	RSA *rsa = ssl_library::instance().get1_rsa()(m_pkey);
 	if (rsa) {
@@ -69,7 +69,7 @@ private_key::verify_rsa() const
 }
 
 void
-private_key::verify_dh() const
+pkey::verify_dh() const
 {
 	DH *dh = ssl_library::instance().get1_dh()(m_pkey);
 	if (dh) {
@@ -91,7 +91,7 @@ private_key::verify_dh() const
 }
 
 void
-private_key::verify_ec() const
+pkey::verify_ec() const
 {
 	EC_KEY *eckey = ssl_library::instance().get1_ec_key()(m_pkey);
 	if (eckey) {
@@ -105,7 +105,7 @@ private_key::verify_ec() const
 	}
 }
 
-private_key::private_key(
+pkey::pkey(
 	ssl_data_fmt fmt,
 	const std::string &kfile,
 	const char *passwd)
@@ -119,7 +119,7 @@ private_key::private_key(
 	}
 }
 
-private_key::private_key(
+pkey::pkey(
 	ssl_data_fmt fmt,
 	const uint8_t *key,
 	size_t keylen,
@@ -132,28 +132,28 @@ private_key::private_key(
 	}
 }
 
-private_key::private_key(EVP_PKEY *pkey)
+pkey::pkey(EVP_PKEY *pkey)
 {
 	if (ssl_library::instance().evp_pkey_up_ref()(pkey) != 1)
 		throw ssl_exception("failed to increment the key reference count");
 	m_pkey = pkey;
 }
 
-private_key::private_key(const private_key &pkey)
+pkey::pkey(const pkey &pkey)
 {
 	if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
 		throw ssl_exception("failed to increment the key reference count");
 	m_pkey = pkey.m_pkey;
 }
 
-private_key::private_key(private_key &&pkey)
+pkey::pkey(pkey &&pkey)
 {
 	m_pkey = pkey.m_pkey;
 	pkey.m_pkey = nullptr;
 }
 
 
-private_key::~private_key()
+pkey::~pkey()
 {
 	if (m_pkey) {
 		ssl_library::instance().evp_pkey_free()(m_pkey);
@@ -161,8 +161,8 @@ private_key::~private_key()
 	}
 }
 
-const private_key &
-private_key::operator=(const private_key &pkey)
+const pkey &
+pkey::operator=(const pkey &pkey)
 {
 	if (this != &pkey) {
 		if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
@@ -172,8 +172,8 @@ private_key::operator=(const private_key &pkey)
 	return *this;
 }
 
-private_key &
-private_key::operator=(private_key &&pkey)
+pkey &
+pkey::operator=(pkey &&pkey)
 {
 	if (this != &pkey) {
 		m_pkey = pkey.m_pkey;
@@ -183,7 +183,7 @@ private_key::operator=(private_key &&pkey)
 }
 
 int
-private_key::type() const
+pkey::type() const
 {
 	int kt = EVP_PKEY_NONE;
 	if (m_pkey)
@@ -192,7 +192,7 @@ private_key::type() const
 }
 
 void
-private_key::verify() const
+pkey::verify() const
 {
 	int kt = type();
 	switch (kt) {

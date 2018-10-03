@@ -33,8 +33,7 @@ public:
 
 			snf::net::ssl::x509_certificate cert2(
 				snf::net::ssl::ssl_data_fmt::pem,
-				"unittest.simplenfast.org/unittest.simplenfast.org.cert.pem",
-				"P@ssw0rd");
+				"unittest.simplenfast.org/unittest.simplenfast.org.cert.pem");
 			ASSERT_EQ(bool, true, true, "certificate 2 creation passed");
 
 			uint8_t *data = nullptr;
@@ -61,8 +60,7 @@ public:
 			snf::net::ssl::x509_certificate cert4(
 				snf::net::ssl::ssl_data_fmt::pem,
 				data,
-				dlen,
-				"P@ssw0rd");
+				dlen);
 			delete [] data;
 			data = nullptr;
 			dlen = 0;
@@ -107,6 +105,8 @@ public:
 					ASSERT_EQ(const std::string &, I->name, "http://127.0.0.1/", "URI matches");
 			}
 
+			std::string serial = "36E9741D6816765143987F6FB9D919B2";
+			ASSERT_EQ(const std::string &, serial, cert9.serial(), "serial number matches");
 		} catch (snf::net::ssl::ssl_exception ex) {
 			std::cerr << ex.what() << std::endl;
 			std::vector<snf::net::ssl::ssl_error>::const_iterator I;

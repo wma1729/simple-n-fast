@@ -33,6 +33,7 @@ public:
 	const std::string &subject();
 	const std::string &issuer();
 	const std::string &common_name();
+	const std::string &serial();
 	const std::vector<alternate_name> &alternate_names();
 
 private:
@@ -40,6 +41,7 @@ private:
 	std::string                     m_subject;
 	std::string                     m_issuer;
 	std::string                     m_cn;
+	std::string                     m_serial;
 	std::vector<alternate_name>     m_alt_names;
 
 	void init_der(snf::file_ptr &);

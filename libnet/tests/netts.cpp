@@ -1,7 +1,7 @@
 #include "test.h"
 #include "testmain.h"
 #include "sockattr.h"
-#include "privkey.h"
+#include "key.h"
 #include "certificate.h"
 
 namespace snf {

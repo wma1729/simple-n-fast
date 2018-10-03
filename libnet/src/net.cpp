@@ -26,6 +26,7 @@ do_initialize(bool use_ssl)
 		ssl::ssl_library::instance().load_error_strings()();
 		ssl_inited = true;
 	}
+	std::atexit(finalize);
 	return;
 }
 

@@ -13,6 +13,7 @@
 #include <openssl/x509v3.h>
 #include <openssl/stack.h>
 #include <openssl/asn1.h>
+#include <openssl/bn.h>
 
 using p_library_init = int (*)(void);
 using p_load_error_strings = void (*)(void);
@@ -51,6 +52,7 @@ using p_x509_get_subject = X509_NAME * (*)(const X509 *);
 using p_x509_get_issuer = X509_NAME * (*)(const X509 *);
 using p_x509_name_get = int (*)(BIO *, const X509_NAME *, int, unsigned long);
 using p_x509_name_get_text_by_nid = int (*)(X509_NAME *, int, char *, int);
+using p_x509_get_serial = ASN1_INTEGER * (*)(X509 *);
 using p_x509_get_ext_d2i = void * (*)(const X509 *, int, int *, int *);
 
 using p_stk_num = int (*)(const _STACK *);
@@ -61,6 +63,11 @@ using p_gen_name_free = void (*)(void *);
 using p_asn1_string_type = int (*)(const ASN1_STRING *);
 using p_asn1_string_len = int (*)(const ASN1_STRING *);
 using p_asn1_string_val = const unsigned char * (*)(const ASN1_STRING *);
+using p_asn1_integer_to_bn = BIGNUM * (*)(const ASN1_INTEGER *, BIGNUM *);
+using p_bn_to_asn1_integer = ASN1_INTEGER * (*)(const BIGNUM *, ASN1_INTEGER *);
+using p_bn2hex = char * (*)(const BIGNUM *);
+using p_hex2bn = int (*)(BIGNUM **, const char *);
+using p_bn_free = void (*)(BIGNUM *);
 
 using p_err_line_data = unsigned long (*)(const char **, int *, const char **, int *);
 using p_err_lib_string = const char * (*)(unsigned long);
@@ -162,6 +169,7 @@ private:
 	p_x509_get_issuer           m_x509_get_issuer = nullptr;
 	p_x509_name_get             m_x509_name_get = nullptr;
 	p_x509_name_get_text_by_nid m_x509_name_get_text_by_nid = nullptr;
+	p_x509_get_serial           m_x509_get_serial = nullptr;
 	p_x509_get_ext_d2i          m_x509_get_ext_d2i = nullptr;
 
 	p_stk_num                   m_stk_num = nullptr;
@@ -172,6 +180,11 @@ private:
 	p_asn1_string_type          m_asn1_string_type = nullptr;
 	p_asn1_string_len           m_asn1_string_len = nullptr;
 	p_asn1_string_val           m_asn1_string_val = nullptr;
+	p_asn1_integer_to_bn        m_asn1_integer_to_bn = nullptr;
+	p_bn_to_asn1_integer        m_bn_to_asn1_integer = nullptr;
+	p_bn2hex                    m_bn2hex = nullptr;
+	p_hex2bn                    m_hex2bn = nullptr;
+	p_bn_free                   m_bn_free = nullptr;
 
 	p_err_line_data             m_err_line_data = nullptr;
 	p_err_lib_string            m_err_lib_string = nullptr;
@@ -229,6 +242,7 @@ public:
 	p_x509_get_issuer x509_get_issuer();
 	p_x509_name_get x509_name_get();
 	p_x509_name_get_text_by_nid x509_name_get_text_by_nid();
+	p_x509_get_serial x509_get_serial();
 	p_x509_get_ext_d2i x509_get_ext_d2i();
 
 	p_stk_num stk_num();
@@ -239,6 +253,11 @@ public:
 	p_asn1_string_type asn1_string_type();
 	p_asn1_string_len asn1_string_len();
 	p_asn1_string_val asn1_string_val();
+	p_asn1_integer_to_bn asn1_integer_to_bn();
+	p_bn_to_asn1_integer bn_to_asn1_integer();
+	p_bn2hex bn2hex();
+	p_hex2bn hex2bn();
+	p_bn_free bn_free();
 
 	p_err_line_data err_line_data();
 	p_err_lib_string err_lib_string();

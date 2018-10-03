@@ -240,6 +240,33 @@ x509_certificate::common_name()
 	return m_cn;
 }
 
+const std::string &
+x509_certificate::serial()
+{
+	if (!m_serial.empty())
+		return m_serial;
+
+	ASN1_INTEGER *aiserial = ssl_library::instance().x509_get_serial()(m_crt);
+	BIGNUM *bnserial = ssl_library::instance().asn1_integer_to_bn()
+				(aiserial, nullptr);
+	if (bnserial == nullptr) {
+		throw ssl_exception("failed to convert ASN1_INTEGER to BIGNUM");
+	}
+
+	char *hexserial = ssl_library::instance().bn2hex()(bnserial);
+	if (hexserial == nullptr) {
+		ssl_library::instance().bn_free()(bnserial);
+		throw ssl_exception("failed to convert BIGNUM to hex string");
+	}
+
+	m_serial = hexserial;
+
+	free(hexserial);
+	ssl_library::instance().bn_free()(bnserial);
+
+	return m_serial;
+}
+
 const std::vector<alternate_name> &
 x509_certificate::alternate_names()
 {

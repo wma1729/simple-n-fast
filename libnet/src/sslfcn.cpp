@@ -353,6 +353,15 @@ ssl_library::x509_name_get_text_by_nid()
 	return m_x509_name_get_text_by_nid;
 }
 
+p_x509_get_serial
+ssl_library::x509_get_serial()
+{
+	if (!m_x509_get_serial)
+		m_x509_get_serial = reinterpret_cast<p_x509_get_serial>
+			(m_ssl->symbol("X509_get_serialNumber"));
+	return m_x509_get_serial;
+}
+
 p_x509_get_ext_d2i
 ssl_library::x509_get_ext_d2i()
 {
@@ -423,6 +432,51 @@ ssl_library::asn1_string_val()
 		m_asn1_string_val = reinterpret_cast<p_asn1_string_val>
 			(m_ssl->symbol("ASN1_STRING_get0_data"));
 	return m_asn1_string_val;
+}
+
+p_asn1_integer_to_bn
+ssl_library::asn1_integer_to_bn()
+{
+	if (!m_asn1_integer_to_bn)
+		m_asn1_integer_to_bn = reinterpret_cast<p_asn1_integer_to_bn>
+			(m_ssl->symbol("ASN1_INTEGER_to_BN"));
+	return m_asn1_integer_to_bn;
+}
+
+p_bn_to_asn1_integer
+ssl_library::bn_to_asn1_integer()
+{
+	if (!m_bn_to_asn1_integer)
+		m_bn_to_asn1_integer = reinterpret_cast<p_bn_to_asn1_integer>
+			(m_ssl->symbol("BN_to_ASN1_INTEGER"));
+	return m_bn_to_asn1_integer;
+}
+
+p_bn2hex
+ssl_library::bn2hex()
+{
+	if (!m_bn2hex)
+		m_bn2hex = reinterpret_cast<p_bn2hex>
+			(m_ssl->symbol("BN_bn2hex"));
+	return m_bn2hex;
+}
+
+p_hex2bn
+ssl_library::hex2bn()
+{
+	if (!m_hex2bn)
+		m_hex2bn = reinterpret_cast<p_hex2bn>
+			(m_ssl->symbol("BN_hex2bn"));
+	return m_hex2bn;
+}
+
+p_bn_free
+ssl_library::bn_free()
+{
+	if (!m_bn_free)
+		m_bn_free = reinterpret_cast<p_bn_free>
+			(m_ssl->symbol("BN_free"));
+	return m_bn_free;
 }
 
 p_err_line_data
