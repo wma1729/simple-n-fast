@@ -47,6 +47,24 @@ ssl_library::ssl_library()
 	m_ssl = new snf::dll(libname);
 }
 
+p_openssl_version_num
+ssl_library::openssl_version_num()
+{
+	if (!m_openssl_version_num)
+		m_openssl_version_num = reinterpret_cast<p_openssl_version_num>
+			(m_ssl->symbol("OpenSSL_version_num"));
+	return m_openssl_version_num;
+}
+
+p_openssl_version_str
+ssl_library::openssl_version_str()
+{
+	if (!m_openssl_version_str)
+		m_openssl_version_str = reinterpret_cast<p_openssl_version_str>
+			(m_ssl->symbol("OpenSSL_version"));
+	return m_openssl_version_str;
+}
+
 p_library_init
 ssl_library::library_init()
 {
@@ -371,6 +389,51 @@ ssl_library::x509_get_ext_d2i()
 	return m_x509_get_ext_d2i;
 }
 
+p_x509_store_new
+ssl_library::x509_store_new()
+{
+	if (!m_x509_store_new)
+		m_x509_store_new = reinterpret_cast<p_x509_store_new>
+			(m_ssl->symbol("X509_STORE_new"));
+	return m_x509_store_new;
+}
+
+p_x509_store_up_ref
+ssl_library::x509_store_up_ref()
+{
+	if (!m_x509_store_up_ref)
+		m_x509_store_up_ref = reinterpret_cast<p_x509_store_up_ref>
+			(m_ssl->symbol("X509_STORE_up_ref"));
+	return m_x509_store_up_ref;
+}
+
+p_x509_store_free
+ssl_library::x509_store_free()
+{
+	if (!m_x509_store_free)
+		m_x509_store_free = reinterpret_cast<p_x509_store_free>
+			(m_ssl->symbol("X509_STORE_free"));
+	return m_x509_store_free;
+}
+
+p_x509_store_load
+ssl_library::x509_store_load()
+{
+	if (!m_x509_store_load)
+		m_x509_store_load = reinterpret_cast<p_x509_store_load>
+			(m_ssl->symbol("X509_STORE_load_locations"));
+	return m_x509_store_load;
+}
+
+p_x509_store_add_cert
+ssl_library::x509_store_add_cert()
+{
+	if (!m_x509_store_add_cert)
+		m_x509_store_add_cert = reinterpret_cast<p_x509_store_add_cert>
+			(m_ssl->symbol("X509_STORE_add_cert"));
+	return m_x509_store_add_cert;
+}
+
 p_stk_num
 ssl_library::stk_num()
 {
@@ -522,6 +585,132 @@ ssl_library::err_clear()
 		m_err_clear = reinterpret_cast<p_err_clear>
 			(m_ssl->symbol("ERR_clear_error"));
 	return m_err_clear;
+}
+
+p_tls_method
+ssl_library::tls_method()
+{
+	if (!m_tls_method)
+		m_tls_method = reinterpret_cast<p_tls_method>
+			(m_ssl->symbol("TLS_method"));
+	return m_tls_method;
+}
+
+p_ssl_ctx_new
+ssl_library::ssl_ctx_new()
+{
+	if (!m_ssl_ctx_new)
+		m_ssl_ctx_new = reinterpret_cast<p_ssl_ctx_new>
+			(m_ssl->symbol("SSL_CTX_new"));
+	return m_ssl_ctx_new;
+}
+
+p_ssl_ctx_up_ref
+ssl_library::ssl_ctx_up_ref()
+{
+	if (!m_ssl_ctx_up_ref)
+		m_ssl_ctx_up_ref = reinterpret_cast<p_ssl_ctx_up_ref>
+			(m_ssl->symbol("SSL_CTX_up_ref"));
+	return m_ssl_ctx_up_ref;
+}
+
+p_ssl_ctx_free
+ssl_library::ssl_ctx_free()
+{
+	if (!m_ssl_ctx_free)
+		m_ssl_ctx_free = reinterpret_cast<p_ssl_ctx_free>
+			(m_ssl->symbol("SSL_CTX_free"));
+	return m_ssl_ctx_free;
+}
+
+p_ssl_ctx_set_min_ver
+ssl_library::ssl_ctx_set_min_ver()
+{
+	if (!m_ssl_ctx_set_min_ver)
+		m_ssl_ctx_set_min_ver = reinterpret_cast<p_ssl_ctx_set_min_ver>
+			(m_ssl->symbol("SSL_CTX_set_min_proto_version"));
+	return m_ssl_ctx_set_min_ver;
+}
+
+p_ssl_ctx_set_max_ver
+ssl_library::ssl_ctx_set_max_ver()
+{
+	if (!m_ssl_ctx_set_max_ver)
+		m_ssl_ctx_set_max_ver = reinterpret_cast<p_ssl_ctx_set_max_ver>
+			(m_ssl->symbol("SSL_CTX_set_max_proto_version"));
+	return m_ssl_ctx_set_max_ver;
+}
+
+p_ssl_ctx_ctrl
+ssl_library::ssl_ctx_ctrl()
+{
+	if (!m_ssl_ctx_ctrl)
+		m_ssl_ctx_ctrl = reinterpret_cast<p_ssl_ctx_ctrl>
+			(m_ssl->symbol("SSL_CTX_ctrl"));
+	return m_ssl_ctx_ctrl;
+}
+
+p_ssl_ctx_get_options
+ssl_library::ssl_ctx_get_options()
+{
+	if (!m_ssl_ctx_get_options)
+		m_ssl_ctx_get_options = reinterpret_cast<p_ssl_ctx_get_options>
+			(m_ssl->symbol("SSL_CTX_get_options"));
+	return m_ssl_ctx_get_options;
+}
+
+p_ssl_ctx_clr_options
+ssl_library::ssl_ctx_clr_options()
+{
+	if (!m_ssl_ctx_clr_options)
+		m_ssl_ctx_clr_options = reinterpret_cast<p_ssl_ctx_clr_options>
+			(m_ssl->symbol("SSL_CTX_clear_options"));
+	return m_ssl_ctx_clr_options;
+}
+
+p_ssl_ctx_set_options
+ssl_library::ssl_ctx_set_options()
+{
+	if (!m_ssl_ctx_set_options)
+		m_ssl_ctx_set_options = reinterpret_cast<p_ssl_ctx_set_options>
+			(m_ssl->symbol("SSL_CTX_set_options"));
+	return m_ssl_ctx_set_options;
+}
+
+p_ssl_ctx_set_ciphers
+ssl_library::ssl_ctx_set_ciphers()
+{
+	if (!m_ssl_ctx_set_ciphers)
+		m_ssl_ctx_set_ciphers = reinterpret_cast<p_ssl_ctx_set_ciphers>
+			(m_ssl->symbol("SSL_CTX_set_cipher_list"));
+	return m_ssl_ctx_set_ciphers;
+}
+
+p_ssl_ctx_use_private_key
+ssl_library::ssl_ctx_use_private_key()
+{
+	if (!m_ssl_ctx_use_private_key)
+		m_ssl_ctx_use_private_key = reinterpret_cast<p_ssl_ctx_use_private_key>
+			(m_ssl->symbol("SSL_CTX_use_PrivateKey"));
+	return m_ssl_ctx_use_private_key;
+}
+
+p_ssl_ctx_use_certificate
+ssl_library::ssl_ctx_use_certificate()
+{
+	if (!m_ssl_ctx_use_certificate)
+		m_ssl_ctx_use_certificate = reinterpret_cast<p_ssl_ctx_use_certificate>
+			(m_ssl->symbol("SSL_CTX_use_certificate"));
+	return m_ssl_ctx_use_certificate;
+}
+
+p_ssl_ctx_use_truststore
+ssl_library::ssl_ctx_use_truststore()
+{
+	if (!m_ssl_ctx_use_truststore)
+		m_ssl_ctx_use_truststore = reinterpret_cast<p_ssl_ctx_use_truststore>
+			(m_ssl->symbol("SSL_CTX_set_cert_store"));
+	return m_ssl_ctx_use_truststore;
 }
 
 } // namespace ssl

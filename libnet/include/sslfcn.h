@@ -11,9 +11,13 @@
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
+#include <openssl/x509_vfy.h>
 #include <openssl/stack.h>
 #include <openssl/asn1.h>
 #include <openssl/bn.h>
+
+using p_openssl_version_num = unsigned long (*)(void);
+using p_openssl_version_str = const char * (*)(int);
 
 using p_library_init = int (*)(void);
 using p_load_error_strings = void (*)(void);
@@ -55,6 +59,12 @@ using p_x509_name_get_text_by_nid = int (*)(X509_NAME *, int, char *, int);
 using p_x509_get_serial = ASN1_INTEGER * (*)(X509 *);
 using p_x509_get_ext_d2i = void * (*)(const X509 *, int, int *, int *);
 
+using p_x509_store_new = X509_STORE * (*)(void);
+using p_x509_store_up_ref = int (*)(X509_STORE *);
+using p_x509_store_free = void (*)(X509_STORE *);
+using p_x509_store_load = int (*)(X509_STORE *, const char *, const char *);
+using p_x509_store_add_cert = int (*)(X509_STORE *, X509 *);
+
 using p_stk_num = int (*)(const _STACK *);
 using p_stk_val = void * (*)(const _STACK *, int);
 using p_stk_deep_free = void (*)(_STACK *, void (*)(void *));
@@ -74,6 +84,21 @@ using p_err_lib_string = const char * (*)(unsigned long);
 using p_err_fcn_string = const char * (*)(unsigned long);
 using p_err_reason_string = const char * (*)(unsigned long);
 using p_err_clear = void (*)(void);
+
+using p_tls_method = const SSL_METHOD * (*)(void);
+using p_ssl_ctx_new = SSL_CTX * (*)(const SSL_METHOD *);
+using p_ssl_ctx_up_ref = int (*)(SSL_CTX *);
+using p_ssl_ctx_free = void (*)(SSL_CTX *);
+using p_ssl_ctx_set_min_ver = int (*)(SSL_CTX *, uint16_t);
+using p_ssl_ctx_set_max_ver = int (*)(SSL_CTX *, uint16_t);
+using p_ssl_ctx_ctrl = long (*)(SSL_CTX *, int, long, void *);
+using p_ssl_ctx_get_options = long (*)(const SSL_CTX *);
+using p_ssl_ctx_clr_options = long (*)(SSL_CTX *, unsigned long op);
+using p_ssl_ctx_set_options = long (*)(SSL_CTX *, unsigned long op);
+using p_ssl_ctx_set_ciphers = int (*)(SSL_CTX *, const char *);
+using p_ssl_ctx_use_private_key = int (*)(SSL_CTX *, EVP_PKEY *);
+using p_ssl_ctx_use_certificate = int (*)(SSL_CTX *, X509 *);
+using p_ssl_ctx_use_truststore = void (*)(SSL_CTX *, X509_STORE *);
 
 namespace snf {
 namespace net {
@@ -132,6 +157,10 @@ class ssl_library
 {
 private:
 	snf::dll                    *m_ssl = nullptr;
+
+	p_openssl_version_num       m_openssl_version_num = nullptr;
+	p_openssl_version_str       m_openssl_version_str = nullptr;
+
 	p_library_init              m_library_init = nullptr;
 	p_load_error_strings        m_load_error_strings = nullptr;
 	p_free_error_strings        m_free_error_strings = nullptr;
@@ -172,6 +201,12 @@ private:
 	p_x509_get_serial           m_x509_get_serial = nullptr;
 	p_x509_get_ext_d2i          m_x509_get_ext_d2i = nullptr;
 
+	p_x509_store_new            m_x509_store_new = nullptr;
+	p_x509_store_up_ref         m_x509_store_up_ref = nullptr;
+	p_x509_store_free           m_x509_store_free = nullptr;
+	p_x509_store_load           m_x509_store_load = nullptr;
+	p_x509_store_add_cert       m_x509_store_add_cert = nullptr;
+
 	p_stk_num                   m_stk_num = nullptr;
 	p_stk_val                   m_stk_val = nullptr;
 	p_stk_deep_free             m_stk_deep_free = nullptr;
@@ -192,6 +227,21 @@ private:
 	p_err_reason_string         m_err_reason_string = nullptr;
 	p_err_clear                 m_err_clear = nullptr;
 
+	p_tls_method                m_tls_method = nullptr;
+	p_ssl_ctx_new               m_ssl_ctx_new = nullptr;
+	p_ssl_ctx_up_ref            m_ssl_ctx_up_ref = nullptr;
+	p_ssl_ctx_free              m_ssl_ctx_free = nullptr;
+	p_ssl_ctx_set_min_ver       m_ssl_ctx_set_min_ver = nullptr;
+	p_ssl_ctx_set_max_ver       m_ssl_ctx_set_max_ver = nullptr;
+	p_ssl_ctx_ctrl              m_ssl_ctx_ctrl = nullptr;
+	p_ssl_ctx_get_options       m_ssl_ctx_get_options = nullptr;
+	p_ssl_ctx_clr_options       m_ssl_ctx_clr_options = nullptr;
+	p_ssl_ctx_set_options       m_ssl_ctx_set_options = nullptr;
+	p_ssl_ctx_set_ciphers       m_ssl_ctx_set_ciphers = nullptr;
+	p_ssl_ctx_use_private_key   m_ssl_ctx_use_private_key = nullptr;
+	p_ssl_ctx_use_certificate   m_ssl_ctx_use_certificate = nullptr;
+	p_ssl_ctx_use_truststore    m_ssl_ctx_use_truststore = nullptr;
+
 	ssl_library();
 
 	void cleanup() { if (m_ssl) { delete m_ssl; m_ssl = nullptr; } }
@@ -204,6 +254,9 @@ public:
 	}
 
 	~ssl_library() { cleanup(); }
+
+	p_openssl_version_num openssl_version_num();
+	p_openssl_version_str openssl_version_str();
 
 	p_library_init library_init();
 	p_load_error_strings load_error_strings();
@@ -245,6 +298,12 @@ public:
 	p_x509_get_serial x509_get_serial();
 	p_x509_get_ext_d2i x509_get_ext_d2i();
 
+	p_x509_store_new x509_store_new();
+	p_x509_store_up_ref x509_store_up_ref();
+	p_x509_store_free x509_store_free();
+	p_x509_store_load x509_store_load();
+	p_x509_store_add_cert x509_store_add_cert();
+
 	p_stk_num stk_num();
 	p_stk_val stk_val();
 	p_stk_deep_free stk_deep_free();
@@ -264,6 +323,21 @@ public:
 	p_err_fcn_string err_fcn_string();
 	p_err_reason_string err_reason_string();
 	p_err_clear err_clear();
+
+	p_tls_method tls_method();
+	p_ssl_ctx_new ssl_ctx_new();
+	p_ssl_ctx_up_ref ssl_ctx_up_ref();
+	p_ssl_ctx_free ssl_ctx_free();
+	p_ssl_ctx_set_min_ver ssl_ctx_set_min_ver();
+	p_ssl_ctx_set_max_ver ssl_ctx_set_max_ver();
+	p_ssl_ctx_ctrl ssl_ctx_ctrl();
+	p_ssl_ctx_get_options ssl_ctx_get_options();
+	p_ssl_ctx_clr_options ssl_ctx_clr_options();
+	p_ssl_ctx_set_options ssl_ctx_set_options();
+	p_ssl_ctx_set_ciphers ssl_ctx_set_ciphers();
+	p_ssl_ctx_use_private_key ssl_ctx_use_private_key();
+	p_ssl_ctx_use_certificate ssl_ctx_use_certificate();
+	p_ssl_ctx_use_truststore ssl_ctx_use_truststore();
 };
 
 } // namespace ssl

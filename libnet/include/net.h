@@ -31,6 +31,7 @@ error(int e)
 
 void initialize(bool use_ssl = false);
 void finalize();
+unsigned long openssl_version(std::string &);
 
 template<typename T>
 T swap(T x)

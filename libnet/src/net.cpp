@@ -48,5 +48,12 @@ finalize()
 #endif
 }
 
+unsigned long
+openssl_version(std::string &ver_str)
+{
+	ver_str = ssl::ssl_library::instance().openssl_version_str()(OPENSSL_VERSION);
+	return ssl::ssl_library::instance().openssl_version_num()();
+}
+
 } // namespace net
 } // namespace snf

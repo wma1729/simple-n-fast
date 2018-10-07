@@ -167,6 +167,8 @@ pkey::operator=(const pkey &pkey)
 	if (this != &pkey) {
 		if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
 			throw ssl_exception("failed to increment the key reference count");
+		if (m_pkey)
+			ssl_library::instance().evp_pkey_free()(m_pkey);
 		m_pkey = pkey.m_pkey;
 	}
 	return *this;
@@ -176,6 +178,8 @@ pkey &
 pkey::operator=(pkey &&pkey)
 {
 	if (this != &pkey) {
+		if (m_pkey)
+			ssl_library::instance().evp_pkey_free()(m_pkey);
 		m_pkey = pkey.m_pkey;
 		pkey.m_pkey = nullptr;
 	}

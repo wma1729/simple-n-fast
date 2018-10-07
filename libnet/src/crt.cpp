@@ -124,6 +124,8 @@ x509_certificate::operator=(const x509_certificate &crt)
 	if (this != &crt) {
 		if (ssl_library::instance().x509_up_ref()(crt.m_crt) != 1)
 			throw ssl_exception("failed to increment the certificate reference count");
+		if (m_crt)
+			ssl_library::instance().x509_free()(m_crt);
 		m_crt = crt.m_crt;
 		m_subject = crt.m_subject;
 		m_issuer = crt.m_issuer;
@@ -137,6 +139,8 @@ x509_certificate &
 x509_certificate::operator=(x509_certificate &&crt)
 {
 	if (this != &crt) {
+		if (m_crt)
+			ssl_library::instance().x509_free()(m_crt);
 		m_crt = crt.m_crt;
 		crt.m_crt = nullptr;
 		m_subject = std::move(crt.m_subject);
