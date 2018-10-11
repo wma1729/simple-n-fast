@@ -22,8 +22,6 @@ truststore::truststore(const std::string &f)
 
 truststore::truststore(X509_STORE *store)
 {
-	if (ssl_library::instance().x509_store_up_ref()(store) != 1)
-		throw ssl_exception("failed to increment the X509 trust store reference count");
 	m_store = store;
 }
 
@@ -54,6 +52,8 @@ truststore::operator=(const truststore &store)
 	if (this != &store) {
 		if (ssl_library::instance().x509_store_up_ref()(store.m_store) != 1)
 			throw ssl_exception("failed to increment the X509 trust store reference count");
+		if (m_store)
+			ssl_library::instance().x509_store_free()(m_store);
 		m_store = store.m_store;
 	}
 	return *this;
@@ -63,6 +63,8 @@ truststore &
 truststore::operator=(truststore &&store)
 {
 	if (this != &store) {
+		if (m_store)
+			ssl_library::instance().x509_store_free()(m_store);
 		m_store = store.m_store;
 		store.m_store = nullptr;
 	}

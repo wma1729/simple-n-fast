@@ -69,7 +69,10 @@ using p_stk_num = int (*)(const _STACK *);
 using p_stk_val = void * (*)(const _STACK *, int);
 using p_stk_deep_free = void (*)(_STACK *, void (*)(void *));
 using p_gen_name_free = void (*)(void *);
+using p_crl_dps_free = void (*)(void *);
+using p_aia_free = void (*)(void *);
 
+using p_obj2nid = int (*)(const ASN1_OBJECT *);
 using p_asn1_string_type = int (*)(const ASN1_STRING *);
 using p_asn1_string_len = int (*)(const ASN1_STRING *);
 using p_asn1_string_val = const unsigned char * (*)(const ASN1_STRING *);
@@ -99,6 +102,10 @@ using p_ssl_ctx_set_ciphers = int (*)(SSL_CTX *, const char *);
 using p_ssl_ctx_use_private_key = int (*)(SSL_CTX *, EVP_PKEY *);
 using p_ssl_ctx_use_certificate = int (*)(SSL_CTX *, X509 *);
 using p_ssl_ctx_use_truststore = void (*)(SSL_CTX *, X509_STORE *);
+using p_ssl_ctx_check_private_key = int (*)(const SSL_CTX *);
+using p_ssl_ctx_verify_cb = int (*)(X509_STORE_CTX *);
+using p_ssl_ctx_set_verify = void (*)(SSL_CTX *, int, p_ssl_ctx_verify_cb);
+using p_ssl_ctx_set_verify_depth = void (*)(SSL_CTX *, int);
 
 namespace snf {
 namespace net {
@@ -211,7 +218,10 @@ private:
 	p_stk_val                   m_stk_val = nullptr;
 	p_stk_deep_free             m_stk_deep_free = nullptr;
 	p_gen_name_free             m_gen_name_free = nullptr;
+	p_crl_dps_free              m_crl_dps_free = nullptr;
+	p_aia_free                  m_aia_free = nullptr;
 
+	p_obj2nid                   m_obj2nid = nullptr;
 	p_asn1_string_type          m_asn1_string_type = nullptr;
 	p_asn1_string_len           m_asn1_string_len = nullptr;
 	p_asn1_string_val           m_asn1_string_val = nullptr;
@@ -241,6 +251,9 @@ private:
 	p_ssl_ctx_use_private_key   m_ssl_ctx_use_private_key = nullptr;
 	p_ssl_ctx_use_certificate   m_ssl_ctx_use_certificate = nullptr;
 	p_ssl_ctx_use_truststore    m_ssl_ctx_use_truststore = nullptr;
+	p_ssl_ctx_check_private_key m_ssl_ctx_check_private_key = nullptr;
+	p_ssl_ctx_set_verify        m_ssl_ctx_set_verify = nullptr;
+	p_ssl_ctx_set_verify_depth  m_ssl_ctx_set_verify_depth = nullptr;
 
 	ssl_library();
 
@@ -308,7 +321,10 @@ public:
 	p_stk_val stk_val();
 	p_stk_deep_free stk_deep_free();
 	p_gen_name_free gen_name_free();
+	p_crl_dps_free crl_dps_free();
+	p_aia_free aia_free();
 
+	p_obj2nid obj2nid();
 	p_asn1_string_type asn1_string_type();
 	p_asn1_string_len asn1_string_len();
 	p_asn1_string_val asn1_string_val();
@@ -338,6 +354,9 @@ public:
 	p_ssl_ctx_use_private_key ssl_ctx_use_private_key();
 	p_ssl_ctx_use_certificate ssl_ctx_use_certificate();
 	p_ssl_ctx_use_truststore ssl_ctx_use_truststore();
+	p_ssl_ctx_check_private_key ssl_ctx_check_private_key();
+	p_ssl_ctx_set_verify ssl_ctx_set_verify();
+	p_ssl_ctx_set_verify_depth ssl_ctx_set_verify_depth();
 };
 
 } // namespace ssl

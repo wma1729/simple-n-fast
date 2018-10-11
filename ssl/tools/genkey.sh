@@ -21,7 +21,7 @@ while [ $# -gt 0 ]
 do
 	case $1 in
 		-o) outfile=$2; shift ;;
-		-p) passphrase="-pass pass:\"$2\""; shift;;
+		-p) passphrase="-pass pass:$2"; shift;;
 		*) usage ;;
 	esac
 	shift

@@ -35,6 +35,8 @@ public:
 	const std::string &common_name();
 	const std::string &serial();
 	const std::vector<alternate_name> &alternate_names();
+	const std::vector<std::string> &crl_distribution_points();
+	const std::vector<std::string> &ocsp_end_points();
 
 private:
 	X509                            *m_crt = nullptr;
@@ -43,11 +45,14 @@ private:
 	std::string                     m_cn;
 	std::string                     m_serial;
 	std::vector<alternate_name>     m_alt_names;
+	std::vector<std::string>        m_crl_dps;
+	std::vector<std::string>        m_ocsp_eps;
 
 	void init_der(snf::file_ptr &);
 	void init_der(const uint8_t *, size_t);
 	void init_pem(snf::file_ptr &, const char *);
 	void init_pem(const uint8_t *, size_t, const char *);
+	std::string gn_2_str(const GENERAL_NAME *);
 };
 
 } // namespace ssl

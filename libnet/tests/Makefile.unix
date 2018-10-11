@@ -26,7 +26,7 @@ ${P}/%.o: %.cpp
 
 test:
 ifeq (${DBG},-g)
-	@valgrind --quiet --leak-check=summary --show-leak-kinds=definite ${P}/netts -name "libnet-test-suite" -desc "test suite for libnet" -v
+	@valgrind --quiet --leak-check=full --show-leak-kinds=definite ${P}/netts -name "libnet-test-suite" -desc "test suite for libnet" -v
 else
 	@${P}/netts -name "libnet-test-suite" -desc "test suite for libnet" -v
 endif

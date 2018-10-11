@@ -170,6 +170,31 @@ sslctx::use_truststore(truststore &store)
 	ssl_library::instance().ssl_ctx_use_truststore()(m_ctx, store);
 }
 
+void
+sslctx::check_private_key()
+{
+	if (ssl_library::instance().ssl_ctx_check_private_key()(m_ctx) != 1)
+		throw ssl_exception("private key and X509 certificate do not match");
+}
+
+void
+sslctx::verify_peer(bool require_certificate, bool do_it_once)
+{
+	int mode = SSL_VERIFY_PEER;
+	if (require_certificate)
+		mode |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+	if (do_it_once)
+		mode |= SSL_VERIFY_CLIENT_ONCE;
+
+	ssl_library::instance().ssl_ctx_set_verify()(m_ctx, mode, nullptr);
+}
+
+void
+sslctx::limit_certificate_chain_depth(int depth)
+{
+	ssl_library::instance().ssl_ctx_set_verify_depth()(m_ctx, depth);
+}
+
 } // namespace ssl
 } // namespace net
 } // namespace snf

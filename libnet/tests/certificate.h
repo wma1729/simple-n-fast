@@ -105,8 +105,16 @@ public:
 					ASSERT_EQ(const std::string &, I->name, "http://127.0.0.1/", "URI matches");
 			}
 
-			std::string serial = "36E9741D6816765143987F6FB9D919B2";
+			std::string serial = "FE9FDE5DA6C957499F393D6572C52023";
 			ASSERT_EQ(const std::string &, serial, cert9.serial(), "serial number matches");
+
+			const std::vector<std::string> &crls = cert9.crl_distribution_points();
+			ASSERT_EQ(size_t, crls.size(), 1, "number of crl distribution points matches");
+			ASSERT_EQ(const std::string &, crls[0], "http://localhost/crl.pem", "crl distribution point matches");
+
+			const std::vector<std::string> &ocsp = cert9.ocsp_end_points();
+			ASSERT_EQ(size_t, ocsp.size(), 1, "number of ocsp matches");
+			ASSERT_EQ(const std::string &, ocsp[0], "http://localhost:2560/", "ocsp matches");
 		} catch (snf::net::ssl::ssl_exception ex) {
 			std::cerr << ex.what() << std::endl;
 			std::vector<snf::net::ssl::ssl_error>::const_iterator I;

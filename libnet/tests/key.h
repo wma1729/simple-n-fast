@@ -28,14 +28,14 @@ public:
 
 			snf::net::ssl::pkey pkey1(
 				snf::net::ssl::ssl_data_fmt::der,
-				"test.key.der");
+				"unittest.simplenfast.org/unittest.simplenfast.org.key.der");
 			ASSERT_EQ(bool, true, true, "private key 1 creation passed");
 			pkey1.verify();
 			ASSERT_EQ(bool, true, true, "private key 1 verification passed");
 
 			snf::net::ssl::pkey pkey2(
 				snf::net::ssl::ssl_data_fmt::pem,
-				"test.key.pem",
+				"unittest.simplenfast.org/unittest.simplenfast.org.key.pem",
 				"Te5tP@55w0rd");
 			ASSERT_EQ(bool, true, true, "private key 2 creation passed");
 			pkey2.verify();
@@ -44,7 +44,10 @@ public:
 			uint8_t *data = nullptr;
 			size_t dlen = 0;
 
-			snf::read_file("test.key.der", data, &dlen);
+			snf::read_file(
+				"unittest.simplenfast.org/unittest.simplenfast.org.key.der",
+				data,
+				&dlen);
 			snf::net::ssl::pkey pkey3(
 				snf::net::ssl::ssl_data_fmt::der,
 				data,
@@ -57,7 +60,10 @@ public:
 			pkey3.verify();
 			ASSERT_EQ(bool, true, true, "private key 3 verification passed");
 
-			snf::read_file("test.key.pem", data, &dlen);
+			snf::read_file(
+				"unittest.simplenfast.org/unittest.simplenfast.org.key.pem",
+				data,
+				&dlen);
 			snf::net::ssl::pkey pkey4(
 				snf::net::ssl::ssl_data_fmt::pem,
 				data,

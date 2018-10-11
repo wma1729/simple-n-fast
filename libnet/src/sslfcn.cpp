@@ -470,6 +470,33 @@ ssl_library::gen_name_free()
 	return m_gen_name_free;
 }
 
+p_crl_dps_free
+ssl_library::crl_dps_free()
+{
+	if (!m_crl_dps_free)
+		m_crl_dps_free = reinterpret_cast<p_crl_dps_free>
+			(m_ssl->symbol("CRL_DIST_POINTS_free"));
+	return m_crl_dps_free;
+}
+
+p_aia_free
+ssl_library::aia_free()
+{
+	if (!m_aia_free)
+		m_aia_free = reinterpret_cast<p_aia_free>
+			(m_ssl->symbol("AUTHORITY_INFO_ACCESS_free"));
+	return m_aia_free;
+}
+
+p_obj2nid
+ssl_library::obj2nid()
+{
+	if (!m_obj2nid)
+		m_obj2nid = reinterpret_cast<p_obj2nid>
+			(m_ssl->symbol("OBJ_obj2nid"));
+	return m_obj2nid;
+}
+
 p_asn1_string_type
 ssl_library::asn1_string_type()
 {
@@ -711,6 +738,33 @@ ssl_library::ssl_ctx_use_truststore()
 		m_ssl_ctx_use_truststore = reinterpret_cast<p_ssl_ctx_use_truststore>
 			(m_ssl->symbol("SSL_CTX_set_cert_store"));
 	return m_ssl_ctx_use_truststore;
+}
+
+p_ssl_ctx_check_private_key
+ssl_library::ssl_ctx_check_private_key()
+{
+	if (!m_ssl_ctx_check_private_key)
+		m_ssl_ctx_check_private_key = reinterpret_cast<p_ssl_ctx_check_private_key>
+			(m_ssl->symbol("SSL_CTX_check_private_key"));
+	return m_ssl_ctx_check_private_key;
+}
+
+p_ssl_ctx_set_verify
+ssl_library::ssl_ctx_set_verify()
+{
+	if (!m_ssl_ctx_set_verify)
+		m_ssl_ctx_set_verify = reinterpret_cast<p_ssl_ctx_set_verify>
+			(m_ssl->symbol("SSL_CTX_set_verify"));
+	return m_ssl_ctx_set_verify;
+}
+
+p_ssl_ctx_set_verify_depth
+ssl_library::ssl_ctx_set_verify_depth()
+{
+	if (!m_ssl_ctx_set_verify_depth)
+		m_ssl_ctx_set_verify_depth = reinterpret_cast<p_ssl_ctx_set_verify_depth>
+			(m_ssl->symbol("SSL_CTX_set_verify_depth"));
+	return m_ssl_ctx_set_verify_depth;
 }
 
 } // namespace ssl

@@ -33,6 +33,9 @@ public:
 	void use_private_key(pkey &);
 	void use_certificate(x509_certificate &);
 	void use_truststore(truststore &);
+	void check_private_key();
+	void verify_peer(bool require_certificate = false, bool do_it_once = false);
+	void limit_certificate_chain_depth(int);
 };
 
 } // namespace ssl

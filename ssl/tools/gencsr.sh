@@ -41,7 +41,7 @@ do
 		-c) config=$2; shift ;;
 		-k) keyfile=$2; shift ;;
 		-o) outfile=$2; shift ;;
-		-p) passphrase="-passin pass:\"$2\""; shift;;
+		-p) passphrase="-passin pass:$2"; shift;;
 		*) usage ;;
 	esac
 	shift
