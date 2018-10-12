@@ -389,6 +389,42 @@ ssl_library::x509_get_ext_d2i()
 	return m_x509_get_ext_d2i;
 }
 
+p_pem_read_x509_crl
+ssl_library::pem_read_x509_crl()
+{
+	if (!m_pem_read_x509_crl)
+		m_pem_read_x509_crl = reinterpret_cast<p_pem_read_x509_crl>
+			(m_ssl->symbol("PEM_read_X509_CRL"));
+	return m_pem_read_x509_crl;
+}
+
+p_pem_read_bio_x509_crl
+ssl_library::pem_read_bio_x509_crl()
+{
+	if (!m_pem_read_bio_x509_crl)
+		m_pem_read_bio_x509_crl = reinterpret_cast<p_pem_read_bio_x509_crl>
+			(m_ssl->symbol("PEM_read_X509_CRL"));
+	return m_pem_read_bio_x509_crl;
+}
+
+p_x509_crl_up_ref
+ssl_library::x509_crl_up_ref()
+{
+	if (!m_x509_crl_up_ref)
+		m_x509_crl_up_ref = reinterpret_cast<p_x509_crl_up_ref>
+			(m_ssl->symbol("X509_CRL_up_ref"));
+	return m_x509_crl_up_ref;
+}
+
+p_x509_crl_free
+ssl_library::x509_crl_free()
+{
+	if (!m_x509_crl_free)
+		m_x509_crl_free = reinterpret_cast<p_x509_crl_free>
+			(m_ssl->symbol("X509_CRL_free"));
+	return m_x509_crl_free;
+}
+
 p_x509_store_new
 ssl_library::x509_store_new()
 {
@@ -432,6 +468,15 @@ ssl_library::x509_store_add_cert()
 		m_x509_store_add_cert = reinterpret_cast<p_x509_store_add_cert>
 			(m_ssl->symbol("X509_STORE_add_cert"));
 	return m_x509_store_add_cert;
+}
+
+p_x509_store_add_crl
+ssl_library::x509_store_add_crl()
+{
+	if (!m_x509_store_add_crl)
+		m_x509_store_add_crl = reinterpret_cast<p_x509_store_add_crl>
+			(m_ssl->symbol("X509_STORE_add_crl"));
+	return m_x509_store_add_crl;
 }
 
 p_stk_num
@@ -765,6 +810,15 @@ ssl_library::ssl_ctx_set_verify_depth()
 		m_ssl_ctx_set_verify_depth = reinterpret_cast<p_ssl_ctx_set_verify_depth>
 			(m_ssl->symbol("SSL_CTX_set_verify_depth"));
 	return m_ssl_ctx_set_verify_depth;
+}
+
+p_ssl_ctx_get_cert_store
+ssl_library::ssl_ctx_get_cert_store()
+{
+	if (!m_ssl_ctx_get_cert_store)
+		m_ssl_ctx_get_cert_store = reinterpret_cast<p_ssl_ctx_get_cert_store>
+			(m_ssl->symbol("SSL_CTX_get_cert_store"));
+	return m_ssl_ctx_get_cert_store;
 }
 
 } // namespace ssl

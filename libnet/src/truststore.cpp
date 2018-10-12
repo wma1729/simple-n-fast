@@ -78,6 +78,13 @@ truststore::add_certificate(x509_certificate &crt)
 		throw ssl_exception("failed to add certificate to the X509 trust store");
 }
 
+void
+truststore::add_crl(x509_crl &crl)
+{
+	if (ssl_library::instance().x509_store_add_crl()(m_store, crl) != 1)
+		throw ssl_exception("failed to add CRL to the X509 trust store");
+}
+
 } // namespace ssl
 } // namespace net
 } // namespace snf

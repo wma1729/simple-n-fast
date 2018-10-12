@@ -171,6 +171,17 @@ sslctx::use_truststore(truststore &store)
 }
 
 void
+sslctx::use_crl(x509_crl &crl)
+{
+	X509_STORE *store = ssl_library::instance().ssl_ctx_get_cert_store()(m_ctx);
+	if (store == nullptr)
+		throw ssl_exception("failed to get X509 trust store for the current context");
+
+	if (ssl_library::instance().x509_store_add_crl()(store, crl) != 1)
+		throw ssl_exception("failed to add CRL to the X509 trust store");
+}
+
+void
 sslctx::check_private_key()
 {
 	if (ssl_library::instance().ssl_ctx_check_private_key()(m_ctx) != 1)

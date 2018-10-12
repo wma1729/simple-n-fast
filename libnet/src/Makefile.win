@@ -5,7 +5,7 @@ include ..\..\Makefile.constants
 !ENDIF
 
 OBJS =  $(P)\net.obj $(P)\addrinfo.obj $(P)\ia.obj $(P)\sa.obj $(P)\host.obj $(P)\sock.obj \
-	$(P)\sslfcn.obj $(P)\pkey.obj $(P)\crt.obj $(P)\truststore.obj $(P)\sslctx.obj
+	$(P)\sslfcn.obj $(P)\pkey.obj $(P)\crt.obj $(P)\crl.obj $(P)\truststore.obj $(P)\sslctx.obj
 
 INCL = $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 

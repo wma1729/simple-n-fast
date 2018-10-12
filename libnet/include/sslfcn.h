@@ -59,11 +59,17 @@ using p_x509_name_get_text_by_nid = int (*)(X509_NAME *, int, char *, int);
 using p_x509_get_serial = ASN1_INTEGER * (*)(X509 *);
 using p_x509_get_ext_d2i = void * (*)(const X509 *, int, int *, int *);
 
+using p_pem_read_x509_crl = X509_CRL * (*)(FILE *, X509_CRL **, pem_password_cb *, void *);
+using p_pem_read_bio_x509_crl = X509_CRL * (*)(BIO *, X509_CRL **, pem_password_cb *, void *);
+using p_x509_crl_up_ref = int (*)(X509_CRL *);
+using p_x509_crl_free = void (*)(X509_CRL *);
+
 using p_x509_store_new = X509_STORE * (*)(void);
 using p_x509_store_up_ref = int (*)(X509_STORE *);
 using p_x509_store_free = void (*)(X509_STORE *);
 using p_x509_store_load = int (*)(X509_STORE *, const char *, const char *);
 using p_x509_store_add_cert = int (*)(X509_STORE *, X509 *);
+using p_x509_store_add_crl = int (*)(X509_STORE *, X509_CRL *);
 
 using p_stk_num = int (*)(const _STACK *);
 using p_stk_val = void * (*)(const _STACK *, int);
@@ -106,6 +112,7 @@ using p_ssl_ctx_check_private_key = int (*)(const SSL_CTX *);
 using p_ssl_ctx_verify_cb = int (*)(X509_STORE_CTX *);
 using p_ssl_ctx_set_verify = void (*)(SSL_CTX *, int, p_ssl_ctx_verify_cb);
 using p_ssl_ctx_set_verify_depth = void (*)(SSL_CTX *, int);
+using p_ssl_ctx_get_cert_store = X509_STORE * (*)(const SSL_CTX *);
 
 namespace snf {
 namespace net {
@@ -208,11 +215,17 @@ private:
 	p_x509_get_serial           m_x509_get_serial = nullptr;
 	p_x509_get_ext_d2i          m_x509_get_ext_d2i = nullptr;
 
+	p_pem_read_x509_crl         m_pem_read_x509_crl = nullptr;
+	p_pem_read_bio_x509_crl     m_pem_read_bio_x509_crl = nullptr;
+	p_x509_crl_up_ref           m_x509_crl_up_ref = nullptr;
+	p_x509_crl_free             m_x509_crl_free = nullptr;
+
 	p_x509_store_new            m_x509_store_new = nullptr;
 	p_x509_store_up_ref         m_x509_store_up_ref = nullptr;
 	p_x509_store_free           m_x509_store_free = nullptr;
 	p_x509_store_load           m_x509_store_load = nullptr;
 	p_x509_store_add_cert       m_x509_store_add_cert = nullptr;
+	p_x509_store_add_crl        m_x509_store_add_crl = nullptr;
 
 	p_stk_num                   m_stk_num = nullptr;
 	p_stk_val                   m_stk_val = nullptr;
@@ -254,6 +267,7 @@ private:
 	p_ssl_ctx_check_private_key m_ssl_ctx_check_private_key = nullptr;
 	p_ssl_ctx_set_verify        m_ssl_ctx_set_verify = nullptr;
 	p_ssl_ctx_set_verify_depth  m_ssl_ctx_set_verify_depth = nullptr;
+	p_ssl_ctx_get_cert_store    m_ssl_ctx_get_cert_store = nullptr;
 
 	ssl_library();
 
@@ -311,11 +325,17 @@ public:
 	p_x509_get_serial x509_get_serial();
 	p_x509_get_ext_d2i x509_get_ext_d2i();
 
+	p_pem_read_x509_crl pem_read_x509_crl();
+	p_pem_read_bio_x509_crl pem_read_bio_x509_crl();
+	p_x509_crl_up_ref x509_crl_up_ref();
+	p_x509_crl_free x509_crl_free();
+
 	p_x509_store_new x509_store_new();
 	p_x509_store_up_ref x509_store_up_ref();
 	p_x509_store_free x509_store_free();
 	p_x509_store_load x509_store_load();
 	p_x509_store_add_cert x509_store_add_cert();
+	p_x509_store_add_crl x509_store_add_crl();
 
 	p_stk_num stk_num();
 	p_stk_val stk_val();
@@ -357,6 +377,7 @@ public:
 	p_ssl_ctx_check_private_key ssl_ctx_check_private_key();
 	p_ssl_ctx_set_verify ssl_ctx_set_verify();
 	p_ssl_ctx_set_verify_depth ssl_ctx_set_verify_depth();
+	p_ssl_ctx_get_cert_store ssl_ctx_get_cert_store();
 };
 
 } // namespace ssl
