@@ -70,6 +70,7 @@ using p_x509_store_free = void (*)(X509_STORE *);
 using p_x509_store_load = int (*)(X509_STORE *, const char *, const char *);
 using p_x509_store_add_cert = int (*)(X509_STORE *, X509 *);
 using p_x509_store_add_crl = int (*)(X509_STORE *, X509_CRL *);
+using p_x509_store_set_flags = int (*)(X509_STORE *, unsigned long);
 
 using p_stk_num = int (*)(const _STACK *);
 using p_stk_val = void * (*)(const _STACK *, int);
@@ -226,6 +227,7 @@ private:
 	p_x509_store_load           m_x509_store_load = nullptr;
 	p_x509_store_add_cert       m_x509_store_add_cert = nullptr;
 	p_x509_store_add_crl        m_x509_store_add_crl = nullptr;
+	p_x509_store_set_flags      m_x509_store_set_flags = nullptr;
 
 	p_stk_num                   m_stk_num = nullptr;
 	p_stk_val                   m_stk_val = nullptr;
@@ -336,6 +338,7 @@ public:
 	p_x509_store_load x509_store_load();
 	p_x509_store_add_cert x509_store_add_cert();
 	p_x509_store_add_crl x509_store_add_crl();
+	p_x509_store_set_flags x509_store_set_flags();
 
 	p_stk_num stk_num();
 	p_stk_val stk_val();

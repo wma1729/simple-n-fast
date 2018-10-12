@@ -1,4 +1,4 @@
-#include "sslctx.h"
+#include "ctx.h"
 
 class sctx : public snf::tf::test
 {
@@ -25,7 +25,7 @@ public:
 
 		try {
 			snf::net::initialize(true);
-			snf::net::ssl::sslctx ctx1;
+			snf::net::ssl::context ctx1;
 			ASSERT_EQ(bool, true, true, "ssl context creation passed");
 		} catch (snf::net::ssl::ssl_exception ex) {
 			std::cerr << ex.what() << std::endl;

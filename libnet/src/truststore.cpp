@@ -85,6 +85,13 @@ truststore::add_crl(x509_crl &crl)
 		throw ssl_exception("failed to add CRL to the X509 trust store");
 }
 
+void
+truststore::set_flags(unsigned long flags)
+{
+	if (ssl_library::instance().x509_store_set_flags()(m_store, flags) != 1)
+		throw ssl_exception("failed to set flags for the X509 trust store");
+}
+
 } // namespace ssl
 } // namespace net
 } // namespace snf

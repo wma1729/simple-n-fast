@@ -27,6 +27,7 @@ public:
 
 	void add_certificate(x509_certificate &);
 	void add_crl(x509_crl &);
+	void set_flags(unsigned long);
 
 private:
 	X509_STORE  *m_store = nullptr;

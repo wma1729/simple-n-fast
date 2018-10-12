@@ -1,5 +1,5 @@
-#ifndef _SNF_SSLCTX_H_
-#define _SNF_SSLCTX_H_
+#ifndef _SNF_CTX_H_
+#define _SNF_CTX_H_
 
 #include "sslfcn.h"
 #include "pkey.h"
@@ -11,7 +11,7 @@ namespace snf {
 namespace net {
 namespace ssl {
 
-class sslctx {
+class context {
 private:
 	SSL_CTX *m_ctx = nullptr;
 
@@ -19,12 +19,12 @@ private:
 	long clr_options(unsigned long);
 	long set_options(unsigned long);
 public:
-	sslctx();
-	sslctx(const sslctx &);
-	sslctx(sslctx &&);
-	const sslctx & operator=(const sslctx &);
-	sslctx & operator=(sslctx &&);
-	~sslctx();
+	context();
+	context(const context &);
+	context(context &&);
+	const context & operator=(const context &);
+	context & operator=(context &&);
+	~context();
 
 	void prefer_server_cipher();
 	void prefer_client_cipher();
@@ -44,4 +44,4 @@ public:
 } // namespace net
 } // namespace snf
 
-#endif // _SNF_SSLCTX_H_
+#endif // _SNF_CTX_H_

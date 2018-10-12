@@ -479,6 +479,15 @@ ssl_library::x509_store_add_crl()
 	return m_x509_store_add_crl;
 }
 
+p_x509_store_set_flags
+ssl_library::x509_store_set_flags()
+{
+	if (!m_x509_store_set_flags)
+		m_x509_store_set_flags = reinterpret_cast<p_x509_store_set_flags>
+			(m_ssl->symbol("X509_STORE_set_flags"));
+	return m_x509_store_set_flags;
+}
+
 p_stk_num
 ssl_library::stk_num()
 {
