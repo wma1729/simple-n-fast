@@ -59,6 +59,7 @@ public:
 	void bind(int, in_port_t);
 	void bind(const internet_address &, in_port_t);
 	void bind(const socket_address &);
+	void listen(int);
 	socket accept();
 	void close();
 	void shutdown(int);

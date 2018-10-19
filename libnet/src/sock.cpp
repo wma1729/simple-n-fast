@@ -565,6 +565,25 @@ socket::bind(const socket_address &sa)
 	bind_to(sa);
 }
 
+void
+socket::listen(int backlog)
+{
+	if (backlog < 5)
+		backlog = 5;
+	if (backlog > SOMAXCONN)
+		backlog = SOMAXCONN;
+
+	if (SOCKET_ERROR == ::listen(m_sock, backlog)) {
+		std::ostringstream oss;
+		oss << "failed to listen on socket " << static_cast<int64_t>(m_sock)
+			<< " with a backlog of " << backlog;
+		throw std::system_error(
+			snf::net::error(),
+			std::system_category(),
+			oss.str());
+	}
+}
+
 socket
 socket::accept()
 {
