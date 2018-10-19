@@ -41,9 +41,9 @@ public:
 	const in_addr *get_ipv4() const;
 	const in6_addr *get_ipv6() const;
 
-	const sockaddr_in *get_sa_v4() const;
-	const sockaddr_in6 *get_sa_v6() const;
-	const sockaddr *get_sa() const;
+	const sockaddr_in *get_sa_v4(socklen_t *len = nullptr) const;
+	const sockaddr_in6 *get_sa_v6(socklen_t *len = nullptr) const;
+	const sockaddr *get_sa(socklen_t *len = nullptr) const;
 
 	in_port_t port() const;
 	void port(in_port_t);

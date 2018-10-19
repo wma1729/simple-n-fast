@@ -13,6 +13,12 @@ constexpr int SHUTDOWN_READ = SD_RECEIVE;
 constexpr int SHUTDOWN_WRITE = SD_SEND;
 constexpr int SHUTDOWN_RDWR = SD_BOTH;
 
+constexpr bool connect_in_progress(int e) { return (e == WSAEWOULDBLOCK); }
+
+#if !defined(ETIMEDOUT)
+#define WSAETIMEDOUT ETIMEDOUT
+#endif
+
 #else // !_WIN32
 
 #include <arpa/inet.h>
@@ -21,6 +27,7 @@ constexpr int SHUTDOWN_RDWR = SD_BOTH;
 #include <sys/socket.h>
 #include <netdb.h>
 #include <fcntl.h>
+#include <poll.h>
 
 using sock_t = int;
 constexpr sock_t INVALID_SOCKET = -1;
@@ -28,6 +35,8 @@ constexpr int SOCKET_ERROR = -1;
 constexpr int SHUTDOWN_READ = SHUT_RD;
 constexpr int SHUTDOWN_WRITE = SHUT_WR;
 constexpr int SHUTDOWN_RDWR = SHUT_RDWR;
+
+constexpr bool connect_in_progress(int e) { return (e == EINPROGRESS); }
 
 #endif // _WIN32
 

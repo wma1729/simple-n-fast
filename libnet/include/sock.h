@@ -17,7 +17,10 @@ private:
 	const char *optstr(int, int);
 	void getopt(int, int, void *, int *);
 	void setopt(int, int, void *, int);
+	void connect_to(const socket_address &, int);
+	void bind_to(const socket_address &);
 
+	socket(sock_t, const sockaddr_storage &, socklen_t);
 public:
 	enum class linger_type
 	{
@@ -26,7 +29,6 @@ public:
 		timed	// linger for the specified time
 	};
 
-	socket(sock_t);
 	socket(int, socket_type);
 	~socket();
 
@@ -45,11 +47,19 @@ public:
 	void rcvtimeout(int64_t);
 	int64_t sndtimeout();
 	void sndtimeout(int64_t);
+	int error();
 	bool tcpnodelay();
 	void tcpnodelay(bool);
 	void blocking(bool);
 	const socket_address &local_address();
 	const socket_address &peer_address();
+	void connect(int, const std::string &, in_port_t, int to = -1); 
+	void connect(const internet_address &, in_port_t, int to = -1);
+	void connect(const socket_address &, int to = -1);
+	void bind(int, in_port_t);
+	void bind(const internet_address &, in_port_t);
+	void bind(const socket_address &);
+	socket accept();
 	void close();
 	void shutdown(int);
 };

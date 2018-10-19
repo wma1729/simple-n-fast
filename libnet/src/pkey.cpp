@@ -134,6 +134,8 @@ pkey::pkey(
 
 pkey::pkey(EVP_PKEY *pkey)
 {
+	if (ssl_library::instance().evp_pkey_up_ref()(pkey) != 1)
+		throw ssl_exception("failed to increment the key reference count");
 	m_pkey = pkey;
 }
 

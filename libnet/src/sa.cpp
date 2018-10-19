@@ -132,28 +132,39 @@ socket_address::get_ipv6() const
 }
 
 const sockaddr_in *
-socket_address::get_sa_v4() const
+socket_address::get_sa_v4(socklen_t *len) const
 {
-	if (is_ipv4())
+	if (is_ipv4()) {
+		if (len)
+			*len = static_cast<socklen_t>(sizeof(sockaddr_in));
 		return &(m_addr.v4_addr);
+	}
 	return nullptr;
 }
 
 const sockaddr_in6 *
-socket_address::get_sa_v6() const
+socket_address::get_sa_v6(socklen_t *len) const
 {
-	if (is_ipv6())
+	if (is_ipv6()) {
+		if (len)
+			*len = static_cast<socklen_t>(sizeof(sockaddr_in6));
 		return &(m_addr.v6_addr);
+	}
 	return nullptr;
 }
 
 const sockaddr *
-socket_address::get_sa() const
+socket_address::get_sa(socklen_t *len) const
 {
-	if (is_ipv4())
+	if (is_ipv4()) {
+		if (len)
+			*len = static_cast<socklen_t>(sizeof(sockaddr_in));
 		return reinterpret_cast<const sockaddr *>(&(m_addr.v4_addr));
-	else if (is_ipv6())
+	} else if (is_ipv6()) {
+		if (len)
+			*len = static_cast<socklen_t>(sizeof(sockaddr_in6));
 		return reinterpret_cast<const sockaddr *>(&(m_addr.v6_addr));
+	}
 	return nullptr;
 }
 

@@ -22,6 +22,8 @@ truststore::truststore(const std::string &f)
 
 truststore::truststore(X509_STORE *store)
 {
+	if (ssl_library::instance().x509_store_up_ref()(store) != 1)
+		throw ssl_exception("failed to increment the X509 trust store reference count");
 	m_store = store;
 }
 

@@ -1,4 +1,5 @@
 #include "sslfcn.h"
+#include "dbg.h"
 
 namespace snf {
 namespace net {
@@ -44,7 +45,7 @@ ssl_library::ssl_library()
 	const char *env = getenv("LIBSSL");
 	if (env && *env)
 		libname = env;
-	m_ssl = new snf::dll(libname);
+	m_ssl = DBG_NEW snf::dll(libname);
 }
 
 p_openssl_version_num
@@ -731,6 +732,15 @@ ssl_library::ssl_ctx_ctrl()
 	return m_ssl_ctx_ctrl;
 }
 
+p_ssl_ctx_cb_ctrl
+ssl_library::ssl_ctx_cb_ctrl()
+{
+	if (!m_ssl_ctx_cb_ctrl)
+		m_ssl_ctx_cb_ctrl = reinterpret_cast<p_ssl_ctx_cb_ctrl>
+			(m_ssl->symbol("SSL_CTX_callback_ctrl"));
+	return m_ssl_ctx_cb_ctrl;
+}
+
 p_ssl_ctx_get_options
 ssl_library::ssl_ctx_get_options()
 {
@@ -828,6 +838,109 @@ ssl_library::ssl_ctx_get_cert_store()
 		m_ssl_ctx_get_cert_store = reinterpret_cast<p_ssl_ctx_get_cert_store>
 			(m_ssl->symbol("SSL_CTX_get_cert_store"));
 	return m_ssl_ctx_get_cert_store;
+}
+
+p_ssl_ctx_get0_cert
+ssl_library::ssl_ctx_get0_cert()
+{
+	if (!m_ssl_ctx_get0_cert)
+		m_ssl_ctx_get0_cert = reinterpret_cast<p_ssl_ctx_get0_cert>
+			(m_ssl->symbol("SSL_CTX_get0_certificate"));
+	return m_ssl_ctx_get0_cert;
+}
+
+p_ssl_new
+ssl_library::ssl_new()
+{
+	if (!m_ssl_new)
+		m_ssl_new = reinterpret_cast<p_ssl_new>
+			(m_ssl->symbol("SSL_new"));
+	return m_ssl_new;
+}
+
+p_ssl_free
+ssl_library::ssl_free()
+{
+	if (!m_ssl_free)
+		m_ssl_free = reinterpret_cast<p_ssl_free>
+			(m_ssl->symbol("SSL_free"));
+	return m_ssl_free;
+}
+
+p_ssl_set_ssl_ctx
+ssl_library::ssl_set_ssl_ctx()
+{
+	if (!m_ssl_set_ssl_ctx)
+		m_ssl_set_ssl_ctx = reinterpret_cast<p_ssl_set_ssl_ctx>
+			(m_ssl->symbol("SSL_set_SSL_CTX"));
+	return m_ssl_set_ssl_ctx;
+}
+
+p_ssl_ctrl
+ssl_library::ssl_ctrl()
+{
+	if (!m_ssl_ctrl)
+		m_ssl_ctrl = reinterpret_cast<p_ssl_ctrl>
+			(m_ssl->symbol("SSL_ctrl"));
+	return m_ssl_ctrl;
+}
+
+p_ssl_get_servername
+ssl_library::ssl_get_servername()
+{
+	if (!m_ssl_get_servername)
+		m_ssl_get_servername = reinterpret_cast<p_ssl_get_servername>
+			(m_ssl->symbol("SSL_get_servername"));
+	return m_ssl_get_servername;
+}
+
+p_ssl_get0_param
+ssl_library::ssl_get0_param()
+{
+	if (!m_ssl_get0_param)
+		m_ssl_get0_param = reinterpret_cast<p_ssl_get0_param>
+			(m_ssl->symbol("SSL_get0_param"));
+	return m_ssl_get0_param;
+}
+
+p_x509_verify_param_set_hostflags
+ssl_library::x509_verify_param_set_hostflags()
+{
+	if (!m_x509_verify_param_set_hostflags)
+		m_x509_verify_param_set_hostflags =
+			reinterpret_cast<p_x509_verify_param_set_hostflags>
+				(m_ssl->symbol("X509_VERIFY_PARAM_set_hostflags"));
+	return m_x509_verify_param_set_hostflags;
+}
+
+p_x509_verify_param_set1_host
+ssl_library::x509_verify_param_set1_host()
+{
+	if (!m_x509_verify_param_set1_host)
+		m_x509_verify_param_set1_host =
+			reinterpret_cast<p_x509_verify_param_set1_host>
+				(m_ssl->symbol("X509_VERIFY_PARAM_set1_host"));
+	return m_x509_verify_param_set1_host;
+}
+
+p_x509_verify_param_add1_host
+ssl_library::x509_verify_param_add1_host()
+{
+	if (!m_x509_verify_param_add1_host)
+		m_x509_verify_param_add1_host =
+			reinterpret_cast<p_x509_verify_param_add1_host>
+				(m_ssl->symbol("X509_VERIFY_PARAM_add1_host"));
+	return m_x509_verify_param_add1_host;
+}
+
+p_x509_verify_param_set1_ip_asc
+ssl_library::x509_verify_param_set1_ip_asc()
+{
+	if (!m_x509_verify_param_set1_ip_asc)
+		m_x509_verify_param_set1_ip_asc =
+			reinterpret_cast<p_x509_verify_param_set1_ip_asc>
+				(m_ssl->symbol("X509_VERIFY_PARAM_set1_ip_asc"));
+	return m_x509_verify_param_set1_ip_asc;
 }
 
 } // namespace ssl

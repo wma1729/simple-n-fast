@@ -79,6 +79,8 @@ T ntoh(T b)
 	throw std::invalid_argument("invalid data type");
 }
 
+int poll(std::vector<pollfd> &, int, int *);
+
 } // namespace net
 } // namespace snf
 

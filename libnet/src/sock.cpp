@@ -1,4 +1,5 @@
 #include "sock.h"
+#include "ia.h"
 
 namespace snf {
 namespace net {
@@ -17,6 +18,7 @@ socket::optstr(int level, int optname)
 				case SO_SNDBUF: return "SO_SNDBUF";
 				case SO_RCVTIMEO: return "SO_RCVTIMEO";
 				case SO_SNDTIMEO: return "SO_SNDTIMEO";
+				case SO_ERROR: return "SO_ERROR";
 				default: break;
 			}
 			break;
@@ -77,7 +79,85 @@ socket::setopt(int level, int optname, void *value, int vlen)
 	}
 }
 
-socket::socket(sock_t s)
+void
+socket::connect_to(const socket_address &sa, int to)
+{
+	int retval = 0;
+	socklen_t len = 0;
+	const sockaddr *saddr = sa.get_sa(&len);
+
+	if (to == -1) {
+		retval = ::connect(m_sock, saddr, len);
+		if (SOCKET_ERROR == retval) {
+			std::ostringstream oss;
+			oss << "failed to connect to " << sa;
+			throw std::system_error(
+				snf::net::error(),
+				std::system_category(),
+				oss.str());
+		}
+	} else {
+		blocking(false);
+
+		retval = ::connect(m_sock, saddr, len);
+		if (SOCKET_ERROR == retval) {
+			retval = snf::net::error();
+			if (connect_in_progress(retval)) {
+				pollfd fdelem;
+
+				fdelem.fd = m_sock;
+				fdelem.events = POLLOUT | POLLERR;
+				fdelem.revents = 0;
+
+				std::vector<pollfd> fdvec;
+				fdvec.push_back(fdelem);
+
+				int syserr;
+				retval = snf::net::poll(fdvec, to, &syserr);
+				if (SOCKET_ERROR == retval) {
+					retval = syserr;
+				} else if (retval == 0) {
+					retval = ETIMEDOUT;
+				} else {
+					if (fdvec[0].revents & POLLERR)
+						retval = error();
+					else
+						retval = 0;
+				}
+
+				if (retval != 0) {
+					std::ostringstream oss;
+					oss << "failed to connect to " << sa;
+					throw std::system_error(
+						retval,
+						std::system_category(),
+						oss.str());
+				}
+			}
+		}
+
+		blocking(true);
+	}
+}
+
+void
+socket::bind_to(const socket_address &sa)
+{
+	socklen_t len = 0;
+	const sockaddr *saddr = sa.get_sa(&len);
+
+	int retval = ::bind(m_sock, saddr, len);
+	if (SOCKET_ERROR == retval) {
+		std::ostringstream oss;
+		oss << "failed to bind to " << sa;
+		throw std::system_error(
+			snf::net::error(),
+			std::system_category(),
+			oss.str());
+	}
+}
+
+socket::socket(sock_t s, const sockaddr_storage &ss, socklen_t len)
 	: m_sock(s)
 {
 	int value = 0;
@@ -92,6 +172,8 @@ socket::socket(sock_t s)
 	} else {
 		throw std::invalid_argument("invalid socket type");
 	}
+
+	m_peer = DBG_NEW socket_address(ss, len);
 }
 
 socket::socket(int family, socket_type type)
@@ -316,6 +398,15 @@ socket::sndtimeout(int64_t to)
 	setopt(SOL_SOCKET, SO_SNDTIMEO, &value, vlen);
 }
 
+int
+socket::error()
+{
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+	getopt(SOL_SOCKET, SO_ERROR, &value, &vlen);
+	return value;
+}
+
 bool
 socket::tcpnodelay()
 {
@@ -424,6 +515,76 @@ socket::peer_address()
 	}
 
 	return *m_peer;
+}
+
+void
+socket::connect(int family, const std::string &host, in_port_t port, int to)
+{
+	std::vector<socket_address> sas =
+		std::move(socket_address::get_client(family, m_type, host, port));
+
+	std::vector<socket_address>::const_iterator it = sas.begin();
+	if (it != sas.end())
+		connect_to(*it, to);
+}
+
+void
+socket::connect(const internet_address &ia, in_port_t port, int to)
+{
+	socket_address sa { ia, port };
+	connect_to(sa, to);
+}
+
+void
+socket::connect(const socket_address &sa, int to)
+{
+	connect_to(sa, to);
+}
+
+void
+socket::bind(int family, in_port_t port)
+{
+	std::vector<socket_address> sas =
+		std::move(socket_address::get_server(family, socket_type::tcp, port));
+
+	std::vector<socket_address>::const_iterator it = sas.begin();
+	if (it != sas.end())
+		bind_to(*it);
+}
+
+void
+socket::bind(const internet_address &ia, in_port_t port)
+{
+	socket_address sa { ia, port };
+	bind_to(sa);
+}
+
+void
+socket::bind(const socket_address &sa)
+{
+	bind_to(sa);
+}
+
+socket
+socket::accept()
+{
+	sockaddr_storage saddr;
+	socklen_t slen;
+
+	sock_t s = ::accept(
+			m_sock,
+			reinterpret_cast<sockaddr *>(&saddr),
+			&slen);
+	if (INVALID_SOCKET == s) {
+		std::ostringstream oss;
+		oss << "failed to accept socket " << static_cast<int64_t>(m_sock);
+		throw std::system_error(
+			snf::net::error(),
+			std::system_category(),
+			oss.str());
+	}
+
+	return socket {s, saddr, slen} ;
 }
 
 void

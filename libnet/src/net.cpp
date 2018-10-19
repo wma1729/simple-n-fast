@@ -55,5 +55,23 @@ openssl_version(std::string &ver_str)
 	return ssl::ssl_library::instance().openssl_version_num()();
 }
 
+int
+poll(std::vector<pollfd> &fds, int to, int *syserr)
+{
+	if (syserr)
+		*syserr = 0;
+
+#if defined(_WIN32)
+	int retval = WSAPoll(fds.data(), static_cast<ULONG>(fds.size()), to);
+#else
+	int retval = poll(fds.data(), fds.size(), to);
+#endif
+	if (retval == SOCKET_ERROR)
+		if (syserr)
+			*syserr = snf::net::error();
+
+	return retval;
+}
+
 } // namespace net
 } // namespace snf

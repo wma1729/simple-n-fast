@@ -102,6 +102,7 @@ using p_ssl_ctx_free = void (*)(SSL_CTX *);
 using p_ssl_ctx_set_min_ver = int (*)(SSL_CTX *, uint16_t);
 using p_ssl_ctx_set_max_ver = int (*)(SSL_CTX *, uint16_t);
 using p_ssl_ctx_ctrl = long (*)(SSL_CTX *, int, long, void *);
+using p_ssl_ctx_cb_ctrl = long (*)(SSL_CTX *, int, void (*)(void));
 using p_ssl_ctx_get_options = long (*)(const SSL_CTX *);
 using p_ssl_ctx_clr_options = long (*)(SSL_CTX *, unsigned long op);
 using p_ssl_ctx_set_options = long (*)(SSL_CTX *, unsigned long op);
@@ -114,6 +115,19 @@ using p_ssl_ctx_verify_cb = int (*)(X509_STORE_CTX *);
 using p_ssl_ctx_set_verify = void (*)(SSL_CTX *, int, p_ssl_ctx_verify_cb);
 using p_ssl_ctx_set_verify_depth = void (*)(SSL_CTX *, int);
 using p_ssl_ctx_get_cert_store = X509_STORE * (*)(const SSL_CTX *);
+using p_ssl_ctx_get0_cert = X509 * (*)(const SSL_CTX *);
+
+using p_ssl_new = SSL * (*)(SSL_CTX *);
+using p_ssl_free = void (*)(SSL *);
+using p_ssl_set_ssl_ctx = SSL_CTX * (*)(SSL *, SSL_CTX *);
+using p_ssl_ctrl = long (*)(SSL *, int, long, void *);
+using p_ssl_get_servername = const char * (*)(const SSL *, int);
+
+using p_ssl_get0_param = X509_VERIFY_PARAM * (*)(SSL *);
+using p_x509_verify_param_set_hostflags = void (*)(X509_VERIFY_PARAM *, unsigned int);
+using p_x509_verify_param_set1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
+using p_x509_verify_param_add1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
+using p_x509_verify_param_set1_ip_asc = int (*)(X509_VERIFY_PARAM *, const char *);
 
 namespace snf {
 namespace net {
@@ -259,6 +273,7 @@ private:
 	p_ssl_ctx_set_min_ver       m_ssl_ctx_set_min_ver = nullptr;
 	p_ssl_ctx_set_max_ver       m_ssl_ctx_set_max_ver = nullptr;
 	p_ssl_ctx_ctrl              m_ssl_ctx_ctrl = nullptr;
+	p_ssl_ctx_cb_ctrl           m_ssl_ctx_cb_ctrl = nullptr;
 	p_ssl_ctx_get_options       m_ssl_ctx_get_options = nullptr;
 	p_ssl_ctx_clr_options       m_ssl_ctx_clr_options = nullptr;
 	p_ssl_ctx_set_options       m_ssl_ctx_set_options = nullptr;
@@ -270,6 +285,19 @@ private:
 	p_ssl_ctx_set_verify        m_ssl_ctx_set_verify = nullptr;
 	p_ssl_ctx_set_verify_depth  m_ssl_ctx_set_verify_depth = nullptr;
 	p_ssl_ctx_get_cert_store    m_ssl_ctx_get_cert_store = nullptr;
+	p_ssl_ctx_get0_cert         m_ssl_ctx_get0_cert = nullptr;
+
+	p_ssl_new                   m_ssl_new = nullptr;
+	p_ssl_free                  m_ssl_free = nullptr;
+	p_ssl_set_ssl_ctx           m_ssl_set_ssl_ctx = nullptr;
+	p_ssl_ctrl                  m_ssl_ctrl = nullptr;
+	p_ssl_get_servername        m_ssl_get_servername = nullptr;
+
+	p_ssl_get0_param                    m_ssl_get0_param = nullptr;
+	p_x509_verify_param_set_hostflags   m_x509_verify_param_set_hostflags = nullptr;
+	p_x509_verify_param_set1_host       m_x509_verify_param_set1_host = nullptr;
+	p_x509_verify_param_add1_host       m_x509_verify_param_add1_host = nullptr;
+	p_x509_verify_param_set1_ip_asc     m_x509_verify_param_set1_ip_asc = nullptr;
 
 	ssl_library();
 
@@ -370,6 +398,7 @@ public:
 	p_ssl_ctx_set_min_ver ssl_ctx_set_min_ver();
 	p_ssl_ctx_set_max_ver ssl_ctx_set_max_ver();
 	p_ssl_ctx_ctrl ssl_ctx_ctrl();
+	p_ssl_ctx_cb_ctrl ssl_ctx_cb_ctrl();
 	p_ssl_ctx_get_options ssl_ctx_get_options();
 	p_ssl_ctx_clr_options ssl_ctx_clr_options();
 	p_ssl_ctx_set_options ssl_ctx_set_options();
@@ -381,6 +410,19 @@ public:
 	p_ssl_ctx_set_verify ssl_ctx_set_verify();
 	p_ssl_ctx_set_verify_depth ssl_ctx_set_verify_depth();
 	p_ssl_ctx_get_cert_store ssl_ctx_get_cert_store();
+	p_ssl_ctx_get0_cert ssl_ctx_get0_cert();
+
+	p_ssl_new ssl_new();
+	p_ssl_free ssl_free();
+	p_ssl_set_ssl_ctx ssl_set_ssl_ctx();
+	p_ssl_ctrl ssl_ctrl();
+	p_ssl_get_servername ssl_get_servername();
+
+	p_ssl_get0_param ssl_get0_param();
+	p_x509_verify_param_set_hostflags x509_verify_param_set_hostflags();
+	p_x509_verify_param_set1_host x509_verify_param_set1_host();
+	p_x509_verify_param_add1_host x509_verify_param_add1_host();
+	p_x509_verify_param_set1_ip_asc x509_verify_param_set1_ip_asc();
 };
 
 } // namespace ssl
