@@ -21,6 +21,10 @@ private:
 	void bind_to(const socket_address &);
 
 	socket(sock_t, const sockaddr_storage &, socklen_t);
+
+protected:
+	int map_system_error(int, int);
+
 public:
 	enum class linger_type
 	{
@@ -53,14 +57,17 @@ public:
 	void blocking(bool);
 	const socket_address &local_address();
 	const socket_address &peer_address();
-	void connect(int, const std::string &, in_port_t, int to = -1); 
-	void connect(const internet_address &, in_port_t, int to = -1);
+	void connect(int, const std::string &, in_port_t, int to = POLL_WAIT_FOREVER); 
+	void connect(const internet_address &, in_port_t, int to = POLL_WAIT_FOREVER);
 	void connect(const socket_address &, int to = -1);
 	void bind(int, in_port_t);
 	void bind(const internet_address &, in_port_t);
 	void bind(const socket_address &);
 	void listen(int);
 	socket accept();
+	bool is_readable(int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int write(const void *, int, int *, int *oserr = 0);
 	void close();
 	void shutdown(int);
 };

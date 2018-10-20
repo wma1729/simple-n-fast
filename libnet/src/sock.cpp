@@ -1,5 +1,6 @@
 #include "sock.h"
 #include "ia.h"
+#include "error.h"
 
 namespace snf {
 namespace net {
@@ -86,7 +87,7 @@ socket::connect_to(const socket_address &sa, int to)
 	socklen_t len = 0;
 	const sockaddr *saddr = sa.get_sa(&len);
 
-	if (to == -1) {
+	if (POLL_WAIT_FOREVER == to) {
 		retval = ::connect(m_sock, saddr, len);
 		if (SOCKET_ERROR == retval) {
 			std::ostringstream oss;
@@ -103,14 +104,8 @@ socket::connect_to(const socket_address &sa, int to)
 		if (SOCKET_ERROR == retval) {
 			retval = snf::net::error();
 			if (connect_in_progress(retval)) {
-				pollfd fdelem;
-
-				fdelem.fd = m_sock;
-				fdelem.events = POLLOUT | POLLERR;
-				fdelem.revents = 0;
-
-				std::vector<pollfd> fdvec;
-				fdvec.push_back(fdelem);
+				pollfd fdelem = { m_sock, POLLOUT | POLLERR, 0 };
+				std::vector<pollfd> fdvec { 1, fdelem };
 
 				int syserr;
 				retval = snf::net::poll(fdvec, to, &syserr);
@@ -174,6 +169,32 @@ socket::socket(sock_t s, const sockaddr_storage &ss, socklen_t len)
 	}
 
 	m_peer = DBG_NEW socket_address(ss, len);
+}
+
+int
+socket::map_system_error(int error, int default_retval)
+{
+	int retval = default_retval;
+
+#if defined(_WIN32)
+	if (WSAEWOULDBLOCK == error)
+		retval = E_try_again;
+	else if ((WSAECONNRESET == error) || (WSAECONNABORTED == error))
+		retval = E_connection_reset;
+	else if (WSAETIMEDOUT == error)
+		retval = E_timed_out;
+#else
+	if ((EAGAIN == error) || (EWOULDBLOCK == error))
+		retval = E_try_again;
+	else if ((ECONNRESET == error) || (ECONNABORTED == error))
+		retval = E_connection_reset;
+	else if (ETIMEDOUT == error)
+		retval = E_timed_out;
+	else if (EPIPE == error)
+		retval = E_broken_pipe;
+#endif
+
+	return retval;
 }
 
 socket::socket(int family, socket_type type)
@@ -604,6 +625,103 @@ socket::accept()
 	}
 
 	return socket {s, saddr, slen} ;
+}
+
+bool
+socket::is_readable(int to, int *oserr)
+{
+	pollfd fdelem = { m_sock, POLLIN, 0 };
+	std::vector<pollfd> fdvec { 1, fdelem };
+	return (snf::net::poll(fdvec, to, oserr) > 0);
+}
+
+int
+socket::read(void *buf, int to_read, int *bread, int to, int *oserr)
+{
+	int     retval = E_ok;
+	int     n = 0, nbytes = 0;
+	char    *cbuf = static_cast<char *>(buf);
+
+	if (buf == nullptr)
+		return E_invalid_arg;
+
+	if (to_read <= 0)
+		return E_invalid_arg;
+
+	if (bread == nullptr)
+		return E_invalid_arg;
+
+	do {
+		if (is_readable(to, oserr)) {
+			n = ::recv(m_sock, cbuf, to_read, 0);
+			if (SOCKET_ERROR == n) {
+				int error = snf::net::error();
+#if !defined(_WIN32)
+				if (EINTR == error)
+					continue;
+#endif
+				if (oserr) *oserr = error;
+				retval = map_system_error(error, E_read_failed);
+				break;
+			} else if (0 == n) {
+				break;
+			} else {
+				cbuf += n;
+				to_read -= n;
+				nbytes += n;
+			}
+		} else {
+			retval = map_system_error(*oserr, E_read_failed);
+		}
+	} while (to_read > 0);
+
+	*bread = nbytes;
+	return retval;
+}
+
+int
+socket::write(const void *buf, int to_write, int *bwritten, int *oserr)
+{
+	int         retval = E_ok;
+	int         flags = 0;
+	int         n = 0, nbytes = 0;
+	const char  *cbuf = static_cast<const char *>(buf);
+
+	if (buf == nullptr)
+		return E_invalid_arg;
+
+	if (to_write <= 0)
+		return E_invalid_arg;
+
+	if (bwritten == nullptr)
+		return E_invalid_arg;
+
+#if !defined(_WIN32)
+	flags = MSG_NOSIGNAL;
+#endif
+
+	do {
+		n = ::send(m_sock, cbuf, to_write, flags);
+		if (SOCKET_ERROR == n) {
+			int error = snf::net::error();
+#if !defined(_WIN32)
+			if (EINTR == error)
+				continue;
+#endif
+			if (oserr) *oserr = error;
+			retval = map_system_error(error, E_write_failed);
+			break;
+		} else if (0 == n) {
+			break;
+		} else {
+			cbuf += n;
+			to_write -= n;
+			nbytes += n;
+		}
+	} while (to_write > 0);
+
+	*bwritten = nbytes;
+	return retval;
 }
 
 void

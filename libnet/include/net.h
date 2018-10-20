@@ -79,6 +79,9 @@ T ntoh(T b)
 	throw std::invalid_argument("invalid data type");
 }
 
+constexpr int POLL_WAIT_FOREVER = -1;
+constexpr int POLL_WAIT_NONE = 0;
+
 int poll(std::vector<pollfd> &, int, int *);
 
 } // namespace net
