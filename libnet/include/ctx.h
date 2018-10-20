@@ -11,6 +11,9 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+#define DEFAULT_CIPHER_LIST \
+	"TLSv1.2:SSLv3:!aNULL:!eNULL:!aGOST:!MD5:!MEDIUM:!CAMELLIA:!PSK:!RC4::@STRENGTH"
+
 class context {
 private:
 	SSL_CTX *m_ctx = nullptr;
@@ -26,11 +29,13 @@ public:
 	context & operator=(context &&);
 	~context();
 
+	operator SSL_CTX * () { return m_ctx; }
+
 	void prefer_server_cipher();
 	void prefer_client_cipher();
 	void new_session_for_renegotiation(bool);
 	void tickets_for_session_resumption(bool);
-	void set_ciphers(const std::string &ciphers = "TLSv1.2:SSLv3:!aNULL:!eNULL:!aGOST:!MD5:!MEDIUM:!CAMELLIA:!PSK:!RC4::@STRENGTH");
+	void set_ciphers(const std::string &ciphers = DEFAULT_CIPHER_LIST);
 	void use_private_key(pkey &);
 	void use_certificate(x509_certificate &);
 	void use_truststore(truststore &);
@@ -38,6 +43,7 @@ public:
 	void check_private_key();
 	void verify_peer(bool require_certificate = false, bool do_it_once = false);
 	void limit_certificate_chain_depth(int);
+	x509_certificate get_certificate();
 };
 
 } // namespace ssl

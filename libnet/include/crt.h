@@ -37,6 +37,7 @@ public:
 	const std::vector<alternate_name> &alternate_names();
 	const std::vector<std::string> &crl_distribution_points();
 	const std::vector<std::string> &ocsp_end_points();
+	bool matches(const std::string &);
 
 private:
 	X509                            *m_crt = nullptr;
@@ -53,6 +54,7 @@ private:
 	void init_pem(snf::file_ptr &, const char *);
 	void init_pem(const uint8_t *, size_t, const char *);
 	std::string gn_2_str(const GENERAL_NAME *);
+	bool equal(const std::string &, const std::string &);
 };
 
 } // namespace ssl

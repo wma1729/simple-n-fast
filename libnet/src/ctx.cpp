@@ -210,6 +210,17 @@ context::limit_certificate_chain_depth(int depth)
 	ssl_library::instance().ssl_ctx_set_verify_depth()(m_ctx, depth);
 }
 
+x509_certificate
+context::get_certificate()
+{
+	X509 *c = ssl_library::instance().ssl_ctx_get0_cert()(m_ctx);
+	if (c == nullptr)
+		throw ssl_exception("failed to get certificate from SSL context");
+
+	x509_certificate cert(c);
+	return cert;
+}
+
 } // namespace ssl
 } // namespace net
 } // namespace snf

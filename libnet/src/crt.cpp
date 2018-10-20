@@ -1,5 +1,7 @@
+#include "common.h"
 #include "crt.h"
 #include "ia.h"
+#include <regex>
 
 namespace snf {
 namespace net {
@@ -94,6 +96,17 @@ x509_certificate::gn_2_str(const GENERAL_NAME *gn)
 	return s;
 }
 
+bool
+x509_certificate::equal(const std::string &name1, const std::string &name2)
+{
+	if (name2.at(0) == '*') {
+		std::regex pat(name2, std::regex::icase);
+		return std::regex_match(name1, pat);
+	} else {
+		return snf::streq(name1, name2, true);
+	}
+}
+
 x509_certificate::x509_certificate(
 	ssl_data_fmt fmt,
 	const std::string &cfile,
@@ -123,6 +136,8 @@ x509_certificate::x509_certificate(
 
 x509_certificate::x509_certificate(X509 *crt)
 {
+	if (ssl_library::instance().x509_up_ref()(crt) != 1)
+		throw ssl_exception("failed to increment the certificate reference count");
 	m_crt = crt;
 }
 
@@ -441,6 +456,30 @@ x509_certificate::ocsp_end_points()
 		(reinterpret_cast<AUTHORITY_INFO_ACCESS *>(aia_stack));
 
 	return m_ocsp_eps;
+}
+
+bool
+x509_certificate::matches(const std::string &servername)
+{
+	const std::string &name = common_name();
+	if (!name.empty()) {
+		if (equal(servername, name))
+			return true;
+	}
+
+	const std::vector<alternate_name> &altnames = alternate_names();
+	std::vector<alternate_name>::const_iterator it;
+	for (it = altnames.begin(); it != altnames.end(); ++it) {
+		if (it->type == "DNS") {
+			if (equal(servername, it->name))
+				return true;
+		} else if (it->type == "IP") {
+			if (snf::streq(servername, it->name, true))
+				return true; 
+		}
+	}
+
+	return false;
 }
 
 } // namespace ssl
