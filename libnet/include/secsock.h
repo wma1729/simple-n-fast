@@ -20,6 +20,8 @@ public:
 
 	secure_socket(int, socket_mode, context &);
 
+	bool is_client() const { return (socket_mode::client == m_mode); }
+	bool is_server() const { return (socket_mode::server == m_mode); }
 	void add_context(context &);
 	void switch_context(const std::string &);
 	void check_hosts(const std::vector<std::string> &);

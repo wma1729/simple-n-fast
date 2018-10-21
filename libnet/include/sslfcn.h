@@ -122,6 +122,8 @@ using p_ssl_free = void (*)(SSL *);
 using p_ssl_set_ssl_ctx = SSL_CTX * (*)(SSL *, SSL_CTX *);
 using p_ssl_ctrl = long (*)(SSL *, int, long, void *);
 using p_ssl_get_servername = const char * (*)(const SSL *, int);
+using p_ssl_set_connect_state = void (*)(SSL *);
+using p_ssl_set_accept_state = void (*)(SSL *);
 
 using p_ssl_get0_param = X509_VERIFY_PARAM * (*)(SSL *);
 using p_x509_verify_param_set_hostflags = void (*)(X509_VERIFY_PARAM *, unsigned int);
@@ -292,6 +294,8 @@ private:
 	p_ssl_set_ssl_ctx           m_ssl_set_ssl_ctx = nullptr;
 	p_ssl_ctrl                  m_ssl_ctrl = nullptr;
 	p_ssl_get_servername        m_ssl_get_servername = nullptr;
+	p_ssl_set_connect_state     m_ssl_set_connect_state = nullptr;
+	p_ssl_set_accept_state      m_ssl_set_accept_state = nullptr;
 
 	p_ssl_get0_param                    m_ssl_get0_param = nullptr;
 	p_x509_verify_param_set_hostflags   m_x509_verify_param_set_hostflags = nullptr;
@@ -417,6 +421,8 @@ public:
 	p_ssl_set_ssl_ctx ssl_set_ssl_ctx();
 	p_ssl_ctrl ssl_ctrl();
 	p_ssl_get_servername ssl_get_servername();
+	p_ssl_set_connect_state ssl_set_connect_state();
+	p_ssl_set_accept_state ssl_set_accept_state();
 
 	p_ssl_get0_param ssl_get0_param();
 	p_x509_verify_param_set_hostflags x509_verify_param_set_hostflags();

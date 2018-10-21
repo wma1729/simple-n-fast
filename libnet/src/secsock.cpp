@@ -30,6 +30,11 @@ secure_socket::secure_socket(int family, socket_mode m, context &ctx)
 	if (m_ssl == nullptr)
 		throw ssl_exception("failed to create SSL object");
 
+	if (socket_mode::client == m_mode)
+		ssl_library::instance().ssl_set_connect_state()(m_ssl);
+	else
+		ssl_library::instance().ssl_set_accept_state()(m_ssl);
+
 	ctxinfo ci;
 	ci.cur = true;
 	ci.ctx = ctx;

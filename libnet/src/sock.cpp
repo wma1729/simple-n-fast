@@ -98,7 +98,11 @@ socket::connect_to(const socket_address &sa, int to)
 				oss.str());
 		}
 	} else {
-		blocking(false);
+		bool reset = false;
+		if (!blocking()) {
+			reset = true;
+			blocking(false);
+		}
 
 		retval = ::connect(m_sock, saddr, len);
 		if (SOCKET_ERROR == retval) {
@@ -131,7 +135,8 @@ socket::connect_to(const socket_address &sa, int to)
 			}
 		}
 
-		blocking(true);
+		if (reset)
+			blocking(true);
 	}
 }
 
@@ -359,8 +364,8 @@ int64_t
 socket::rcvtimeout()
 {
 #if defined(_WIN32)
-	// SO_RCVTIMEO not supported with getsockopt
-	return -1L;
+	// SO_RCVTIMEO not supported with getsockopt; rely on variable :-(
+	return m_rcvtimeo;
 #else
 	struct timeval value;
 	int vlen = static_cast<int>(sizeof(value));
@@ -375,6 +380,8 @@ socket::rcvtimeout(int64_t to)
 #if defined(_WIN32)
 	DWORD value = narrow_cast<DWORD>(to);
 	int vlen = static_cast<int>(sizeof(value));
+	setopt(SOL_SOCKET, SO_RCVTIMEO, &value, vlen);
+	m_rcvtimeo = value;
 #else
 	struct timeval value;
 	int vlen = static_cast<int>(sizeof(value));
@@ -382,9 +389,8 @@ socket::rcvtimeout(int64_t to)
 	if (to > 1000)
 		value.tv_sec = to / 1000;
 	value.tv_usec = (to % 1000) * 1000;
-
-#endif
 	setopt(SOL_SOCKET, SO_RCVTIMEO, &value, vlen);
+#endif
 }
 
 int64_t
@@ -392,7 +398,7 @@ socket::sndtimeout()
 {
 #if defined(_WIN32)
 	// SO_SNDTIMEO not supported with getsockopt
-	return -1L;
+	return m_sndtimeo;
 #else
 	struct timeval value;
 	int vlen = static_cast<int>(sizeof(value));
@@ -407,6 +413,8 @@ socket::sndtimeout(int64_t to)
 #if defined(_WIN32)
 	DWORD value = narrow_cast<DWORD>(to);
 	int vlen = static_cast<int>(sizeof(value));
+	setopt(SOL_SOCKET, SO_SNDTIMEO, &value, vlen);
+	m_sndtimeo = value;
 #else
 	struct timeval value;
 	int vlen = static_cast<int>(sizeof(value));
@@ -414,9 +422,8 @@ socket::sndtimeout(int64_t to)
 	if (to > 1000)
 		value.tv_sec = to / 1000;
 	value.tv_usec = (to % 1000) * 1000;
-
-#endif
 	setopt(SOL_SOCKET, SO_SNDTIMEO, &value, vlen);
+#endif
 }
 
 int
@@ -445,15 +452,36 @@ socket::tcpnodelay(bool nodelay)
 	setopt(IPPROTO_TCP, TCP_NODELAY, &value, vlen);
 }
 
+bool
+socket::blocking()
+{
+#if defined(_WIN32)
+	return m_blocking;
+#else
+	int flags = fcntl(m_sock, F_GETFL, 0);
+	if (SOCKET_ERROR == flags) {
+		throw std::system_error(
+			snf::net::error(),
+			std::system_category(),
+			"failed to get socket flags");
+	}
+
+	if ((flags & O_NONBLOCK) == O_NONBLOCK)
+		return false;
+	return true;
+#endif
+}
+
 void
 socket::blocking(bool blk)
 {
-	int status;
+	int retval;
 	const char *mode = blk ? "blocking" : "non-blocking";
 
 #if defined(_WIN32)
 	u_long nb = blk ? 0 : 1;
-	status = ioctlsocket(m_sock, FIONBIO, &nb);
+	retval = ioctlsocket(m_sock, FIONBIO, &nb);
+	m_blocking = !nb;
 #else
 	int flags = fcntl(m_sock, F_GETFL, 0);
 	if (SOCKET_ERROR == flags) {
@@ -479,10 +507,10 @@ socket::blocking(bool blk)
 		}
 	}
 
-	status = fcntl(m_sock, F_SETFL, flags);
+	retval = fcntl(m_sock, F_SETFL, flags);
 #endif
 
-	if (SOCKET_ERROR == status) {
+	if (SOCKET_ERROR == retval) {
 		std::ostringstream oss;
 		oss << "failed to set socket mode to " << mode;
 		throw std::system_error(

@@ -13,6 +13,11 @@ private:
 	socket_type     m_type;
 	socket_address  *m_local = nullptr;
 	socket_address  *m_peer = nullptr;
+#if defined(_WIN32)
+	bool            m_blocking = true;
+	int64_t         m_rcvtimeo = -1L;
+	int64_t         m_sndtimeo = -1L;
+#endif
 
 	const char *optstr(int, int);
 	void getopt(int, int, void *, int *);
@@ -54,6 +59,7 @@ public:
 	int error();
 	bool tcpnodelay();
 	void tcpnodelay(bool);
+	bool blocking();
 	void blocking(bool);
 	const socket_address &local_address();
 	const socket_address &peer_address();

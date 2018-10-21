@@ -894,6 +894,24 @@ ssl_library::ssl_get_servername()
 	return m_ssl_get_servername;
 }
 
+p_ssl_set_connect_state
+ssl_library::ssl_set_connect_state()
+{
+	if (!m_ssl_set_connect_state)
+		m_ssl_set_connect_state = reinterpret_cast<p_ssl_set_connect_state>
+			(m_ssl->symbol("SSL_set_connect_state"));
+	return m_ssl_set_connect_state;
+}
+
+p_ssl_set_accept_state
+ssl_library::ssl_set_accept_state()
+{
+	if (!m_ssl_set_accept_state)
+		m_ssl_set_accept_state = reinterpret_cast<p_ssl_set_accept_state>
+			(m_ssl->symbol("SSL_set_accept_state"));
+	return m_ssl_set_accept_state;
+}
+
 p_ssl_get0_param
 ssl_library::ssl_get0_param()
 {
