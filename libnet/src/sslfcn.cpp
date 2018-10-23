@@ -669,6 +669,15 @@ ssl_library::err_clear()
 	return m_err_clear;
 }
 
+p_err_peek
+ssl_library::err_peek()
+{
+	if (!m_err_peek)
+		m_err_peek = reinterpret_cast<p_err_peek>
+			(m_ssl->symbol("ERR_peek_error"));
+	return m_err_peek;
+}
+
 p_tls_method
 ssl_library::tls_method()
 {
@@ -858,6 +867,15 @@ ssl_library::ssl_new()
 	return m_ssl_new;
 }
 
+p_ssl_up_ref
+ssl_library::ssl_up_ref()
+{
+	if (!m_ssl_up_ref)
+		m_ssl_up_ref = reinterpret_cast<p_ssl_up_ref>
+			(m_ssl->symbol("SSL_up_ref"));
+	return m_ssl_up_ref;
+}
+
 p_ssl_free
 ssl_library::ssl_free()
 {
@@ -910,6 +928,42 @@ ssl_library::ssl_set_accept_state()
 		m_ssl_set_accept_state = reinterpret_cast<p_ssl_set_accept_state>
 			(m_ssl->symbol("SSL_set_accept_state"));
 	return m_ssl_set_accept_state;
+}
+
+p_ssl_set_fd
+ssl_library::ssl_set_fd()
+{
+	if (!m_ssl_set_fd)
+		m_ssl_set_fd = reinterpret_cast<p_ssl_set_fd>
+			(m_ssl->symbol("SSL_set_fd"));
+	return m_ssl_set_fd;
+}
+
+p_ssl_connect
+ssl_library::ssl_connect()
+{
+	if (!m_ssl_connect)
+		m_ssl_connect = reinterpret_cast<p_ssl_connect>
+			(m_ssl->symbol("SSL_connect"));
+	return m_ssl_connect;
+}
+
+p_ssl_accept
+ssl_library::ssl_accept()
+{
+	if (!m_ssl_accept)
+		m_ssl_accept = reinterpret_cast<p_ssl_accept>
+			(m_ssl->symbol("SSL_accept"));
+	return m_ssl_accept;
+}
+
+p_ssl_get_error
+ssl_library::ssl_get_error()
+{
+	if (!m_ssl_get_error)
+		m_ssl_get_error = reinterpret_cast<p_ssl_get_error>
+			(m_ssl->symbol("SSL_set_error"));
+	return m_ssl_get_error;
 }
 
 p_ssl_get0_param

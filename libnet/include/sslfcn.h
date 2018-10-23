@@ -94,6 +94,7 @@ using p_err_lib_string = const char * (*)(unsigned long);
 using p_err_fcn_string = const char * (*)(unsigned long);
 using p_err_reason_string = const char * (*)(unsigned long);
 using p_err_clear = void (*)(void);
+using p_err_peek = unsigned long (*)(void);
 
 using p_tls_method = const SSL_METHOD * (*)(void);
 using p_ssl_ctx_new = SSL_CTX * (*)(const SSL_METHOD *);
@@ -118,12 +119,17 @@ using p_ssl_ctx_get_cert_store = X509_STORE * (*)(const SSL_CTX *);
 using p_ssl_ctx_get0_cert = X509 * (*)(const SSL_CTX *);
 
 using p_ssl_new = SSL * (*)(SSL_CTX *);
+using p_ssl_up_ref = int (*)(SSL *);
 using p_ssl_free = void (*)(SSL *);
 using p_ssl_set_ssl_ctx = SSL_CTX * (*)(SSL *, SSL_CTX *);
 using p_ssl_ctrl = long (*)(SSL *, int, long, void *);
 using p_ssl_get_servername = const char * (*)(const SSL *, int);
 using p_ssl_set_connect_state = void (*)(SSL *);
 using p_ssl_set_accept_state = void (*)(SSL *);
+using p_ssl_set_fd = int (*)(SSL *, int);
+using p_ssl_connect = int (*)(SSL *);
+using p_ssl_accept = int (*)(SSL *);
+using p_ssl_get_error = int (*)(const SSL *, int);
 
 using p_ssl_get0_param = X509_VERIFY_PARAM * (*)(SSL *);
 using p_x509_verify_param_set_hostflags = void (*)(X509_VERIFY_PARAM *, unsigned int);
@@ -267,6 +273,7 @@ private:
 	p_err_fcn_string            m_err_fcn_string = nullptr;
 	p_err_reason_string         m_err_reason_string = nullptr;
 	p_err_clear                 m_err_clear = nullptr;
+	p_err_peek                  m_err_peek = nullptr;
 
 	p_tls_method                m_tls_method = nullptr;
 	p_ssl_ctx_new               m_ssl_ctx_new = nullptr;
@@ -290,12 +297,17 @@ private:
 	p_ssl_ctx_get0_cert         m_ssl_ctx_get0_cert = nullptr;
 
 	p_ssl_new                   m_ssl_new = nullptr;
+	p_ssl_up_ref                m_ssl_up_ref = nullptr;
 	p_ssl_free                  m_ssl_free = nullptr;
 	p_ssl_set_ssl_ctx           m_ssl_set_ssl_ctx = nullptr;
 	p_ssl_ctrl                  m_ssl_ctrl = nullptr;
 	p_ssl_get_servername        m_ssl_get_servername = nullptr;
 	p_ssl_set_connect_state     m_ssl_set_connect_state = nullptr;
 	p_ssl_set_accept_state      m_ssl_set_accept_state = nullptr;
+	p_ssl_set_fd                m_ssl_set_fd = nullptr;
+	p_ssl_connect               m_ssl_connect = nullptr;
+	p_ssl_accept                m_ssl_accept = nullptr;
+	p_ssl_get_error             m_ssl_get_error = nullptr;
 
 	p_ssl_get0_param                    m_ssl_get0_param = nullptr;
 	p_x509_verify_param_set_hostflags   m_x509_verify_param_set_hostflags = nullptr;
@@ -394,6 +406,7 @@ public:
 	p_err_fcn_string err_fcn_string();
 	p_err_reason_string err_reason_string();
 	p_err_clear err_clear();
+	p_err_peek err_peek();
 
 	p_tls_method tls_method();
 	p_ssl_ctx_new ssl_ctx_new();
@@ -417,12 +430,17 @@ public:
 	p_ssl_ctx_get0_cert ssl_ctx_get0_cert();
 
 	p_ssl_new ssl_new();
+	p_ssl_up_ref ssl_up_ref();
 	p_ssl_free ssl_free();
 	p_ssl_set_ssl_ctx ssl_set_ssl_ctx();
 	p_ssl_ctrl ssl_ctrl();
 	p_ssl_get_servername ssl_get_servername();
 	p_ssl_set_connect_state ssl_set_connect_state();
 	p_ssl_set_accept_state ssl_set_accept_state();
+	p_ssl_set_fd ssl_set_fd();
+	p_ssl_connect ssl_connect();
+	p_ssl_accept ssl_accept();
+	p_ssl_get_error ssl_get_error();
 
 	p_ssl_get0_param ssl_get0_param();
 	p_x509_verify_param_set_hostflags x509_verify_param_set_hostflags();

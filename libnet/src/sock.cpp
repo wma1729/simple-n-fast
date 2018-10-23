@@ -87,7 +87,7 @@ socket::connect_to(const socket_address &sa, int to)
 	socklen_t len = 0;
 	const sockaddr *saddr = sa.get_sa(&len);
 
-	if (POLL_WAIT_FOREVER == to) {
+	if ((POLL_WAIT_FOREVER == to) && blocking()) {
 		retval = ::connect(m_sock, saddr, len);
 		if (SOCKET_ERROR == retval) {
 			std::ostringstream oss;
@@ -157,25 +157,6 @@ socket::bind_to(const socket_address &sa)
 	}
 }
 
-socket::socket(sock_t s, const sockaddr_storage &ss, socklen_t len)
-	: m_sock(s)
-{
-	int value = 0;
-	int vlen = static_cast<int>(sizeof(value));
-
-	getopt(SOL_SOCKET, SO_TYPE, &value, &vlen);
-
-	if (value == SOCK_STREAM) {
-		m_type = socket_type::tcp;
-	} else if (value == SOCK_DGRAM) {
-		m_type = socket_type::udp;
-	} else {
-		throw std::invalid_argument("invalid socket type");
-	}
-
-	m_peer = DBG_NEW socket_address(ss, len);
-}
-
 int
 socket::map_system_error(int error, int default_retval)
 {
@@ -200,6 +181,25 @@ socket::map_system_error(int error, int default_retval)
 #endif
 
 	return retval;
+}
+
+socket::socket(sock_t s, const sockaddr_storage &ss, socklen_t len)
+	: m_sock(s)
+{
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+
+	getopt(SOL_SOCKET, SO_TYPE, &value, &vlen);
+
+	if (value == SOCK_STREAM) {
+		m_type = socket_type::tcp;
+	} else if (value == SOCK_DGRAM) {
+		m_type = socket_type::udp;
+	} else {
+		throw std::invalid_argument("invalid socket type");
+	}
+
+	m_peer = DBG_NEW socket_address(ss, len);
 }
 
 socket::socket(int family, socket_type type)
@@ -238,6 +238,30 @@ socket::socket(int family, socket_type type)
 	m_type = type;
 }
 
+socket::socket(socket &&s)
+{
+	m_sock = s.m_sock;
+	s.m_sock = INVALID_SOCKET;
+
+	m_type = s.m_type;
+
+	if (s.m_local) {
+		m_local = s.m_local;
+		s.m_local = nullptr;
+	}
+
+	if (s.m_peer) {
+		m_peer = s.m_peer;
+		s.m_peer = nullptr;
+	}
+
+#if defined(_WIN32)
+	m_blocking = s.m_blocking;
+	m_rcvtimeo = s.m_rcvtimeo;
+	m_sndtimeo = s.m_sndtimeo;
+#endif
+}
+
 socket::~socket()
 {
 	close();
@@ -249,6 +273,34 @@ socket::~socket()
 		delete m_peer;
 		m_peer = nullptr;
 	}
+}
+
+socket &
+socket::operator=(socket &&s)
+{
+	if (this != &s) {
+		m_sock = s.m_sock;
+		s.m_sock = INVALID_SOCKET;
+
+		m_type = s.m_type;
+
+		if (s.m_local) {
+			m_local = s.m_local;
+			s.m_local = nullptr;
+		}
+
+		if (s.m_peer) {
+			m_peer = s.m_peer;
+			s.m_peer = nullptr;
+		}
+
+#if defined(_WIN32)
+		m_blocking = s.m_blocking;
+		m_rcvtimeo = s.m_rcvtimeo;
+		m_sndtimeo = s.m_sndtimeo;
+#endif
+	}
+	return *this;
 }
 
 bool

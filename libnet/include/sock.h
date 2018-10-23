@@ -13,6 +13,7 @@ private:
 	socket_type     m_type;
 	socket_address  *m_local = nullptr;
 	socket_address  *m_peer = nullptr;
+
 #if defined(_WIN32)
 	bool            m_blocking = true;
 	int64_t         m_rcvtimeo = -1L;
@@ -24,11 +25,10 @@ private:
 	void setopt(int, int, void *, int);
 	void connect_to(const socket_address &, int);
 	void bind_to(const socket_address &);
-
-	socket(sock_t, const sockaddr_storage &, socklen_t);
+	int map_system_error(int, int);
 
 protected:
-	int map_system_error(int, int);
+	socket(sock_t, const sockaddr_storage &, socklen_t);
 
 public:
 	enum class linger_type
@@ -39,8 +39,15 @@ public:
 	};
 
 	socket(int, socket_type);
-	~socket();
+	socket(const socket &) = delete;
+	socket(socket &&);
 
+	virtual ~socket();
+
+	const socket &operator=(const socket &) = delete;
+	socket &operator=(socket &&);
+
+	sock_t handle() { return m_sock; }
 	socket_type get_type() { return m_type; }
 	bool keepalive();
 	void keepalive(bool);
@@ -63,19 +70,19 @@ public:
 	void blocking(bool);
 	const socket_address &local_address();
 	const socket_address &peer_address();
-	void connect(int, const std::string &, in_port_t, int to = POLL_WAIT_FOREVER); 
-	void connect(const internet_address &, in_port_t, int to = POLL_WAIT_FOREVER);
-	void connect(const socket_address &, int to = -1);
+	virtual void connect(int, const std::string &, in_port_t, int to = POLL_WAIT_FOREVER); 
+	virtual void connect(const internet_address &, in_port_t, int to = POLL_WAIT_FOREVER);
+	virtual void connect(const socket_address &, int to = -1);
 	void bind(int, in_port_t);
 	void bind(const internet_address &, in_port_t);
 	void bind(const socket_address &);
 	void listen(int);
-	socket accept();
+	virtual socket accept();
 	bool is_readable(int to = POLL_WAIT_FOREVER, int *oserr = 0);
-	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
-	int write(const void *, int, int *, int *oserr = 0);
-	void close();
-	void shutdown(int);
+	virtual int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	virtual int write(const void *, int, int *, int *oserr = 0);
+	virtual void close();
+	virtual void shutdown(int);
 };
 
 inline std::ostream &
