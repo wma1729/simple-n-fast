@@ -47,8 +47,8 @@ public:
 	const socket &operator=(const socket &) = delete;
 	socket &operator=(socket &&);
 
-	sock_t handle() { return m_sock; }
-	socket_type get_type() { return m_type; }
+	sock_t handle() const { return m_sock; }
+	socket_type get_type() const { return m_type; }
 	bool keepalive();
 	void keepalive(bool);
 	bool reuseaddr();
@@ -70,14 +70,14 @@ public:
 	void blocking(bool);
 	const socket_address &local_address();
 	const socket_address &peer_address();
-	virtual void connect(int, const std::string &, in_port_t, int to = POLL_WAIT_FOREVER); 
-	virtual void connect(const internet_address &, in_port_t, int to = POLL_WAIT_FOREVER);
-	virtual void connect(const socket_address &, int to = -1);
+	void connect(int, const std::string &, in_port_t, int to = POLL_WAIT_FOREVER); 
+	void connect(const internet_address &, in_port_t, int to = POLL_WAIT_FOREVER);
+	void connect(const socket_address &, int to = -1);
 	void bind(int, in_port_t);
 	void bind(const internet_address &, in_port_t);
 	void bind(const socket_address &);
 	void listen(int);
-	virtual socket accept();
+	socket accept();
 	bool is_readable(int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	virtual int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	virtual int write(const void *, int, int *, int *oserr = 0);

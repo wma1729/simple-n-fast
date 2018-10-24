@@ -119,7 +119,7 @@ using p_ssl_ctx_get_cert_store = X509_STORE * (*)(const SSL_CTX *);
 using p_ssl_ctx_get0_cert = X509 * (*)(const SSL_CTX *);
 
 using p_ssl_new = SSL * (*)(SSL_CTX *);
-using p_ssl_up_ref = int (*)(SSL *);
+using p_ssl_dup = SSL * (*)(SSL *);
 using p_ssl_free = void (*)(SSL *);
 using p_ssl_set_ssl_ctx = SSL_CTX * (*)(SSL *, SSL_CTX *);
 using p_ssl_ctrl = long (*)(SSL *, int, long, void *);
@@ -127,6 +127,7 @@ using p_ssl_get_servername = const char * (*)(const SSL *, int);
 using p_ssl_set_connect_state = void (*)(SSL *);
 using p_ssl_set_accept_state = void (*)(SSL *);
 using p_ssl_set_fd = int (*)(SSL *, int);
+using p_ssl_get_fd = int (*)(const SSL *);
 using p_ssl_connect = int (*)(SSL *);
 using p_ssl_accept = int (*)(SSL *);
 using p_ssl_get_error = int (*)(const SSL *, int);
@@ -297,7 +298,7 @@ private:
 	p_ssl_ctx_get0_cert         m_ssl_ctx_get0_cert = nullptr;
 
 	p_ssl_new                   m_ssl_new = nullptr;
-	p_ssl_up_ref                m_ssl_up_ref = nullptr;
+	p_ssl_dup                   m_ssl_dup = nullptr;
 	p_ssl_free                  m_ssl_free = nullptr;
 	p_ssl_set_ssl_ctx           m_ssl_set_ssl_ctx = nullptr;
 	p_ssl_ctrl                  m_ssl_ctrl = nullptr;
@@ -305,6 +306,7 @@ private:
 	p_ssl_set_connect_state     m_ssl_set_connect_state = nullptr;
 	p_ssl_set_accept_state      m_ssl_set_accept_state = nullptr;
 	p_ssl_set_fd                m_ssl_set_fd = nullptr;
+	p_ssl_get_fd                m_ssl_get_fd = nullptr;
 	p_ssl_connect               m_ssl_connect = nullptr;
 	p_ssl_accept                m_ssl_accept = nullptr;
 	p_ssl_get_error             m_ssl_get_error = nullptr;
@@ -430,7 +432,7 @@ public:
 	p_ssl_ctx_get0_cert ssl_ctx_get0_cert();
 
 	p_ssl_new ssl_new();
-	p_ssl_up_ref ssl_up_ref();
+	p_ssl_dup ssl_dup();
 	p_ssl_free ssl_free();
 	p_ssl_set_ssl_ctx ssl_set_ssl_ctx();
 	p_ssl_ctrl ssl_ctrl();
@@ -438,6 +440,7 @@ public:
 	p_ssl_set_connect_state ssl_set_connect_state();
 	p_ssl_set_accept_state ssl_set_accept_state();
 	p_ssl_set_fd ssl_set_fd();
+	p_ssl_get_fd ssl_get_fd();
 	p_ssl_connect ssl_connect();
 	p_ssl_accept ssl_accept();
 	p_ssl_get_error ssl_get_error();

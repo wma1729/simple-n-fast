@@ -867,13 +867,13 @@ ssl_library::ssl_new()
 	return m_ssl_new;
 }
 
-p_ssl_up_ref
-ssl_library::ssl_up_ref()
+p_ssl_dup
+ssl_library::ssl_dup()
 {
-	if (!m_ssl_up_ref)
-		m_ssl_up_ref = reinterpret_cast<p_ssl_up_ref>
-			(m_ssl->symbol("SSL_up_ref"));
-	return m_ssl_up_ref;
+	if (!m_ssl_dup)
+		m_ssl_dup = reinterpret_cast<p_ssl_dup>
+			(m_ssl->symbol("SSL_dup"));
+	return m_ssl_dup;
 }
 
 p_ssl_free
@@ -937,6 +937,15 @@ ssl_library::ssl_set_fd()
 		m_ssl_set_fd = reinterpret_cast<p_ssl_set_fd>
 			(m_ssl->symbol("SSL_set_fd"));
 	return m_ssl_set_fd;
+}
+
+p_ssl_get_fd
+ssl_library::ssl_get_fd()
+{
+	if (!m_ssl_get_fd)
+		m_ssl_get_fd = reinterpret_cast<p_ssl_get_fd>
+			(m_ssl->symbol("SSL_get_fd"));
+	return m_ssl_get_fd;
 }
 
 p_ssl_connect
