@@ -79,6 +79,8 @@ T ntoh(T b)
 	throw std::invalid_argument("invalid data type");
 }
 
+int map_system_error(int, int);
+
 constexpr int POLL_WAIT_FOREVER = -1;
 constexpr int POLL_WAIT_NONE = 0;
 

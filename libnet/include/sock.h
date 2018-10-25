@@ -25,7 +25,6 @@ private:
 	void setopt(int, int, void *, int);
 	void connect_to(const socket_address &, int);
 	void bind_to(const socket_address &);
-	int map_system_error(int, int);
 
 protected:
 	socket(sock_t, const sockaddr_storage &, socklen_t);
@@ -79,10 +78,11 @@ public:
 	void listen(int);
 	socket accept();
 	bool is_readable(int to = POLL_WAIT_FOREVER, int *oserr = 0);
-	virtual int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
-	virtual int write(const void *, int, int *, int *oserr = 0);
-	virtual void close();
-	virtual void shutdown(int);
+	bool is_writable(int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	void close();
+	void shutdown(int);
 };
 
 inline std::ostream &

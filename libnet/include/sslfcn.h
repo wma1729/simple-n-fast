@@ -130,6 +130,11 @@ using p_ssl_set_fd = int (*)(SSL *, int);
 using p_ssl_get_fd = int (*)(const SSL *);
 using p_ssl_connect = int (*)(SSL *);
 using p_ssl_accept = int (*)(SSL *);
+using p_ssl_read = int (*)(SSL *, void *, int);
+using p_ssl_write = int (*)(SSL *, const void *, int);
+using p_ssl_clear = int (*)(SSL *);
+using p_ssl_shutdown = int (*)(SSL *);
+using p_ssl_get_shutdown = int (*)(SSL *);
 using p_ssl_get_error = int (*)(const SSL *, int);
 
 using p_ssl_get0_param = X509_VERIFY_PARAM * (*)(SSL *);
@@ -309,6 +314,11 @@ private:
 	p_ssl_get_fd                m_ssl_get_fd = nullptr;
 	p_ssl_connect               m_ssl_connect = nullptr;
 	p_ssl_accept                m_ssl_accept = nullptr;
+	p_ssl_read                  m_ssl_read = nullptr;
+	p_ssl_write                 m_ssl_write = nullptr;
+	p_ssl_clear                 m_ssl_clear = nullptr;
+	p_ssl_shutdown              m_ssl_shutdown = nullptr;
+	p_ssl_get_shutdown          m_ssl_get_shutdown = nullptr;
 	p_ssl_get_error             m_ssl_get_error = nullptr;
 
 	p_ssl_get0_param                    m_ssl_get0_param = nullptr;
@@ -443,6 +453,11 @@ public:
 	p_ssl_get_fd ssl_get_fd();
 	p_ssl_connect ssl_connect();
 	p_ssl_accept ssl_accept();
+	p_ssl_read ssl_read();
+	p_ssl_write ssl_write();
+	p_ssl_clear ssl_clear();
+	p_ssl_shutdown ssl_shutdown();
+	p_ssl_get_shutdown ssl_get_shutdown();
 	p_ssl_get_error ssl_get_error();
 
 	p_ssl_get0_param ssl_get0_param();

@@ -46,6 +46,7 @@ public:
 	driver(driver_mode, context &);
 	driver(const driver &);
 	driver(driver &&);
+	~driver();
 
 	const driver &operator=(const driver &);
 	driver &operator=(driver &&);
@@ -60,6 +61,10 @@ public:
 	std::string get_sni();
 	void enable_sni();
 	void handshake(const socket &, int to = 120000);
+	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	void shutdown();
+	void reset();
 };
 
 } // namespace ssl

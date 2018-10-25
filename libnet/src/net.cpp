@@ -1,6 +1,6 @@
 #include "net.h"
-#include "logmgr.h"
 #include "sslfcn.h"
+#include "error.h"
 #include <mutex>
 
 namespace snf {
@@ -53,6 +53,32 @@ openssl_version(std::string &ver_str)
 {
 	ver_str = ssl::ssl_library::instance().openssl_version_str()(OPENSSL_VERSION);
 	return ssl::ssl_library::instance().openssl_version_num()();
+}
+
+int
+map_system_error(int error, int default_retval)
+{
+	int retval = default_retval;
+
+#if defined(_WIN32)
+	if (WSAEWOULDBLOCK == error)
+		retval = E_try_again;
+	else if ((WSAECONNRESET == error) || (WSAECONNABORTED == error))
+		retval = E_connection_reset;
+	else if (WSAETIMEDOUT == error)
+		retval = E_timed_out;
+#else
+	if ((EAGAIN == error) || (EWOULDBLOCK == error))
+		retval = E_try_again;
+	else if ((ECONNRESET == error) || (ECONNABORTED == error))
+		retval = E_connection_reset;
+	else if (ETIMEDOUT == error)
+		retval = E_timed_out;
+	else if (EPIPE == error)
+		retval = E_broken_pipe;
+#endif
+
+	return retval;
 }
 
 int

@@ -59,7 +59,9 @@ context::context()
 	}
 
 	// mimics SSL_CTX_set_mode
-	long mode = SSL_MODE_ENABLE_PARTIAL_WRITE | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER;
+	long mode = SSL_MODE_ENABLE_PARTIAL_WRITE |
+			SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER |
+			SSL_MODE_AUTO_RETRY;
 	ssl_library::instance().ssl_ctx_ctrl()
 		(m_ctx, SSL_CTRL_MODE, mode, nullptr);
 }

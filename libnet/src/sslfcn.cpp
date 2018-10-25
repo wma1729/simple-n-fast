@@ -966,6 +966,51 @@ ssl_library::ssl_accept()
 	return m_ssl_accept;
 }
 
+p_ssl_read
+ssl_library::ssl_read()
+{
+	if (!m_ssl_read)
+		m_ssl_read = reinterpret_cast<p_ssl_read>
+			(m_ssl->symbol("SSL_read"));
+	return m_ssl_read;
+}
+
+p_ssl_write
+ssl_library::ssl_write()
+{
+	if (!m_ssl_write)
+		m_ssl_write = reinterpret_cast<p_ssl_write>
+			(m_ssl->symbol("SSL_write"));
+	return m_ssl_write;
+}
+
+p_ssl_clear
+ssl_library::ssl_clear()
+{
+	if (!m_ssl_clear)
+		m_ssl_clear = reinterpret_cast<p_ssl_clear>
+			(m_ssl->symbol("SSL_clear"));
+	return m_ssl_clear;
+}
+
+p_ssl_shutdown
+ssl_library::ssl_shutdown()
+{
+	if (!m_ssl_shutdown)
+		m_ssl_shutdown = reinterpret_cast<p_ssl_shutdown>
+			(m_ssl->symbol("SSL_shutdown"));
+	return m_ssl_shutdown;
+}
+
+p_ssl_get_shutdown
+ssl_library::ssl_get_shutdown()
+{
+	if (!m_ssl_get_shutdown)
+		m_ssl_get_shutdown = reinterpret_cast<p_ssl_get_shutdown>
+			(m_ssl->symbol("SSL_get_shutdown"));
+	return m_ssl_get_shutdown;
+}
+
 p_ssl_get_error
 ssl_library::ssl_get_error()
 {

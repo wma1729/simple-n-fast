@@ -157,32 +157,6 @@ socket::bind_to(const socket_address &sa)
 	}
 }
 
-int
-socket::map_system_error(int error, int default_retval)
-{
-	int retval = default_retval;
-
-#if defined(_WIN32)
-	if (WSAEWOULDBLOCK == error)
-		retval = E_try_again;
-	else if ((WSAECONNRESET == error) || (WSAECONNABORTED == error))
-		retval = E_connection_reset;
-	else if (WSAETIMEDOUT == error)
-		retval = E_timed_out;
-#else
-	if ((EAGAIN == error) || (EWOULDBLOCK == error))
-		retval = E_try_again;
-	else if ((ECONNRESET == error) || (ECONNABORTED == error))
-		retval = E_connection_reset;
-	else if (ETIMEDOUT == error)
-		retval = E_timed_out;
-	else if (EPIPE == error)
-		retval = E_broken_pipe;
-#endif
-
-	return retval;
-}
-
 socket::socket(sock_t s, const sockaddr_storage &ss, socklen_t len)
 	: m_sock(s)
 {
@@ -715,6 +689,14 @@ socket::is_readable(int to, int *oserr)
 	return (snf::net::poll(fdvec, to, oserr) > 0);
 }
 
+bool
+socket::is_writable(int to, int *oserr)
+{
+	pollfd fdelem = { m_sock, POLLOUT, 0 };
+	std::vector<pollfd> fdvec { 1, fdelem };
+	return (snf::net::poll(fdvec, to, oserr) > 0);
+}
+
 int
 socket::read(void *buf, int to_read, int *bread, int to, int *oserr)
 {
@@ -760,7 +742,7 @@ socket::read(void *buf, int to_read, int *bread, int to, int *oserr)
 }
 
 int
-socket::write(const void *buf, int to_write, int *bwritten, int *oserr)
+socket::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 {
 	int         retval = E_ok;
 	int         flags = 0;
@@ -781,22 +763,26 @@ socket::write(const void *buf, int to_write, int *bwritten, int *oserr)
 #endif
 
 	do {
-		n = ::send(m_sock, cbuf, to_write, flags);
-		if (SOCKET_ERROR == n) {
-			int error = snf::net::error();
+		if (is_writable(to, oserr)) {
+			n = ::send(m_sock, cbuf, to_write, flags);
+			if (SOCKET_ERROR == n) {
+				int error = snf::net::error();
 #if !defined(_WIN32)
-			if (EINTR == error)
-				continue;
+				if (EINTR == error)
+					continue;
 #endif
-			if (oserr) *oserr = error;
-			retval = map_system_error(error, E_write_failed);
-			break;
-		} else if (0 == n) {
-			break;
+				if (oserr) *oserr = error;
+				retval = map_system_error(error, E_write_failed);
+				break;
+			} else if (0 == n) {
+				break;
+			} else {
+				cbuf += n;
+				to_write -= n;
+				nbytes += n;
+			}
 		} else {
-			cbuf += n;
-			to_write -= n;
-			nbytes += n;
+			retval = map_system_error(*oserr, E_write_failed);
 		}
 	} while (to_write > 0);
 

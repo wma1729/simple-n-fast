@@ -106,6 +106,16 @@ driver::driver(driver &&d)
 	d.m_ssl = nullptr;
 }
 
+driver::~driver()
+{
+	shutdown();
+	if (m_ssl) {
+		ssl_library::instance().ssl_free()(m_ssl);
+		m_ssl = nullptr;
+	}
+	m_contexts.clear();
+}
+
 const driver &
 driver::operator=(const driver &d)
 {
@@ -342,6 +352,170 @@ driver::handshake(const socket &s, int to)
 			}
 		}
 	}
+}
+
+int
+driver::read(void *buf, int to_read, int *bread, int to, int *oserr)
+{
+	int     retval = E_ok;
+	int     n = 0, nbytes = 0;
+	char    *cbuf = static_cast<char *>(buf);
+	sock_t  sock;
+
+	if (buf == nullptr)
+		return E_invalid_arg;
+
+	if (to_read <= 0)
+		return E_invalid_arg;
+
+	if (bread == nullptr)
+		return E_invalid_arg;
+
+	sock = ssl_library::instance().ssl_get_fd()(m_ssl);
+	if (sock < 1)
+		throw ssl_exception("failed to get internal socket");
+
+	ssl_error err;
+
+	do {
+		n = ssl_library::instance().ssl_read()(m_ssl, cbuf, to_read);
+		if (n <= 0) {
+			if (decode_ssl_error(retval, err)) {
+				if (err.want_rd || err.want_wr) {
+					pollfd fdelem = { sock, 0, 0 };
+					if (err.want_rd) fdelem.events |= POLLIN;
+					if (err.want_wr) fdelem.events |= POLLOUT;
+					std::vector<pollfd> fdvec { 1, fdelem };
+
+					retval = snf::net::poll(fdvec, to, &err.syserr);
+					if (0 == retval) {
+						err.syserr = ETIMEDOUT;
+					}
+
+					if (SOCKET_ERROR == retval) {
+						retval = map_system_error(
+								err.syserr, E_write_failed);
+						break;
+					}
+
+					// try again
+				}
+			} else {
+				if (err.syserr != 0) {
+					retval = map_system_error(
+							err.syserr, E_write_failed);
+					break;
+				} else {
+					throw ssl_exception("failed to complete the handshake");
+				}
+			}
+		} else {
+			cbuf += n;
+			to_read -= n;
+			nbytes += n;
+		}
+	} while (to_read > 0);
+
+	*bread = nbytes;
+
+	return retval;
+}
+
+int
+driver::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
+{
+	int         retval = E_ok;
+	int         n = 0, nbytes = 0;
+	const char  *cbuf = static_cast<const char *>(buf);
+	sock_t      sock;
+
+	if (buf == nullptr)
+		return E_invalid_arg;
+
+	if (to_write <= 0)
+		return E_invalid_arg;
+
+	if (bwritten == nullptr)
+		return E_invalid_arg;
+
+	sock = ssl_library::instance().ssl_get_fd()(m_ssl);
+	if (sock < 1)
+		throw ssl_exception("failed to get internal socket");
+
+	ssl_error err;
+
+	do {
+		n = ssl_library::instance().ssl_write()(m_ssl, cbuf, to_write);
+		if (n <= 0) {
+			if (decode_ssl_error(retval, err)) {
+				if (err.want_rd || err.want_wr) {
+					pollfd fdelem = { sock, 0, 0 };
+					if (err.want_rd) fdelem.events |= POLLIN;
+					if (err.want_wr) fdelem.events |= POLLOUT;
+					std::vector<pollfd> fdvec { 1, fdelem };
+
+					retval = snf::net::poll(fdvec, to, &err.syserr);
+					if (0 == retval) {
+						err.syserr = ETIMEDOUT;
+					}
+
+					if (SOCKET_ERROR == retval) {
+						retval = map_system_error(
+								err.syserr, E_write_failed);
+						break;
+					}
+
+					// try again
+				}
+			} else {
+				if (err.syserr != 0) {
+					retval = map_system_error(
+							err.syserr, E_write_failed);
+					break;
+				} else {
+					throw ssl_exception("failed to complete the handshake");
+				}
+			}
+		} else {
+			cbuf += n;
+			to_write -= n;
+			nbytes += n;
+		}
+	} while (to_write > 0);
+
+	*bwritten = nbytes;
+
+	return retval;
+}
+
+void
+driver::shutdown()
+{
+	int retval = ssl_library::instance().ssl_shutdown()(m_ssl);
+	if (retval == 0) {
+		retval = ssl_library::instance().ssl_shutdown()(m_ssl);
+	}
+
+	if (retval != 1) {
+		ssl_error err;
+		if (!decode_ssl_error(retval, err)) {
+			if (err.syserr != 0) {
+				throw std::system_error(
+					err.syserr,
+					std::system_category(),
+					"failed to shutdown TLS connection");
+			} else {
+				throw ssl_exception("failed to shutdown TLS connection");
+			}
+		}
+	}
+}
+
+void
+driver::reset()
+{
+	if (ssl_library::instance().ssl_clear()(m_ssl) != 1)
+		throw ssl_exception("failed to prepare TLS object for new connection");
 }
 
 } // namespace ssl
