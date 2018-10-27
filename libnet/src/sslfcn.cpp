@@ -1020,6 +1020,33 @@ ssl_library::ssl_get_error()
 	return m_ssl_get_error;
 }
 
+p_ssl_renegotiate
+ssl_library::ssl_renegotiate()
+{
+	if (!m_ssl_renegotiate)
+		m_ssl_renegotiate = reinterpret_cast<p_ssl_renegotiate>
+			(m_ssl->symbol("SSL_renegotiate"));
+	return m_ssl_renegotiate;
+}
+
+p_ssl_renegotiate_pending
+ssl_library::ssl_renegotiate_pending()
+{
+	if (!m_ssl_renegotiate_pending)
+		m_ssl_renegotiate_pending = reinterpret_cast<p_ssl_renegotiate_pending>
+			(m_ssl->symbol("SSL_renegotiate_pending"));
+	return m_ssl_renegotiate_pending;
+}
+
+p_ssl_do_handshake
+ssl_library::ssl_do_handshake()
+{
+	if (!m_ssl_do_handshake)
+		m_ssl_do_handshake = reinterpret_cast<p_ssl_do_handshake>
+			(m_ssl->symbol("SSL_do_handshake"));
+	return m_ssl_do_handshake;
+}
+
 p_ssl_get0_param
 ssl_library::ssl_get0_param()
 {

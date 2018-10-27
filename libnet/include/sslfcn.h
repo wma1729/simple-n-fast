@@ -136,6 +136,9 @@ using p_ssl_clear = int (*)(SSL *);
 using p_ssl_shutdown = int (*)(SSL *);
 using p_ssl_get_shutdown = int (*)(SSL *);
 using p_ssl_get_error = int (*)(const SSL *, int);
+using p_ssl_renegotiate = int (*)(SSL *);
+using p_ssl_renegotiate_pending = int (*)(SSL *);
+using p_ssl_do_handshake = int (*)(SSL *);
 
 using p_ssl_get0_param = X509_VERIFY_PARAM * (*)(SSL *);
 using p_x509_verify_param_set_hostflags = void (*)(X509_VERIFY_PARAM *, unsigned int);
@@ -320,6 +323,9 @@ private:
 	p_ssl_shutdown              m_ssl_shutdown = nullptr;
 	p_ssl_get_shutdown          m_ssl_get_shutdown = nullptr;
 	p_ssl_get_error             m_ssl_get_error = nullptr;
+	p_ssl_renegotiate           m_ssl_renegotiate = nullptr;
+	p_ssl_renegotiate_pending   m_ssl_renegotiate_pending = nullptr;
+	p_ssl_do_handshake          m_ssl_do_handshake = nullptr;
 
 	p_ssl_get0_param                    m_ssl_get0_param = nullptr;
 	p_x509_verify_param_set_hostflags   m_x509_verify_param_set_hostflags = nullptr;
@@ -459,6 +465,9 @@ public:
 	p_ssl_shutdown ssl_shutdown();
 	p_ssl_get_shutdown ssl_get_shutdown();
 	p_ssl_get_error ssl_get_error();
+	p_ssl_renegotiate ssl_renegotiate();
+	p_ssl_renegotiate_pending ssl_renegotiate_pending();
+	p_ssl_do_handshake ssl_do_handshake();
 
 	p_ssl_get0_param ssl_get0_param();
 	p_x509_verify_param_set_hostflags x509_verify_param_set_hostflags();

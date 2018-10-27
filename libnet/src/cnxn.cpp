@@ -1,12 +1,12 @@
-#include "drvr.h"
+#include "cnxn.h"
 #include "error.h"
 #include <algorithm>
 
 extern "C" int
 sni_cb(SSL *ssl, int *, void *arg)
 {
-	snf::net::ssl::driver *ssock =
-		reinterpret_cast<snf::net::ssl::driver *>(arg);
+	snf::net::ssl::connection *ssock =
+		reinterpret_cast<snf::net::ssl::connection *>(arg);
 	if (ssock == nullptr)
 		return 0;
 	try {
@@ -23,61 +23,75 @@ namespace snf {
 namespace net {
 namespace ssl {
 
-bool
-driver::decode_ssl_error(int status, ssl_error &err)
+int
+connection::handle_ssl_error(sock_t sock, int to, int error, const std::string &errstr, int *oserr)
 {
-	err.want_rd = false;
-	err.want_wr = false;
-	err.chk_err_stk = false;
-	err.syserr = 0;
+	int retval = E_ok;
 
-	if (status > 0)
-		return true;
+	if (error > 0)
+		return retval;
 
-	int ssl_err = ssl_library::instance().ssl_get_error()(m_ssl, status);
-	bool success = true;
+	pollfd fdelem = { sock, 0, 0 };
 
-	switch (ssl_err) {
+	int ssl_error = ssl_library::instance().ssl_get_error()(m_ssl, error);
+
+	switch (ssl_error) {
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_ZERO_RETURN:
 			break;
 
 		case SSL_ERROR_WANT_READ:
-			err.want_rd = true;
+			fdelem.events |= POLLIN;
+			retval = E_try_again;
 			break;
 
 		case SSL_ERROR_WANT_WRITE:
-			err.want_wr = true;
+			fdelem.events |= POLLOUT;
+			retval = E_try_again;
 			break;
 
 		case SSL_ERROR_SYSCALL:
 			if (ssl_library::instance().err_peek()() != 0) {
-				err.chk_err_stk = true;
-			} else if (status == 0) {
-				err.syserr = EOF;
-			} else if (status == -1) {
-				err.syserr = snf::net::error();
+				throw ssl_exception(errstr);
+			} else if (error == 0) {
+				if (oserr) *oserr = EOF;
+				retval = E_syscall_failed;
+			} else if (error == -1) {
+				if (oserr) *oserr = snf::net::error();
+				retval = E_syscall_failed;
 			}
-			success = false;
 			break;
 
 		default:
-			err.chk_err_stk = true;
-			success = false;
+			throw ssl_exception(errstr);
 			break;
 	}
 
-	return success;
+	if ((INVALID_SOCKET != sock) && (E_try_again == retval)) {
+		std::vector<pollfd> fdvec { 1, fdelem };
+
+		retval = snf::net::poll(fdvec, to, oserr);
+		if (0 == retval) {
+			if (oserr) *oserr = ETIMEDOUT;
+			retval = E_timed_out;
+		} else if (SOCKET_ERROR == retval) {
+			retval = E_syscall_failed;
+		} else /* if (retval > 0) */ {
+			retval = E_try_again;
+		}
+	}
+
+	return retval;
 }
 
-driver::driver(driver_mode m, context &ctx)
+connection::connection(connection_mode m, context &ctx)
 	: m_mode(m)
 {
 	m_ssl = ssl_library::instance().ssl_new()(ctx);
 	if (m_ssl == nullptr)
 		throw ssl_exception("failed to create SSL object");
 
-	if (driver_mode::client == m_mode)
+	if (connection_mode::client == m_mode)
 		ssl_library::instance().ssl_set_connect_state()(m_ssl);
 	else
 		ssl_library::instance().ssl_set_accept_state()(m_ssl);
@@ -88,7 +102,7 @@ driver::driver(driver_mode m, context &ctx)
 	m_contexts.push_back(ci);
 }
 
-driver::driver(const driver &d)
+connection::connection(const connection &d)
 {
 	m_mode = d.m_mode;
 	m_contexts = d.m_contexts;
@@ -98,7 +112,7 @@ driver::driver(const driver &d)
 		throw ssl_exception("failed to duplicate SSL object");
 }
 
-driver::driver(driver &&d)
+connection::connection(connection &&d)
 {
 	m_mode = d.m_mode;
 	m_contexts = std::move(d.m_contexts);
@@ -106,7 +120,7 @@ driver::driver(driver &&d)
 	d.m_ssl = nullptr;
 }
 
-driver::~driver()
+connection::~connection()
 {
 	shutdown();
 	if (m_ssl) {
@@ -116,8 +130,8 @@ driver::~driver()
 	m_contexts.clear();
 }
 
-const driver &
-driver::operator=(const driver &d)
+const connection &
+connection::operator=(const connection &d)
 {
 	if (this != &d) {
 		m_mode = d.m_mode;
@@ -129,8 +143,9 @@ driver::operator=(const driver &d)
 	}
 	return *this;
 }
-driver &
-driver::operator=(driver &&d)
+
+connection &
+connection::operator=(connection &&d)
 {
 	if (this != &d) {
 		m_mode = d.m_mode;
@@ -142,9 +157,9 @@ driver::operator=(driver &&d)
 }
 
 void
-driver::add_context(context &ctx)
+connection::add_context(context &ctx)
 {
-	if (driver_mode::client == m_mode)
+	if (connection_mode::client == m_mode)
 		throw ssl_exception("only 1 SSL context can be added in client mode");
 
 	std::lock_guard<std::mutex> guard(m_lock);
@@ -155,7 +170,7 @@ driver::add_context(context &ctx)
 }
 
 void
-driver::switch_context(const std::string &servername)
+connection::switch_context(const std::string &servername)
 {
 	std::lock_guard<std::mutex> guard(m_lock);
 
@@ -186,7 +201,7 @@ driver::switch_context(const std::string &servername)
 }
 
 void
-driver::check_hosts(const std::vector<std::string> &hostnames)
+connection::check_hosts(const std::vector<std::string> &hostnames)
 {
 	int retval;
 
@@ -226,7 +241,7 @@ driver::check_hosts(const std::vector<std::string> &hostnames)
 }
 
 void
-driver::check_inaddr(const internet_address &ia)
+connection::check_inaddr(const internet_address &ia)
 {
 	X509_VERIFY_PARAM *param = ssl_library::instance().ssl_get0_param()(m_ssl);
 	if (param == nullptr)
@@ -242,9 +257,9 @@ driver::check_inaddr(const internet_address &ia)
 }
 
 void
-driver::set_sni(const std::string &servername)
+connection::set_sni(const std::string &servername)
 {
-	if (driver_mode::server == m_mode)
+	if (connection_mode::server == m_mode)
 		throw ssl_exception("setting server name for SNI only possible in client mode");
 
 	int retval = ssl_library::instance().ssl_ctrl()
@@ -260,9 +275,9 @@ driver::set_sni(const std::string &servername)
 }
 
 std::string
-driver::get_sni()
+connection::get_sni()
 {
-	if (driver_mode::client == m_mode)
+	if (connection_mode::client == m_mode)
 		throw ssl_exception("getting server name for SNI only possible in server mode");
 
 	const char *name = ssl_library::instance().ssl_get_servername()
@@ -275,9 +290,9 @@ driver::get_sni()
 }
 
 void
-driver::enable_sni()
+connection::enable_sni()
 {
-	if (driver_mode::client == m_mode)
+	if (connection_mode::client == m_mode)
 		throw ssl_exception("handling SNI requests can only be enabled in server mode");
 
 	std::lock_guard<std::mutex> guard(m_lock);
@@ -296,7 +311,7 @@ driver::enable_sni()
 }
 
 void
-driver::handshake(const socket &s, int to)
+connection::handshake(const socket &s, int to)
 {
 	sock_t sock = s.handle();
 	int retval = ssl_library::instance().ssl_set_fd()(m_ssl, static_cast<int>(sock));
@@ -308,54 +323,34 @@ driver::handshake(const socket &s, int to)
 		throw ssl_exception(oss.str());
 	}
 
-	ssl_error err;
+	int oserr;
 
-	while (true) {
-		if (driver_mode::client == m_mode)
+	std::ostringstream oss;
+	oss << "failed to complete the handshake during ";
+	if (connection_mode::client == m_mode)
+		oss << "client connect";
+	else
+		oss << "server accept";
+
+	do {
+		if (connection_mode::client == m_mode)
 			retval = ssl_library::instance().ssl_connect()(m_ssl);
-		else /* if (driver_mode::server == m_mode) */
+		else /* if (connection_mode::server == m_mode) */
 			retval = ssl_library::instance().ssl_accept()(m_ssl);
 
-		if (decode_ssl_error(retval, err)) {
-			if (err.want_rd || err.want_wr) {
-				pollfd fdelem = { sock, 0, 0 };
-				if (err.want_rd) fdelem.events |= POLLIN;
-				if (err.want_wr) fdelem.events |= POLLOUT;
-				std::vector<pollfd> fdvec { 1, fdelem };
-
-				retval = snf::net::poll(fdvec, to, &err.syserr);
-				if (0 == retval) {
-					err.syserr = ETIMEDOUT;
-					retval = SOCKET_ERROR;
-				}
-
-				if (SOCKET_ERROR == retval) {
-					throw std::system_error(
-						err.syserr,
-						std::system_category(),
-						"failed to complete the handshake");
-				}
-
-				// try again
-			} else {
-				// handshake complete
-				break;
-			}
-		} else {
-			if (err.syserr != 0) {
-				throw std::system_error(
-					err.syserr,
-					std::system_category(),
-					"failed to complete the handshake");
-			} else {
-				throw ssl_exception("failed to complete the handshake");
-			}
+		oserr = 0;
+		retval = handle_ssl_error(sock, to, retval, oss.str(), &oserr); 
+		if ((E_ok != retval) && (E_try_again != retval)) {
+			throw std::system_error(
+				oserr,
+				std::system_category(),
+				oss.str());
 		}
-	}
+	} while (retval != E_ok);
 }
 
 int
-driver::read(void *buf, int to_read, int *bread, int to, int *oserr)
+connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
 {
 	int     retval = E_ok;
 	int     n = 0, nbytes = 0;
@@ -375,39 +370,15 @@ driver::read(void *buf, int to_read, int *bread, int to, int *oserr)
 	if (sock < 1)
 		throw ssl_exception("failed to get internal socket");
 
-	ssl_error err;
-
 	do {
 		n = ssl_library::instance().ssl_read()(m_ssl, cbuf, to_read);
 		if (n <= 0) {
-			if (decode_ssl_error(retval, err)) {
-				if (err.want_rd || err.want_wr) {
-					pollfd fdelem = { sock, 0, 0 };
-					if (err.want_rd) fdelem.events |= POLLIN;
-					if (err.want_wr) fdelem.events |= POLLOUT;
-					std::vector<pollfd> fdvec { 1, fdelem };
-
-					retval = snf::net::poll(fdvec, to, &err.syserr);
-					if (0 == retval) {
-						err.syserr = ETIMEDOUT;
-					}
-
-					if (SOCKET_ERROR == retval) {
-						retval = map_system_error(
-								err.syserr, E_write_failed);
-						break;
-					}
-
-					// try again
-				}
-			} else {
-				if (err.syserr != 0) {
-					retval = map_system_error(
-							err.syserr, E_write_failed);
-					break;
-				} else {
-					throw ssl_exception("failed to complete the handshake");
-				}
+			if (oserr) *oserr = 0;
+			retval = handle_ssl_error(sock, to, n,
+					"failed to complete the handshake during read",
+					oserr);
+			if ((E_ok != retval) && (E_try_again != retval)) {
+				break;
 			}
 		} else {
 			cbuf += n;
@@ -422,7 +393,7 @@ driver::read(void *buf, int to_read, int *bread, int to, int *oserr)
 }
 
 int
-driver::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
+connection::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 {
 	int         retval = E_ok;
 	int         n = 0, nbytes = 0;
@@ -442,39 +413,15 @@ driver::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 	if (sock < 1)
 		throw ssl_exception("failed to get internal socket");
 
-	ssl_error err;
-
 	do {
 		n = ssl_library::instance().ssl_write()(m_ssl, cbuf, to_write);
 		if (n <= 0) {
-			if (decode_ssl_error(retval, err)) {
-				if (err.want_rd || err.want_wr) {
-					pollfd fdelem = { sock, 0, 0 };
-					if (err.want_rd) fdelem.events |= POLLIN;
-					if (err.want_wr) fdelem.events |= POLLOUT;
-					std::vector<pollfd> fdvec { 1, fdelem };
-
-					retval = snf::net::poll(fdvec, to, &err.syserr);
-					if (0 == retval) {
-						err.syserr = ETIMEDOUT;
-					}
-
-					if (SOCKET_ERROR == retval) {
-						retval = map_system_error(
-								err.syserr, E_write_failed);
-						break;
-					}
-
-					// try again
-				}
-			} else {
-				if (err.syserr != 0) {
-					retval = map_system_error(
-							err.syserr, E_write_failed);
-					break;
-				} else {
-					throw ssl_exception("failed to complete the handshake");
-				}
+			if (oserr) *oserr = 0;
+			retval = handle_ssl_error(sock, to, n,
+					"failed to complete the handshake during write",
+					oserr);
+			if ((E_ok != retval) && (E_try_again != retval)) {
+				break;
 			}
 		} else {
 			cbuf += n;
@@ -489,7 +436,7 @@ driver::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 }
 
 void
-driver::shutdown()
+connection::shutdown()
 {
 	int retval = ssl_library::instance().ssl_shutdown()(m_ssl);
 	if (retval == 0) {
@@ -497,25 +444,53 @@ driver::shutdown()
 	}
 
 	if (retval != 1) {
-		ssl_error err;
-		if (!decode_ssl_error(retval, err)) {
-			if (err.syserr != 0) {
-				throw std::system_error(
-					err.syserr,
-					std::system_category(),
-					"failed to shutdown TLS connection");
-			} else {
-				throw ssl_exception("failed to shutdown TLS connection");
-			}
+		int oserr = 0;
+		retval = handle_ssl_error(INVALID_SOCKET, POLL_WAIT_NONE, retval,
+				"failed to shutdown TLS connection", &oserr);
+		if (retval != E_ok) {
+			throw std::system_error(
+				oserr,
+				std::system_category(),
+				"failed to shutdown TLS connection");
 		}
 	}
 }
 
 void
-driver::reset()
+connection::reset()
 {
 	if (ssl_library::instance().ssl_clear()(m_ssl) != 1)
 		throw ssl_exception("failed to prepare TLS object for new connection");
+}
+
+void
+connection::renegotiate(int to)
+{
+	int retval;
+	int oserr;
+
+	if (ssl_library::instance().ssl_renegotiate()(m_ssl) != 1)
+		throw ssl_exception("failed to schedule TLS renegotiation");
+
+	sock_t sock = ssl_library::instance().ssl_get_fd()(m_ssl);
+	if (sock < 1)
+		throw ssl_exception("failed to get internal socket");
+
+	do {
+		retval = ssl_library::instance().ssl_do_handshake()(m_ssl);
+		if (retval <= 0) {
+			oserr = 0;
+			retval = handle_ssl_error(sock, to, retval,
+					"failed to complete the handshake during renegotiation",
+					&oserr);
+			if ((E_ok != retval) && (E_try_again != retval)) {
+				throw std::system_error(
+					oserr,
+					std::system_category(),
+					"failed to complete the handshake during renegotiation");
+			}
+		}
+	} while (ssl_library::instance().ssl_renegotiate_pending()(m_ssl) == 1);
 }
 
 } // namespace ssl

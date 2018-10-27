@@ -1,5 +1,5 @@
-#ifndef _SNF_DRIVER_H_
-#define _SNF_DRIVER_H_
+#ifndef _SNF_CONNECTION_H_
+#define _SNF_CONNECTION_H_
 
 #include "sslfcn.h"
 #include "sock.h"
@@ -13,10 +13,10 @@ namespace snf {
 namespace net {
 namespace ssl {
 
-class driver
+class connection
 {
 public:
-	enum class driver_mode { client, server };
+	enum class connection_mode { client, server };
 
 private:
 	struct ctxinfo
@@ -25,34 +25,26 @@ private:
 		context ctx;
 	};
 
-	struct ssl_error
-	{
-		bool    want_rd;
-		bool    want_wr;
-		bool    chk_err_stk;
-		int     syserr;
-	};
-
-	driver_mode             m_mode;
+	connection_mode         m_mode;
 	std::vector<ctxinfo>    m_contexts;
 	std::mutex              m_lock;
 	SSL                     *m_ssl = nullptr;
 
-	bool decode_ssl_error(int, ssl_error &);
+	int handle_ssl_error(sock_t, int, int, const std::string &, int *oserr = 0);
 	void ssl_connect(int);
 	void ssl_accept(int);
 
 public:
-	driver(driver_mode, context &);
-	driver(const driver &);
-	driver(driver &&);
-	~driver();
+	connection(connection_mode, context &);
+	connection(const connection &);
+	connection(connection &&);
+	~connection();
 
-	const driver &operator=(const driver &);
-	driver &operator=(driver &&);
+	const connection &operator=(const connection &);
+	connection &operator=(connection &&);
 
-	bool is_client() const { return (driver_mode::client == m_mode); }
-	bool is_server() const { return (driver_mode::server == m_mode); }
+	bool is_client() const { return (connection_mode::client == m_mode); }
+	bool is_server() const { return (connection_mode::server == m_mode); }
 	void add_context(context &);
 	void switch_context(const std::string &);
 	void check_hosts(const std::vector<std::string> &);
@@ -60,15 +52,16 @@ public:
 	void set_sni(const std::string &);
 	std::string get_sni();
 	void enable_sni();
-	void handshake(const socket &, int to = 120000);
+	void handshake(const socket &, int to = POLL_WAIT_FOREVER);
 	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	void shutdown();
 	void reset();
+	void renegotiate(int to = POLL_WAIT_FOREVER);
 };
 
 } // namespace ssl
 } // namespace net
 } // namespace snf
 
-#endif // _SNF_DRIVER_H_
+#endif // _SNF_CONNECTION_H_
