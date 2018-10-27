@@ -493,6 +493,18 @@ connection::renegotiate(int to)
 	} while (ssl_library::instance().ssl_renegotiate_pending()(m_ssl) == 1);
 }
 
+x509_certificate *
+connection::get_peer_certificate()
+{
+	X509 *c = ssl_library::instance().ssl_get_peer_cert()(m_ssl);
+	if (c) {
+		x509_certificate *crt = DBG_NEW x509_certificate(c);
+		ssl_library::instance().x509_free()(c);
+		return crt;
+	}
+	return nullptr;
+}
+
 } // namespace ssl
 } // namespace net
 } // namespace snf

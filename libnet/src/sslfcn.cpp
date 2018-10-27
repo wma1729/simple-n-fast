@@ -1047,6 +1047,15 @@ ssl_library::ssl_do_handshake()
 	return m_ssl_do_handshake;
 }
 
+p_ssl_get_peer_cert
+ssl_library::ssl_get_peer_cert()
+{
+	if (!m_ssl_get_peer_cert)
+		m_ssl_get_peer_cert = reinterpret_cast<p_ssl_get_peer_cert>
+			(m_ssl->symbol("SSL_get_peer_certificate"));
+	return m_ssl_get_peer_cert;
+}
+
 p_ssl_get0_param
 ssl_library::ssl_get0_param()
 {

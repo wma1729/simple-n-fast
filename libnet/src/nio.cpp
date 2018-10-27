@@ -1,4 +1,6 @@
 #include "nio.h"
+#include "dbg.h"
+#include <memory>
 
 namespace snf {
 namespace net {
@@ -12,15 +14,15 @@ nio::read_string(std::string &str, int to, int *oserr)
 	retval = read_integral(&to_read, to, oserr);
 	if (E_ok == retval) {
 		int bread = 0;
-		char *buf = new char[to_read];
+		std::unique_ptr<char []> ptr(DBG_NEW char[to_read]);
 
-		retval = read(buf, to_read, &bread, to, oserr);
+		retval = read(ptr.get(), to_read, &bread, to, oserr);
 		if (E_ok == retval)
 			if (to_read != bread)
 				retval = E_read_failed;
 
 		if (E_ok == retval)
-			str.insert(0, buf, bread);
+			str.insert(0, ptr.get(), bread);
 	}
 
 	return retval;

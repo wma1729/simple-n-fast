@@ -6,6 +6,7 @@
 #include "ia.h"
 #include "ctx.h"
 #include "nio.h"
+#include "crt.h"
 #include <string>
 #include <vector>
 #include <mutex>
@@ -59,6 +60,7 @@ public:
 	void shutdown();
 	void reset();
 	void renegotiate(int to = POLL_WAIT_FOREVER);
+	x509_certificate *get_peer_certificate();
 };
 
 } // namespace ssl
