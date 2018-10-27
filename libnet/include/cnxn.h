@@ -5,6 +5,7 @@
 #include "sock.h"
 #include "ia.h"
 #include "ctx.h"
+#include "nio.h"
 #include <string>
 #include <vector>
 #include <mutex>
@@ -13,7 +14,7 @@ namespace snf {
 namespace net {
 namespace ssl {
 
-class connection
+class connection : public snf::net::nio
 {
 public:
 	enum class connection_mode { client, server };

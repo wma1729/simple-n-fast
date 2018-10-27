@@ -2,11 +2,12 @@
 #define _SNF_SOCK_H_
 
 #include "net.h"
+#include "nio.h"
 
 namespace snf {
 namespace net {
 
-class socket
+class socket : public nio
 {
 private:
 	sock_t          m_sock;
