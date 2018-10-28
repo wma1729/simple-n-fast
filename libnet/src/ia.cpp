@@ -144,7 +144,7 @@ internet_address::str(bool brief) const
 	if (paddr == nullptr) {
                 throw std::system_error(snf::net::error(),
 					std::system_category(),
-					"inet_ntop() failed");
+					"failed to get string representation of IP address");
 	}
 
 	if (brief) {

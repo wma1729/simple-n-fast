@@ -21,8 +21,20 @@ private:
 public:
 	internet_address(const in_addr &);
 	internet_address(const in6_addr &);
+
+	/*
+	 * Initialize with address type AF_INET or AF_INET6
+	 * and address string. Can throw std::runtime_error
+	 * in case of error.
+	 */
 	internet_address(int, const std::string &);
+
+	/*
+	 * Initialize with address string. The address type is
+	 * deduced. Can throw std::runtime_error in case of error.
+	 */
 	internet_address(const std::string &);
+
 	internet_address(const internet_address &);
 
 	const internet_address & operator=(const internet_address &);

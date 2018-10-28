@@ -8,6 +8,9 @@
 namespace snf {
 namespace net {
 
+/*
+ * Performs host lookup.
+ */
 class host
 {
 private:
@@ -19,13 +22,24 @@ private:
 	void init(const std::string &, int);
 
 public:
+	/*
+	 * Host lookup using AI_CANONNAME flag.
+	 * On failure std::system_error is thrown.
+	 */
 	host(const std::string &);
+
+	/*
+	 * Host lookup using specified flags.
+	 * On failure std::system_error is thrown.
+	 */
 	host(const std::string &, int);
 
 	const std::string &get_canonical_name() const { return m_canonical; }
 	const std::vector<std::string> &get_names() const { return m_names; }
 	const std::vector<internet_address> &get_internet_addresses() const { return m_ias; }
 };
+
+bool hosteq(const std::string &, const std::string &);
 
 } // namespace net
 } // namespace snf

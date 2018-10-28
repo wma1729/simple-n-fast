@@ -9,6 +9,7 @@
 namespace snf {
 namespace net {
 
+/* Get system error */
 inline int
 error(void)
 {
@@ -19,6 +20,7 @@ error(void)
 #endif
 }
 
+/* Set system error */
 inline void
 error(int e)
 {
@@ -29,8 +31,23 @@ error(int e)
 #endif
 }
 
+/*
+ * Initialize the networking library.
+ * If use_ssl flag is set, the TLS library is
+ * initialized as well. This function can be
+ * called multiple times.
+ */
 void initialize(bool use_ssl = false);
+
+/* Finalizes (cleans up) the networking library. */
 void finalize();
+
+/*
+ * Openssl library is loaded dynamically.
+ * It may be desirable to get the version of
+ * openssl library loaded. This function can
+ * be used to get the openssl version.
+ */
 unsigned long openssl_version(std::string &);
 
 template<typename T>
@@ -49,6 +66,10 @@ T swap(T x)
 	return x;
 }
 
+/*
+ * Converts the integral data type from host to
+ * network byte order.
+ */
 template<typename T>
 T hton(T b)
 {
@@ -64,6 +85,10 @@ T hton(T b)
 	throw std::invalid_argument("invalid data type");
 }
 
+/*
+ * Converts the integral data type from network to
+ * host byte order.
+ */
 template<typename T>
 T ntoh(T b)
 {
@@ -84,7 +109,7 @@ int map_system_error(int, int);
 constexpr int POLL_WAIT_FOREVER = -1;
 constexpr int POLL_WAIT_NONE = 0;
 
-int poll(std::vector<pollfd> &, int, int *);
+int poll(std::vector<pollfd> &, int, int *oserr = 0);
 
 } // namespace net
 } // namespace snf

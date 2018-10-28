@@ -157,12 +157,10 @@ const sockaddr *
 socket_address::get_sa(socklen_t *len) const
 {
 	if (is_ipv4()) {
-		if (len)
-			*len = static_cast<socklen_t>(sizeof(sockaddr_in));
+		if (len) *len = static_cast<socklen_t>(sizeof(sockaddr_in));
 		return reinterpret_cast<const sockaddr *>(&(m_addr.v4_addr));
 	} else if (is_ipv6()) {
-		if (len)
-			*len = static_cast<socklen_t>(sizeof(sockaddr_in6));
+		if (len) *len = static_cast<socklen_t>(sizeof(sockaddr_in6));
 		return reinterpret_cast<const sockaddr *>(&(m_addr.v6_addr));
 	}
 	return nullptr;
@@ -225,6 +223,15 @@ socket_address::str(bool brief) const
 	return s;
 }
 
+/*
+ * Get socket address(es) ready to be bound.
+ * 'svc' can be either the service name or the port string.
+ * The flags used for getaddrinfo are AI_PASSIVE | AI_ADDRCONFIG.
+ * Following bits are conditionally added to the flags:
+ * - AI_V4MAPPED: if the address family is AF_INET6.
+ * - AI_NUMERICSERV: if the 'svc' is a port string.
+ * On failure, std::system_error is thrown.
+ */
 std::vector<socket_address>
 socket_address::get_server(int family, socket_type type, const std::string &svc)
 {
@@ -277,6 +284,16 @@ socket_address::get_server(int family, socket_type type, in_port_t port)
 	return get_server(family, type, portstr);
 }
 
+/*
+ * Get socket address(es) ready to connect.
+ * 'svc' can be either the service name or the port string.
+ * The flags used for getaddrinfo is AI_ADDRCONFIG.
+ * Following bits are conditionally added to the flags:
+ * - AI_V4MAPPED: if the address family is AF_INET6.
+ * - AI_NUMERICHOST: if host is an IP address.
+ * - AI_NUMERICSERV: if the 'svc' is a port string.
+ * On failure, std::system_error is thrown.
+ */
 std::vector<socket_address>
 socket_address::get_client(int family, socket_type type,
 			const std::string &host, const std::string &svc)

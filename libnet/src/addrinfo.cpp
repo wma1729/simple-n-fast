@@ -13,6 +13,9 @@ namespace snf {
 namespace net {
 namespace internal {
 
+constexpr int MAX_TRIES = 10;
+constexpr int SLEEP_FOR = 5000;
+
 void
 get_address_info(
 	const char *host,
@@ -20,7 +23,7 @@ get_address_info(
 	struct addrinfo *hints,
 	struct addrinfo **res)
 {
-	const int max_tries = 10;
+	const int max_tries = MAX_TRIES;
 	int cur_tries = 0;
 	int status = 0;
 
@@ -28,7 +31,7 @@ get_address_info(
 		status = getaddrinfo(host, svc, hints, res);
 		if (status != 0) {
 			if (status == EAI_AGAIN) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+				std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_FOR));
 				cur_tries++;
 			}
 		}

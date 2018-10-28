@@ -82,19 +82,29 @@ map_system_error(int error, int default_retval)
 }
 
 int
-poll(std::vector<pollfd> &fds, int to, int *syserr)
+poll(std::vector<pollfd> &fds, int to, int *oserr)
 {
-	if (syserr)
-		*syserr = 0;
+	int retval;
 
+	if (oserr)
+		*oserr = 0;
+
+	do {
 #if defined(_WIN32)
-	int retval = WSAPoll(fds.data(), static_cast<ULONG>(fds.size()), to);
+		retval = WSAPoll(fds.data(), static_cast<ULONG>(fds.size()), to);
 #else
-	int retval = poll(fds.data(), fds.size(), to);
+		retval = poll(fds.data(), fds.size(), to);
 #endif
-	if (retval == SOCKET_ERROR)
-		if (syserr)
-			*syserr = snf::net::error();
+		if (retval == SOCKET_ERROR) {
+			int error = snf::net::error();
+#if !defined(_WIN32)
+			if (EINTR == error) continue;
+#endif
+			if (oserr) *oserr = error;
+		}
+
+		break;
+	} while (true);
 
 	return retval;
 }
