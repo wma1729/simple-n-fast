@@ -106,6 +106,8 @@ T ntoh(T b)
 
 int map_system_error(int, int);
 
+enum class connection_mode { client, server };
+
 constexpr int POLL_WAIT_FOREVER = -1;
 constexpr int POLL_WAIT_NONE = 0;
 

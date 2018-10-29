@@ -5,19 +5,23 @@ include ../../Makefile.constants
 !ENDIF
 
 NETTS_OBJS = $(P)\netts.obj
-HOSTADDR_OBJS = $(P)\hostaddr.obj
+HOST_OBJS = $(P)\host.obj
+NET_OBJS = $(P)\net.obj
 
 INCL = $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLSSL) $(INCLTF)
 
-all: platform $(P)\hostaddr.exe $(P)\netts.exe
+all: platform $(P)\host.exe $(P)\netts.exe $(P)\net.exe
 
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\hostaddr.exe: $(HOSTADDR_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+$(P)\host.exe: $(HOST_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
 $(P)\netts.exe: $(NETTS_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
+
+$(P)\net.exe: $(NET_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
 {.}.cpp{$(P)}.obj:
@@ -29,4 +33,4 @@ test:
 install:
 
 clean:
-	@del /q $(HOSTADDR_OBJS) $(NETTS_OBJS) $(P)\*.pdb $(P)\hostaddr.* $(P)\netts.*
+	@del /q $(HOST_OBJS) $(NETTS_OBJS) $(NET_OBJS) $(P)\*.pdb $(P)\host.* $(P)\netts.* $(P)\net.*

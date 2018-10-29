@@ -17,9 +17,6 @@ namespace ssl {
 
 class connection : public snf::net::nio
 {
-public:
-	enum class connection_mode { client, server };
-
 private:
 	struct ctxinfo
 	{

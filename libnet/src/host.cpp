@@ -58,7 +58,15 @@ host::host(const std::string &h, int ai_flags)
 	init(h, ai_flags);
 }
 
-/* Are two host name/address same? */
+/*
+ * Are two host name/address same?
+ * It is difficult to determine if the two names/addresses
+ * are for the same host. This function simply finds all
+ * addresses for the two hosts and see if there is a common
+ * address between them. It might be useful in certain
+ * situation where the mapping between name and address is
+ * static over a longer period.
+ */
 bool
 hosteq(const std::string &h1, const std::string &h2)
 {
@@ -66,13 +74,14 @@ hosteq(const std::string &h1, const std::string &h2)
 		return true;
 
 	int flags1 = AI_ADDRCONFIG;
+	int flags2 = AI_ADDRCONFIG;
+
 	try {
 		internet_address ia1 { h1 };
 		flags1 |= AI_NUMERICHOST;
 	} catch (std::runtime_error) {
 	}
 
-	int flags2 = AI_ADDRCONFIG;
 	try {
 		internet_address ia2 { h2 };
 		flags2 |= AI_NUMERICHOST;

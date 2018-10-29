@@ -5,20 +5,24 @@ $(error P is not set)
 endif
 
 NETTS_OBJS = ${P}/netts.o
-HOSTADDR_OBJS = ${P}/hostaddr.o
+HOST_OBJS = ${P}/host.o
+NET_OBJS = ${P}/net.o
 
 INCL = ${INCLCOM} ${INCLNET} ${INCLLOG} ${INCLSSL} ${INCLTF}
 LIBS = -ldl -lpthread
 
-all: platform ${P}/hostaddr ${P}/netts
+all: platform ${P}/host ${P}/netts ${P}/net
 
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/hostaddr: ${HOSTADDR_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
+${P}/host: ${HOST_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/netts: ${NETTS_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/net: ${NET_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
@@ -34,4 +38,4 @@ endif
 install:
 
 clean:
-	@/bin/rm -rf ${HOSTADDR_OBJS} ${NETTS_OBJS} ${P}/hostaddr ${P}/netts
+	@/bin/rm -rf ${HOST_OBJS} ${NETTS_OBJS} ${NET_OBJS} ${P}/host ${P}/netts ${P}/net
