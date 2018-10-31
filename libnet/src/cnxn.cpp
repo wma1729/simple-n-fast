@@ -505,6 +505,18 @@ connection::get_peer_certificate()
 	return nullptr;
 }
 
+bool
+connection::is_verification_successful(std::string &errstr)
+{
+	errstr.clear();
+	long result = ssl_library::instance().ssl_get_verify_result()(m_ssl);
+	if (result == X509_V_OK)
+		return true;
+
+	errstr.assign(ssl_library::instance().x509_verify_cert_error_string()(result));
+	return false;
+}
+
 } // namespace ssl
 } // namespace net
 } // namespace snf

@@ -1056,6 +1056,15 @@ ssl_library::ssl_get_peer_cert()
 	return m_ssl_get_peer_cert;
 }
 
+p_ssl_get_verify_result
+ssl_library::ssl_get_verify_result()
+{
+	if (!m_ssl_get_verify_result)
+		m_ssl_get_verify_result = reinterpret_cast<p_ssl_get_verify_result>
+			(m_ssl->symbol("SSL_get_verify_result"));
+	return m_ssl_get_verify_result;
+}
+
 p_ssl_get0_param
 ssl_library::ssl_get0_param()
 {
@@ -1103,6 +1112,16 @@ ssl_library::x509_verify_param_set1_ip_asc()
 			reinterpret_cast<p_x509_verify_param_set1_ip_asc>
 				(m_ssl->symbol("X509_VERIFY_PARAM_set1_ip_asc"));
 	return m_x509_verify_param_set1_ip_asc;
+}
+
+p_x509_verify_cert_error_string
+ssl_library::x509_verify_cert_error_string()
+{
+	if (!m_x509_verify_cert_error_string)
+		m_x509_verify_cert_error_string =
+			reinterpret_cast<p_x509_verify_cert_error_string>
+				(m_ssl->symbol("X509_verify_cert_error_string"));
+	return m_x509_verify_cert_error_string;
 }
 
 } // namespace ssl

@@ -140,12 +140,14 @@ using p_ssl_renegotiate = int (*)(SSL *);
 using p_ssl_renegotiate_pending = int (*)(SSL *);
 using p_ssl_do_handshake = int (*)(SSL *);
 using p_ssl_get_peer_cert = X509 * (*)(const SSL *);
+using p_ssl_get_verify_result = long (*)(const SSL *);
 
 using p_ssl_get0_param = X509_VERIFY_PARAM * (*)(SSL *);
 using p_x509_verify_param_set_hostflags = void (*)(X509_VERIFY_PARAM *, unsigned int);
 using p_x509_verify_param_set1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
 using p_x509_verify_param_add1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
 using p_x509_verify_param_set1_ip_asc = int (*)(X509_VERIFY_PARAM *, const char *);
+using p_x509_verify_cert_error_string = const char * (*)(long);
 
 namespace snf {
 namespace net {
@@ -328,12 +330,14 @@ private:
 	p_ssl_renegotiate_pending   m_ssl_renegotiate_pending = nullptr;
 	p_ssl_do_handshake          m_ssl_do_handshake = nullptr;
 	p_ssl_get_peer_cert         m_ssl_get_peer_cert = nullptr;
+	p_ssl_get_verify_result     m_ssl_get_verify_result = nullptr;
 
 	p_ssl_get0_param                    m_ssl_get0_param = nullptr;
 	p_x509_verify_param_set_hostflags   m_x509_verify_param_set_hostflags = nullptr;
 	p_x509_verify_param_set1_host       m_x509_verify_param_set1_host = nullptr;
 	p_x509_verify_param_add1_host       m_x509_verify_param_add1_host = nullptr;
 	p_x509_verify_param_set1_ip_asc     m_x509_verify_param_set1_ip_asc = nullptr;
+	p_x509_verify_cert_error_string     m_x509_verify_cert_error_string = nullptr;
 
 	ssl_library();
 
@@ -471,12 +475,14 @@ public:
 	p_ssl_renegotiate_pending ssl_renegotiate_pending();
 	p_ssl_do_handshake ssl_do_handshake();
 	p_ssl_get_peer_cert ssl_get_peer_cert();
+	p_ssl_get_verify_result ssl_get_verify_result();
 
 	p_ssl_get0_param ssl_get0_param();
 	p_x509_verify_param_set_hostflags x509_verify_param_set_hostflags();
 	p_x509_verify_param_set1_host x509_verify_param_set1_host();
 	p_x509_verify_param_add1_host x509_verify_param_add1_host();
 	p_x509_verify_param_set1_ip_asc x509_verify_param_set1_ip_asc();
+	p_x509_verify_cert_error_string x509_verify_cert_error_string();
 };
 
 } // namespace ssl
