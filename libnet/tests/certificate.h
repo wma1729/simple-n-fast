@@ -27,12 +27,12 @@ public:
 			snf::net::initialize(true);
 
 			snf::net::ssl::x509_certificate cert1(
-				snf::net::ssl::ssl_data_fmt::der,
+				snf::net::ssl::data_fmt::der,
 				"unittest.simplenfast.org/unittest.simplenfast.org.cert.der");
 			ASSERT_EQ(bool, true, true, "certificate 1 creation passed");
 
 			snf::net::ssl::x509_certificate cert2(
-				snf::net::ssl::ssl_data_fmt::pem,
+				snf::net::ssl::data_fmt::pem,
 				"unittest.simplenfast.org/unittest.simplenfast.org.cert.pem");
 			ASSERT_EQ(bool, true, true, "certificate 2 creation passed");
 
@@ -44,7 +44,7 @@ public:
 				data,
 				&dlen);
 			snf::net::ssl::x509_certificate cert3(
-				snf::net::ssl::ssl_data_fmt::der,
+				snf::net::ssl::data_fmt::der,
 				data,
 				dlen);
 			delete [] data;
@@ -58,7 +58,7 @@ public:
 				data,
 				&dlen);
 			snf::net::ssl::x509_certificate cert4(
-				snf::net::ssl::ssl_data_fmt::pem,
+				snf::net::ssl::data_fmt::pem,
 				data,
 				dlen);
 			delete [] data;

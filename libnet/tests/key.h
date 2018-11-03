@@ -27,14 +27,14 @@ public:
 			snf::net::initialize(true);
 
 			snf::net::ssl::pkey pkey1(
-				snf::net::ssl::ssl_data_fmt::der,
+				snf::net::ssl::data_fmt::der,
 				"unittest.simplenfast.org/unittest.simplenfast.org.key.der");
 			ASSERT_EQ(bool, true, true, "private key 1 creation passed");
 			pkey1.verify();
 			ASSERT_EQ(bool, true, true, "private key 1 verification passed");
 
 			snf::net::ssl::pkey pkey2(
-				snf::net::ssl::ssl_data_fmt::pem,
+				snf::net::ssl::data_fmt::pem,
 				"unittest.simplenfast.org/unittest.simplenfast.org.key.pem",
 				"Te5tP@55w0rd");
 			ASSERT_EQ(bool, true, true, "private key 2 creation passed");
@@ -49,7 +49,7 @@ public:
 				data,
 				&dlen);
 			snf::net::ssl::pkey pkey3(
-				snf::net::ssl::ssl_data_fmt::der,
+				snf::net::ssl::data_fmt::der,
 				data,
 				dlen);
 			delete [] data;
@@ -65,7 +65,7 @@ public:
 				data,
 				&dlen);
 			snf::net::ssl::pkey pkey4(
-				snf::net::ssl::ssl_data_fmt::pem,
+				snf::net::ssl::data_fmt::pem,
 				data,
 				dlen,
 				"Te5tP@55w0rd");

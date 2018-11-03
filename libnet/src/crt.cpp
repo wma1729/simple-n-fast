@@ -108,28 +108,28 @@ x509_certificate::equal(const std::string &name1, const std::string &name2)
 }
 
 x509_certificate::x509_certificate(
-	ssl_data_fmt fmt,
+	data_fmt fmt,
 	const std::string &cfile,
 	const char *passwd)
 {
 	snf::file_ptr fp(cfile, "rb");
 
-	if (fmt == ssl_data_fmt::pem) {
+	if (fmt == data_fmt::pem) {
 		init_pem(fp, passwd);
-	} else /* if (fmt == ssl_data_fmt::der) */ {
+	} else /* if (fmt == data_fmt::der) */ {
 		init_der(fp);
 	}
 }
 
 x509_certificate::x509_certificate(
-	ssl_data_fmt fmt,
+	data_fmt fmt,
 	const uint8_t *crt,
 	size_t crtlen,
 	const char *passwd)
 {
-	if (fmt == ssl_data_fmt::pem) {
+	if (fmt == data_fmt::pem) {
 		init_pem(crt, crtlen, passwd);
-	} else /* if (fmt == ssl_data_fmt::der) */ {
+	} else /* if (fmt == data_fmt::der) */ {
 		init_der(crt, crtlen);
 	}
 }

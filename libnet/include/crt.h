@@ -18,8 +18,8 @@ struct alternate_name {
 class x509_certificate
 {
 public:
-	x509_certificate(ssl_data_fmt, const std::string &, const char *passwd = nullptr);
-	x509_certificate(ssl_data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
+	x509_certificate(data_fmt, const std::string &, const char *passwd = nullptr);
+	x509_certificate(data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
 	x509_certificate(X509 *);
 	x509_certificate(const x509_certificate &);
 	x509_certificate(x509_certificate &&);

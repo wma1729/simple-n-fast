@@ -85,11 +85,8 @@ truststore::add_crl(x509_crl &crl)
 {
 	if (ssl_library::instance().x509_store_add_crl()(m_store, crl) != 1)
 		throw ssl_exception("failed to add CRL to the X509 trust store");
-}
 
-void
-truststore::set_flags(unsigned long flags)
-{
+	unsigned long flags = X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
 	if (ssl_library::instance().x509_store_set_flags()(m_store, flags) != 1)
 		throw ssl_exception("failed to set flags for the X509 trust store");
 }

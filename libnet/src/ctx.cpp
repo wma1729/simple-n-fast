@@ -169,7 +169,11 @@ context::use_certificate(x509_certificate &crt)
 void
 context::use_truststore(truststore &store)
 {
-	ssl_library::instance().ssl_ctx_use_truststore()(m_ctx, store);
+	X509_STORE *s = store;
+	if (ssl_library::instance().x509_store_up_ref()(s) != 1)
+		throw ssl_exception("failed to increment the X509 trust store reference count");
+
+	ssl_library::instance().ssl_ctx_use_truststore()(m_ctx, s);
 }
 
 void

@@ -12,8 +12,8 @@ namespace ssl {
 class pkey
 {
 public:
-	pkey(ssl_data_fmt, const std::string &, const char *passwd = nullptr);
-	pkey(ssl_data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
+	pkey(data_fmt, const std::string &, const char *passwd = nullptr);
+	pkey(data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
 	pkey(EVP_PKEY *);
 	pkey(const pkey &);
 	pkey(pkey &&);

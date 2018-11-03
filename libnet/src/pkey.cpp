@@ -106,28 +106,28 @@ pkey::verify_ec() const
 }
 
 pkey::pkey(
-	ssl_data_fmt fmt,
+	data_fmt fmt,
 	const std::string &kfile,
 	const char *passwd)
 {
 	snf::file_ptr fp(kfile, "rb");
 
-	if (fmt == ssl_data_fmt::pem) {
+	if (fmt == data_fmt::pem) {
 		init_pem(fp, passwd);
-	} else /* if (fmt == ssl_data_fmt::der) */ {
+	} else /* if (fmt == data_fmt::der) */ {
 		init_der(fp);
 	}
 }
 
 pkey::pkey(
-	ssl_data_fmt fmt,
+	data_fmt fmt,
 	const uint8_t *key,
 	size_t keylen,
 	const char *passwd)
 {
-	if (fmt == ssl_data_fmt::pem) {
+	if (fmt == data_fmt::pem) {
 		init_pem(key, keylen, passwd);
-	} else /* if (fmt == ssl_data_fmt::der) */ {
+	} else /* if (fmt == data_fmt::der) */ {
 		init_der(key, keylen);
 	}
 }

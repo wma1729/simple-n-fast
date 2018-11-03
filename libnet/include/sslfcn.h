@@ -153,7 +153,7 @@ namespace snf {
 namespace net {
 namespace ssl {
 
-enum class ssl_data_fmt
+enum class data_fmt
 {
 	pem = 1,
 	der = 2

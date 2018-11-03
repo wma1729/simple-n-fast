@@ -259,11 +259,13 @@ socket::operator=(socket &&s)
 		m_type = s.m_type;
 
 		if (s.m_local) {
+			if (m_local) delete m_local;
 			m_local = s.m_local;
 			s.m_local = nullptr;
 		}
 
 		if (s.m_peer) {
+			if (m_peer) delete m_peer;
 			m_peer = s.m_peer;
 			s.m_peer = nullptr;
 		}
