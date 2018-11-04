@@ -48,22 +48,18 @@ socket_address::socket_address(const std::string &addrstr, in_port_t port)
 
 socket_address::socket_address(const sockaddr_storage &ss, socklen_t len)
 {
-	if (ss.ss_family == AF_INET) {
-		if (len < static_cast<socklen_t>(sizeof(sockaddr_in))) {
-			throw std::invalid_argument("invalid address length");
-		}
-
-		const sockaddr_in &sin = reinterpret_cast<const sockaddr_in &>(ss);
-		memcpy(&(m_addr.v4_addr), &sin, sizeof(sockaddr_in));
-	} else if (ss.ss_family == AF_INET6) {
-		if (len < static_cast<socklen_t>(sizeof(sockaddr_in6))) {
-			throw std::invalid_argument("invalid address length");
-		}
-
-		const sockaddr_in6 &sin6 = reinterpret_cast<const sockaddr_in6 &>(ss);
-		memcpy(&(m_addr.v6_addr), &sin6, sizeof(sockaddr_in6));
+	if (len == static_cast<socklen_t>(sizeof(sockaddr_in))) {
+		const sockaddr_in *sin = reinterpret_cast<const sockaddr_in *>(&ss);
+		memcpy(&(m_addr.v4_addr), sin, sizeof(sockaddr_in));
+		m_addr.v4_addr.sin_family = AF_INET;
+	} else if (len == static_cast<socklen_t>(sizeof(sockaddr_in6))) {
+		const sockaddr_in6 *sin6 = reinterpret_cast<const sockaddr_in6 *>(&ss);
+		memcpy(&(m_addr.v6_addr), sin6, sizeof(sockaddr_in6));
+		m_addr.v6_addr.sin6_family = AF_INET6;
 	} else {
-		throw std::invalid_argument("invalid address family");
+		std::ostringstream oss;
+		oss << "invalid address length (" << len << ")";
+		throw std::invalid_argument(oss.str());
 	}
 }
 
@@ -109,7 +105,9 @@ socket_address::operator==(const socket_address &sa) const
 		if (memcmp(p1, p2, sizeof(in6_addr)) != 0)
 			return false;
 	} else {
-		throw std::invalid_argument("invalid address family");
+		std::ostringstream oss;
+		oss << "invalid address family (" << m_addr.v4_addr.sin_family << ")";
+		throw std::invalid_argument(oss.str());
 	}
 
 	return true;

@@ -37,7 +37,7 @@ public:
 	connection(connection_mode, context &);
 	connection(const connection &);
 	connection(connection &&);
-	~connection();
+	virtual ~connection();
 
 	const connection &operator=(const connection &);
 	connection &operator=(connection &&);

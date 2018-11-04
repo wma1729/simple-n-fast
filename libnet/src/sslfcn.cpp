@@ -1016,7 +1016,7 @@ ssl_library::ssl_get_error()
 {
 	if (!m_ssl_get_error)
 		m_ssl_get_error = reinterpret_cast<p_ssl_get_error>
-			(m_ssl->symbol("SSL_set_error"));
+			(m_ssl->symbol("SSL_get_error"));
 	return m_ssl_get_error;
 }
 
