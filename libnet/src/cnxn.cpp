@@ -27,13 +27,18 @@ int
 connection::handle_ssl_error(sock_t sock, int to, int error, const std::string &errstr, int *oserr)
 {
 	int retval = E_ok;
+	std::ostringstream oss;
 
 	if (error > 0)
 		return retval;
 
+	oss << errstr << "; error = " << error;
+
 	pollfd fdelem = { sock, 0, 0 };
 
 	int ssl_error = ssl_library::instance().ssl_get_error()(m_ssl, error);
+
+	oss << ", ssl_error = " << ssl_error;
 
 	switch (ssl_error) {
 		case SSL_ERROR_NONE:
@@ -52,7 +57,7 @@ connection::handle_ssl_error(sock_t sock, int to, int error, const std::string &
 
 		case SSL_ERROR_SYSCALL:
 			if (ssl_library::instance().err_peek()() != 0) {
-				throw ssl_exception(errstr);
+				throw ssl_exception(oss.str());
 			} else if (error == 0) {
 				if (oserr) *oserr = EOF;
 				retval = E_syscall_failed;
@@ -63,7 +68,7 @@ connection::handle_ssl_error(sock_t sock, int to, int error, const std::string &
 			break;
 
 		default:
-			throw ssl_exception(errstr);
+			throw ssl_exception(oss.str());
 			break;
 	}
 
@@ -447,7 +452,7 @@ connection::shutdown()
 		int oserr = 0;
 		retval = handle_ssl_error(INVALID_SOCKET, POLL_WAIT_NONE, retval,
 				"failed to shutdown TLS connection", &oserr);
-		if (retval != E_ok) {
+		if (oserr && retval != E_ok) {
 			throw std::system_error(
 				oserr,
 				std::system_category(),

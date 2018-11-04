@@ -27,20 +27,19 @@ public:
 			snf::net::initialize(true);
 			snf::net::ssl::context ctx1;
 			ASSERT_EQ(bool, true, true, "ssl context creation passed");
-		} catch (snf::net::ssl::ssl_exception ex) {
+		} catch (const snf::net::ssl::ssl_exception &ex) {
 			std::cerr << ex.what() << std::endl;
-			std::vector<snf::net::ssl::ssl_error>::const_iterator I;
-			for (I = ex.begin(); I != ex.end(); ++I)
+			for (auto I = ex.begin(); I != ex.end(); ++I)
 				std::cerr << *I << std::endl;
 			exception_caught = true;
-		} catch (std::system_error ex) {
+		} catch (const std::system_error &ex) {
 			std::cerr << "system error: " << ex.code() << std::endl;
 			std::cerr << ex.what() << std::endl;
 			exception_caught = true;
-		} catch (std::invalid_argument ex) {
+		} catch (const std::invalid_argument &ex) {
 			std::cerr << "invalid argument: " << ex.what() << std::endl;
 			exception_caught = true;
-		} catch (std::runtime_error ex) {
+		} catch (const std::runtime_error &ex) {
 			std::cerr << "runtime error: " << ex.what() << std::endl;
 			exception_caught = true;
 		}

@@ -71,10 +71,10 @@ main(int argc, const char **argv)
 				std::cout << " not";
 			std::cout << " equal" << std::endl;
 		}
-	} catch (std::system_error e) {
+	} catch (const std::system_error &e) {
 		std::cerr << "Error Code: " << e.code() << std::endl;
 		std::cerr << "Error: " << e.what() << std::endl;
-	} catch (std::runtime_error e) {
+	} catch (const std::runtime_error &e) {
 		std::cerr << "Error: " << e.what() << std::endl;
 	}
 

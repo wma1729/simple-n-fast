@@ -115,20 +115,19 @@ public:
 			const std::vector<std::string> &ocsp = cert9.ocsp_end_points();
 			ASSERT_EQ(size_t, ocsp.size(), 1, "number of ocsp matches");
 			ASSERT_EQ(const std::string &, ocsp[0], "http://localhost:2560/", "ocsp matches");
-		} catch (snf::net::ssl::ssl_exception ex) {
+		} catch (const snf::net::ssl::ssl_exception &ex) {
 			std::cerr << ex.what() << std::endl;
-			std::vector<snf::net::ssl::ssl_error>::const_iterator I;
-			for (I = ex.begin(); I != ex.end(); ++I)
+			for (auto I = ex.begin(); I != ex.end(); ++I)
 				std::cerr << *I << std::endl;
 			exception_caught = true;
-		} catch (std::system_error ex) {
+		} catch (const std::system_error &ex) {
 			std::cerr << "system error: " << ex.code() << std::endl;
 			std::cerr << ex.what() << std::endl;
 			exception_caught = true;
-		} catch (std::invalid_argument ex) {
+		} catch (const std::invalid_argument &ex) {
 			std::cerr << "invalid argument: " << ex.what() << std::endl;
 			exception_caught = true;
-		} catch (std::runtime_error ex) {
+		} catch (const std::runtime_error &ex) {
 			std::cerr << "runtime error: " << ex.what() << std::endl;
 			exception_caught = true;
 		}

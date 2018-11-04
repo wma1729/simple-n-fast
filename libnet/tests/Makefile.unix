@@ -6,12 +6,12 @@ endif
 
 NETTS_OBJS = ${P}/netts.o
 HOST_OBJS = ${P}/host.o
-NET_OBJS = ${P}/net.o
+ECHO_OBJS = ${P}/echo.o
 
 INCL = ${INCLCOM} ${INCLNET} ${INCLLOG} ${INCLSSL} ${INCLTF}
 LIBS = -ldl -lpthread
 
-all: platform ${P}/host ${P}/netts ${P}/net
+all: platform ${P}/host ${P}/netts ${P}/echo
 
 platform:
 	@test -d ${P} || mkdir ${P}
@@ -22,7 +22,7 @@ ${P}/host: ${HOST_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 ${P}/netts: ${NETTS_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
-${P}/net: ${NET_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
+${P}/echo: ${ECHO_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
@@ -38,4 +38,4 @@ endif
 install:
 
 clean:
-	@/bin/rm -rf ${HOST_OBJS} ${NETTS_OBJS} ${NET_OBJS} ${P}/host ${P}/netts ${P}/net
+	@/bin/rm -rf ${HOST_OBJS} ${NETTS_OBJS} ${ECHO_OBJS} ${P}/host ${P}/netts ${P}/echo

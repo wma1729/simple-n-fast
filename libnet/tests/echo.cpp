@@ -2,6 +2,8 @@
 #include "cnxn.h"
 #include <iostream>
 #include <thread>
+#include <stdexcept>
+#include <memory>
 
 struct arguments
 {
@@ -35,7 +37,7 @@ struct arguments
 	
 };
 
-static snf::net::ssl::context g_ctx;
+static std::exception_ptr g_except_ptr = nullptr;
 
 static int
 usage(const std::string &prog)
@@ -173,21 +175,21 @@ parse_arguments(arguments &args, int argc, const char **argv)
 }
 
 static void
-prepare_context(const arguments &args)
+prepare_context(const arguments &args, snf::net::ssl::context &ctx)
 {
 	if (!args.keyfile.empty()) {
 		const char *passwd = args.kf_password.empty() ? nullptr : args.kf_password.c_str();
 		snf::net::ssl::pkey key { args.kf_fmt, args.keyfile, passwd };
-		g_ctx.use_private_key(key);
+		ctx.use_private_key(key);
 	}
 
 	if (!args.certfile.empty()) {
 		snf::net::ssl::x509_certificate cert { args.cf_fmt, args.certfile };
-		g_ctx.use_certificate(cert);
+		ctx.use_certificate(cert);
 	}
 
 	if (!args.keyfile.empty() && !args.certfile.empty())
-		g_ctx.check_private_key();
+		ctx.check_private_key();
 
 	snf::net::ssl::truststore store { args.cafile };
 	if (!args.crlfile.empty()) {
@@ -195,16 +197,18 @@ prepare_context(const arguments &args)
 		store.add_crl(crl);
 	}
 
-	g_ctx.use_truststore(store);	
+	ctx.use_truststore(store);	
+
+	ctx.set_ciphers();
 
 	if (args.verify_peer)
-		g_ctx.verify_peer(args.require_cert);
+		ctx.verify_peer(args.require_cert);
 
-	g_ctx.limit_certificate_chain_depth(args.depth);
+	ctx.limit_certificate_chain_depth(args.depth);
 }
 
 static int
-client(const arguments &args)
+client(const arguments &args, snf::net::ssl::context &ctx)
 {
 	int retval = E_ok;
 	snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
@@ -214,11 +218,32 @@ client(const arguments &args)
 
 	sock.connect(AF_INET, args.host, args.port);
 
+	snf::net::nio &io = sock;
+	snf::net::ssl::connection *cnxn = nullptr;
+
+	if (args.use_ssl) {
+		cnxn = new snf::net::ssl::connection { snf::net::connection_mode::client, ctx };
+		cnxn->handshake(sock);
+
+		std::unique_ptr<snf::net::ssl::x509_certificate> cert
+			(cnxn->get_peer_certificate());
+		if (cert)
+			std::cout << "Got certificate for " << cert->subject() << std::endl;
+
+		std::string errstr;
+		if (cnxn->is_verification_successful(errstr))
+			std::cerr << "Handshake successfull" << std::endl;
+		else
+			std::cerr << "Handshake failure: " << errstr << std::endl;
+		
+		io = *cnxn;
+	}
+
 	std::string buf1, buf2;
 	while (std::getline(std::cin, buf1)) {
-		retval = sock.write_string(buf1);
+		retval = io.write_string(buf1);
 		if (E_ok == retval) {
-			retval = sock.read_string(buf2);
+			retval = io.read_string(buf2);
 			if (E_ok == retval) {
 				std::cout << buf2 << std::endl;
 			}
@@ -232,30 +257,61 @@ client(const arguments &args)
 		}
 	}
 
+	if (cnxn) {
+		cnxn->shutdown();
+		delete cnxn;
+	}
+
 	sock.close();
 
 	return 0;
 }
 
 static void
-worker_thread(snf::net::socket &&sock)
+worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::socket &&sock)
 {
 	int retval = E_ok;
 	std::string buf;
 
-	do {
-		retval = sock.read_string(buf);
-		if (E_ok == retval)
-			retval = sock.write_string(buf);
-		buf.clear();
-	} while (E_ok == retval);
+	snf::net::nio &io = sock;
+	snf::net::ssl::connection *cnxn = nullptr;
 
-	sock.close();
+	try {
+		if (args.use_ssl) {
+			cnxn = new snf::net::ssl::connection { snf::net::connection_mode::server, ctx };
+			cnxn->handshake(sock);
+
+			std::string errstr;
+			if (cnxn->is_verification_successful(errstr))
+				std::cerr << "Handshake successfull" << std::endl;
+			else
+				std::cerr << "Handshake failure: " << errstr << std::endl;
+
+			io = *cnxn;
+		}
+
+		do {
+			retval = io.read_string(buf);
+			if (E_ok == retval)
+				retval = io.write_string(buf);
+			buf.clear();
+		} while (E_ok == retval);
+
+		if (cnxn) {
+			cnxn->shutdown();
+			delete cnxn;
+		}
+
+		sock.close();
+	} catch (...) {
+		g_except_ptr = std::current_exception();
+	}
 }
 
 static int
-server(const arguments &args)
+server(const arguments &args, snf::net::ssl::context &ctx)
 {
+	int retval, oserr;
 	snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
 
 	sock.keepalive(true);
@@ -266,9 +322,27 @@ server(const arguments &args)
 	sock.listen(20);
 
 	while (true) {
-		snf::net::socket nsock = std::move(sock.accept());
-		std::thread wt(worker_thread, std::move(nsock));
-		wt.detach();
+		pollfd fdelem = { sock.handle(), POLLIN, 0 };
+		std::vector<pollfd> fdvec { 1, fdelem };
+
+		retval = snf::net::poll(fdvec, 1000, &oserr);
+		if (0 == retval) {
+			if (g_except_ptr)
+				std::rethrow_exception(g_except_ptr);
+		} else if (SOCKET_ERROR == retval) {
+			throw std::system_error(
+				oserr,
+				std::system_category(),
+				"failed to poll socket");
+		} else /* if (retval > 0) */ {
+			snf::net::socket nsock = std::move(sock.accept());
+			std::thread wt(
+				worker_thread,
+				std::ref(args),
+				std::ref(ctx),
+				std::move(nsock));
+			wt.detach();
+		}
 	}
 
 	sock.close();
@@ -278,6 +352,7 @@ server(const arguments &args)
 
 int
 main(int argc, const char **argv)
+{
 try {
 	arguments args;
 
@@ -285,26 +360,28 @@ try {
 	if (retval == 0) {
 		snf::net::initialize(args.use_ssl);
 
+		snf::net::ssl::context ctx;
 		if (args.use_ssl)
-			prepare_context(args);
+			prepare_context(args, ctx);
 
 		if (args.cnxn_mode == snf::net::connection_mode::client)
-			retval = client(args);
+			retval = client(args, ctx);
 		else
-			retval = server(args);
+			retval = server(args, ctx);
 	}
 
 	return retval;
-} catch (std::invalid_argument ex) {
+} catch (const std::invalid_argument &ex) {
 	std::cerr << ex.what() << std::endl;
-} catch (snf::net::ssl::ssl_exception ex) {
+} catch (const snf::net::ssl::ssl_exception &ex) {
 	std::cerr << ex.what() << std::endl;
-	std::vector<snf::net::ssl::ssl_error>::const_iterator I;
-	for (I = ex.begin(); I != ex.end(); ++I)
+	for (auto I = ex.begin(); I != ex.end(); ++I)
 		std::cerr << *I << std::endl;
-} catch (std::system_error ex) {
+} catch (const std::system_error &ex) {
 	std::cerr << "Error Code: " << ex.code() << std::endl;
 	std::cerr << "Error: " << ex.what() << std::endl;
-} catch (std::runtime_error ex) {
+} catch (const std::runtime_error &ex) {
 	std::cerr << ex.what() << std::endl;
+} catch (...) {
+}
 }

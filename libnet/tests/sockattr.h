@@ -147,9 +147,9 @@ public:
 			s.blocking(true);
 			std::cout << "socket is blocking now" << std::endl;
 
-		} catch (std::invalid_argument ex) {
+		} catch (const std::invalid_argument &ex) {
 			std::cerr << "invalid argument: " << ex.what() << std::endl;
-		} catch (std::system_error ex) {
+		} catch (const std::system_error &ex) {
 			std::cerr << "system error: " << ex.code() << std::endl;
 			std::cerr << ex.what() << std::endl;
 		}

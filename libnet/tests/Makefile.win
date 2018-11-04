@@ -6,11 +6,11 @@ include ../../Makefile.constants
 
 NETTS_OBJS = $(P)\netts.obj
 HOST_OBJS = $(P)\host.obj
-NET_OBJS = $(P)\net.obj
+ECHO_OBJS = $(P)\echo.obj
 
 INCL = $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLSSL) $(INCLTF)
 
-all: platform $(P)\host.exe $(P)\netts.exe $(P)\net.exe
+all: platform $(P)\host.exe $(P)\netts.exe $(P)\echo.exe
 
 platform:
 	@if not exist $(P) mkdir $(P)
@@ -21,7 +21,7 @@ $(P)\host.exe: $(HOST_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 $(P)\netts.exe: $(NETTS_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
-$(P)\net.exe: $(NET_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+$(P)\echo.exe: $(ECHO_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
 {.}.cpp{$(P)}.obj:
@@ -33,4 +33,4 @@ test:
 install:
 
 clean:
-	@del /q $(HOST_OBJS) $(NETTS_OBJS) $(NET_OBJS) $(P)\*.pdb $(P)\host.* $(P)\netts.* $(P)\net.*
+	@del /q $(HOST_OBJS) $(NETTS_OBJS) $(ECHO_OBJS) $(P)\*.pdb $(P)\host.* $(P)\netts.* $(P)\echo.*

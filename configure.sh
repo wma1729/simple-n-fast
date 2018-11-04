@@ -72,7 +72,7 @@ if [ "$PLAT" = "Linux" ]; then
 		CFLAGS = -c -Wall
 		DEFINES = -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -D_FILE_OFFSET_BITS=64
 		LD = $CC -shared -m64
-		LDFLAGS = -fPIC
+		LDFLAGS =
 		AR = ar
 		ARFLAGS = -r
 		DBG = $DEBUG
