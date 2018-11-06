@@ -337,7 +337,7 @@ server(const arguments &args, snf::net::ssl::context *ctx)
 	sock.listen(20);
 
 	while (!g_terminated) {
-		pollfd fdelem = { sock.handle(), POLLIN, 0 };
+		pollfd fdelem = { sock, POLLIN, 0 };
 		std::vector<pollfd> fdvec { 1, fdelem };
 
 		retval = snf::net::poll(fdvec, 1000, &oserr);

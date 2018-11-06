@@ -318,7 +318,7 @@ connection::enable_sni()
 void
 connection::handshake(const socket &s, int to)
 {
-	sock_t sock = s.handle();
+	sock_t sock = s;
 	int retval = ssl_library::instance().ssl_set_fd()(m_ssl, static_cast<int>(sock));
 	if (retval != 1) {
 		std::ostringstream oss;

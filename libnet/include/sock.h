@@ -47,7 +47,8 @@ public:
 	const socket &operator=(const socket &) = delete;
 	socket &operator=(socket &&);
 
-	sock_t handle() const { return m_sock; }
+	operator sock_t () const { return m_sock; }
+
 	socket_type get_type() const { return m_type; }
 	bool keepalive();
 	void keepalive(bool);

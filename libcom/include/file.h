@@ -113,10 +113,7 @@ public:
 	/**
 	 * Gets the low level file handle.
 	 */
-	fhandle_t handle() const
-	{
-		return fd;
-	}
+	operator fhandle_t () const { return fd; }
 
 	virtual int     open(const open_flags &, mode_t mode = 0600, int *oserr = 0);
 	virtual int     read(void *, int, int *, int *oserr = 0);
