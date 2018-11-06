@@ -664,8 +664,8 @@ socket::listen(int backlog)
 socket
 socket::accept()
 {
-	sockaddr_storage saddr;
-	socklen_t slen;
+	sockaddr_storage saddr = { 0 };
+	socklen_t slen = static_cast<socklen_t>(sizeof(saddr));
 
 	sock_t s = ::accept(
 			m_sock,
