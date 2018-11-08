@@ -252,8 +252,9 @@ connection::check_inaddr(const internet_address &ia)
 	if (param == nullptr)
 		throw ssl_exception("failed to get X509 verify parameters");
 
+	std::string ip = std::move(ia.str(true));
 	int retval = ssl_library::instance().x509_verify_param_set1_ip_asc()
-		(param, ia.str(false).c_str());
+		(param, ip.c_str());
 	if (retval != 1) {
 		std::ostringstream oss;
 		oss << "failed to set " << ia << " to X509 verify parameters";

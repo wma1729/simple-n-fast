@@ -231,6 +231,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 
 	if (args.use_ssl) {
 		cnxn = new snf::net::ssl::connection { snf::net::connection_mode::client, *ctx };
+		cnxn->check_hosts({ args.host });
 		cnxn->handshake(sock);
 
 		std::unique_ptr<snf::net::ssl::x509_certificate> cert
@@ -290,7 +291,8 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 
 	try {
 		if (args.use_ssl) {
-			cnxn = new snf::net::ssl::connection { snf::net::connection_mode::server, ctx };
+			cnxn = new snf::net::ssl::connection
+				{ snf::net::connection_mode::server, ctx };
 			cnxn->handshake(sock);
 
 			std::string errstr;
@@ -374,6 +376,7 @@ try {
 	int retval = parse_arguments(args, argc, argv);
 	if (retval == 0) {
 		std::signal(SIGINT, signal_handler);
+		std::signal(SIGTERM, signal_handler);
 
 		snf::net::initialize(args.use_ssl);
 
