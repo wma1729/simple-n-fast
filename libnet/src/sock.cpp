@@ -600,9 +600,8 @@ socket::connect(int family, const std::string &host, in_port_t port, int to)
 	std::vector<socket_address> sas =
 		std::move(socket_address::get_client(family, m_type, host, port));
 
-	std::vector<socket_address>::const_iterator it = sas.begin();
-	if (it != sas.end())
-		connect_to(*it, to);
+	if (!sas.empty())
+		connect_to(sas[0], to);
 }
 
 void
@@ -624,9 +623,8 @@ socket::bind(int family, in_port_t port)
 	std::vector<socket_address> sas =
 		std::move(socket_address::get_server(family, socket_type::tcp, port));
 
-	std::vector<socket_address>::const_iterator it = sas.begin();
-	if (it != sas.end())
-		bind_to(*it);
+	if (!sas.empty())
+		bind_to(sas[0]);
 }
 
 void

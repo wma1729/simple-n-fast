@@ -75,12 +75,10 @@ ifndef EXT
 	$(error variable EXT, for extension to use, is not set)
 endif
 	openssl ca -batch -config intermediate-ca.conf -passin pass:$(INTERMEDIATE_KEY_PASSWD) -notext -days 375 -extensions $(EXT) -in $(CSR) -out intermediate/newcerts/$(CN).cert.pem
-	mkdir $(CN)
+	mkdir -p $(CN)
 	cp intermediate/newcerts/$(CN).cert.pem $(CN)
 	cp intermediate/certs/chain.cert.pem $(CN)
-	tar cvf $(CN).tar $(CN)
-	rm -rf $(CN)
-	echo "Extract $(CN).tar to fetch certificate and CA certificate chain."
+	echo "Directory $(CN) has the certificate and the corresponding CA certificate chain."
 
 revoke:
 ifndef CERT

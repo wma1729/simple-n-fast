@@ -94,17 +94,15 @@ hosteq(const std::string &h1, const std::string &h2)
 	const std::vector<std::string> &names1 = host1.get_names();
 	const std::vector<std::string> &names2 = host2.get_names();
 
-	std::vector<std::string>::const_iterator I;
-	for (I = names1.begin(); I != names1.end(); ++I)
-		if (std::find(names2.begin(), names2.end(), *I) != names2.end())
+	for (auto &name : names1)
+		if (std::find(names2.begin(), names2.end(), name) != names2.end())
 			return true;
 
 	const std::vector<internet_address> &ias1 = host1.get_internet_addresses();
 	const std::vector<internet_address> &ias2 = host2.get_internet_addresses();
 
-	std::vector<internet_address>::const_iterator J;
-	for (J = ias1.begin(); J != ias1.end(); ++J)
-		if (std::find(ias2.begin(), ias2.end(), *J) != ias2.end())
+	for (auto &ia : ias1)
+		if (std::find(ias2.begin(), ias2.end(), ia) != ias2.end())
 			return true;
 
 	return false;

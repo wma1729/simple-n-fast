@@ -462,22 +462,15 @@ bool
 x509_certificate::matches(const std::string &servername)
 {
 	const std::string &name = common_name();
-	if (!name.empty()) {
+
+	if (!name.empty())
 		if (equal(servername, name))
 			return true;
-	}
 
-	const std::vector<alternate_name> &altnames = alternate_names();
-	std::vector<alternate_name>::const_iterator it;
-	for (it = altnames.begin(); it != altnames.end(); ++it) {
-		if (it->type == "DNS") {
-			if (equal(servername, it->name))
-				return true;
-		} else if (it->type == "IP") {
-			if (snf::streq(servername, it->name, true))
+	for (auto &altname : alternate_names())
+		if ((altname.type == "DNS") || (altname.type == "IP"))
+			if (equal(servername, altname.name))
 				return true; 
-		}
-	}
 
 	return false;
 }

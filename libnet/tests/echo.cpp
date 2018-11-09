@@ -16,11 +16,14 @@ struct arguments
 	snf::net::ssl::data_fmt kf_fmt;
 	std::string kf_password;
 	std::string certfile;
+	std::string altcertfile;
 	snf::net::ssl::data_fmt cf_fmt;
 	std::string cafile;
 	std::string crlfile;
+	std::string snihost;
 	bool verify_peer;
 	bool require_cert;
+	bool check_hosts;
 	int depth;
 
 	arguments()
@@ -30,6 +33,7 @@ struct arguments
 		, use_ssl(false)
 		, verify_peer(false)
 		, require_cert(false)
+		, check_hosts(false)
 		, depth(2)
 	{
 		kf_fmt = snf::net::ssl::data_fmt::pem;
@@ -52,9 +56,11 @@ usage(const std::string &prog)
 {
 	std::cerr << prog << " (connect|bind) [-host <host>] [-port <port>] -ssl" << std::endl;
 	std::cerr << "    -key <key-file> -keypass <key-password> -keyfmt <der|pem>" << std::endl;
-	std::cerr << "    -cert <certificate-chain> -certfmt <der|pem>" << std::endl;
+	std::cerr << "    -cert <certificate> -certfmt <der|pem>" << std::endl;
+	std::cerr << "    -altcert <secondary-certificate-for-SNI>" << std::endl;
 	std::cerr << "    -ca <ca-bundle-file> -crl <crl-file>" << std::endl;
 	std::cerr << "    -verify -reqcert -depth <certificate-chain-depth>" << std::endl;
+	std::cerr << "    -chkhost -sni <sni-host>" << std::endl;
 	return 1;
 }
 
@@ -125,6 +131,13 @@ parse_arguments(arguments &args, int argc, const char **argv)
 				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
 				return usage(argv[0]);
 			}
+		} else if (snf::streq("-altcert", argv[i])) {
+			if (argv[i + 1]) {
+				args.altcertfile = argv[++i];
+			} else {
+				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
+				return usage(argv[0]);
+			}
 		} else if (snf::streq("-ca", argv[i])) {
 			if (argv[i + 1]) {
 				args.cafile = argv[++i];
@@ -143,9 +156,18 @@ parse_arguments(arguments &args, int argc, const char **argv)
 			args.verify_peer = true;
 		} else if (snf::streq("-reqcert", argv[i])) {
 			args.require_cert = true;
+		} else if (snf::streq("-chkhost", argv[i])) {
+			args.check_hosts = true;
 		} else if (snf::streq("-depth", argv[i])) {
 			if (argv[i + 1]) {
 				args.depth = atoi(argv[++i]);
+			} else {
+				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
+				return usage(argv[0]);
+			}
+		} else if (snf::streq("-sni", argv[i])) {
+			if (argv[i + 1]) {
+				args.snihost = argv[++i];
 			} else {
 				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
 				return usage(argv[0]);
@@ -183,7 +205,7 @@ parse_arguments(arguments &args, int argc, const char **argv)
 }
 
 static void
-prepare_context(const arguments &args, snf::net::ssl::context *ctx)
+prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *ctx)
 {
 	if (!args.keyfile.empty()) {
 		const char *passwd = args.kf_password.empty() ? nullptr : args.kf_password.c_str();
@@ -191,9 +213,16 @@ prepare_context(const arguments &args, snf::net::ssl::context *ctx)
 		ctx->use_private_key(key);
 	}
 
-	if (!args.certfile.empty()) {
-		snf::net::ssl::x509_certificate cert { args.cf_fmt, args.certfile };
-		ctx->use_certificate(cert);
+	if (usealtcert) {
+		if (!args.altcertfile.empty()) {
+			snf::net::ssl::x509_certificate cert { args.cf_fmt, args.altcertfile };
+			ctx->use_certificate(cert);
+		}
+	} else {
+		if (!args.certfile.empty()) {
+			snf::net::ssl::x509_certificate cert { args.cf_fmt, args.certfile };
+			ctx->use_certificate(cert);
+		}
 	}
 
 	if (!args.keyfile.empty() && !args.certfile.empty())
@@ -231,7 +260,10 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 
 	if (args.use_ssl) {
 		cnxn = new snf::net::ssl::connection { snf::net::connection_mode::client, *ctx };
-		cnxn->check_hosts({ args.host });
+		if (args.check_hosts)
+			cnxn->check_hosts({ args.host });
+		if (!args.snihost.empty())
+			cnxn->set_sni(args.snihost);
 		cnxn->handshake(sock);
 
 		std::unique_ptr<snf::net::ssl::x509_certificate> cert
@@ -293,6 +325,14 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 		if (args.use_ssl) {
 			cnxn = new snf::net::ssl::connection
 				{ snf::net::connection_mode::server, ctx };
+
+			if (!args.altcertfile.empty()) {
+				snf::net::ssl::context ctx2;
+				prepare_context(args, true, &ctx2);
+				cnxn->add_context(ctx2);
+				cnxn->enable_sni();
+			}
+
 			cnxn->handshake(sock);
 
 			std::string errstr;
@@ -383,7 +423,7 @@ try {
 		snf::net::ssl::context *ctx = nullptr;
 		if (args.use_ssl) {
 			ctx = new snf::net::ssl::context {};
-			prepare_context(args, ctx);
+			prepare_context(args, false, ctx);
 		}
 
 		if (args.cnxn_mode == snf::net::connection_mode::client)
