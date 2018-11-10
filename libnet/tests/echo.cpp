@@ -43,12 +43,12 @@ struct arguments
 };
 
 static std::exception_ptr g_except_ptr = nullptr;
-static bool g_terminated = false;
+volatile std::sig_atomic_t g_terminated = 0;
 
-static void
+void
 signal_handler(int signo)
 {
-	g_terminated = true;
+	g_terminated = 1;
 }
 
 static int
@@ -281,10 +281,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 	}
 
 	std::string buf1, buf2;
-	while (std::getline(std::cin, buf1)) {
-		if (g_terminated)
-			break;
-
+	while (!g_terminated && std::getline(std::cin, buf1)) {
 		retval = io.write_string(buf1);
 		if (E_ok == retval) {
 			retval = io.read_string(buf2);

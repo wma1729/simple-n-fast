@@ -23,6 +23,51 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+void
+connection::switch_context(const std::string &servername)
+{
+	std::lock_guard<std::mutex> guard(m_lock);
+
+	std::vector<ctxinfo>::iterator it;
+	for (it = m_contexts.begin(); it != m_contexts.end(); ++it) {
+		x509_certificate cert = std::move(it->ctx.get_certificate());
+		if (cert.matches(servername)) {
+			if (it->cur) {
+				// already current
+				return;
+			} else {
+				// make this current
+				break;
+			}
+		}
+	}
+
+	if (it == m_contexts.end()) {
+		std::ostringstream oss;
+		oss << "SSL context for server name " << servername << " not found";
+		throw ssl_exception(oss.str());
+	} else {
+		std::for_each(m_contexts.begin(), m_contexts.end(),
+			[](ctxinfo &ci) { ci.cur = false; });
+		ssl_library::instance().ssl_set_ssl_ctx()(m_ssl, it->ctx);
+		it->cur = true;
+	}
+}
+
+std::string
+connection::get_sni()
+{
+	if (connection_mode::client == m_mode)
+		throw ssl_exception("getting server name for SNI only possible in server mode");
+
+	const char *name = ssl_library::instance().ssl_get_servername()
+				(m_ssl, TLSEXT_NAMETYPE_host_name);
+	if ((name == nullptr) || (*name == '\0'))
+		throw ssl_exception("failed to get SNI from SSL");
+
+	return std::string(name);
+}
+
 int
 connection::handle_ssl_error(sock_t sock, int to, int error, const std::string &errstr, int *oserr)
 {
@@ -175,37 +220,6 @@ connection::add_context(context &ctx)
 }
 
 void
-connection::switch_context(const std::string &servername)
-{
-	std::lock_guard<std::mutex> guard(m_lock);
-
-	std::vector<ctxinfo>::iterator it;
-	for (it = m_contexts.begin(); it != m_contexts.end(); ++it) {
-		x509_certificate cert = std::move(it->ctx.get_certificate());
-		if (cert.matches(servername)) {
-			if (it->cur) {
-				// already current
-				return;
-			} else {
-				// make this current
-				break;
-			}
-		}
-	}
-
-	if (it == m_contexts.end()) {
-		std::ostringstream oss;
-		oss << "SSL context for server name " << servername << " not found";
-		throw ssl_exception(oss.str());
-	} else {
-		std::for_each(m_contexts.begin(), m_contexts.end(),
-			[](ctxinfo &ci) { ci.cur = false; });
-		ssl_library::instance().ssl_set_ssl_ctx()(m_ssl, it->ctx);
-		it->cur = true;
-	}
-}
-
-void
 connection::check_hosts(const std::vector<std::string> &hostnames)
 {
 	int retval;
@@ -278,21 +292,6 @@ connection::set_sni(const std::string &servername)
 		oss << "failed to set SNI for " << servername << " in SSL";
 		throw ssl_exception(oss.str());
 	}
-}
-
-std::string
-connection::get_sni()
-{
-	if (connection_mode::client == m_mode)
-		throw ssl_exception("getting server name for SNI only possible in server mode");
-
-	const char *name = ssl_library::instance().ssl_get_servername()
-				(m_ssl, TLSEXT_NAMETYPE_host_name);
-	if ((name == nullptr) || (*name == '\0'))
-		throw ssl_exception("failed to get SNI from SSL");
-
-	std::string servername(name);
-	return servername;
 }
 
 void

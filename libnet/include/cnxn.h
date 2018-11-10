@@ -11,6 +11,8 @@
 #include <vector>
 #include <mutex>
 
+extern "C" int sni_cb(SSL *, int *, void *);
+
 namespace snf {
 namespace net {
 namespace ssl {
@@ -29,6 +31,8 @@ private:
 	std::mutex              m_lock;
 	SSL                     *m_ssl = nullptr;
 
+	void switch_context(const std::string &);
+	std::string get_sni();
 	int handle_ssl_error(sock_t, int, int, const std::string &, int *oserr = 0);
 	void ssl_connect(int);
 	void ssl_accept(int);
@@ -45,11 +49,9 @@ public:
 	bool is_client() const { return (connection_mode::client == m_mode); }
 	bool is_server() const { return (connection_mode::server == m_mode); }
 	void add_context(context &);
-	void switch_context(const std::string &);
 	void check_hosts(const std::vector<std::string> &);
 	void check_inaddr(const internet_address &);
 	void set_sni(const std::string &);
-	std::string get_sni();
 	void enable_sni();
 	void handshake(const socket &, int to = POLL_WAIT_FOREVER);
 	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
@@ -59,6 +61,8 @@ public:
 	void renegotiate(int to = POLL_WAIT_FOREVER);
 	x509_certificate *get_peer_certificate();
 	bool is_verification_successful(std::string &);
+
+	friend int ::sni_cb(SSL *, int *, void *);
 };
 
 } // namespace ssl
