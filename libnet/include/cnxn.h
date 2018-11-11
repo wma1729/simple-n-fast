@@ -58,7 +58,6 @@ public:
 	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	void shutdown();
 	void reset();
-	void renegotiate(int to = POLL_WAIT_FOREVER);
 	x509_certificate *get_peer_certificate();
 	bool is_verification_successful(std::string &);
 

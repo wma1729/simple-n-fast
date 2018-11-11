@@ -41,20 +41,20 @@ dll::dll(const std::string &path, bool lazy)
 }
 
 void *
-dll::symbol(const char *symbol)
+dll::symbol(const char *symbol, bool fatal)
 {
 	void *addr = nullptr;
 
 #if defined(_WIN32)
 	addr = GetProcAddress(m_handle, symbol);
-	if (addr == 0) {
+	if ((addr == 0) && fatal) {
 		std::ostringstream oss;
 		oss << "failed to find symbol " << symbol << " in dll " << m_path;
 		throw std::system_error(GetLastError(), std::system_category(), oss.str());
 	}
 #else
 	addr = dlsym(m_handle, symbol);
-	if (addr == 0) {
+	if ((addr == 0) && fatal) {
 		std::ostringstream oss;
 		oss << "failed to find symbol " << symbol << " in shared library " << m_path
 			<< ": " << dlerror();

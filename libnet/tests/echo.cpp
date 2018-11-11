@@ -255,7 +255,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 
 	sock.connect(AF_INET, args.host, args.port);
 
-	snf::net::nio &io = sock;
+	snf::net::nio *io = nullptr;
 	snf::net::ssl::connection *cnxn = nullptr;
 
 	if (args.use_ssl) {
@@ -277,14 +277,16 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 		else
 			std::cerr << "Handshake failure: " << errstr << std::endl;
 		
-		io = *cnxn;
+		io = cnxn;
+	} else {
+		io = &sock;
 	}
 
 	std::string buf1, buf2;
 	while (!g_terminated && std::getline(std::cin, buf1)) {
-		retval = io.write_string(buf1);
+		retval = io->write_string(buf1);
 		if (E_ok == retval) {
-			retval = io.read_string(buf2);
+			retval = io->read_string(buf2);
 			if (E_ok == retval) {
 				std::cout << buf2 << std::endl;
 			}
@@ -315,7 +317,7 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 	std::string buf;
 
 	snf::net::socket sock = std::move(s);
-	snf::net::nio &io = sock;
+	snf::net::nio *io = nullptr;
 	snf::net::ssl::connection *cnxn = nullptr;
 
 	try {
@@ -338,16 +340,21 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 			else
 				std::cerr << "Handshake failure: " << errstr << std::endl;
 
-			io = *cnxn;
+			io = cnxn;
+		} else {
+			io = &sock;
 		}
 
 		do {
 			if (g_terminated)
 				break;
 
-			retval = io.read_string(buf);
-			if (E_ok == retval)
-				retval = io.write_string(buf);
+			retval = io->read_string(buf);
+			if (E_ok == retval) {
+				retval = io->write_string(buf);
+				if (E_ok == retval) {
+				}
+			}
 			buf.clear();
 		} while (E_ok == retval);
 
@@ -376,7 +383,7 @@ server(const arguments &args, snf::net::ssl::context *ctx)
 	sock.listen(20);
 
 	while (!g_terminated) {
-		pollfd fdelem = { sock, POLLIN, 0 };
+		pollfd fdelem = { sock, POLLIN | POLLOUT, 0 };
 		std::vector<pollfd> fdvec { 1, fdelem };
 
 		retval = snf::net::poll(fdvec, 1000, &oserr);

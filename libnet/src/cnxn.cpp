@@ -382,9 +382,8 @@ connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
 			retval = handle_ssl_error(sock, to, n,
 					"failed to complete the handshake during read",
 					oserr);
-			if ((E_ok != retval) && (E_try_again != retval)) {
+			if (E_try_again != retval)
 				break;
-			}
 		} else {
 			cbuf += n;
 			to_read -= n;
@@ -425,9 +424,8 @@ connection::write(const void *buf, int to_write, int *bwritten, int to, int *ose
 			retval = handle_ssl_error(sock, to, n,
 					"failed to complete the handshake during write",
 					oserr);
-			if ((E_ok != retval) && (E_try_again != retval)) {
+			if (E_try_again != retval)
 				break;
-			}
 		} else {
 			cbuf += n;
 			to_write -= n;
@@ -466,36 +464,6 @@ connection::reset()
 {
 	if (ssl_library::instance().ssl_clear()(m_ssl) != 1)
 		throw ssl_exception("failed to prepare TLS object for new connection");
-}
-
-void
-connection::renegotiate(int to)
-{
-	int retval;
-	int oserr;
-
-	if (ssl_library::instance().ssl_renegotiate()(m_ssl) != 1)
-		throw ssl_exception("failed to schedule TLS renegotiation");
-
-	sock_t sock = ssl_library::instance().ssl_get_fd()(m_ssl);
-	if (sock < 1)
-		throw ssl_exception("failed to get internal socket");
-
-	do {
-		retval = ssl_library::instance().ssl_do_handshake()(m_ssl);
-		if (retval <= 0) {
-			oserr = 0;
-			retval = handle_ssl_error(sock, to, retval,
-					"failed to complete the handshake during renegotiation",
-					&oserr);
-			if ((E_ok != retval) && (E_try_again != retval)) {
-				throw std::system_error(
-					oserr,
-					std::system_category(),
-					"failed to complete the handshake during renegotiation");
-			}
-		}
-	} while (ssl_library::instance().ssl_renegotiate_pending()(m_ssl) == 1);
 }
 
 x509_certificate *

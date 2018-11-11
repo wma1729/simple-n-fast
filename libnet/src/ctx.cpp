@@ -64,6 +64,11 @@ context::context()
 			SSL_MODE_AUTO_RETRY;
 	ssl_library::instance().ssl_ctx_ctrl()
 		(m_ctx, SSL_CTRL_MODE, mode, nullptr);
+
+	ssl_library::instance().ssl_ctx_ctrl()
+		(m_ctx, SSL_CTRL_SET_SESS_CACHE_MODE, SSL_SESS_CACHE_OFF, nullptr);
+
+	set_options(SSL_OP_NO_TICKET);
 }
 
 context::context(const context &ctx)
@@ -122,24 +127,6 @@ void
 context::prefer_client_cipher()
 {
 	clr_options(SSL_OP_CIPHER_SERVER_PREFERENCE);
-}
-
-void
-context::new_session_for_renegotiation(bool v)
-{
-	if (v)
-		set_options(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
-	else
-		clr_options(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
-}
-
-void
-context::tickets_for_session_resumption(bool v)
-{
-	if (v)
-		clr_options(SSL_OP_NO_TICKET);
-	else
-		set_options(SSL_OP_NO_TICKET);
 }
 
 void
