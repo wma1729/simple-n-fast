@@ -7,6 +7,7 @@
 #include "ctx.h"
 #include "nio.h"
 #include "crt.h"
+#include "session.h"
 #include <string>
 #include <vector>
 #include <mutex>
@@ -53,7 +54,11 @@ public:
 	void check_inaddr(const internet_address &);
 	void set_sni(const std::string &);
 	void enable_sni();
+	void set_session_context(const std::string &);
 	void handshake(const socket &, int to = POLL_WAIT_FOREVER);
+	session get_session();
+	void set_session(session &);
+	bool is_session_reused();
 	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	void shutdown();

@@ -65,9 +65,6 @@ context::context()
 	ssl_library::instance().ssl_ctx_ctrl()
 		(m_ctx, SSL_CTRL_MODE, mode, nullptr);
 
-	ssl_library::instance().ssl_ctx_ctrl()
-		(m_ctx, SSL_CTRL_SET_SESS_CACHE_MODE, SSL_SESS_CACHE_OFF, nullptr);
-
 	set_options(SSL_OP_NO_TICKET);
 }
 

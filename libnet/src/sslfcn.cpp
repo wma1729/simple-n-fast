@@ -755,7 +755,7 @@ ssl_library::ssl_ctx_get_options()
 {
 	if (!m_ssl_ctx_get_options)
 		m_ssl_ctx_get_options = reinterpret_cast<p_ssl_ctx_get_options>
-			(m_ssl->symbol("SSL_CTX_get_options"));
+			(m_ssl->symbol("SSL_CTX_get_options", false));
 	return m_ssl_ctx_get_options;
 }
 
@@ -764,7 +764,7 @@ ssl_library::ssl_ctx_clr_options()
 {
 	if (!m_ssl_ctx_clr_options)
 		m_ssl_ctx_clr_options = reinterpret_cast<p_ssl_ctx_clr_options>
-			(m_ssl->symbol("SSL_CTX_clear_options"));
+			(m_ssl->symbol("SSL_CTX_clear_options", false));
 	return m_ssl_ctx_clr_options;
 }
 
@@ -773,7 +773,7 @@ ssl_library::ssl_ctx_set_options()
 {
 	if (!m_ssl_ctx_set_options)
 		m_ssl_ctx_set_options = reinterpret_cast<p_ssl_ctx_set_options>
-			(m_ssl->symbol("SSL_CTX_set_options"));
+			(m_ssl->symbol("SSL_CTX_set_options", false));
 	return m_ssl_ctx_set_options;
 }
 
@@ -1065,6 +1065,42 @@ ssl_library::ssl_get_verify_result()
 	return m_ssl_get_verify_result;
 }
 
+p_ssl_set_session_id_ctx
+ssl_library::ssl_set_session_id_ctx()
+{
+	if (!m_ssl_set_session_id_ctx)
+		m_ssl_set_session_id_ctx = reinterpret_cast<p_ssl_set_session_id_ctx>
+			(m_ssl->symbol("SSL_set_session_id_context"));
+	return m_ssl_set_session_id_ctx;
+}
+
+p_ssl_get_session
+ssl_library::ssl_get_session()
+{
+	if (!m_ssl_get_session)
+		m_ssl_get_session = reinterpret_cast<p_ssl_get_session>
+			(m_ssl->symbol("SSL_get_session"));
+	return m_ssl_get_session;
+}
+
+p_ssl_set_session
+ssl_library::ssl_set_session()
+{
+	if (!m_ssl_set_session)
+		m_ssl_set_session = reinterpret_cast<p_ssl_set_session>
+			(m_ssl->symbol("SSL_set_session"));
+	return m_ssl_set_session;
+}
+
+p_ssl_session_reused
+ssl_library::ssl_session_reused()
+{
+	if (!m_ssl_session_reused)
+		m_ssl_session_reused = reinterpret_cast<p_ssl_session_reused>
+			(m_ssl->symbol("SSL_session_reused"));
+	return m_ssl_session_reused;
+}
+
 p_ssl_get0_param
 ssl_library::ssl_get0_param()
 {
@@ -1072,6 +1108,69 @@ ssl_library::ssl_get0_param()
 		m_ssl_get0_param = reinterpret_cast<p_ssl_get0_param>
 			(m_ssl->symbol("SSL_get0_param"));
 	return m_ssl_get0_param;
+}
+
+p_ssl_session_d2i
+ssl_library::ssl_session_d2i()
+{
+	if (!m_ssl_session_d2i)
+		m_ssl_session_d2i = reinterpret_cast<p_ssl_session_d2i>
+			(m_ssl->symbol("d2i_SSL_SESSION"));
+	return m_ssl_session_d2i;
+}
+
+p_ssl_session_i2d
+ssl_library::ssl_session_i2d()
+{
+	if (!m_ssl_session_i2d)
+		m_ssl_session_i2d = reinterpret_cast<p_ssl_session_i2d>
+			(m_ssl->symbol("i2d_SSL_SESSION"));
+	return m_ssl_session_i2d;
+}
+
+p_ssl_session_up_ref
+ssl_library::ssl_session_up_ref()
+{
+	if (!m_ssl_session_up_ref)
+		m_ssl_session_up_ref = reinterpret_cast<p_ssl_session_up_ref>
+			(m_ssl->symbol("SSL_SESSION_up_ref"));
+	return m_ssl_session_up_ref;
+}
+
+p_ssl_session_free
+ssl_library::ssl_session_free()
+{
+	if (!m_ssl_session_free)
+		m_ssl_session_free = reinterpret_cast<p_ssl_session_free>
+			(m_ssl->symbol("SSL_SESSION_free"));
+	return m_ssl_session_free;
+}
+
+p_ssl_session_get_id
+ssl_library::ssl_session_get_id()
+{
+	if (!m_ssl_session_get_id)
+		m_ssl_session_get_id = reinterpret_cast<p_ssl_session_get_id>
+			(m_ssl->symbol("SSL_SESSION_get_id"));
+	return m_ssl_session_get_id;
+}
+
+p_ssl_session_get_id_ctx
+ssl_library::ssl_session_get_id_ctx()
+{
+	if (!m_ssl_session_get_id_ctx)
+		m_ssl_session_get_id_ctx = reinterpret_cast<p_ssl_session_get_id_ctx>
+			(m_ssl->symbol("SSL_SESSION_get0_id_context"));
+	return m_ssl_session_get_id_ctx;
+}
+
+p_ssl_session_get_protocol
+ssl_library::ssl_session_get_protocol()
+{
+	if (!m_ssl_session_get_protocol)
+		m_ssl_session_get_protocol = reinterpret_cast<p_ssl_session_get_protocol>
+			(m_ssl->symbol("SSL_SESSION_get_protocol_version"));
+	return m_ssl_session_get_protocol;
 }
 
 p_x509_verify_param_set_hostflags

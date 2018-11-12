@@ -316,6 +316,22 @@ connection::enable_sni()
 }
 
 void
+connection::set_session_context(const std::string &ctx)
+{
+	if (connection_mode::client == m_mode)
+		throw ssl_exception("session ID context can only be set in server mode");
+
+	if (ctx.size() > SSL_MAX_SSL_SESSION_ID_LENGTH)
+		throw ssl_exception("session ID context is too large");
+
+	unsigned int ctxlen = static_cast<unsigned int>(ctx.size());
+	const unsigned char *pctx = reinterpret_cast<const unsigned char *>(ctx.c_str());
+
+	if (ssl_library::instance().ssl_set_session_id_ctx()(m_ssl, pctx, ctxlen) != 1)
+		throw ssl_exception("failed to set session ID context");
+}
+
+void
 connection::handshake(const socket &s, int to)
 {
 	sock_t sock = s;
@@ -352,6 +368,28 @@ connection::handshake(const socket &s, int to)
 				oss.str());
 		}
 	} while (retval != E_ok);
+}
+
+session
+connection::get_session()
+{
+	SSL_SESSION *sess = ssl_library::instance().ssl_get_session()(m_ssl);
+	if (sess == nullptr)
+		throw ssl_exception("no SSL session avaliable");
+	return session { sess };
+}
+
+void
+connection::set_session(session &sess)
+{
+	if (ssl_library::instance().ssl_set_session()(m_ssl, sess) != 1)
+		throw ssl_exception("failed to set SSL session");
+}
+
+bool
+connection::is_session_reused()
+{
+	return (ssl_library::instance().ssl_session_reused()(m_ssl) == 1);
 }
 
 int

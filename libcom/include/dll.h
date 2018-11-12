@@ -32,7 +32,7 @@ public:
 	dll(const std::string &, bool lazy = false);
 	~dll();
 	
-	void *symbol(const char *, bool fatal = false);
+	void *symbol(const char *, bool fatal = true);
 };
 
 } // snf

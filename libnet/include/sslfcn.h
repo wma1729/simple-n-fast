@@ -141,8 +141,20 @@ using p_ssl_renegotiate_pending = int (*)(SSL *);
 using p_ssl_do_handshake = int (*)(SSL *);
 using p_ssl_get_peer_cert = X509 * (*)(const SSL *);
 using p_ssl_get_verify_result = long (*)(const SSL *);
-
+using p_ssl_set_session_id_ctx = int (*)(SSL *, const unsigned char *, unsigned int);
+using p_ssl_get_session = SSL_SESSION * (*)(const SSL *);
+using p_ssl_set_session = int (*)(SSL *, SSL_SESSION *);
+using p_ssl_session_reused = int (*)(SSL *);
 using p_ssl_get0_param = X509_VERIFY_PARAM * (*)(SSL *);
+
+using p_ssl_session_d2i = SSL_SESSION * (*)(SSL_SESSION **, const unsigned char **, long);
+using p_ssl_session_i2d = int (*)(SSL_SESSION *, unsigned char **);
+using p_ssl_session_up_ref = int (*)(SSL_SESSION *);
+using p_ssl_session_free = void (*)(SSL_SESSION *);
+using p_ssl_session_get_id = const unsigned char * (*)(const SSL_SESSION *, unsigned int *);
+using p_ssl_session_get_id_ctx = const unsigned char * (*)(const SSL_SESSION *, unsigned int *);
+using p_ssl_session_get_protocol = int (*)(const SSL_SESSION *);
+
 using p_x509_verify_param_set_hostflags = void (*)(X509_VERIFY_PARAM *, unsigned int);
 using p_x509_verify_param_set1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
 using p_x509_verify_param_add1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
@@ -331,8 +343,20 @@ private:
 	p_ssl_do_handshake          m_ssl_do_handshake = nullptr;
 	p_ssl_get_peer_cert         m_ssl_get_peer_cert = nullptr;
 	p_ssl_get_verify_result     m_ssl_get_verify_result = nullptr;
+	p_ssl_set_session_id_ctx    m_ssl_set_session_id_ctx = nullptr;        
+	p_ssl_get_session           m_ssl_get_session = nullptr;
+	p_ssl_set_session           m_ssl_set_session = nullptr;
+	p_ssl_session_reused        m_ssl_session_reused = nullptr;
+	p_ssl_get0_param            m_ssl_get0_param = nullptr;
 
-	p_ssl_get0_param                    m_ssl_get0_param = nullptr;
+	p_ssl_session_d2i           m_ssl_session_d2i = nullptr;
+	p_ssl_session_i2d           m_ssl_session_i2d = nullptr;
+	p_ssl_session_up_ref        m_ssl_session_up_ref = nullptr;
+	p_ssl_session_free          m_ssl_session_free = nullptr;
+	p_ssl_session_get_id        m_ssl_session_get_id = nullptr;
+	p_ssl_session_get_id_ctx    m_ssl_session_get_id_ctx = nullptr;
+	p_ssl_session_get_protocol  m_ssl_session_get_protocol = nullptr;
+
 	p_x509_verify_param_set_hostflags   m_x509_verify_param_set_hostflags = nullptr;
 	p_x509_verify_param_set1_host       m_x509_verify_param_set1_host = nullptr;
 	p_x509_verify_param_add1_host       m_x509_verify_param_add1_host = nullptr;
@@ -476,8 +500,20 @@ public:
 	p_ssl_do_handshake ssl_do_handshake();
 	p_ssl_get_peer_cert ssl_get_peer_cert();
 	p_ssl_get_verify_result ssl_get_verify_result();
-
+	p_ssl_set_session_id_ctx ssl_set_session_id_ctx();
+	p_ssl_get_session ssl_get_session();
+	p_ssl_set_session ssl_set_session();
+	p_ssl_session_reused ssl_session_reused();
 	p_ssl_get0_param ssl_get0_param();
+
+	p_ssl_session_d2i ssl_session_d2i();
+	p_ssl_session_i2d ssl_session_i2d();
+	p_ssl_session_up_ref ssl_session_up_ref();
+	p_ssl_session_free ssl_session_free();
+	p_ssl_session_get_id ssl_session_get_id();
+	p_ssl_session_get_id_ctx ssl_session_get_id_ctx();
+	p_ssl_session_get_protocol ssl_session_get_protocol();
+
 	p_x509_verify_param_set_hostflags x509_verify_param_set_hostflags();
 	p_x509_verify_param_set1_host x509_verify_param_set1_host();
 	p_x509_verify_param_add1_host x509_verify_param_add1_host();
