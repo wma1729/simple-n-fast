@@ -858,6 +858,15 @@ ssl_library::ssl_ctx_get0_cert()
 	return m_ssl_ctx_get0_cert;
 }
 
+p_ssl_ctx_set_sid_ctx
+ssl_library::ssl_ctx_set_sid_ctx()
+{
+	if (!m_ssl_ctx_set_sid_ctx)
+		m_ssl_ctx_set_sid_ctx = reinterpret_cast<p_ssl_ctx_set_sid_ctx>
+			(m_ssl->symbol("SSL_CTX_set_session_id_context"));
+	return m_ssl_ctx_set_sid_ctx;
+}
+
 p_ssl_new
 ssl_library::ssl_new()
 {
@@ -1029,6 +1038,15 @@ ssl_library::ssl_renegotiate()
 	return m_ssl_renegotiate;
 }
 
+p_ssl_renegotiate
+ssl_library::ssl_renegotiate_abbr()
+{
+	if (!m_ssl_renegotiate_abbr)
+		m_ssl_renegotiate_abbr = reinterpret_cast<p_ssl_renegotiate_abbr>
+			(m_ssl->symbol("SSL_renegotiate_abbreviated"));
+	return m_ssl_renegotiate_abbr;
+}
+
 p_ssl_renegotiate_pending
 ssl_library::ssl_renegotiate_pending()
 {
@@ -1063,15 +1081,6 @@ ssl_library::ssl_get_verify_result()
 		m_ssl_get_verify_result = reinterpret_cast<p_ssl_get_verify_result>
 			(m_ssl->symbol("SSL_get_verify_result"));
 	return m_ssl_get_verify_result;
-}
-
-p_ssl_set_session_id_ctx
-ssl_library::ssl_set_session_id_ctx()
-{
-	if (!m_ssl_set_session_id_ctx)
-		m_ssl_set_session_id_ctx = reinterpret_cast<p_ssl_set_session_id_ctx>
-			(m_ssl->symbol("SSL_set_session_id_context"));
-	return m_ssl_set_session_id_ctx;
 }
 
 p_ssl_get_session

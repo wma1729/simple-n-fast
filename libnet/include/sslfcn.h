@@ -117,6 +117,7 @@ using p_ssl_ctx_set_verify = void (*)(SSL_CTX *, int, p_ssl_ctx_verify_cb);
 using p_ssl_ctx_set_verify_depth = void (*)(SSL_CTX *, int);
 using p_ssl_ctx_get_cert_store = X509_STORE * (*)(const SSL_CTX *);
 using p_ssl_ctx_get0_cert = X509 * (*)(const SSL_CTX *);
+using p_ssl_ctx_set_sid_ctx = int (*)(SSL_CTX *, const unsigned char *, unsigned int);
 
 using p_ssl_new = SSL * (*)(SSL_CTX *);
 using p_ssl_dup = SSL * (*)(SSL *);
@@ -137,11 +138,11 @@ using p_ssl_shutdown = int (*)(SSL *);
 using p_ssl_get_shutdown = int (*)(SSL *);
 using p_ssl_get_error = int (*)(const SSL *, int);
 using p_ssl_renegotiate = int (*)(SSL *);
+using p_ssl_renegotiate_abbr = int (*)(SSL *);
 using p_ssl_renegotiate_pending = int (*)(SSL *);
 using p_ssl_do_handshake = int (*)(SSL *);
 using p_ssl_get_peer_cert = X509 * (*)(const SSL *);
 using p_ssl_get_verify_result = long (*)(const SSL *);
-using p_ssl_set_session_id_ctx = int (*)(SSL *, const unsigned char *, unsigned int);
 using p_ssl_get_session = SSL_SESSION * (*)(const SSL *);
 using p_ssl_set_session = int (*)(SSL *, SSL_SESSION *);
 using p_ssl_session_reused = int (*)(SSL *);
@@ -319,6 +320,7 @@ private:
 	p_ssl_ctx_set_verify_depth  m_ssl_ctx_set_verify_depth = nullptr;
 	p_ssl_ctx_get_cert_store    m_ssl_ctx_get_cert_store = nullptr;
 	p_ssl_ctx_get0_cert         m_ssl_ctx_get0_cert = nullptr;
+	p_ssl_ctx_set_sid_ctx       m_ssl_ctx_set_sid_ctx = nullptr;        
 
 	p_ssl_new                   m_ssl_new = nullptr;
 	p_ssl_dup                   m_ssl_dup = nullptr;
@@ -339,11 +341,11 @@ private:
 	p_ssl_get_shutdown          m_ssl_get_shutdown = nullptr;
 	p_ssl_get_error             m_ssl_get_error = nullptr;
 	p_ssl_renegotiate           m_ssl_renegotiate = nullptr;
+	p_ssl_renegotiate_abbr      m_ssl_renegotiate_abbr = nullptr;
 	p_ssl_renegotiate_pending   m_ssl_renegotiate_pending = nullptr;
 	p_ssl_do_handshake          m_ssl_do_handshake = nullptr;
 	p_ssl_get_peer_cert         m_ssl_get_peer_cert = nullptr;
 	p_ssl_get_verify_result     m_ssl_get_verify_result = nullptr;
-	p_ssl_set_session_id_ctx    m_ssl_set_session_id_ctx = nullptr;        
 	p_ssl_get_session           m_ssl_get_session = nullptr;
 	p_ssl_set_session           m_ssl_set_session = nullptr;
 	p_ssl_session_reused        m_ssl_session_reused = nullptr;
@@ -476,6 +478,7 @@ public:
 	p_ssl_ctx_set_verify_depth ssl_ctx_set_verify_depth();
 	p_ssl_ctx_get_cert_store ssl_ctx_get_cert_store();
 	p_ssl_ctx_get0_cert ssl_ctx_get0_cert();
+	p_ssl_ctx_set_sid_ctx ssl_ctx_set_sid_ctx();
 
 	p_ssl_new ssl_new();
 	p_ssl_dup ssl_dup();
@@ -496,11 +499,11 @@ public:
 	p_ssl_get_shutdown ssl_get_shutdown();
 	p_ssl_get_error ssl_get_error();
 	p_ssl_renegotiate ssl_renegotiate();
+	p_ssl_renegotiate_abbr ssl_renegotiate_abbr();
 	p_ssl_renegotiate_pending ssl_renegotiate_pending();
 	p_ssl_do_handshake ssl_do_handshake();
 	p_ssl_get_peer_cert ssl_get_peer_cert();
 	p_ssl_get_verify_result ssl_get_verify_result();
-	p_ssl_set_session_id_ctx ssl_set_session_id_ctx();
 	p_ssl_get_session ssl_get_session();
 	p_ssl_set_session ssl_set_session();
 	p_ssl_session_reused ssl_session_reused();

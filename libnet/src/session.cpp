@@ -116,8 +116,6 @@ session::get_context()
 {
 	unsigned int plen = 0;
 	const uint8_t *ptr = ssl_library::instance().ssl_session_get_id_ctx()(m_session, &plen);
-	if ((ptr == nullptr) && (plen != 0))
-		throw ssl_exception("failed to fetch SSL session context");
 	return std::string { reinterpret_cast<const char *>(ptr), static_cast<size_t>(plen) };
 }
 

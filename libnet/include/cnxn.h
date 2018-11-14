@@ -18,6 +18,9 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+enum class operation;
+struct error_info;
+
 class connection : public snf::net::nio
 {
 private:
@@ -34,9 +37,7 @@ private:
 
 	void switch_context(const std::string &);
 	std::string get_sni();
-	int handle_ssl_error(sock_t, int, int, const std::string &, int *oserr = 0);
-	void ssl_connect(int);
-	void ssl_accept(int);
+	int handle_ssl_error(sock_t, int, error_info &);
 
 public:
 	connection(connection_mode, context &);
@@ -54,7 +55,6 @@ public:
 	void check_inaddr(const internet_address &);
 	void set_sni(const std::string &);
 	void enable_sni();
-	void set_session_context(const std::string &);
 	void handshake(const socket &, int to = POLL_WAIT_FOREVER);
 	session get_session();
 	void set_session(session &);

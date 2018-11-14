@@ -66,6 +66,7 @@ context::context()
 		(m_ctx, SSL_CTRL_MODE, mode, nullptr);
 
 	set_options(SSL_OP_NO_TICKET);
+	set_options(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
 }
 
 context::context(const context &ctx)
@@ -124,6 +125,36 @@ void
 context::prefer_client_cipher()
 {
 	clr_options(SSL_OP_CIPHER_SERVER_PREFERENCE);
+}
+
+void
+context::disable_session_caching()
+{
+	ssl_library::instance().ssl_ctx_ctrl() 
+		(m_ctx, SSL_CTRL_SET_SESS_CACHE_MODE, SSL_SESS_CACHE_OFF, nullptr); 
+}
+
+void
+context::tickets_for_session_resumption(bool enable)
+{
+	if (enable) {
+		clr_options(SSL_OP_NO_TICKET);
+	} else {
+		set_options(SSL_OP_NO_TICKET);
+	}
+}
+
+void
+context::set_session_context(const std::string &ctx)
+{
+	if (ctx.size() > SSL_MAX_SSL_SESSION_ID_LENGTH)
+		throw ssl_exception("session ID context is too large");
+
+	unsigned int ctxlen = static_cast<unsigned int>(ctx.size());
+	const unsigned char *pctx = reinterpret_cast<const unsigned char *>(ctx.c_str());
+
+	if (ssl_library::instance().ssl_ctx_set_sid_ctx()(m_ctx, pctx, ctxlen) != 1)
+		throw ssl_exception("failed to set session ID context");
 }
 
 void

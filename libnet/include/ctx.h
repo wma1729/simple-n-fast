@@ -33,6 +33,9 @@ public:
 
 	void prefer_server_cipher();
 	void prefer_client_cipher();
+	void disable_session_caching();
+	void tickets_for_session_resumption(bool);
+	void set_session_context(const std::string &);
 	void set_ciphers(const std::string &ciphers = DEFAULT_CIPHER_LIST);
 	void use_private_key(pkey &);
 	void use_certificate(x509_certificate &);

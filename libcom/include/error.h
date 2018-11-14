@@ -31,5 +31,7 @@
 #define E_broken_pipe           -27
 #define E_timed_out             -28
 #define E_ssl_error             -29
+#define E_want_read             -30
+#define E_want_write            -31
 
 #endif // _SNF_ERROR_H_

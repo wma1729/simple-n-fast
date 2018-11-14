@@ -23,6 +23,62 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+enum class operation
+{
+	unknown,
+	connect,
+	accept,
+	read,
+	write,
+	shutdown
+};
+
+struct error_info
+{
+	int         error;
+	int         ssl_error;
+	int         os_error;
+	operation   op;
+
+	error_info() : error(0), ssl_error(0), os_error(0), op(operation::unknown) { }
+};
+
+static std::ostream &
+operator<< (std::ostream &os, const error_info &ei)
+{
+	os << "failed to complete the handshake";
+	switch (ei.op) {
+		case operation::connect:
+			os << " during client connect";
+			break;
+
+		case operation::accept:
+			os << " during server accept";
+			break;
+
+		case operation::read:
+			os << " during read";
+			break;
+
+		case operation::write:
+			os << " during write";
+			break;
+
+		case operation::shutdown:
+			os << " during shutdown";
+			break;
+
+		default:
+			break;
+	}
+
+	os << "; error = " << ei.error
+		<< ", ssl_error = " << ei.ssl_error
+		<< ", os_error = " << ei.os_error;
+
+	return os;
+}
+
 void
 connection::switch_context(const std::string &servername)
 {
@@ -69,66 +125,83 @@ connection::get_sni()
 }
 
 int
-connection::handle_ssl_error(sock_t sock, int to, int error, const std::string &errstr, int *oserr)
+connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
 {
 	int retval = E_ok;
-	std::ostringstream oss;
 
-	if (error > 0)
+	if (ei.error > 0)
 		return retval;
-
-	oss << errstr << "; error = " << error;
 
 	pollfd fdelem = { sock, 0, 0 };
 
-	int ssl_error = ssl_library::instance().ssl_get_error()(m_ssl, error);
+	ei.ssl_error = ssl_library::instance().ssl_get_error()(m_ssl, ei.error);
 
-	oss << ", ssl_error = " << ssl_error;
-
-	switch (ssl_error) {
+	switch (ei.ssl_error) {
 		case SSL_ERROR_NONE:
 		case SSL_ERROR_ZERO_RETURN:
 			break;
 
 		case SSL_ERROR_WANT_READ:
 			fdelem.events |= POLLIN;
-			retval = E_try_again;
+			if (ei.op == operation::write)
+				retval = E_want_read;
+			else
+				retval = E_try_again;
 			break;
 
 		case SSL_ERROR_WANT_WRITE:
 			fdelem.events |= POLLOUT;
-			retval = E_try_again;
+			if (ei.op == operation::read)
+				retval = E_want_write;
+			else
+				retval = E_try_again;
 			break;
 
 		case SSL_ERROR_SYSCALL:
 			if (ssl_library::instance().err_peek()() != 0) {
-				throw ssl_exception(oss.str());
-			} else if (error == 0) {
-				if (oserr) *oserr = EOF;
+				retval = E_ssl_error;
+			} else if (ei.error == 0) {
+				ei.os_error = EOF;
 				retval = E_syscall_failed;
-			} else if (error == -1) {
-				if (oserr) *oserr = snf::net::error();
-				retval = E_syscall_failed;
+			} else if (ei.error == -1) {
+				ei.os_error = snf::net::error();
+				if ((ei.op == operation::shutdown) && (ei.os_error == 0))
+					retval = E_ok;
+				else
+					retval = E_syscall_failed;
 			}
 			break;
 
 		default:
-			throw ssl_exception(oss.str());
+			retval = E_ssl_error;
 			break;
 	}
 
 	if ((INVALID_SOCKET != sock) && (E_try_again == retval)) {
 		std::vector<pollfd> fdvec { 1, fdelem };
 
-		retval = snf::net::poll(fdvec, to, oserr);
+		retval = snf::net::poll(fdvec, to, &ei.os_error);
 		if (0 == retval) {
-			if (oserr) *oserr = ETIMEDOUT;
+			ei.os_error = ETIMEDOUT;
 			retval = E_timed_out;
 		} else if (SOCKET_ERROR == retval) {
 			retval = E_syscall_failed;
 		} else /* if (retval > 0) */ {
 			retval = E_try_again;
 		}
+	}
+
+	if (E_ssl_error == retval) {
+		std::ostringstream oss;
+		oss << ei;
+		throw ssl_exception(oss.str());
+	} else if (E_syscall_failed == retval) {
+		std::ostringstream oss;
+		oss << ei;
+		throw std::system_error(
+			ei.os_error,
+			std::system_category(),
+			oss.str());
 	}
 
 	return retval;
@@ -316,22 +389,6 @@ connection::enable_sni()
 }
 
 void
-connection::set_session_context(const std::string &ctx)
-{
-	if (connection_mode::client == m_mode)
-		throw ssl_exception("session ID context can only be set in server mode");
-
-	if (ctx.size() > SSL_MAX_SSL_SESSION_ID_LENGTH)
-		throw ssl_exception("session ID context is too large");
-
-	unsigned int ctxlen = static_cast<unsigned int>(ctx.size());
-	const unsigned char *pctx = reinterpret_cast<const unsigned char *>(ctx.c_str());
-
-	if (ssl_library::instance().ssl_set_session_id_ctx()(m_ssl, pctx, ctxlen) != 1)
-		throw ssl_exception("failed to set session ID context");
-}
-
-void
 connection::handshake(const socket &s, int to)
 {
 	sock_t sock = s;
@@ -344,30 +401,21 @@ connection::handshake(const socket &s, int to)
 		throw ssl_exception(oss.str());
 	}
 
-	int oserr;
-
-	std::ostringstream oss;
-	oss << "failed to complete the handshake during ";
-	if (connection_mode::client == m_mode)
-		oss << "client connect";
-	else
-		oss << "server accept";
-
 	do {
-		if (connection_mode::client == m_mode)
-			retval = ssl_library::instance().ssl_connect()(m_ssl);
-		else /* if (connection_mode::server == m_mode) */
-			retval = ssl_library::instance().ssl_accept()(m_ssl);
+		error_info ei;
 
-		oserr = 0;
-		retval = handle_ssl_error(sock, to, retval, oss.str(), &oserr); 
-		if ((E_ok != retval) && (E_try_again != retval)) {
-			throw std::system_error(
-				oserr,
-				std::system_category(),
-				oss.str());
+		if (connection_mode::client == m_mode) {
+			ei.op = operation::connect;
+			ei.error = ssl_library::instance().ssl_connect()(m_ssl);
+		} else /* if (connection_mode::server == m_mode) */ {
+			ei.op = operation::accept;
+			ei.error = ssl_library::instance().ssl_accept()(m_ssl);
 		}
-	} while (retval != E_ok);
+
+		retval = handle_ssl_error(sock, to, ei);
+		if (E_ok == retval)
+			break;
+	} while (retval == E_try_again);
 }
 
 session
@@ -414,14 +462,18 @@ connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
 		throw ssl_exception("failed to get internal socket");
 
 	do {
+		error_info ei;
+
 		n = ssl_library::instance().ssl_read()(m_ssl, cbuf, to_read);
 		if (n <= 0) {
-			if (oserr) *oserr = 0;
-			retval = handle_ssl_error(sock, to, n,
-					"failed to complete the handshake during read",
-					oserr);
-			if (E_try_again != retval)
+			ei.op = operation::read;
+			ei.error = n;
+
+			retval = handle_ssl_error(sock, to, ei);
+			if (E_try_again != retval) {
+				if (oserr) *oserr = ei.os_error;
 				break;
+			}
 		} else {
 			cbuf += n;
 			to_read -= n;
@@ -456,14 +508,18 @@ connection::write(const void *buf, int to_write, int *bwritten, int to, int *ose
 		throw ssl_exception("failed to get internal socket");
 
 	do {
+		error_info ei;
+
 		n = ssl_library::instance().ssl_write()(m_ssl, cbuf, to_write);
 		if (n <= 0) {
-			if (oserr) *oserr = 0;
-			retval = handle_ssl_error(sock, to, n,
-					"failed to complete the handshake during write",
-					oserr);
-			if (E_try_again != retval)
+			ei.op = operation::write;
+			ei.error = n;
+
+			retval = handle_ssl_error(sock, to, ei);
+			if (E_try_again != retval) {
+				if (oserr) *oserr = ei.os_error;
 				break;
+			}
 		} else {
 			cbuf += n;
 			to_write -= n;
@@ -485,15 +541,10 @@ connection::shutdown()
 	}
 
 	if (retval != 1) {
-		int oserr = 0;
-		retval = handle_ssl_error(INVALID_SOCKET, POLL_WAIT_NONE, retval,
-				"failed to shutdown TLS connection", &oserr);
-		if (oserr && retval != E_ok) {
-			throw std::system_error(
-				oserr,
-				std::system_category(),
-				"failed to shutdown TLS connection");
-		}
+		error_info ei;
+		ei.op = operation::shutdown;
+		ei.error = retval;
+		handle_ssl_error(INVALID_SOCKET, POLL_WAIT_NONE, ei);
 	}
 }
 

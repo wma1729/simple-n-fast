@@ -42,6 +42,12 @@ struct arguments
 	
 };
 
+struct input
+{
+	std::string cmd;
+	std::string arg;
+};
+
 static std::exception_ptr g_except_ptr = nullptr;
 volatile std::sig_atomic_t g_terminated = 0;
 
@@ -62,6 +68,23 @@ usage(const std::string &prog)
 	std::cerr << "    -verify -reqcert -depth <certificate-chain-depth>" << std::endl;
 	std::cerr << "    -chkhost -sni <sni-host>" << std::endl;
 	return 1;
+}
+
+static bool
+get_input(input &in)
+{
+	in.cmd.clear();
+	in.arg.clear();
+
+	std::cin >> in.cmd;
+
+	std::string buf;
+	if (std::getline(std::cin, buf)) {
+		in.arg = std::move(snf::trim(buf));
+		return true;
+	}
+
+	return false;
 }
 
 static int
@@ -242,6 +265,11 @@ prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *
 		ctx->verify_peer(args.require_cert);
 
 	ctx->limit_certificate_chain_depth(args.depth);
+
+	if (snf::net::connection_mode::client == args.cnxn_mode)
+		ctx->set_session_context("client:16781");
+	else
+		ctx->set_session_context("server:16781");
 }
 
 static int
@@ -276,28 +304,33 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 			std::cerr << "Handshake successfull" << std::endl;
 		else
 			std::cerr << "Handshake failure: " << errstr << std::endl;
+
+		snf::net::ssl::session sess = std::move(cnxn->get_session());
+		std::cout << "session context = " << sess.get_context() << std::endl;
 		
 		io = cnxn;
 	} else {
 		io = &sock;
 	}
 
-	std::string buf1, buf2;
-	while (!g_terminated && std::getline(std::cin, buf1)) {
-		retval = io->write_string(buf1);
-		if (E_ok == retval) {
-			retval = io->read_string(buf2);
+	std::string buf;
+	input in;
+	while (!g_terminated && get_input(in)) {
+		if (in.cmd == "exit") {
+			break;
+		} else if (in.cmd == "echo") {
+			retval = io->write_string(in.arg);
 			if (E_ok == retval) {
-				std::cout << buf2 << std::endl;
+				retval = io->read_string(buf);
+				if (E_ok == retval) {
+					std::cout << buf << std::endl;
+					buf.clear();
+				}
 			}
 		}
 
-		if (E_ok == retval) {
-			buf1.clear();
-			buf2.clear();
-		} else {
+		if (E_ok != retval)
 			break;
-		}
 	}
 
 	if (cnxn) {
@@ -345,18 +378,20 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 			io = &sock;
 		}
 
+		int oserr;
+
 		do {
 			if (g_terminated)
 				break;
 
-			retval = io->read_string(buf);
-			if (E_ok == retval) {
+			oserr = 0;
+			retval = io->read_string(buf, snf::net::POLL_WAIT_FOREVER, &oserr);
+			if (E_ok == retval)
 				retval = io->write_string(buf);
-				if (E_ok == retval) {
-				}
-			}
 			buf.clear();
 		} while (E_ok == retval);
+
+		std::cerr << "worker thread exited with " << retval << ", " << oserr << std::endl;
 
 		if (cnxn) {
 			cnxn->shutdown();
