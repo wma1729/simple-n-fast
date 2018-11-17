@@ -1,5 +1,7 @@
 #include "session.h"
 #include "dbg.h"
+#include "file.h"
+#include "error.h"
 #include <ostream>
 #include <sstream>
 
@@ -13,6 +15,50 @@ session::session(const uint8_t *data, size_t len)
 			(nullptr, &data, static_cast<long>(len));
 	if (m_session == nullptr)
 		throw ssl_exception("failed to import SSL session");
+}
+
+session::session(const std::string &name)
+{
+	int oserr = 0;
+	snf::file f(name, 0022);
+	snf::file::open_flags flags;
+
+	flags.o_read = true;
+
+	if (f.open(flags, 0600, &oserr) != E_ok) {
+		std::ostringstream oss;
+		oss << "failed to open file " << name;
+		throw std::system_error(
+			oserr,
+			std::system_category(),
+			oss.str());
+	}
+
+	int bread = 0;
+	int len = static_cast<int>(f.size());
+	uint8_t *data = new uint8_t[len];
+
+	if (f.read(data, len, &bread, &oserr) != E_ok) {
+		delete [] data;
+		std::ostringstream oss;
+		oss << "failed to read from file " << name;
+		throw std::system_error(
+			oserr,
+			std::system_category(),
+			oss.str());
+	}
+
+	const uint8_t *buf = data;
+	m_session = ssl_library::instance().ssl_session_d2i()
+			(nullptr, &buf, static_cast<long>(len));
+	if (m_session == nullptr) {
+		delete [] data;
+		throw ssl_exception("failed to import SSL session");
+	}
+
+	delete [] data;
+
+	f.close();
 }
 
 session::session(SSL_SESSION *s)
@@ -69,7 +115,7 @@ session::operator=(session &&s)
 }
 
 uint8_t *
-session::raw(size_t *len)
+session::to_bytes(size_t *len)
 {
 	size_t exp_len = ssl_library::instance().ssl_session_i2d()(m_session, nullptr);
 	uint8_t *exp_data = DBG_NEW uint8_t[exp_len];
@@ -91,6 +137,45 @@ session::raw(size_t *len)
 	}
 
 	return data;
+}
+
+void
+session::to_file(const std::string &name)
+{
+	int oserr = 0;
+	snf::file f(name, 0022);
+	snf::file::open_flags flags;
+
+	flags.o_write = true;
+	flags.o_create = true;
+	flags.o_truncate = true;
+
+	if (f.open(flags, 0600, &oserr) != E_ok) {
+		std::ostringstream oss;
+		oss << "failed to open file " << name;
+		throw std::system_error(
+			oserr,
+			std::system_category(),
+			oss.str());
+	}
+
+	int bwritten = 0;
+	size_t len = 0;
+	uint8_t *data = to_bytes(&len);
+
+	if (f.write(data, static_cast<int>(len), &bwritten, &oserr) != E_ok) {
+		delete [] data;
+		std::ostringstream oss;
+		oss << "failed to write to file " << name;
+		throw std::system_error(
+			oserr,
+			std::system_category(),
+			oss.str());
+	}
+
+	delete [] data;
+
+	f.close();
 }
 
 uint8_t *

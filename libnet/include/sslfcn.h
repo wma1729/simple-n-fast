@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <ostream>
 #include <openssl/ssl.h>
+#include <openssl/tls1.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/bio.h>
@@ -15,6 +16,7 @@
 #include <openssl/stack.h>
 #include <openssl/asn1.h>
 #include <openssl/bn.h>
+#include <openssl/hmac.h>
 
 using p_openssl_version_num = unsigned long (*)(void);
 using p_openssl_version_str = const char * (*)(int);
@@ -118,6 +120,8 @@ using p_ssl_ctx_set_verify_depth = void (*)(SSL_CTX *, int);
 using p_ssl_ctx_get_cert_store = X509_STORE * (*)(const SSL_CTX *);
 using p_ssl_ctx_get0_cert = X509 * (*)(const SSL_CTX *);
 using p_ssl_ctx_set_sid_ctx = int (*)(SSL_CTX *, const unsigned char *, unsigned int);
+using p_ssl_ctx_tlsext_ticket_key_cb = int (*)(SSL *, unsigned char *, unsigned char *, EVP_CIPHER_CTX *, HMAC_CTX *, int);
+using p_ssl_ctx_set_tlsext_ticket_key_cb = long (*)(SSL_CTX *, p_ssl_ctx_tlsext_ticket_key_cb);
 
 using p_ssl_new = SSL * (*)(SSL_CTX *);
 using p_ssl_dup = SSL * (*)(SSL *);
@@ -161,6 +165,13 @@ using p_x509_verify_param_set1_host = int (*)(X509_VERIFY_PARAM *, const char *,
 using p_x509_verify_param_add1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
 using p_x509_verify_param_set1_ip_asc = int (*)(X509_VERIFY_PARAM *, const char *);
 using p_x509_verify_cert_error_string = const char * (*)(long);
+
+using p_rand_bytes = int (*)(unsigned char *, int);
+using p_evp_sha256 = const EVP_MD * (*)(void);
+using p_hmac_init_ex = int (*)(HMAC_CTX *, const void *, int, const EVP_MD *, ENGINE *);
+using p_evp_aes_256_cbc = const EVP_CIPHER * (*)(void);
+using p_evp_encrypt_init_ex = int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, ENGINE *, const unsigned char *, const unsigned char *);
+using p_evp_decrypt_init_ex = int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, ENGINE *, const unsigned char *, const unsigned char *);
 
 namespace snf {
 namespace net {
@@ -321,6 +332,7 @@ private:
 	p_ssl_ctx_get_cert_store    m_ssl_ctx_get_cert_store = nullptr;
 	p_ssl_ctx_get0_cert         m_ssl_ctx_get0_cert = nullptr;
 	p_ssl_ctx_set_sid_ctx       m_ssl_ctx_set_sid_ctx = nullptr;        
+	p_ssl_ctx_set_tlsext_ticket_key_cb m_ssl_ctx_set_tlsext_ticket_key_cb = nullptr;
 
 	p_ssl_new                   m_ssl_new = nullptr;
 	p_ssl_dup                   m_ssl_dup = nullptr;
@@ -364,6 +376,13 @@ private:
 	p_x509_verify_param_add1_host       m_x509_verify_param_add1_host = nullptr;
 	p_x509_verify_param_set1_ip_asc     m_x509_verify_param_set1_ip_asc = nullptr;
 	p_x509_verify_cert_error_string     m_x509_verify_cert_error_string = nullptr;
+
+	p_rand_bytes                m_rand_bytes = nullptr;
+	p_evp_sha256                m_evp_sha256 = nullptr;
+	p_hmac_init_ex              m_hmac_init_ex = nullptr;
+	p_evp_aes_256_cbc           m_evp_aes_256_cbc = nullptr;
+	p_evp_encrypt_init_ex       m_evp_encrypt_init_ex = nullptr;
+	p_evp_decrypt_init_ex       m_evp_decrypt_init_ex = nullptr;
 
 	ssl_library();
 
@@ -479,6 +498,7 @@ public:
 	p_ssl_ctx_get_cert_store ssl_ctx_get_cert_store();
 	p_ssl_ctx_get0_cert ssl_ctx_get0_cert();
 	p_ssl_ctx_set_sid_ctx ssl_ctx_set_sid_ctx();
+	p_ssl_ctx_set_tlsext_ticket_key_cb ssl_ctx_set_tlsext_ticket_key_cb();
 
 	p_ssl_new ssl_new();
 	p_ssl_dup ssl_dup();
@@ -522,6 +542,13 @@ public:
 	p_x509_verify_param_add1_host x509_verify_param_add1_host();
 	p_x509_verify_param_set1_ip_asc x509_verify_param_set1_ip_asc();
 	p_x509_verify_cert_error_string x509_verify_cert_error_string();
+
+	p_rand_bytes rand_bytes();
+	p_evp_sha256 evp_sha256();
+	p_hmac_init_ex hmac_init_ex();
+	p_evp_aes_256_cbc evp_aes_256_cbc();
+	p_evp_encrypt_init_ex evp_encrypt_init_ex();
+	p_evp_decrypt_init_ex evp_decrypt_init_ex();
 };
 
 } // namespace ssl

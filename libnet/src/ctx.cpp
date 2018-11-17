@@ -1,5 +1,74 @@
 #include "ctx.h"
+#include <time.h>
 #include <sstream>
+
+static const int NEW_SESSION_KEY = 1;
+static const int RETRIEVE_SESSION_KEY = !NEW_SESSION_KEY;
+
+static snf::net::ssl::keymgr *g_km = nullptr;
+
+extern "C" int
+ssl_session_tickey_key_cb(
+	SSL *ssl,
+	unsigned char *key_name,
+	unsigned char *iv,
+	EVP_CIPHER_CTX *cipher_ctx,
+	HMAC_CTX *hmac_ctx,
+	int mode)
+{
+	const snf::net::ssl::keyrec *krec = nullptr;
+
+	if (mode == NEW_SESSION_KEY) {
+		krec = g_km->get();
+		if (krec == nullptr)
+			return -1;
+
+		memcpy(key_name, krec->key_name, snf::net::ssl::KEY_SIZE);
+		if (snf::net::ssl::ssl_library::instance().rand_bytes()
+			(iv, EVP_MAX_IV_LENGTH) != 1)
+			return -1;
+
+		snf::net::ssl::ssl_library::instance().evp_encrypt_init_ex()(
+			cipher_ctx,
+			snf::net::ssl::ssl_library::instance().evp_aes_256_cbc()(),
+			nullptr,
+			krec->aes_key,
+			iv);
+
+		snf::net::ssl::ssl_library::instance().hmac_init_ex()(
+			hmac_ctx,
+			krec->hmac_key,
+			snf::net::ssl::HMAC_SIZE,
+			snf::net::ssl::ssl_library::instance().evp_sha256()(),
+			nullptr);
+
+		return 1;
+	} else {
+		krec = g_km->find(key_name, snf::net::ssl::KEY_SIZE);
+		if (krec == nullptr)
+			return 0;
+
+		snf::net::ssl::ssl_library::instance().evp_decrypt_init_ex()(
+			cipher_ctx,
+			snf::net::ssl::ssl_library::instance().evp_aes_256_cbc()(),
+			nullptr,
+			krec->aes_key,
+			iv);
+
+		snf::net::ssl::ssl_library::instance().hmac_init_ex()(
+			hmac_ctx,
+			krec->hmac_key,
+			snf::net::ssl::HMAC_SIZE,
+			snf::net::ssl::ssl_library::instance().evp_sha256()(),
+			nullptr);
+
+		time_t now = time(0);
+		if (krec->expire < now)
+			return 2;
+
+		return 1;
+	}
+}
 
 namespace snf {
 namespace net {
@@ -240,6 +309,17 @@ context::get_certificate()
 
 	x509_certificate cert(c);
 	return cert;
+}
+
+void
+context::register_keymgr_for_session_tickets(keymgr *km)
+{
+	if (g_km) delete g_km;
+	g_km = km;
+
+	if (ssl_library::instance().ssl_ctx_set_tlsext_ticket_key_cb()
+		(m_ctx, ssl_session_tickey_key_cb) != 0)
+		throw ssl_exception("failed to set tickey key callback for session resumption");
 }
 
 } // namespace ssl

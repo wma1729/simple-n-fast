@@ -6,6 +6,7 @@
 #include "crt.h"
 #include "crl.h"
 #include "truststore.h"
+#include "keymgr.h"
 
 namespace snf {
 namespace net {
@@ -45,6 +46,7 @@ public:
 	void verify_peer(bool require_certificate = false, bool do_it_once = false);
 	void limit_certificate_chain_depth(int);
 	x509_certificate get_certificate();
+	void register_keymgr_for_session_tickets(keymgr *);
 };
 
 } // namespace ssl

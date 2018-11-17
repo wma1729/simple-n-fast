@@ -1,4 +1,5 @@
 #include "sslfcn.h"
+#include <openssl/rand.h>
 #include "dbg.h"
 
 namespace snf {
@@ -867,6 +868,16 @@ ssl_library::ssl_ctx_set_sid_ctx()
 	return m_ssl_ctx_set_sid_ctx;
 }
 
+p_ssl_ctx_set_tlsext_ticket_key_cb
+ssl_library::ssl_ctx_set_tlsext_ticket_key_cb()
+{
+	if (!m_ssl_ctx_set_tlsext_ticket_key_cb)
+		m_ssl_ctx_set_tlsext_ticket_key_cb =
+			reinterpret_cast<p_ssl_ctx_set_tlsext_ticket_key_cb>
+			(m_ssl->symbol("SSL_CTX_set_tlsext_ticket_key_cb"));
+	return m_ssl_ctx_set_tlsext_ticket_key_cb;
+}
+
 p_ssl_new
 ssl_library::ssl_new()
 {
@@ -1230,6 +1241,60 @@ ssl_library::x509_verify_cert_error_string()
 			reinterpret_cast<p_x509_verify_cert_error_string>
 				(m_ssl->symbol("X509_verify_cert_error_string"));
 	return m_x509_verify_cert_error_string;
+}
+
+p_rand_bytes
+ssl_library::rand_bytes()
+{
+	if (!m_rand_bytes)
+		m_rand_bytes = reinterpret_cast<p_rand_bytes>
+			(m_ssl->symbol("RAND_bytes"));
+	return m_rand_bytes;
+}
+
+p_evp_sha256
+ssl_library::evp_sha256()
+{
+	if (!m_evp_sha256)
+		m_evp_sha256 = reinterpret_cast<p_evp_sha256>
+			(m_ssl->symbol("EVP_sha256"));
+	return m_evp_sha256;
+}
+
+p_hmac_init_ex
+ssl_library::hmac_init_ex()
+{
+	if (!m_hmac_init_ex)
+		m_hmac_init_ex = reinterpret_cast<p_hmac_init_ex>
+			(m_ssl->symbol("HMAC_Init_ex"));
+	return m_hmac_init_ex;
+}
+
+p_evp_aes_256_cbc
+ssl_library::evp_aes_256_cbc()
+{
+	if (!m_evp_aes_256_cbc)
+		m_evp_aes_256_cbc = reinterpret_cast<p_evp_aes_256_cbc>
+			(m_ssl->symbol("EVP_aes_256_cbc"));
+	return m_evp_aes_256_cbc;
+}
+
+p_evp_encrypt_init_ex
+ssl_library::evp_encrypt_init_ex()
+{
+	if (!m_evp_encrypt_init_ex)
+		m_evp_encrypt_init_ex = reinterpret_cast<p_evp_encrypt_init_ex>
+			(m_ssl->symbol("EVP_EncryptInit_ex"));
+	return m_evp_encrypt_init_ex;
+}
+
+p_evp_decrypt_init_ex
+ssl_library::evp_decrypt_init_ex()
+{
+	if (!m_evp_decrypt_init_ex)
+		m_evp_decrypt_init_ex = reinterpret_cast<p_evp_decrypt_init_ex>
+			(m_ssl->symbol("EVP_DecryptInit_ex"));
+	return m_evp_decrypt_init_ex;
 }
 
 } // namespace ssl
