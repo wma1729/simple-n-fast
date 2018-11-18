@@ -17,12 +17,27 @@ namespace ssl {
 
 class context {
 private:
-	SSL_CTX *m_ctx = nullptr;
+	static keymgr   *s_km;
+	SSL_CTX         *m_ctx = nullptr;
 
 	long get_options();
 	long clr_options(unsigned long);
 	long set_options(unsigned long);
+	x509_certificate get_certificate();
+
 public:
+	static keymgr *get_keymgr()
+	{
+		if (s_km == nullptr) s_km = new basic_keymgr();
+		return s_km;
+	}
+
+	static void set_keymgr(keymgr *km)
+	{
+		if (s_km) delete s_km;
+		s_km = km;
+	}
+
 	context();
 	context(const context &);
 	context(context &&);
@@ -35,8 +50,9 @@ public:
 	void prefer_server_cipher();
 	void prefer_client_cipher();
 	void disable_session_caching();
-	void tickets_for_session_resumption(bool);
 	void set_session_context(const std::string &);
+	void session_ticket(bool);
+	void session_ticket_key_handler(bool);
 	void set_ciphers(const std::string &ciphers = DEFAULT_CIPHER_LIST);
 	void use_private_key(pkey &);
 	void use_certificate(x509_certificate &);
@@ -45,8 +61,8 @@ public:
 	void check_private_key();
 	void verify_peer(bool require_certificate = false, bool do_it_once = false);
 	void limit_certificate_chain_depth(int);
-	x509_certificate get_certificate();
-	void register_keymgr_for_session_tickets(keymgr *);
+
+	friend class connection;
 };
 
 } // namespace ssl

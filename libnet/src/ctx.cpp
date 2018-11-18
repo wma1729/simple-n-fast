@@ -5,8 +5,6 @@
 static const int NEW_SESSION_KEY = 1;
 static const int RETRIEVE_SESSION_KEY = !NEW_SESSION_KEY;
 
-static snf::net::ssl::keymgr *g_km = nullptr;
-
 extern "C" int
 ssl_session_tickey_key_cb(
 	SSL *ssl,
@@ -17,9 +15,12 @@ ssl_session_tickey_key_cb(
 	int mode)
 {
 	const snf::net::ssl::keyrec *krec = nullptr;
+	snf::net::ssl::keymgr *km = snf::net::ssl::context::get_keymgr();
+	if (km == nullptr)
+		return -1;
 
 	if (mode == NEW_SESSION_KEY) {
-		krec = g_km->get();
+		krec = km->get();
 		if (krec == nullptr)
 			return -1;
 
@@ -44,7 +45,7 @@ ssl_session_tickey_key_cb(
 
 		return 1;
 	} else {
-		krec = g_km->find(key_name, snf::net::ssl::KEY_SIZE);
+		krec = km->find(key_name, snf::net::ssl::KEY_SIZE);
 		if (krec == nullptr)
 			return 0;
 
@@ -73,6 +74,8 @@ ssl_session_tickey_key_cb(
 namespace snf {
 namespace net {
 namespace ssl {
+
+keymgr *context::s_km = nullptr;
 
 long
 context::get_options()
@@ -204,16 +207,6 @@ context::disable_session_caching()
 }
 
 void
-context::tickets_for_session_resumption(bool enable)
-{
-	if (enable) {
-		clr_options(SSL_OP_NO_TICKET);
-	} else {
-		set_options(SSL_OP_NO_TICKET);
-	}
-}
-
-void
 context::set_session_context(const std::string &ctx)
 {
 	if (ctx.size() > SSL_MAX_SSL_SESSION_ID_LENGTH)
@@ -224,6 +217,27 @@ context::set_session_context(const std::string &ctx)
 
 	if (ssl_library::instance().ssl_ctx_set_sid_ctx()(m_ctx, pctx, ctxlen) != 1)
 		throw ssl_exception("failed to set session ID context");
+}
+
+void
+context::session_ticket(bool enable)
+{
+	if (enable) {
+		clr_options(SSL_OP_NO_TICKET);
+	} else {
+		set_options(SSL_OP_NO_TICKET);
+	}
+}
+
+void
+context::session_ticket_key_handler(bool enable)
+{
+	p_ssl_ctx_tlsext_ticket_key_cb cb = nullptr;
+	if (enable)
+		cb = ssl_session_tickey_key_cb;
+
+	if (ssl_library::instance().ssl_ctx_set_tlsext_ticket_key_cb()(m_ctx, cb) != 0)
+		throw ssl_exception("failed to set tickey key callback for session resumption");
 }
 
 void
@@ -309,17 +323,6 @@ context::get_certificate()
 
 	x509_certificate cert(c);
 	return cert;
-}
-
-void
-context::register_keymgr_for_session_tickets(keymgr *km)
-{
-	if (g_km) delete g_km;
-	g_km = km;
-
-	if (ssl_library::instance().ssl_ctx_set_tlsext_ticket_key_cb()
-		(m_ctx, ssl_session_tickey_key_cb) != 0)
-		throw ssl_exception("failed to set tickey key callback for session resumption");
 }
 
 } // namespace ssl

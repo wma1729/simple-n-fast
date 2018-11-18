@@ -31,7 +31,7 @@ class keymgr
 public:
 	virtual ~keymgr() {}
 	virtual const keyrec *get() = 0;
-	virtual const keyrec *find(const uint8_t *, size_t) const = 0;
+	virtual const keyrec *find(const uint8_t *, size_t) = 0;
 };
 
 /*
