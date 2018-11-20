@@ -266,9 +266,7 @@ prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *
 
 	ctx->limit_certificate_chain_depth(args.depth);
 
-	if (snf::net::connection_mode::client == args.cnxn_mode)
-		ctx->set_session_context("client:16781");
-	else
+	if (snf::net::connection_mode::server == args.cnxn_mode)
 		ctx->set_session_context("server:16781");
 }
 
@@ -300,14 +298,21 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 			std::cout << "Got certificate for " << cert->subject() << std::endl;
 
 		std::string errstr;
-		if (cnxn->is_verification_successful(errstr))
+		if (cnxn->is_verification_successful(errstr)) {
 			std::cerr << "Handshake successfull" << std::endl;
-		else
-			std::cerr << "Handshake failure: " << errstr << std::endl;
 
-		snf::net::ssl::session sess = std::move(cnxn->get_session());
-		std::cout << "session context = " << sess.get_context() << std::endl;
-		
+			snf::net::ssl::session sess = std::move(cnxn->get_session());
+
+			size_t idlen = 0;
+			uint8_t *id = sess.get_id(&idlen);
+			std::string sid = std::move(snf::bin2hex(id, idlen));
+			delete [] id;
+			std::cout << "session id = " << sid << std::endl;
+			std::cout << "session context = " << sess.get_context() << std::endl;
+		} else {
+			std::cerr << "Handshake failure: " << errstr << std::endl;
+		}
+
 		io = cnxn;
 	} else {
 		io = &sock;
@@ -456,6 +461,10 @@ try {
 	if (retval == 0) {
 		std::signal(SIGINT, signal_handler);
 		std::signal(SIGTERM, signal_handler);
+#if !defined(_WIN32)
+		if (args.use_ssl)
+			std::signal(SIGPIPE, SIG_IGN);
+#endif
 
 		snf::net::initialize(args.use_ssl);
 

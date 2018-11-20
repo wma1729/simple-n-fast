@@ -138,7 +138,7 @@ context::context()
 		(m_ctx, SSL_CTRL_MODE, mode, nullptr);
 
 	set_options(SSL_OP_NO_TICKET);
-	set_options(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
+	// set_options(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
 }
 
 context::context(const context &ctx)

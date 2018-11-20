@@ -36,7 +36,7 @@ session::session(const std::string &name)
 
 	int bread = 0;
 	int len = static_cast<int>(f.size());
-	uint8_t *data = new uint8_t[len];
+	uint8_t *data = DBG_NEW uint8_t[len];
 
 	if (f.read(data, len, &bread, &oserr) != E_ok) {
 		delete [] data;

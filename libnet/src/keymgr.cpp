@@ -1,4 +1,5 @@
 #include "keymgr.h"
+#include "dbg.h"
 #include <time.h>
 
 namespace snf {
@@ -25,7 +26,7 @@ basic_keymgr::get()
 			(buf, KEY_SIZE + AES_SIZE + HMAC_SIZE) != 1)
 			throw ssl_exception("failed to generate random data");
 
-		m_cur = new keyrec;
+		m_cur = DBG_NEW keyrec;
 		uint8_t *ptr = buf;
 		memcpy(m_cur->key_name, ptr, KEY_SIZE); ptr += KEY_SIZE;
 		memcpy(m_cur->aes_key, ptr, AES_SIZE); ptr += AES_SIZE;

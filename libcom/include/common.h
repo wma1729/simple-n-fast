@@ -153,6 +153,7 @@ is_big_endian()
 const char *syserr(char *, size_t, int);
 const char *basename(char *, size_t, const char *, bool stripExt = false);
 std::string trim(const std::string &);
+std::string bin2hex(const uint8_t *, size_t);
 
 } // namespace snf
 
