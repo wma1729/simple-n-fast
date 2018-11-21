@@ -437,7 +437,13 @@ connection::set_session(session &sess)
 bool
 connection::is_session_reused()
 {
-	return (ssl_library::instance().ssl_session_reused()(m_ssl) == 1);
+	p_ssl_session_reused session_reused =
+		ssl_library::instance().ssl_session_reused();
+	if (session_reused)
+		return (session_reused(m_ssl) == 1);
+	else
+		return (ssl_library::instance().ssl_ctrl()
+			(m_ssl, SSL_CTRL_GET_SESSION_REUSED, 0, NULL) == 1);
 }
 
 int

@@ -4,6 +4,7 @@
 #include <thread>
 #include <stdexcept>
 #include <memory>
+#include <chrono>
 #include <csignal>
 
 struct arguments
@@ -21,9 +22,13 @@ struct arguments
 	std::string cafile;
 	std::string crlfile;
 	std::string snihost;
+	std::string session_file;
 	bool verify_peer;
 	bool require_cert;
 	bool check_hosts;
+	bool save_session;
+	bool restore_session;
+	bool use_ticket;
 	int depth;
 
 	arguments()
@@ -34,6 +39,9 @@ struct arguments
 		, verify_peer(false)
 		, require_cert(false)
 		, check_hosts(false)
+		, save_session(false)
+		, restore_session(false)
+		, use_ticket(false)
 		, depth(2)
 	{
 		kf_fmt = snf::net::ssl::data_fmt::pem;
@@ -67,6 +75,7 @@ usage(const std::string &prog)
 	std::cerr << "    -ca <ca-bundle-file> -crl <crl-file>" << std::endl;
 	std::cerr << "    -verify -reqcert -depth <certificate-chain-depth>" << std::endl;
 	std::cerr << "    -chkhost -sni <sni-host>" << std::endl;
+	std::cerr << "    [-save|-restore] -session <session-file> [-token]" << std::endl;
 	return 1;
 }
 
@@ -175,12 +184,25 @@ parse_arguments(arguments &args, int argc, const char **argv)
 				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
 				return usage(argv[0]);
 			}
+		} else if (snf::streq("-session", argv[i])) {
+			if (argv[i + 1]) {
+				args.session_file = argv[++i];
+			} else {
+				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
+				return usage(argv[0]);
+			}
 		} else if (snf::streq("-verify", argv[i])) {
 			args.verify_peer = true;
 		} else if (snf::streq("-reqcert", argv[i])) {
 			args.require_cert = true;
 		} else if (snf::streq("-chkhost", argv[i])) {
 			args.check_hosts = true;
+		} else if (snf::streq("-save", argv[i])) {
+			args.save_session = true;
+		} else if (snf::streq("-restore", argv[i])) {
+			args.restore_session = true;
+		} else if (snf::streq("-ticket", argv[i])) {
+			args.use_ticket = true;
 		} else if (snf::streq("-depth", argv[i])) {
 			if (argv[i + 1]) {
 				args.depth = atoi(argv[++i]);
@@ -222,6 +244,13 @@ parse_arguments(arguments &args, int argc, const char **argv)
 	} else {
 		args.verify_peer = true;
 		args.require_cert = true;
+		if (args.save_session || args.restore_session) {
+			if (args.session_file.empty()) {
+				std::cerr << "-session is required if -save or -restore specified"
+					<< std::endl;
+				return usage(argv[0]);
+			}
+		}
 	}
 
 	return 0;
@@ -266,8 +295,9 @@ prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *
 
 	ctx->limit_certificate_chain_depth(args.depth);
 
-	if (snf::net::connection_mode::server == args.cnxn_mode)
-		ctx->set_session_context("server:16781");
+	if (!args.use_ticket)
+		if (snf::net::connection_mode::server == args.cnxn_mode)
+			ctx->set_session_context("server:16781");
 }
 
 static int
@@ -290,7 +320,28 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 			cnxn->check_hosts({ args.host });
 		if (!args.snihost.empty())
 			cnxn->set_sni(args.snihost);
+
+		if (args.restore_session) {
+			snf::net::ssl::session sess { args.session_file };
+			cnxn->set_session(sess);
+		}
+
+		std::chrono::time_point<std::chrono::high_resolution_clock> begin_time;
+		std::chrono::time_point<std::chrono::high_resolution_clock> end_time;
+
+		begin_time = std::chrono::high_resolution_clock::now();
 		cnxn->handshake(sock);
+		end_time = std::chrono::high_resolution_clock::now();
+
+		std::cout << "SSL handshake took "
+			<< std::chrono::duration_cast<std::chrono::microseconds>
+				(end_time - begin_time).count()
+			<< " microseconds" << std::endl;
+
+		if (cnxn->is_session_reused())
+			std::cout << "SSL session is reused" << std::endl;
+		else
+			std::cout << "SSL session is not reused" << std::endl;
 
 		std::unique_ptr<snf::net::ssl::x509_certificate> cert
 			(cnxn->get_peer_certificate());
@@ -309,6 +360,9 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 			delete [] id;
 			std::cout << "session id = " << sid << std::endl;
 			std::cout << "session context = " << sess.get_context() << std::endl;
+
+			if (args.save_session)
+				sess.to_file(args.session_file);
 		} else {
 			std::cerr << "Handshake failure: " << errstr << std::endl;
 		}

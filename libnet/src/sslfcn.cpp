@@ -1117,7 +1117,7 @@ ssl_library::ssl_session_reused()
 {
 	if (!m_ssl_session_reused)
 		m_ssl_session_reused = reinterpret_cast<p_ssl_session_reused>
-			(m_ssl->symbol("SSL_session_reused"));
+			(m_ssl->symbol("SSL_session_reused", false));
 	return m_ssl_session_reused;
 }
 
