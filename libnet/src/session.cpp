@@ -197,6 +197,20 @@ session::get_id(size_t *len)
 }
 
 std::string
+session::get_id()
+{
+	size_t idlen = 0;
+	uint8_t *id = get_id(&idlen);
+	if (id && idlen) {
+		std::string sid = std::move(snf::bin2hex(id, idlen));
+		delete [] id;
+		return sid;
+	} else {
+		return std::string {};
+	}
+}
+
+std::string
 session::get_context()
 {
 	unsigned int plen = 0;
@@ -208,6 +222,32 @@ int
 session::get_protocol_version()
 {
 	return ssl_library::instance().ssl_session_get_protocol()(m_session);
+}
+
+time_t
+session::start_time()
+{
+	return static_cast<time_t>(ssl_library::instance().ssl_session_get_time()(m_session));
+}
+
+time_t
+session::timeout()
+{
+	return static_cast<time_t>(ssl_library::instance().ssl_session_get_timeout()(m_session));
+}
+
+void
+session::timeout(time_t to)
+{
+	long lto = static_cast<long>(to);
+	if (ssl_library::instance().ssl_session_set_timeout()(m_session, lto) != 1)
+		throw ssl_exception("failed to set the session timeout");
+}
+
+bool
+session::has_ticket()
+{
+	return (ssl_library::instance().ssl_session_has_ticket()(m_session) == 1);
 }
 
 } // namespace ssl

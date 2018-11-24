@@ -868,14 +868,22 @@ ssl_library::ssl_ctx_set_sid_ctx()
 	return m_ssl_ctx_set_sid_ctx;
 }
 
-p_ssl_ctx_set_tlsext_ticket_key_cb
-ssl_library::ssl_ctx_set_tlsext_ticket_key_cb()
+p_ssl_ctx_get_timeout
+ssl_library::ssl_ctx_get_timeout()
 {
-	if (!m_ssl_ctx_set_tlsext_ticket_key_cb)
-		m_ssl_ctx_set_tlsext_ticket_key_cb =
-			reinterpret_cast<p_ssl_ctx_set_tlsext_ticket_key_cb>
-			(m_ssl->symbol("SSL_CTX_set_tlsext_ticket_key_cb"));
-	return m_ssl_ctx_set_tlsext_ticket_key_cb;
+	if (!m_ssl_ctx_get_timeout)
+		m_ssl_ctx_get_timeout = reinterpret_cast<p_ssl_ctx_get_timeout>
+			(m_ssl->symbol("SSL_CTX_get_timeout"));
+	return m_ssl_ctx_get_timeout;
+}
+
+p_ssl_ctx_set_timeout
+ssl_library::ssl_ctx_set_timeout()
+{
+	if (!m_ssl_ctx_set_timeout)
+		m_ssl_ctx_set_timeout = reinterpret_cast<p_ssl_ctx_set_timeout>
+			(m_ssl->symbol("SSL_CTX_set_timeout"));
+	return m_ssl_ctx_set_timeout;
 }
 
 p_ssl_new
@@ -1191,6 +1199,42 @@ ssl_library::ssl_session_get_protocol()
 		m_ssl_session_get_protocol = reinterpret_cast<p_ssl_session_get_protocol>
 			(m_ssl->symbol("SSL_SESSION_get_protocol_version"));
 	return m_ssl_session_get_protocol;
+}
+
+p_ssl_session_get_time
+ssl_library::ssl_session_get_time()
+{
+	if (!m_ssl_session_get_time)
+		m_ssl_session_get_time = reinterpret_cast<p_ssl_session_get_time>
+			(m_ssl->symbol("SSL_SESSION_get_time"));
+	return m_ssl_session_get_time;
+}
+
+p_ssl_session_get_timeout
+ssl_library::ssl_session_get_timeout()
+{
+	if (!m_ssl_session_get_timeout)
+		m_ssl_session_get_timeout = reinterpret_cast<p_ssl_session_get_timeout>
+			(m_ssl->symbol("SSL_SESSION_get_timeout"));
+	return m_ssl_session_get_timeout;
+}
+
+p_ssl_session_set_timeout
+ssl_library::ssl_session_set_timeout()
+{
+	if (!m_ssl_session_set_timeout)
+		m_ssl_session_set_timeout = reinterpret_cast<p_ssl_session_set_timeout>
+			(m_ssl->symbol("SSL_SESSION_set_timeout"));
+	return m_ssl_session_set_timeout;
+}
+
+p_ssl_session_has_ticket
+ssl_library::ssl_session_has_ticket()
+{
+	if (!m_ssl_session_has_ticket)
+		m_ssl_session_has_ticket = reinterpret_cast<p_ssl_session_has_ticket>
+			(m_ssl->symbol("SSL_SESSION_has_ticket"));
+	return m_ssl_session_has_ticket;
 }
 
 p_x509_verify_param_set_hostflags

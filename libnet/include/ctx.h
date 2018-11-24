@@ -2,6 +2,7 @@
 #define _SNF_CTX_H_
 
 #include "sslfcn.h"
+#include "net.h"
 #include "pkey.h"
 #include "crt.h"
 #include "crl.h"
@@ -50,9 +51,10 @@ public:
 	void prefer_server_cipher();
 	void prefer_client_cipher();
 	void disable_session_caching();
+	time_t session_timeout();
+	time_t session_timeout(time_t);
 	void set_session_context(const std::string &);
-	void session_ticket(bool);
-	void session_ticket_key_handler(bool);
+	void session_ticket(connection_mode, bool);
 	void set_ciphers(const std::string &ciphers = DEFAULT_CIPHER_LIST);
 	void use_private_key(pkey &);
 	void use_certificate(x509_certificate &);

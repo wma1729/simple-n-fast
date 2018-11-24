@@ -121,7 +121,8 @@ using p_ssl_ctx_get_cert_store = X509_STORE * (*)(const SSL_CTX *);
 using p_ssl_ctx_get0_cert = X509 * (*)(const SSL_CTX *);
 using p_ssl_ctx_set_sid_ctx = int (*)(SSL_CTX *, const unsigned char *, unsigned int);
 using p_ssl_ctx_tlsext_ticket_key_cb = int (*)(SSL *, unsigned char *, unsigned char *, EVP_CIPHER_CTX *, HMAC_CTX *, int);
-using p_ssl_ctx_set_tlsext_ticket_key_cb = long (*)(SSL_CTX *, p_ssl_ctx_tlsext_ticket_key_cb);
+using p_ssl_ctx_get_timeout = long (*)(const SSL_CTX *);
+using p_ssl_ctx_set_timeout = long (*)(SSL_CTX *, long);
 
 using p_ssl_new = SSL * (*)(SSL_CTX *);
 using p_ssl_dup = SSL * (*)(SSL *);
@@ -159,6 +160,10 @@ using p_ssl_session_free = void (*)(SSL_SESSION *);
 using p_ssl_session_get_id = const unsigned char * (*)(const SSL_SESSION *, unsigned int *);
 using p_ssl_session_get_id_ctx = const unsigned char * (*)(const SSL_SESSION *, unsigned int *);
 using p_ssl_session_get_protocol = int (*)(const SSL_SESSION *);
+using p_ssl_session_get_time = long (*)(const SSL_SESSION *);
+using p_ssl_session_get_timeout = long (*)(const SSL_SESSION *);
+using p_ssl_session_set_timeout = long (*)(const SSL_SESSION *, long);
+using p_ssl_session_has_ticket = int (*)(const SSL_SESSION *);
 
 using p_x509_verify_param_set_hostflags = void (*)(X509_VERIFY_PARAM *, unsigned int);
 using p_x509_verify_param_set1_host = int (*)(X509_VERIFY_PARAM *, const char *, size_t);
@@ -332,7 +337,8 @@ private:
 	p_ssl_ctx_get_cert_store    m_ssl_ctx_get_cert_store = nullptr;
 	p_ssl_ctx_get0_cert         m_ssl_ctx_get0_cert = nullptr;
 	p_ssl_ctx_set_sid_ctx       m_ssl_ctx_set_sid_ctx = nullptr;        
-	p_ssl_ctx_set_tlsext_ticket_key_cb m_ssl_ctx_set_tlsext_ticket_key_cb = nullptr;
+	p_ssl_ctx_get_timeout       m_ssl_ctx_get_timeout = nullptr;
+	p_ssl_ctx_set_timeout       m_ssl_ctx_set_timeout = nullptr;
 
 	p_ssl_new                   m_ssl_new = nullptr;
 	p_ssl_dup                   m_ssl_dup = nullptr;
@@ -370,6 +376,10 @@ private:
 	p_ssl_session_get_id        m_ssl_session_get_id = nullptr;
 	p_ssl_session_get_id_ctx    m_ssl_session_get_id_ctx = nullptr;
 	p_ssl_session_get_protocol  m_ssl_session_get_protocol = nullptr;
+	p_ssl_session_get_time      m_ssl_session_get_time = nullptr;
+	p_ssl_session_get_timeout   m_ssl_session_get_timeout = nullptr;
+	p_ssl_session_set_timeout   m_ssl_session_set_timeout = nullptr;
+	p_ssl_session_has_ticket    m_ssl_session_has_ticket = nullptr;
 
 	p_x509_verify_param_set_hostflags   m_x509_verify_param_set_hostflags = nullptr;
 	p_x509_verify_param_set1_host       m_x509_verify_param_set1_host = nullptr;
@@ -498,7 +508,8 @@ public:
 	p_ssl_ctx_get_cert_store ssl_ctx_get_cert_store();
 	p_ssl_ctx_get0_cert ssl_ctx_get0_cert();
 	p_ssl_ctx_set_sid_ctx ssl_ctx_set_sid_ctx();
-	p_ssl_ctx_set_tlsext_ticket_key_cb ssl_ctx_set_tlsext_ticket_key_cb();
+	p_ssl_ctx_get_timeout ssl_ctx_get_timeout();
+	p_ssl_ctx_set_timeout ssl_ctx_set_timeout();
 
 	p_ssl_new ssl_new();
 	p_ssl_dup ssl_dup();
@@ -536,6 +547,10 @@ public:
 	p_ssl_session_get_id ssl_session_get_id();
 	p_ssl_session_get_id_ctx ssl_session_get_id_ctx();
 	p_ssl_session_get_protocol ssl_session_get_protocol();
+	p_ssl_session_get_time ssl_session_get_time();
+	p_ssl_session_get_timeout ssl_session_get_timeout();
+	p_ssl_session_set_timeout ssl_session_set_timeout();
+	p_ssl_session_has_ticket ssl_session_has_ticket();
 
 	p_x509_verify_param_set_hostflags x509_verify_param_set_hostflags();
 	p_x509_verify_param_set1_host x509_verify_param_set1_host();

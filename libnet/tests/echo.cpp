@@ -75,7 +75,7 @@ usage(const std::string &prog)
 	std::cerr << "    -ca <ca-bundle-file> -crl <crl-file>" << std::endl;
 	std::cerr << "    -verify -reqcert -depth <certificate-chain-depth>" << std::endl;
 	std::cerr << "    -chkhost -sni <sni-host>" << std::endl;
-	std::cerr << "    [-save|-restore] -session <session-file> [-token]" << std::endl;
+	std::cerr << "    [-save|-restore] -session <session-file> [-ticket]" << std::endl;
 	return 1;
 }
 
@@ -295,9 +295,12 @@ prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *
 
 	ctx->limit_certificate_chain_depth(args.depth);
 
-	if (!args.use_ticket)
-		if (snf::net::connection_mode::server == args.cnxn_mode)
-			ctx->set_session_context("server:16781");
+	if (snf::net::connection_mode::server == args.cnxn_mode)
+		ctx->set_session_context("server:16781");
+
+	if (args.use_ticket) {
+		ctx->session_ticket(args.cnxn_mode, true);
+	}
 }
 
 static int
@@ -353,13 +356,9 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 			std::cerr << "Handshake successfull" << std::endl;
 
 			snf::net::ssl::session sess = std::move(cnxn->get_session());
-
-			size_t idlen = 0;
-			uint8_t *id = sess.get_id(&idlen);
-			std::string sid = std::move(snf::bin2hex(id, idlen));
-			delete [] id;
-			std::cout << "session id = " << sid << std::endl;
-			std::cout << "session context = " << sess.get_context() << std::endl;
+			std::cout << "session id = " << sess.get_id() << std::endl;
+			if (sess.has_ticket())
+				std::cout << "session has ticket" << std::endl;
 
 			if (args.save_session)
 				sess.to_file(args.session_file);

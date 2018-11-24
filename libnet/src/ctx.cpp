@@ -206,6 +206,19 @@ context::disable_session_caching()
 		(m_ctx, SSL_CTRL_SET_SESS_CACHE_MODE, SSL_SESS_CACHE_OFF, nullptr); 
 }
 
+time_t
+context::session_timeout()
+{
+	return static_cast<time_t>(ssl_library::instance().ssl_ctx_get_timeout()(m_ctx));
+}
+
+time_t
+context::session_timeout(time_t to)
+{
+	long lto = static_cast<long>(to);
+	return static_cast<time_t>(ssl_library::instance().ssl_ctx_set_timeout()(m_ctx, lto));
+}
+
 void
 context::set_session_context(const std::string &ctx)
 {
@@ -220,24 +233,26 @@ context::set_session_context(const std::string &ctx)
 }
 
 void
-context::session_ticket(bool enable)
+context::session_ticket(connection_mode mode, bool enable)
 {
 	if (enable) {
 		clr_options(SSL_OP_NO_TICKET);
 	} else {
 		set_options(SSL_OP_NO_TICKET);
 	}
-}
 
-void
-context::session_ticket_key_handler(bool enable)
-{
-	p_ssl_ctx_tlsext_ticket_key_cb cb = nullptr;
-	if (enable)
-		cb = ssl_session_tickey_key_cb;
+	if (connection_mode::server == mode) {
+		p_ssl_ctx_tlsext_ticket_key_cb cb = nullptr;
+		if (enable)
+			cb = ssl_session_tickey_key_cb;
 
-	if (ssl_library::instance().ssl_ctx_set_tlsext_ticket_key_cb()(m_ctx, cb) != 0)
-		throw ssl_exception("failed to set tickey key callback for session resumption");
+		if (ssl_library::instance().ssl_ctx_cb_ctrl()
+			(m_ctx,
+			SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB,
+			reinterpret_cast<void (*)(void)>(cb)) != 1)
+			throw ssl_exception("failed to set ticket key callback for session resumption");
+		disable_session_caching();
+	}
 }
 
 void
