@@ -7,45 +7,87 @@
 namespace snf {
 namespace net {
 
+/*
+ * Initialize the socket address.
+ *
+ * @param [in] ia   - the internet address.
+ * @param [in] port - the internet port.
+ *
+ * @throws std::invalid_argument if the internet address is not
+ *         initialized correctly.
+ */
 void
 socket_address::init(const internet_address &ia, in_port_t port)
 {
 	if (ia.is_ipv4()) {
 		memset(&(m_addr.v4_addr), 0, sizeof(sockaddr_in));
-
 		m_addr.v4_addr.sin_family = AF_INET;
 		m_addr.v4_addr.sin_port = ntoh(port);
-		memcpy(&(m_addr.v4_addr.sin_addr), ia.get_ipv4(),
-			sizeof(in_addr));
+		memcpy(&(m_addr.v4_addr.sin_addr), ia.get_ipv4(), sizeof(in_addr));
 	} else if (ia.is_ipv6()) {
 		memset(&(m_addr.v6_addr), 0, sizeof(sockaddr_in6));
-
 		m_addr.v6_addr.sin6_family = AF_INET6;
 		m_addr.v6_addr.sin6_port = ntoh(port);
-		memcpy(&(m_addr.v6_addr.sin6_addr), ia.get_ipv6(),
-			sizeof(in6_addr));
+		memcpy(&(m_addr.v6_addr.sin6_addr), ia.get_ipv6(), sizeof(in6_addr));
 	} else {
 		throw std::invalid_argument("invalid internet address");
 	}
 }
 
+/*
+ * Constructs the socket address.
+ *
+ * @param [in] ia   - the internet address.
+ * @param [in] port - the internet port.
+ *
+ * @throws std::invalid_argument if the internet address is not
+ *         initialized correctly.
+ */
 socket_address::socket_address(const internet_address &ia, in_port_t port)
 {
 	init(ia, port);
 }
 
+/*
+ * Constructs the socket address.
+ *
+ * @param [in] type    - the internet address type.
+ * @param [in] addrstr - the internet address string.
+ * @param [in] port    - the internet port.
+ *
+ * @throws std::runtime_error if the internet address string could not be parsed.
+ *         std::invalid_argument if the internet address is not initialized correctly.
+ */
 socket_address::socket_address(int type, const std::string &addrstr, in_port_t port)
 {
 	internet_address ia{type, addrstr};
 	init(ia, port);
 }
 
+/*
+ * Constructs the socket address.
+ *
+ * @param [in] addrstr - the internet address string.
+ * @param [in] port    - the internet port.
+ *
+ * @throws std::runtime_error if the internet address string could not be parsed.
+ *         std::invalid_argument if the internet address is not initialized correctly.
+ */
 socket_address::socket_address(const std::string &addrstr, in_port_t port)
 {
 	internet_address ia{addrstr};
 	init(ia, port);
 }
 
+/*
+ * Constructs the socket address from raw socket address. It is really
+ * important to set the socket length correctly when using this form.
+ *
+ * @param [in] ss  - the raw socket address.
+ * @param [in] len - the raw socket address length.
+ *
+ * @throws std::invalid_argument if the socket address length is incorrect.
+ */
 socket_address::socket_address(const sockaddr_storage &ss, socklen_t len)
 {
 	if (len == static_cast<socklen_t>(sizeof(sockaddr_in))) {
@@ -176,6 +218,15 @@ socket_address::port(in_port_t p)
 	m_addr.v4_addr.sin_port = hton(p);
 }
 
+/*
+ * Gets the string representation of the socket address.
+ *
+ * @param [in] brief - Use brief mode [Default is true.]
+ *
+ * @return string representation of the socket address.
+ *
+ * @throws std::system_error in case of failure.
+ */
 std::string
 socket_address::str(bool brief) const
 {
@@ -223,12 +274,20 @@ socket_address::str(bool brief) const
 
 /*
  * Get socket address(es) ready to be bound.
- * 'svc' can be either the service name or the port string.
+ *
+ * @param [in] family - the internet address family.
+ * @param [in] type   - the socket type: tcp or udp.
+ * @param [in] svc    - the service name. It could also be the port string.
+ *
  * The flags used for getaddrinfo are AI_PASSIVE | AI_ADDRCONFIG.
  * Following bits are conditionally added to the flags:
  * - AI_V4MAPPED: if the address family is AF_INET6.
  * - AI_NUMERICSERV: if the 'svc' is a port string.
- * On failure, std::system_error is thrown.
+ *
+ * @return a vector of socket address(es).
+ *
+ * @throws std::invalid_argument if svc is empty.
+ *         std::system_exception if address lookup fails.
  */
 std::vector<socket_address>
 socket_address::get_server(int family, socket_type type, const std::string &svc)
@@ -284,13 +343,22 @@ socket_address::get_server(int family, socket_type type, in_port_t port)
 
 /*
  * Get socket address(es) ready to connect.
- * 'svc' can be either the service name or the port string.
+ *
+ * @param [in] family - the internet address family.
+ * @param [in] type   - the socket type: tcp or udp.
+ * @param [in] host   - the host name to connect to.
+ * @param [in] svc    - the service name. It could also be the port string.
+ *
  * The flags used for getaddrinfo is AI_ADDRCONFIG.
  * Following bits are conditionally added to the flags:
  * - AI_V4MAPPED: if the address family is AF_INET6.
  * - AI_NUMERICHOST: if host is an IP address.
  * - AI_NUMERICSERV: if the 'svc' is a port string.
- * On failure, std::system_error is thrown.
+ *
+ * @return a vector of socket address(es).
+ *
+ * @throws std::invalid_argument if svc is empty.
+ *         std::system_exception if address lookup fails.
  */
 std::vector<socket_address>
 socket_address::get_client(int family, socket_type type,

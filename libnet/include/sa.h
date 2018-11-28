@@ -13,6 +13,10 @@ class internet_address;
 
 enum class socket_type { tcp, udp };
 
+/*
+ * This class encapsulates the socket address. It holds
+ * the binary socket address: sockaddr_in or sockaddr_in6.
+ */
 class socket_address
 {
 private:
@@ -24,21 +28,9 @@ private:
 	void init(const internet_address &, in_port_t);
 
 public:
-	/* Initialize with internet address and port */
 	socket_address(const internet_address &, in_port_t);
-
-	/*
-	 * Initialize with address family, string representation
-	 * of internet address and port.
-	 */
 	socket_address(int, const std::string &, in_port_t);
-
-	/*
-	 * Initialize with string representation of internet
-	 * address and port. The address family is deduced.
-	 */
 	socket_address(const std::string &, in_port_t);
-
 	socket_address(const sockaddr_storage &, socklen_t);
 	socket_address(const sockaddr_in &);
 	socket_address(const sockaddr_in6 &);
@@ -62,15 +54,8 @@ public:
 
 	std::string str(bool brief = true) const;
 
-	/*
-	 * Get socket address(es) ready to be bound.
-	 */
 	static std::vector<socket_address> get_server(int, socket_type, const std::string &);
 	static std::vector<socket_address> get_server(int, socket_type, in_port_t);
-
-	/*
-	 * Get socket address(es) ready to connect.
-	 */
 	static std::vector<socket_address> get_client(int, socket_type,
 				const std::string &, const std::string &);
 	static std::vector<socket_address> get_client(int, socket_type,

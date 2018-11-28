@@ -19,6 +19,15 @@ internet_address::internet_address(const in6_addr &addr)
 	m_addr.v6_addr = addr;
 }
 
+/*
+ * Initialize with address type AF_INET or AF_INET6
+ * and address string.
+ *
+ * @param [in] type    - address type.
+ * @param [in] addrstr - address string.
+ *
+ * @throws std::runtime_error if the address string could not be parsed.
+ */
 internet_address::internet_address(int type, const std::string &addrstr)
 	: m_type(type)
 {
@@ -43,6 +52,13 @@ internet_address::internet_address(int type, const std::string &addrstr)
 		throw std::runtime_error(oss.str());
 }
 
+/*
+ * Initialize with address string. The address type is deduced.
+ *
+ * @param [in] addrstr - address string.
+ *
+ * @throws std::runtime_error if the address string could not be parsed.
+ */
 internet_address::internet_address(const std::string &addrstr)
 {
 	in_addr      i4a;
@@ -125,6 +141,15 @@ internet_address::get_ipv6() const
 	return nullptr;
 }
 
+/*
+ * Gets the string representation of the internet address.
+ *
+ * @param [in] brief - Use brief mode [Default is true.]
+ *
+ * @return string representation of the internet address.
+ *
+ * @throws std::system_error in case of failure.
+ */
 std::string
 internet_address::str(bool brief) const
 {

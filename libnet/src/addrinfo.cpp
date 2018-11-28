@@ -16,11 +16,22 @@ namespace internal {
 constexpr int MAX_TRIES = 10;
 constexpr int SLEEP_FOR = 5000;
 
+/*
+ * Gets address information. The call is retries 10 times with
+ * a delay of 5 seconds if the call fails with EAI_AGAIN error.
+ *
+ * @param [in]  host  - the host name.
+ * @param [in]  svc   - the service name.
+ * @param [in]  hints - hints to the address lookup algorithm.
+ * @param [out] res   - result of the lookup.
+ *
+ * @throw std::system_exception in case of failure.
+ */
 void
 get_address_info(
 	const char *host,
 	const char *svc, 
-	struct addrinfo *hints,
+	const struct addrinfo *hints,
 	struct addrinfo **res)
 {
 	const int max_tries = MAX_TRIES;

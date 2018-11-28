@@ -48,6 +48,13 @@ finalize()
 #endif
 }
 
+/*
+ * Get the OpenSSL version.
+ *
+ * @param [out] ver_str - OpenSSL version string.
+ *
+ * @return OpenSSL version number.
+ */
 unsigned long
 openssl_version(std::string &ver_str)
 {
@@ -81,6 +88,19 @@ map_system_error(int error, int default_retval)
 	return retval;
 }
 
+/*
+ * Poll sockets for events. Look at poll(2) for more details.
+ *
+ * @param [inout] fds   - vector of pollfd elements.
+ * @param [in]    to    - timeout in milliseconds.
+ *                        POLL_WAIT_FOREVER for inifinite wait.
+ *                        POLL_WAIT_NONE for no wait.
+ * @param [out]   oserr - system error in case of failure, if not null.
+ *
+ * @return >0 indicating the number of sockets that are ready.
+ *         =0 if the call times out before any socket is ready.
+ *         <0 in case of error.
+ */
 int
 poll(std::vector<pollfd> &fds, int to, int *oserr)
 {

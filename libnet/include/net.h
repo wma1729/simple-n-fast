@@ -33,7 +33,7 @@ error(int e)
 
 /*
  * Initialize the networking library.
- * If use_ssl flag is set, the TLS library is
+ * If use_ssl flag is set, the SSL library is
  * initialized as well. This function can be
  * called multiple times.
  */
@@ -50,6 +50,9 @@ void finalize();
  */
 unsigned long openssl_version(std::string &);
 
+/*
+ * Swap bytes of an integral number.
+ */
 template<typename T>
 T swap(T x)
 {
@@ -106,6 +109,11 @@ T ntoh(T b)
 
 int map_system_error(int, int);
 
+/*
+ * Connection mode
+ * client - side calling connect()
+ * server - side calling accept()
+ */
 enum class connection_mode { client, server };
 
 constexpr int POLL_WAIT_FOREVER = -1;
