@@ -5,6 +5,20 @@
 namespace snf {
 namespace net {
 
+/*
+ * Reads string. String is read as <4-byte-string-length><string>.
+ *
+ * @param [out] str   - string to read.
+ * @param [in]  to    - timeout in milliseconds.
+ *                      POLL_WAIT_FOREVER for inifinite wait.
+ *                      POLL_WAIT_NONE for no wait.
+ * @param [out] oserr - system error in case of failure, if not null.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ *
+ * The call can possibly throw one or more exceptions if the derived
+ * class of implementation of read throws one.
+ */
 int
 nio::read_string(std::string &str, int to, int *oserr)
 {
@@ -28,6 +42,20 @@ nio::read_string(std::string &str, int to, int *oserr)
 	return retval;
 }
 
+/*
+ * Writes string. String is written as <4-byte-string-length><string>.
+ *
+ * @param [out] str   - string to write.
+ * @param [in]  to    - timeout in milliseconds.
+ *                      POLL_WAIT_FOREVER for inifinite wait.
+ *                      POLL_WAIT_NONE for no wait.
+ * @param [out] oserr - system error in case of failure, if not null.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ *
+ * The call can possibly throw one or more exceptions if the derived
+ * class of implementation of write throws one.
+ */
 int
 nio::write_string(const std::string &str, int to, int *oserr)
 {
