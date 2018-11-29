@@ -5,6 +5,11 @@
 namespace snf {
 namespace net {
 
+/*
+ * Add name if it does not already exist.
+ *
+ * @param [in] n - the host name.
+ */
 void
 host::add_name(const std::string &n)
 {
@@ -12,6 +17,14 @@ host::add_name(const std::string &n)
 		m_names.push_back(n);
 }
 
+/*
+ * Initialize the host object.
+ *
+ * @param [in] h        - the host name.
+ * @param [in] ai_flags - the address info flags.
+ *
+ * @throws std::system_exception in case of failure.
+ */
 void
 host::init(const std::string &h, int ai_flags)
 {
@@ -48,11 +61,28 @@ host::init(const std::string &h, int ai_flags)
 	freeaddrinfo(res);
 }
 
+/*
+ * Constructs host object with the host name. The address info
+ * flag used is AI_CANONNAME.
+ *
+ * @param [in] h - the host name.
+ *
+ * @throws std::system_exception in case of failure.
+ */
 host::host(const std::string &h)
 {
 	init(h, AI_CANONNAME);
 }
 
+/*
+ * Constructs host object with the host name and the address info
+ * flag specified.
+ *
+ * @param [in] h        - the host name.
+ * @param [in] ai_flags - the address info flags.
+ *
+ * @throws std::system_exception in case of failure.
+ */
 host::host(const std::string &h, int ai_flags)
 {
 	init(h, ai_flags);
@@ -66,6 +96,13 @@ host::host(const std::string &h, int ai_flags)
  * address between them. It might be useful in certain
  * situation where the mapping between name and address is
  * static over a longer period.
+ *
+ * @param [in] h1 - the first host name.
+ * @param [in] h2 - the second host name.
+ *
+ * @return true if the two hosts are same, false otherwise.
+ *
+ * @throws std::system_exception in case of failure.
  */
 bool
 hosteq(const std::string &h1, const std::string &h2)

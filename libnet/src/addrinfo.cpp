@@ -25,7 +25,7 @@ constexpr int SLEEP_FOR = 5000;
  * @param [in]  hints - hints to the address lookup algorithm.
  * @param [out] res   - result of the lookup.
  *
- * @throw std::system_exception in case of failure.
+ * @throws std::system_exception in case of failure.
  */
 void
 get_address_info(

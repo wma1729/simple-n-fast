@@ -22,16 +22,7 @@ private:
 	void init(const std::string &, int);
 
 public:
-	/*
-	 * Host lookup using AI_CANONNAME flag.
-	 * On failure std::system_error is thrown.
-	 */
 	host(const std::string &);
-
-	/*
-	 * Host lookup using specified flags.
-	 * On failure std::system_error is thrown.
-	 */
 	host(const std::string &, int);
 
 	const std::string &get_canonical_name() const { return m_canonical; }
@@ -39,6 +30,7 @@ public:
 	const std::vector<internet_address> &get_internet_addresses() const { return m_ias; }
 };
 
+/* Determines if two hosts are equal */
 bool hosteq(const std::string &, const std::string &);
 
 } // namespace net
