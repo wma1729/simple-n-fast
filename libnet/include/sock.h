@@ -7,6 +7,12 @@
 namespace snf {
 namespace net {
 
+/*
+ * Manages all aspects of socket.
+ * - There is no copy constructor or copy operator.
+ * - There are move constructor and move operator available though.
+ * - A type operator is provided to get the raw socket.
+ */
 class socket : public nio
 {
 private:
@@ -17,15 +23,13 @@ private:
 
 #if defined(_WIN32)
 	bool            m_blocking = true;
-	int64_t         m_rcvtimeo = -1L;
-	int64_t         m_sndtimeo = -1L;
+	int64_t         m_rcvtimeo = 0L;
+	int64_t         m_sndtimeo = 0L;
 #endif
 
 	const char *optstr(int, int);
 	void getopt(int, int, void *, int *);
 	void setopt(int, int, void *, int);
-	void connect_to(const socket_address &, int);
-	void bind_to(const socket_address &);
 
 protected:
 	socket(sock_t, const sockaddr_storage &, socklen_t);

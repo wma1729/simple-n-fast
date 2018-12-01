@@ -260,10 +260,10 @@ file::read(int64_t offset, void *buf, int toRead, int *bRead, int *oserr)
 /**
  * Writes to the file.
  *
- * @param [in]  buf    - Buffer to write the data from.
- * @param [in]  toRead - Number of bytes to write.
- * @param [out] bRead  - Number of bytes written.
- * @param [out] oserr  - OS error code.
+ * @param [in]  buf       - Buffer to write the data from.
+ * @param [in]  toWrite   - Number of bytes to write.
+ * @param [out] bWritten  - Number of bytes written.
+ * @param [out] oserr     - OS error code.
  *
  * @return E_ok on success, -ve error code on success.
  */
