@@ -566,6 +566,12 @@ public:
 	p_evp_decrypt_init_ex evp_decrypt_init_ex();
 };
 
+inline void
+bio_free(BIO *bio)
+{
+	ssl_library::instance().bio_free()(bio);
+}
+
 } // namespace ssl
 } // namespace net
 } // namespace snf

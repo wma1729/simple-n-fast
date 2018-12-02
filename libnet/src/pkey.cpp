@@ -1,9 +1,18 @@
 #include "pkey.h"
+#include <memory>
 
 namespace snf {
 namespace net {
 namespace ssl {
 
+/*
+ * Initialize key in der format from file pointer.
+ *
+ * @param [in] fp - pointer to the file containing the key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key could not be read or
+ *         the key could not be converted to EVP_PKEY.
+ */
 void
 pkey::init_der(snf::file_ptr &fp)
 {
@@ -15,6 +24,14 @@ pkey::init_der(snf::file_ptr &fp)
 	}
 }
 
+/*
+ * Initialize key in der format from memory.
+ *
+ * @param [in] key    - key.
+ * @param [in] keylen - key length.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key could not converted to EVP_PKEY.
+ */
 void
 pkey::init_der(const uint8_t *key, size_t keylen)
 {
@@ -26,6 +43,16 @@ pkey::init_der(const uint8_t *key, size_t keylen)
 		throw ssl_exception("failed to load DER key");
 }
 
+/*
+ * Initialize key in pem format from file pointer.
+ *
+ * @param [in] fp     - pointer to the file containing the key.
+ * @param [in] passwd - password to the pem key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key could not be read or
+ *         the key could not be converted to EVP_PKEY or
+ *         the key password is incorrect.
+ */
 void
 pkey::init_pem(snf::file_ptr &fp, const char *passwd)
 {
@@ -39,20 +66,38 @@ pkey::init_pem(snf::file_ptr &fp, const char *passwd)
 	}
 }
 
+/*
+ * Initialize key in pem format from memory.
+ *
+ * @param [in] key    - key.
+ * @param [in] keylen - key length.
+ * @param [in] passwd - password to the pem key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key could not converted to EVP_PKEY or
+ *         the key password is incorrect.
+ */
 void
 pkey::init_pem(const uint8_t *key, size_t keylen, const char *passwd)
 {
 	char *pwd = const_cast<char *>(passwd);
 
-	BIO *pkbio = ssl_library::instance().bio_new_mem_buf()(key, static_cast<int>(keylen));
-	m_pkey = ssl_library::instance().pem_read_bio_private_key()(pkbio, nullptr, nullptr, pwd);
-	if (m_pkey == nullptr) {
-		ssl_library::instance().bio_free()(pkbio);
+	std::unique_ptr<BIO, decltype(&bio_free)> pkbio {
+		ssl_library::instance().bio_new_mem_buf()(key, static_cast<int>(keylen)),
+		bio_free
+	};
+
+	m_pkey = ssl_library::instance().pem_read_bio_private_key()
+		(pkbio.get(), nullptr, nullptr, pwd);
+	if (m_pkey == nullptr)
 		throw ssl_exception("failed to load PEM key");
-	}
-	ssl_library::instance().bio_free()(pkbio);
 }
 
+/*
+ * Verifies RSA key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key is not a RSA key or
+ *         the key is invalid.
+ */
 void
 pkey::verify_rsa() const
 {
@@ -68,6 +113,12 @@ pkey::verify_rsa() const
 	}
 }
 
+/*
+ * Verifies DH key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key is not a DH key or
+ *         the key is invalid.
+ */
 void
 pkey::verify_dh() const
 {
@@ -90,6 +141,12 @@ pkey::verify_dh() const
 	}
 }
 
+/*
+ * Verifies EC key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key is not an EC key or
+ *         the key is invalid.
+ */
 void
 pkey::verify_ec() const
 {
@@ -105,6 +162,18 @@ pkey::verify_ec() const
 	}
 }
 
+/*
+ * Construct the key.
+ *
+ * @param [in] fmt    - key format: der or pem.
+ * @param [in] kfile  - key file path.
+ * @param [in] passwd - password to the pem key. The password is
+ *                      applicable only to pem format.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key could not be read or
+ *         the key could not be converted to EVP_PKEY or
+ *         the key password is incorrect.
+ */
 pkey::pkey(
 	data_fmt fmt,
 	const std::string &kfile,
@@ -119,6 +188,18 @@ pkey::pkey(
 	}
 }
 
+/*
+ * Construct the key.
+ *
+ * @param [in] fmt    - key format: der or pem.
+ * @param [in] key    - key.
+ * @param [in] keylen - key length.
+ * @param [in] passwd - password to the pem key. The password is
+ *                      applicable only to pem format.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key could not converted to EVP_PKEY or
+ *         the key password is incorrect.
+ */
 pkey::pkey(
 	data_fmt fmt,
 	const uint8_t *key,
@@ -132,6 +213,14 @@ pkey::pkey(
 	}
 }
 
+/*
+ * Constructs the key from the raw EVP_PKEY.
+ * It bumps up the reference count of the key.
+ *
+ * @param [in] pkey - raw key.
+ *
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ */
 pkey::pkey(EVP_PKEY *pkey)
 {
 	if (ssl_library::instance().evp_pkey_up_ref()(pkey) != 1)
@@ -139,6 +228,12 @@ pkey::pkey(EVP_PKEY *pkey)
 	m_pkey = pkey;
 }
 
+/*
+ * Copy constructor. No copy is done, the class simply points to the same
+ * same raw key and the reference count in bumped up.
+ *
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ */
 pkey::pkey(const pkey &pkey)
 {
 	if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
@@ -146,13 +241,19 @@ pkey::pkey(const pkey &pkey)
 	m_pkey = pkey.m_pkey;
 }
 
+/*
+ * Move constructor.
+ */
 pkey::pkey(pkey &&pkey)
 {
 	m_pkey = pkey.m_pkey;
 	pkey.m_pkey = nullptr;
 }
 
-
+/*
+ * Destructor. The reference count to the key is decremented. If it is the
+ * last reference, the key is deleted.
+ */
 pkey::~pkey()
 {
 	if (m_pkey) {
@@ -161,6 +262,12 @@ pkey::~pkey()
 	}
 }
 
+/*
+ * Copy operator. No copy is done, the class simply points to the same
+ * same raw key and the reference count in bumped up.
+ *
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ */
 const pkey &
 pkey::operator=(const pkey &pkey)
 {
@@ -174,6 +281,9 @@ pkey::operator=(const pkey &pkey)
 	return *this;
 }
 
+/*
+ * Move operator.
+ */
 pkey &
 pkey::operator=(pkey &&pkey)
 {
@@ -186,6 +296,9 @@ pkey::operator=(pkey &&pkey)
 	return *this;
 }
 
+/*
+ * Get the key type (EVP_PKEY_XXX).
+ */
 int
 pkey::type() const
 {
@@ -195,6 +308,11 @@ pkey::type() const
 	return kt;
 }
 
+/*
+ * Verifies the key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key is invalid.
+ */
 void
 pkey::verify() const
 {

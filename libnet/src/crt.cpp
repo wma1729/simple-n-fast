@@ -2,6 +2,7 @@
 #include "crt.h"
 #include "ia.h"
 #include <regex>
+#include <memory>
 
 namespace snf {
 namespace net {
@@ -47,13 +48,15 @@ x509_certificate::init_pem(const uint8_t *crt, size_t crtlen, const char *passwd
 {
 	char *pwd = const_cast<char *>(passwd);
 
-	BIO *cbio = ssl_library::instance().bio_new_mem_buf()(crt, static_cast<int>(crtlen));
-	m_crt = ssl_library::instance().pem_read_bio_x509()(cbio, nullptr, nullptr, pwd);
-	if (m_crt == nullptr) {
-		ssl_library::instance().bio_free()(cbio);
+	std::unique_ptr<BIO, decltype(&bio_free)> cbio {
+		ssl_library::instance().bio_new_mem_buf()(crt, static_cast<int>(crtlen)),
+		bio_free
+	};
+
+	m_crt = ssl_library::instance().pem_read_bio_x509()
+		(cbio.get(), nullptr, nullptr, pwd);
+	if (m_crt == nullptr)
 		throw ssl_exception("failed to load PEM certificate");
-	}
-	ssl_library::instance().bio_free()(cbio);
 }
 
 std::string
@@ -220,30 +223,26 @@ x509_certificate::subject()
 
 	int len;
 	char buf[2048];
-	BIO *bio;
 	X509_NAME *n;
 
 	n = ssl_library::instance().x509_get_subject()(m_crt);
 	if (n == nullptr)
 		throw ssl_exception("failed to get subject from certificate");
 
-	bio = ssl_library::instance().bio_new()
-		(ssl_library::instance().bio_s_mem()());
+	std::unique_ptr<BIO, decltype(&bio_free)> bio {
+		ssl_library::instance().bio_new()(ssl_library::instance().bio_s_mem()()),
+		bio_free
+	};
 
 	len = ssl_library::instance().x509_name_get()
-		(bio, n, 0, XN_FLAG_ONELINE);
-	if (len < 0) {
-		ssl_library::instance().bio_free()(bio);
+		(bio.get(), n, 0, XN_FLAG_ONELINE);
+	if (len < 0)
 		throw ssl_exception("failed to transfer X509 name to bio");
-	}
 
-	len = ssl_library::instance().bio_read()(bio, buf, static_cast<int>(sizeof(buf)) - 1);
-	if (len < 0) {
-		ssl_library::instance().bio_free()(bio);
+	len = ssl_library::instance().bio_read()
+		(bio.get(), buf, static_cast<int>(sizeof(buf)) - 1);
+	if (len < 0)
 		throw ssl_exception("failed to fetch subject from bio");
-	}
-
-	ssl_library::instance().bio_free()(bio);
 
 	m_subject.insert(0, buf, len);
 
@@ -264,30 +263,26 @@ x509_certificate::issuer()
 
 	int len;
 	char buf[2048];
-	BIO *bio;
 	X509_NAME *n;
 
 	n = ssl_library::instance().x509_get_issuer()(m_crt);
 	if (n == nullptr)
 		throw ssl_exception("failed to get issuer from certificate");
 
-	bio = ssl_library::instance().bio_new()
-		(ssl_library::instance().bio_s_mem()());
+	std::unique_ptr<BIO, decltype(&bio_free)> bio {
+		ssl_library::instance().bio_new()(ssl_library::instance().bio_s_mem()()),
+		bio_free
+	};
 
 	len = ssl_library::instance().x509_name_get()
-		(bio, n, 0, XN_FLAG_ONELINE);
-	if (len < 0) {
-		ssl_library::instance().bio_free()(bio);
+		(bio.get(), n, 0, XN_FLAG_ONELINE);
+	if (len < 0)
 		throw ssl_exception("failed to transfer X509 name to bio");
-	}
 
-	len = ssl_library::instance().bio_read()(bio, buf, static_cast<int>(sizeof(buf)) - 1);
-	if (len < 0) {
-		ssl_library::instance().bio_free()(bio);
+	len = ssl_library::instance().bio_read()
+		(bio.get(), buf, static_cast<int>(sizeof(buf)) - 1);
+	if (len < 0)
 		throw ssl_exception("failed to fetch issuer from bio");
-	}
-
-	ssl_library::instance().bio_free()(bio);
 
 	m_issuer.insert(0, buf, len);
 

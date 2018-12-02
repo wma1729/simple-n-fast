@@ -1,4 +1,5 @@
 #include "crl.h"
+#include <memory>
 
 namespace snf {
 namespace net {
@@ -26,13 +27,15 @@ x509_crl::x509_crl(
 {
 	char *pwd = const_cast<char *>(passwd);
 
-	BIO *crlbio = ssl_library::instance().bio_new_mem_buf()(crl, static_cast<int>(crllen));
-	m_crl = ssl_library::instance().pem_read_bio_x509_crl()(crlbio, nullptr, nullptr, pwd);
-	if (m_crl == nullptr) {
-		ssl_library::instance().bio_free()(crlbio);
+	std::unique_ptr<BIO, decltype(&bio_free)> crlbio {
+		ssl_library::instance().bio_new_mem_buf()(crl, static_cast<int>(crllen)),
+		bio_free
+	};
+
+	m_crl = ssl_library::instance().pem_read_bio_x509_crl()
+		(crlbio.get(), nullptr, nullptr, pwd);
+	if (m_crl == nullptr)
 		throw ssl_exception("failed to load X509 CRL");
-	}
-	ssl_library::instance().bio_free()(crlbio);
 }
 
 x509_crl::x509_crl(X509_CRL *crl)

@@ -1,7 +1,6 @@
 #ifndef _SNF_PKEY_H_
 #define _SNF_PKEY_H_
 
-#include <cstdint>
 #include "file.h"
 #include "sslfcn.h"
 
@@ -9,6 +8,11 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+/*
+ * Encapsulates OpenSSL key (EVP_PKEY).
+ * - The key can be in der or pem format.
+ * - A type operator is provided to get the raw key.
+ */
 class pkey
 {
 public:
@@ -22,7 +26,6 @@ public:
 	const pkey &operator=(const pkey &);
 	pkey &operator=(pkey &&);
 
-	/* Return EVP_PKEY_XXX */
 	int type() const;
 	void verify() const;
 
