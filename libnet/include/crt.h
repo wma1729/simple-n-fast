@@ -10,14 +10,19 @@ namespace snf {
 namespace net {
 namespace ssl {
 
-struct alternate_name {
-	std::string type;
-	std::string name;
-};
-
+/*
+ * Encapsulates OpenSSL X509 Certificate (X509).
+ * - The certificate can be in der or pem format.
+ * - A type operator is provided to get the raw certificate.
+ */
 class x509_certificate
 {
 public:
+	struct altname {
+		std::string type;
+		std::string name;
+	};
+
 	x509_certificate(data_fmt, const std::string &, const char *passwd = nullptr);
 	x509_certificate(data_fmt, const uint8_t *, size_t, const char *passwd = nullptr);
 	x509_certificate(X509 *);
@@ -34,20 +39,20 @@ public:
 	const std::string &issuer();
 	const std::string &common_name();
 	const std::string &serial();
-	const std::vector<alternate_name> &alternate_names();
+	const std::vector<x509_certificate::altname> &alternate_names();
 	const std::vector<std::string> &crl_distribution_points();
 	const std::vector<std::string> &ocsp_end_points();
 	bool matches(const std::string &);
 
 private:
-	X509                            *m_crt = nullptr;
-	std::string                     m_subject;
-	std::string                     m_issuer;
-	std::string                     m_cn;
-	std::string                     m_serial;
-	std::vector<alternate_name>     m_alt_names;
-	std::vector<std::string>        m_crl_dps;
-	std::vector<std::string>        m_ocsp_eps;
+	X509                        *m_crt = nullptr;
+	std::string                 m_subject;
+	std::string                 m_issuer;
+	std::string                 m_cn;
+	std::string                 m_serial;
+	std::vector<altname>        m_alt_names;
+	std::vector<std::string>    m_crl_dps;
+	std::vector<std::string>    m_ocsp_eps;
 
 	void init_der(snf::file_ptr &);
 	void init_der(const uint8_t *, size_t);

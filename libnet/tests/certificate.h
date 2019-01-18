@@ -91,12 +91,11 @@ public:
 			std::string iss = "C = US, ST = Minnesota, O = www.simplenfast.org, OU = Department of Perennial Learning, CN = IntermediateCA";
 			ASSERT_EQ(const std::string &, iss, cert9.issuer(), "issuer matches");
 
-			const std::vector<snf::net::ssl::alternate_name> &altnames =
+			const std::vector<snf::net::ssl::x509_certificate::altname> &altnames =
 				cert9.alternate_names();
 			ASSERT_EQ(size_t, altnames.size(), 3, "alternate names size matched");
 
-			std::vector<snf::net::ssl::alternate_name>::const_iterator I;
-			for (I = altnames.begin(); I != altnames.end(); ++I) {
+			for (auto I = altnames.begin(); I != altnames.end(); ++I) {
 				if (I->type == "DNS")
 					ASSERT_EQ(const std::string &, I->name, "localhost", "DNS name matches");
 				else if (I->type == "IP")

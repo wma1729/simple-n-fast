@@ -8,6 +8,14 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+/*
+ * Initialize certificate in der format from file pointer.
+ *
+ * @param [in] fp - pointer to the file containing the certificate.
+ *
+ * @throws snf::net::ssl::ssl_exception if the certificate could not be read or
+ *         the certificate could not be converted to X509.
+ */
 void
 x509_certificate::init_der(snf::file_ptr &fp)
 {
@@ -19,6 +27,14 @@ x509_certificate::init_der(snf::file_ptr &fp)
 	}
 }
 
+/*
+ * Initialize certificate in der format from memory.
+ *
+ * @param [in] crt    - certificate.
+ * @param [in] crtlen - certificate length.
+ *
+ * @throws snf::net::ssl::ssl_exception if the certificate could not converted to X509.
+ */
 void
 x509_certificate::init_der(const uint8_t *crt, size_t crtlen)
 {
@@ -30,6 +46,16 @@ x509_certificate::init_der(const uint8_t *crt, size_t crtlen)
 		throw ssl_exception("failed to load DER certificate");
 }
 
+/*
+ * Initialize certificate in pem format from file pointer.
+ *
+ * @param [in] fp     - pointer to the file containing the certificate.
+ * @param [in] passwd - password to the pem certificate.
+ *
+ * @throws snf::net::ssl::ssl_exception if the certificate could not be read or
+ *         the certificate could not be converted to X509 or
+ *         the certificate password is incorrect.
+ */
 void
 x509_certificate::init_pem(snf::file_ptr &fp, const char *passwd)
 {
@@ -43,6 +69,16 @@ x509_certificate::init_pem(snf::file_ptr &fp, const char *passwd)
 	}
 }
 
+/*
+ * Initialize certificate in pem format from memory.
+ *
+ * @param [in] crt    - certificate.
+ * @param [in] crtlen - certificate length.
+ * @param [in] passwd - password to the pem certificate.
+ *
+ * @throws snf::net::ssl::ssl_exception if the certificate could not converted to X509 or
+ *         the certificate password is incorrect.
+ */
 void
 x509_certificate::init_pem(const uint8_t *crt, size_t crtlen, const char *passwd)
 {
@@ -59,6 +95,15 @@ x509_certificate::init_pem(const uint8_t *crt, size_t crtlen, const char *passwd
 		throw ssl_exception("failed to load PEM certificate");
 }
 
+/*
+ * String representation of the GENERAL_NAME.
+ *
+ * @param [in] gn - pointer to the GENERAL_NAME.
+ *
+ * @return the string representation of the GENERAL_NAME.
+ * Only GEN_DNS, GEN_URI, and GEN_IPADD are handled. Empty
+ * string is returned for the rest.
+ */
 std::string
 x509_certificate::gn_2_str(const GENERAL_NAME *gn)
 {
@@ -99,6 +144,14 @@ x509_certificate::gn_2_str(const GENERAL_NAME *gn)
 	return s;
 }
 
+/*
+ * Determines if two certificate names are same.
+ *
+ * @param [in] name1 - the first certificate name (no regex allowed).
+ * @param [in] name2 - the second certificate name (regex allowed).
+ *
+ * @return true if the names are same, false otherwise.
+ */
 bool
 x509_certificate::equal(const std::string &name1, const std::string &name2)
 {
@@ -110,6 +163,18 @@ x509_certificate::equal(const std::string &name1, const std::string &name2)
 	}
 }
 
+/*
+ * Construct the certificate.
+ *
+ * @param [in] fmt    - certificate format: der or pem.
+ * @param [in] cfile  - certificate file path.
+ * @param [in] passwd - password to the pem certificate. The password is
+ *                      applicable only to pem format.
+ *
+ * @throws snf::net::ssl::ssl_exception if the certificate could not be read or
+ *         the certificate could not be converted to X509 or
+ *         the certificate password is incorrect.
+ */
 x509_certificate::x509_certificate(
 	data_fmt fmt,
 	const std::string &cfile,
@@ -124,6 +189,18 @@ x509_certificate::x509_certificate(
 	}
 }
 
+/*
+ * Construct the certificate.
+ *
+ * @param [in] fmt    - certificate format: der or pem.
+ * @param [in] crt    - certificate.
+ * @param [in] crtlen - certificate length.
+ * @param [in] passwd - password to the pem certificate. The password is
+ *                      applicable only to pem format.
+ *
+ * @throws snf::net::ssl::ssl_exception if the certificate could not converted to X509 or
+ *         the certificate password is incorrect.
+ */
 x509_certificate::x509_certificate(
 	data_fmt fmt,
 	const uint8_t *crt,
@@ -137,6 +214,14 @@ x509_certificate::x509_certificate(
 	}
 }
 
+/*
+ * Constructs the certificate from the raw X509.
+ * It bumps up the reference count of the certificate.
+ *
+ * @param [in] crt - raw certificate.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 x509_certificate::x509_certificate(X509 *crt)
 {
 	if (ssl_library::instance().x509_up_ref()(crt) != 1)
@@ -144,6 +229,14 @@ x509_certificate::x509_certificate(X509 *crt)
 	m_crt = crt;
 }
 
+/*
+ * Copy constructor. No copy is done, the class simply points to the same
+ * same raw certificate and the reference count in bumped up.
+ *
+ * @param [in] crt - certificate.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 x509_certificate::x509_certificate(const x509_certificate &crt)
 {
 	if (ssl_library::instance().x509_up_ref()(crt.m_crt) != 1)
@@ -157,6 +250,9 @@ x509_certificate::x509_certificate(const x509_certificate &crt)
 	m_ocsp_eps = crt.m_ocsp_eps;
 }
 
+/*
+ * Move constructor.
+ */
 x509_certificate::x509_certificate(x509_certificate &&crt)
 {
 	m_crt = crt.m_crt;
@@ -169,7 +265,10 @@ x509_certificate::x509_certificate(x509_certificate &&crt)
 	m_ocsp_eps = std::move(crt.m_ocsp_eps);
 }
 
-
+/*
+ * Destructor. The reference count to the certificate is decremented. If it is the
+ * last reference, the certificate is deleted.
+ */
 x509_certificate::~x509_certificate()
 {
 	if (m_crt) {
@@ -178,6 +277,12 @@ x509_certificate::~x509_certificate()
 	}
 }
 
+/*
+ * Copy operator. No copy is done, the class simply points to the same
+ * same raw certificate and the reference count in bumped up.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 const x509_certificate &
 x509_certificate::operator=(const x509_certificate &crt)
 {
@@ -197,6 +302,9 @@ x509_certificate::operator=(const x509_certificate &crt)
 	return *this;
 }
 
+/*
+ * Move operator.
+ */
 x509_certificate &
 x509_certificate::operator=(x509_certificate &&crt)
 {
@@ -215,6 +323,12 @@ x509_certificate::operator=(x509_certificate &&crt)
 	return *this;
 }
 
+/*
+ * Gets the certificate's subject. The common name is also retrieved here.
+ *
+ * @throws snf::net::ssl::ssl_exception if the subject and/or the common
+ *         name could not be retrieved from the certificate.
+ */
 const std::string &
 x509_certificate::subject()
 {
@@ -255,6 +369,12 @@ x509_certificate::subject()
 	return m_subject;
 }
 
+/*
+ * Gets the certificate's issuer.
+ *
+ * @throws snf::net::ssl::ssl_exception if the issuer
+ *         could not be retrieved from the certificate.
+ */
 const std::string &
 x509_certificate::issuer()
 {
@@ -289,6 +409,12 @@ x509_certificate::issuer()
 	return m_issuer;
 }
 
+/*
+ * Gets the certificate's common name.
+ *
+ * @throws snf::net::ssl::ssl_exception if the common
+ *         name could not be retrieved from the certificate.
+ */
 const std::string &
 x509_certificate::common_name()
 {
@@ -300,6 +426,12 @@ x509_certificate::common_name()
 	return m_cn;
 }
 
+/*
+ * Gets the certificate's serial number.
+ *
+ * @throws snf::net::ssl::ssl_exception if the serial
+ *         number could not be retrieved from the certificate.
+ */
 const std::string &
 x509_certificate::serial()
 {
@@ -327,7 +459,15 @@ x509_certificate::serial()
 	return m_serial;
 }
 
-const std::vector<alternate_name> &
+/*
+ * Gets the certificate's alternate names. Only the names of
+ * type GEN_DNS, GEN_URI, and GEN_IPADD are handled. No alternate
+ * names is not an error.
+ *
+ * @throws snf::net::ssl::ssl_exception if the alternate
+ *         names could not be retrieved from the certificate.
+ */
+const std::vector<x509_certificate::altname> &
 x509_certificate::alternate_names()
 {
 	if (!m_alt_names.empty())
@@ -346,7 +486,7 @@ x509_certificate::alternate_names()
 		GENERAL_NAME *altname = static_cast<GENERAL_NAME *>(
 			ssl_library::instance().stk_val()(altname_stack, i));
 
-		alternate_name an;
+		x509_certificate::altname an;
 
 		if (altname->type == GEN_DNS) {
 			an.type = "DNS";
@@ -370,6 +510,13 @@ x509_certificate::alternate_names()
 	return m_alt_names;
 }
 
+/*
+ * Gets the certification revocation list (CRL) distribution points
+ * from the certificate. No data is not an error.
+ *
+ * @throws snf::net::ssl::ssl_exception if the CRL
+ *         distribution points could not be retrieved from the certificate.
+ */
 const std::vector<std::string> &
 x509_certificate::crl_distribution_points()
 {
@@ -418,6 +565,13 @@ x509_certificate::crl_distribution_points()
 	return m_crl_dps;
 }
 
+/*
+ * Gets the online certificate status protocol (OCSP) end points
+ * from the certificate. No data is not an error.
+ *
+ * @throws snf::net::ssl::ssl_exception if the OCSP
+ *         end points could not be retrieved from the certificate.
+ */
 const std::vector<std::string> &
 x509_certificate::ocsp_end_points()
 {
@@ -453,6 +607,16 @@ x509_certificate::ocsp_end_points()
 	return m_ocsp_eps;
 }
 
+/*
+ * Determines if the given server name matches the certificate.
+ * The common name and alternate names, if any, are checked for a match.
+ * The server name is compared against the alternate names of type DNS
+ * and IP address only.
+ *
+ * @param [in] servername - the server name to match.
+ *
+ * @return true if the server name matches the certificate, false otherwise.
+ */
 bool
 x509_certificate::matches(const std::string &servername)
 {

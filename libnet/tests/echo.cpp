@@ -311,6 +311,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 
 	sock.keepalive(true);
 	sock.tcpnodelay(true);
+	sock.blocking(false);
 
 	sock.connect(AF_INET, args.host, args.port);
 
@@ -471,6 +472,7 @@ server(const arguments &args, snf::net::ssl::context *ctx)
 	sock.keepalive(true);
 	sock.tcpnodelay(true);
 	sock.reuseaddr(true);
+	sock.blocking(false);
 
 	sock.bind(AF_INET, args.port);
 	sock.listen(20);
@@ -490,6 +492,7 @@ server(const arguments &args, snf::net::ssl::context *ctx)
 				"failed to poll socket");
 		} else /* if (retval > 0) */ {
 			snf::net::socket nsock = std::move(sock.accept());
+			nsock.blocking(false);
 			std::thread wt(
 				worker_thread,
 				std::ref(args),

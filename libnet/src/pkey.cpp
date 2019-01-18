@@ -217,28 +217,30 @@ pkey::pkey(
  * Constructs the key from the raw EVP_PKEY.
  * It bumps up the reference count of the key.
  *
- * @param [in] pkey - raw key.
+ * @param [in] key - raw key.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */
-pkey::pkey(EVP_PKEY *pkey)
+pkey::pkey(EVP_PKEY *key)
 {
-	if (ssl_library::instance().evp_pkey_up_ref()(pkey) != 1)
+	if (ssl_library::instance().evp_pkey_up_ref()(key) != 1)
 		throw ssl_exception("failed to increment the key reference count");
-	m_pkey = pkey;
+	m_pkey = key;
 }
 
 /*
  * Copy constructor. No copy is done, the class simply points to the same
  * same raw key and the reference count in bumped up.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @param [in] key - key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */
-pkey::pkey(const pkey &pkey)
+pkey::pkey(const pkey &key)
 {
-	if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
+	if (ssl_library::instance().evp_pkey_up_ref()(key.m_pkey) != 1)
 		throw ssl_exception("failed to increment the key reference count");
-	m_pkey = pkey.m_pkey;
+	m_pkey = key.m_pkey;
 }
 
 /*
@@ -266,7 +268,7 @@ pkey::~pkey()
  * Copy operator. No copy is done, the class simply points to the same
  * same raw key and the reference count in bumped up.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */
 const pkey &
 pkey::operator=(const pkey &pkey)
