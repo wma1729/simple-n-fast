@@ -143,18 +143,12 @@ connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
 
 		case SSL_ERROR_WANT_READ:
 			fdelem.events |= POLLIN;
-			if (ei.op == operation::write)
-				retval = E_want_read;
-			else
-				retval = E_try_again;
+			retval = E_try_again;
 			break;
 
 		case SSL_ERROR_WANT_WRITE:
 			fdelem.events |= POLLOUT;
-			if (ei.op == operation::read)
-				retval = E_want_write;
-			else
-				retval = E_try_again;
+			retval = E_try_again;
 			break;
 
 		case SSL_ERROR_SYSCALL:
@@ -481,6 +475,7 @@ connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
 				break;
 			}
 		} else {
+			retval = E_ok;
 			cbuf += n;
 			to_read -= n;
 			nbytes += n;
@@ -527,6 +522,7 @@ connection::write(const void *buf, int to_write, int *bwritten, int to, int *ose
 				break;
 			}
 		} else {
+			retval = E_ok;
 			cbuf += n;
 			to_write -= n;
 			nbytes += n;
