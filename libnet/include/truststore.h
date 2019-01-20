@@ -11,6 +11,11 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+/*
+ * Encapsulates OpenSSL X509 trust store (X509_STORE).
+ * - A type operator is provided to get the raw trust store.
+ * - Certificates and CRLs can be added to the trust store.
+ */
 class truststore
 {
 public:

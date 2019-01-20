@@ -9,6 +9,11 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+/*
+ * Encapsulates OpenSSL X509 Certificate Revocation List (X509_crl).
+ * - The CRL must be in pem format.
+ * - A type operator is provided to get the raw X509 CRL.
+ */
 class x509_crl
 {
 public:
