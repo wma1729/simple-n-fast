@@ -9,6 +9,15 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+/*
+ * Constructs SSL session from in-memory session data.
+ *
+ * @param [in] data - session data.
+ * @param [in] len  - session data length.
+ *
+ * @throws snf::net::ssl::ssl_exception if the SSL session could not
+ *         be imported from the given data.
+ */
 session::session(const uint8_t *data, size_t len)
 {
 	m_session = ssl_library::instance().ssl_session_d2i()
@@ -17,6 +26,15 @@ session::session(const uint8_t *data, size_t len)
 		throw ssl_exception("failed to import SSL session");
 }
 
+/*
+ * Constructs SSL session from the contents of the given file.
+ *
+ * @param [in] name - session file name.
+ *
+ * @throws std::system_error if the file could not be opened or read,
+ *         snf::net::ssl::ssl_exception if the SSL session could not
+ *         be imported from the file content.
+ */
 session::session(const std::string &name)
 {
 	int oserr = 0;
@@ -61,6 +79,14 @@ session::session(const std::string &name)
 	f.close();
 }
 
+/*
+ * Constructs the SSL session from the raw SSL_SESSION.
+ * It bumps up the reference count of the SSL session.
+ *
+ * @param [in] s - raw SSL_SESSION.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 session::session(SSL_SESSION *s)
 {
 	if (ssl_library::instance().ssl_session_up_ref()(s) != 1)
@@ -68,6 +94,14 @@ session::session(SSL_SESSION *s)
 	m_session = s;
 }
 
+/*
+ * Copy constructor. No copy is done, the class simply points to the same
+ * same raw SSL session and the reference count in bumped up.
+ *
+ * @param [in] s - SSL session.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 session::session(const session &s)
 {
 	if (ssl_library::instance().ssl_session_up_ref()(s.m_session) != 1)
@@ -75,12 +109,19 @@ session::session(const session &s)
 	m_session = s.m_session;
 }
 
+/*
+ * Move constructor.
+ */
 session::session(session &&s)
 {
 	m_session = s.m_session;
 	s.m_session = nullptr;
 }
 
+/*
+ * Destructor. The reference count to the SSL session is decremented. If it is the
+ * last reference, the SSL session is deleted.
+ */
 session::~session()
 {
 	if (m_session) {
@@ -89,6 +130,12 @@ session::~session()
 	}
 }
 
+/*
+ * Copy operator. No copy is done, the class simply points to the same
+ * same raw SSL session and the reference count in bumped up.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 const session &
 session::operator=(const session &s)
 {
@@ -102,6 +149,9 @@ session::operator=(const session &s)
 	return *this;
 }
 
+/*
+ * Move operator.
+ */
 session &
 session::operator=(session &&s)
 {
@@ -114,12 +164,25 @@ session::operator=(session &&s)
 	return *this;
 }
 
+/*
+ * Exports SSL session to in-memory data. The returned data must be freed using
+ * 'delete []'.
+ *
+ * @param [out] len - session data length in case of success.
+ *
+ * @return pointer to the session data.
+ *
+ * @throws snf::net::ssl::ssl_exception if the SSL session could not be exported.
+ */
 uint8_t *
 session::to_bytes(size_t *len)
 {
 	size_t exp_len = ssl_library::instance().ssl_session_i2d()(m_session, nullptr);
 	uint8_t *exp_data = DBG_NEW uint8_t[exp_len];
 	uint8_t *data = exp_data;
+
+	if (len == 0)
+		throw std::invalid_argument("session data length must be specified");
 
 	*len = ssl_library::instance().ssl_session_i2d()(m_session, &exp_data);
 
@@ -139,6 +202,14 @@ session::to_bytes(size_t *len)
 	return data;
 }
 
+/*
+ * Exports SSL session to the given file.
+ *
+ * @param [in] name - SSL session file name.
+ *
+ * @throws std::system_error if the file could not be opened or written to,
+ *         snf::net::ssl::ssl_exception if the SSL session could not be exported.
+ */
 void
 session::to_file(const std::string &name)
 {
@@ -178,24 +249,34 @@ session::to_file(const std::string &name)
 	f.close();
 }
 
+/*
+ * Gets raw SSL session identifier. The returned data must be freed using 'delete []'.
+ *
+ * @param [out] len - length of the SSL session identifier.
+ *
+ * @return SSL session identifier.
+ */
 uint8_t *
 session::get_id(size_t *len)
 {
 	uint8_t *data = nullptr;
 	unsigned int plen = 0;
 
-	*len = 0;
+	if (len) *len = 0;
 
 	const uint8_t *ptr = ssl_library::instance().ssl_session_get_id()(m_session, &plen);
 	if (ptr && plen) {
 		data = DBG_NEW uint8_t[plen];
 		memcpy(data, ptr, plen);
-		*len = plen;
+		if (len) *len = plen;
 	}
 
 	return data;
 }
 
+/*
+ * Gets SSL session identifier in hexadecimal form.
+ */
 std::string
 session::get_id()
 {
@@ -210,6 +291,10 @@ session::get_id()
 	}
 }
 
+/*
+ * Gets the SSL session context. See snf::net::ssl::context.set_session_context() for
+ * setting SSL session context.
+ */
 std::string
 session::get_context()
 {
@@ -218,24 +303,40 @@ session::get_context()
 	return std::string { reinterpret_cast<const char *>(ptr), static_cast<size_t>(plen) };
 }
 
+/*
+ * Gets SSL session protocol version.
+ */
 int
 session::get_protocol_version()
 {
 	return ssl_library::instance().ssl_session_get_protocol()(m_session);
 }
 
+/*
+ * Gets SSL session start time.
+ */
 time_t
 session::start_time()
 {
 	return static_cast<time_t>(ssl_library::instance().ssl_session_get_time()(m_session));
 }
 
+/*
+ * Gets SSL session timeout in seconds.
+ */
 time_t
 session::timeout()
 {
 	return static_cast<time_t>(ssl_library::instance().ssl_session_get_timeout()(m_session));
 }
 
+/*
+ * Sets SSL session timeout in seconds.
+ *
+ * @param [in] to - timeout in seconds.
+ *
+ * @throws snf::net::ssl::ssl_exception if could not set the timeout.
+ */
 void
 session::timeout(time_t to)
 {
@@ -244,6 +345,10 @@ session::timeout(time_t to)
 		throw ssl_exception("failed to set the session timeout");
 }
 
+/*
+ * Determines if the SSL session has tickets. See snf::net::ssl::context.session_ticket()
+ * to enable session tickets.
+ */
 bool
 session::has_ticket()
 {

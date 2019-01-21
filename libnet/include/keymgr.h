@@ -17,14 +17,24 @@ constexpr int HMAC_SIZE = 16;
  */
 struct keyrec
 {
-	uint8_t key_name[KEY_SIZE];
-	uint8_t aes_key[AES_SIZE];
-	uint8_t hmac_key[HMAC_SIZE];
-	time_t  expire;
+	uint8_t key_name[KEY_SIZE];     // Key name
+	uint8_t aes_key[AES_SIZE];      // AES key
+	uint8_t hmac_key[HMAC_SIZE];    // HMAX key
+	time_t  expire;                 // Epoch time when the key expires
 };
 
 /*
  * Key manager interface.
+ *
+ * If Session ticket based SSL resumption is in used, the session-state
+ * information is encrypted and sent back to the client in the form
+ * of a ticket. The ticket is created by a TLS server and sent to a TLS
+ * client. The TLS client presents the ticket to the TLS server to resume
+ * a session.
+ *
+ * The key record, keyrec, is an implementation of the encryption key
+ * record on the TLS server side. The key manager, keymgr, is a public
+ * interface to create new key record or find an existing key.
  */
 class keymgr
 {

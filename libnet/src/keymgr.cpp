@@ -6,6 +6,22 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+/*
+ * Gets a key record. A new key is created if:
+ * - one does not exist.
+ * - the key has expired.
+ *
+ * The lifetime of the key can be specified at the time
+ * of key manager creation. The default is 1 hour. The
+ * expired key is maintained for 80% of the lifetime i.e.
+ * 48 minutes by default.
+ *
+ * @return key record or nullptr if the key could not be
+ *         created.
+ *
+ * @throws snf::net::ssl::ssl_exception if the key could not
+ *         be created.
+ */
 const keyrec *
 basic_keymgr::get()
 {
@@ -37,6 +53,14 @@ basic_keymgr::get()
 	return m_cur;
 }
 
+/*
+ * Finds the key record using the given key name.
+ *
+ * @param [in] name - key name.
+ * @param [in] len  - key name length.
+ *
+ * @return key record.
+ */
 const keyrec *
 basic_keymgr::find(const uint8_t *name, size_t len)
 {
