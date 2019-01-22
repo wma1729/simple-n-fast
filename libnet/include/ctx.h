@@ -16,6 +16,12 @@ namespace ssl {
 #define DEFAULT_CIPHER_LIST \
 	"TLSv1.2:SSLv3:!aNULL:!eNULL:!aGOST:!MD5:!MEDIUM:!CAMELLIA:!PSK:!RC4::@STRENGTH"
 
+/*
+ * Encapsulates OpenSSL SSL context (SSL_CTX).
+ * - A type operator is provided to get the raw SSL context.
+ * - Ability to specify various options.
+ * - Ability to use private key, trust store, and CRLs.
+ */
 class context {
 private:
 	static keymgr   *s_km;
@@ -24,15 +30,27 @@ private:
 	long get_options();
 	long clr_options(unsigned long);
 	long set_options(unsigned long);
+	void disable_session_caching();
 	x509_certificate get_certificate();
 
 public:
+	/*
+	 * Gets the key manager. If not already set using
+	 * set_keymgr(), a basic key manager is created
+	 * and used.
+	 */
 	static keymgr *get_keymgr()
 	{
 		if (s_km == nullptr) s_km = new basic_keymgr();
 		return s_km;
 	}
 
+	/*
+	 * Sets the key manager. Be careful about its use. It is not
+	 * thread-safe. But most of the time, you would set your key
+	 * manager at the start of the program where the risk of
+	 * concurrency are little.
+	 */
 	static void set_keymgr(keymgr *km)
 	{
 		if (s_km) delete s_km;
@@ -50,7 +68,6 @@ public:
 
 	void prefer_server_cipher();
 	void prefer_client_cipher();
-	void disable_session_caching();
 	time_t session_timeout();
 	time_t session_timeout(time_t);
 	void set_session_context(const std::string &);

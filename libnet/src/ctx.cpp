@@ -5,8 +5,36 @@
 static const int NEW_SESSION_KEY = 1;
 static const int RETRIEVE_SESSION_KEY = !NEW_SESSION_KEY;
 
+/*
+ * A callback function for handling session tickets.
+ * The callback function is called for every client instigated TLS
+ * session when session ticket extension is presented in the TLS
+ * hello message. It is the responsibility of this function to create
+ * or retrieve the cryptographic parameters and to maintain their state.
+ *
+ * @param [in]    ssl        - current SSL connection.
+ * @param [inout] key_name   - key name presented by the TLS client.
+ * @param [inout] iv         - initialization vector of the cipher.
+ * @param [inout] cipher_ctx - cipher context initialized with EVP_CIPHER_CTX_init().
+ * @param [inout] hmac_ctx   - HMAC context initialized with HMAC_CTX_init().
+ * @param [in]    mode       - For new sessions tickets, when the client doesn't
+ *                             present a session ticket, or an attempted retrieval
+ *                             of the ticket failed, or a renew option was indicated,
+ *                             the callback function is called with enc equal to 1.
+ *                             The callback function sets an arbitrary key_name,
+ *                             initialize iv, the cipher_ctx, and the hmac_ctx.
+ *
+ * @return 0 - If it was not possible to set/retrieve a session ticket and the SSL/TLS
+ *             session will continue by negotiating a set of cryptographic parameters.
+ *             If mode is 0, the callback will be called again with mode set to 1.
+ *         1 - If cipher_ctx and hmac_ctx have been set and the session can continue
+ *             using those parameters.
+ *         2 - If cipher_ctx and hmac_ctx have been set and the session can continue
+ *             using those parameters. It also indicates that the key has expired. The
+ *             next time, this callback function is called with mode set to 1.
+ */
 extern "C" int
-ssl_session_tickey_key_cb(
+ssl_session_ticket_key_cb(
 	SSL *ssl,
 	unsigned char *key_name,
 	unsigned char *iv,
@@ -77,6 +105,11 @@ namespace ssl {
 
 keymgr *context::s_km = nullptr;
 
+/*
+ * Get SSL context options.
+ *
+ * @return the current SSL context options.
+ */
 long
 context::get_options()
 {
@@ -89,6 +122,13 @@ context::get_options()
 	}
 }
 
+/*
+ * Clear SSL context options.
+ *
+ * @param [in] opt - options to clear.
+ *
+ * @return the current SSL context options after clearing the given options.
+ */
 long
 context::clr_options(unsigned long opt)
 {
@@ -101,6 +141,13 @@ context::clr_options(unsigned long opt)
 	}
 }
 
+/*
+ * Set SSL context options.
+ *
+ * @param [in] opt - options to set.
+ *
+ * @return the current SSL context options after setting the given options.
+ */
 long
 context::set_options(unsigned long opt)
 {
@@ -113,6 +160,45 @@ context::set_options(unsigned long opt)
 	}
 }
 
+/*
+ * Disables SSL session caching.
+ */
+void
+context::disable_session_caching()
+{
+	ssl_library::instance().ssl_ctx_ctrl() 
+		(m_ctx, SSL_CTRL_SET_SESS_CACHE_MODE, SSL_SESS_CACHE_OFF, nullptr); 
+}
+
+/*
+ * Gets the X509 certificate stored in the SSL context.
+ *
+ * @throws snf::net::ssl::ssl_exception if failed to fetch the certificate.
+ */
+x509_certificate
+context::get_certificate()
+{
+	X509 *c = ssl_library::instance().ssl_ctx_get0_cert()(m_ctx);
+	if (c == nullptr)
+		throw ssl_exception("failed to get certificate from SSL context");
+
+	x509_certificate cert(c);
+	return cert;
+}
+
+/*
+ * Constructs the SSL context.
+ * - Minimum TLS version is set to TLS1_VERSION.
+ * - SSL context mode is set to:
+ *       SSL_MODE_ENABLE_PARTIAL_WRITE |
+ *       SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER |
+ *       SSL_MODE_AUTO_RETRY
+ * - SSL context option is set to:
+ *       SSL_OP_NO_TICKET
+ *
+ * @throws snf::net::ssl::ssl_exception if the SSL context could not
+ *         be created or the mode/options could not be applied.
+ */
 context::context()
 {
 	m_ctx = ssl_library::instance().ssl_ctx_new()
@@ -138,9 +224,16 @@ context::context()
 		(m_ctx, SSL_CTRL_MODE, mode, nullptr);
 
 	set_options(SSL_OP_NO_TICKET);
-	// set_options(SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION);
 }
 
+/*
+ * Copy constructor. No copy is done, the class simply points to the same
+ * raw SSL context and the reference count in bumped up.
+ *
+ * @param [in] ctx - SSL context.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 context::context(const context &ctx)
 {
 	if (ssl_library::instance().ssl_ctx_up_ref()(ctx.m_ctx) != 1)
@@ -148,12 +241,33 @@ context::context(const context &ctx)
 	m_ctx = ctx.m_ctx;
 }
 
+/*
+ * Move constructor.
+ */
 context::context(context &&ctx)
 {
 	m_ctx = ctx.m_ctx;
 	ctx.m_ctx = nullptr;		
 }
 
+/*
+ * Destructor. The reference count to the SSL context is decremented. If it is the
+ * last reference, the SSL context is deleted.
+ */
+context::~context()
+{
+	if (m_ctx) {
+		ssl_library::instance().ssl_ctx_free()(m_ctx);
+		m_ctx = nullptr;
+	}
+}
+
+/*
+ * Copy operator. No copy is done, the class simply points to the same
+ * raw SSL context and the reference count in bumped up.
+ *
+ * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ */
 const context &
 context::operator=(const context &ctx)
 {
@@ -167,6 +281,9 @@ context::operator=(const context &ctx)
 	return *this;
 }
 
+/*
+ * Move operator.
+ */
 context &
 context::operator=(context &&ctx)
 {
@@ -179,39 +296,45 @@ context::operator=(context &&ctx)
 	return *this;
 }
 
-context::~context()
-{
-	if (m_ctx) {
-		ssl_library::instance().ssl_ctx_free()(m_ctx);
-		m_ctx = nullptr;
-	}
-}
-
+/*
+ * Call on TLS server.
+ * When choosing a cipher, use the TLS server's preferences instead of the
+ * client preferences. When not set, the TLS server will always follow the
+ * clients preferences.
+ */
 void
 context::prefer_server_cipher()
 {
 	set_options(SSL_OP_CIPHER_SERVER_PREFERENCE);
 }
 
+/*
+ * Call on TLS server.
+ * This is the default. The TLS server prefers client preferenced in
+ * choosing the cipher.
+ */
 void
 context::prefer_client_cipher()
 {
 	clr_options(SSL_OP_CIPHER_SERVER_PREFERENCE);
 }
 
-void
-context::disable_session_caching()
-{
-	ssl_library::instance().ssl_ctx_ctrl() 
-		(m_ctx, SSL_CTRL_SET_SESS_CACHE_MODE, SSL_SESS_CACHE_OFF, nullptr); 
-}
-
+/*
+ * Gets the current SSL session timeout in seconds.
+ */
 time_t
 context::session_timeout()
 {
 	return static_cast<time_t>(ssl_library::instance().ssl_ctx_get_timeout()(m_ctx));
 }
 
+/*
+ * Sets SSL session timeout in seconds.
+ *
+ * @param [in] to - timeout in seconds.
+ *
+ * @return previously set SSL session timeout in seconds.
+ */
 time_t
 context::session_timeout(time_t to)
 {
@@ -219,6 +342,15 @@ context::session_timeout(time_t to)
 	return static_cast<time_t>(ssl_library::instance().ssl_ctx_set_timeout()(m_ctx, lto));
 }
 
+/*
+ * If using Session ID context based SSL resumption, the TLS server
+ * should call this function to set the session ID context.
+ *
+ * @param [in] ctx - session ID context.
+ *
+ * @throws snf::net::ssl::ssl_exception if the session ID context is too
+ *         large or if the session ID context could not be set.
+ */
 void
 context::set_session_context(const std::string &ctx)
 {
@@ -232,6 +364,19 @@ context::set_session_context(const std::string &ctx)
 		throw ssl_exception("failed to set session ID context");
 }
 
+/*
+ * Enables/disables SSL session resumption using session ticket.
+ *
+ * @param [in] mode   - connection mode: server or client.
+ * @param [in] enable - If true, SSL resumption using session ticket
+ *                      is enabled. A callback function is registered
+ *                      for handling session tickets. If false, SSL
+ *                      resumption using session ticket is disabled.
+ *                      The callback function is un-registered.
+ *
+ * @throws snf::net::ssl::ssl_exception if the callback handler could
+ *         not be registered or un-registered.
+ */
 void
 context::session_ticket(connection_mode mode, bool enable)
 {
@@ -244,7 +389,7 @@ context::session_ticket(connection_mode mode, bool enable)
 	if (connection_mode::server == mode) {
 		p_ssl_ctx_tlsext_ticket_key_cb cb = nullptr;
 		if (enable)
-			cb = ssl_session_tickey_key_cb;
+			cb = ssl_session_ticket_key_cb;
 
 		if (ssl_library::instance().ssl_ctx_cb_ctrl()
 			(m_ctx,
@@ -255,6 +400,14 @@ context::session_ticket(connection_mode mode, bool enable)
 	}
 }
 
+/*
+ * Sets ciphers to use. See SSL_CTX_set_cipher_list() for the format.
+ * The default is TLSv1.2:SSLv3:!aNULL:!eNULL:!aGOST:!MD5:!MEDIUM:!CAMELLIA:!PSK:!RC4::@STRENGTH.
+ *
+ * @param [in] ciphers - cipher list to use.
+ *
+ * @throws snf::net::ssl::ssl_exception if the cipher list could not be set.
+ */
 void
 context::set_ciphers(const std::string &ciphers)
 {
@@ -265,6 +418,13 @@ context::set_ciphers(const std::string &ciphers)
 	}
 }
 
+/*
+ * Specifies the private key to use.
+ *
+ * @param [in] key - private key.
+ *
+ * @throws snf::net::ssl::ssl_exception if the private key could not be used.
+ */
 void
 context::use_private_key(pkey &key)
 {
@@ -272,6 +432,13 @@ context::use_private_key(pkey &key)
 		throw ssl_exception("failed to use private key");
 }
 
+/*
+ * Specifies the X509 certificate to use.
+ *
+ * @param [in] crt - X509 certificate.
+ *
+ * @throws snf::net::ssl::ssl_exception if the X509 certificate could not be used.
+ */
 void
 context::use_certificate(x509_certificate &crt)
 {
@@ -279,6 +446,13 @@ context::use_certificate(x509_certificate &crt)
 		throw ssl_exception("failed to use X509 certificate");
 }
 
+/*
+ * Specifies the trust store to use.
+ *
+ * @param [in] store - trust store.
+ *
+ * @throws snf::net::ssl::ssl_exception if the trust store could not be used.
+ */
 void
 context::use_truststore(truststore &store)
 {
@@ -289,6 +463,13 @@ context::use_truststore(truststore &store)
 	ssl_library::instance().ssl_ctx_use_truststore()(m_ctx, s);
 }
 
+/*
+ * Specifies the CRL to use.
+ *
+ * @param [in] crl - CRL.
+ *
+ * @throws snf::net::ssl::ssl_exception if the CRL could not be used.
+ */
 void
 context::use_crl(x509_crl &crl)
 {
@@ -304,6 +485,11 @@ context::use_crl(x509_crl &crl)
 		throw ssl_exception("failed to set flags for the X509 trust store");
 }
 
+/*
+ * Checks if the private key and the certificate matches.
+ *
+ * @throws snf::net::ssl::ssl_exception if the private key and the certificate do not match.
+ */
 void
 context::check_private_key()
 {
@@ -311,6 +497,14 @@ context::check_private_key()
 		throw ssl_exception("private key and X509 certificate do not match");
 }
 
+/*
+ * Specifies if the peer certificate, if provided, should be verified.
+ *
+ * @param [in] require_certificate - If true and no certificate is provided, the
+ *                                   verification fails.
+ * @param [in] do_it_once          - Verify only for initial handshake and not for
+ *                                   renegotiation.
+ */
 void
 context::verify_peer(bool require_certificate, bool do_it_once)
 {
@@ -323,21 +517,15 @@ context::verify_peer(bool require_certificate, bool do_it_once)
 	ssl_library::instance().ssl_ctx_set_verify()(m_ctx, mode, nullptr);
 }
 
+/*
+ * Specifies the certificate chain depth for verification.
+ *
+ * @param [in] depth - certificate chain depth.
+ */
 void
 context::limit_certificate_chain_depth(int depth)
 {
 	ssl_library::instance().ssl_ctx_set_verify_depth()(m_ctx, depth);
-}
-
-x509_certificate
-context::get_certificate()
-{
-	X509 *c = ssl_library::instance().ssl_ctx_get0_cert()(m_ctx);
-	if (c == nullptr)
-		throw ssl_exception("failed to get certificate from SSL context");
-
-	x509_certificate cert(c);
-	return cert;
 }
 
 } // namespace ssl
