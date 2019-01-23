@@ -230,7 +230,7 @@ pkey::pkey(EVP_PKEY *key)
 
 /*
  * Copy constructor. No copy is done, the class simply points to the same
- * same raw key and the reference count in bumped up.
+ * raw key and the reference count in bumped up.
  *
  * @param [in] key - key.
  *
@@ -266,7 +266,7 @@ pkey::~pkey()
 
 /*
  * Copy operator. No copy is done, the class simply points to the same
- * same raw key and the reference count in bumped up.
+ * raw key and the reference count in bumped up.
  *
  * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */

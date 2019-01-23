@@ -74,7 +74,7 @@ x509_crl::x509_crl(X509_CRL *crl)
 
 /*
  * Copy constructor. No copy is done, the class simply points to the same
- * same raw CRL and the reference count in bumped up.
+ * raw CRL and the reference count in bumped up.
  *
  * @param [in] crl - CRL.
  *
@@ -110,7 +110,7 @@ x509_crl::~x509_crl()
 
 /*
  * Copy operator. No copy is done, the class simply points to the same
- * same raw CRL and the reference count in bumped up.
+ * raw CRL and the reference count in bumped up.
  *
  * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */

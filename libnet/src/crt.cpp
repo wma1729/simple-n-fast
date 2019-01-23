@@ -231,7 +231,7 @@ x509_certificate::x509_certificate(X509 *crt)
 
 /*
  * Copy constructor. No copy is done, the class simply points to the same
- * same raw certificate and the reference count in bumped up.
+ * raw certificate and the reference count in bumped up.
  *
  * @param [in] crt - certificate.
  *
@@ -279,7 +279,7 @@ x509_certificate::~x509_certificate()
 
 /*
  * Copy operator. No copy is done, the class simply points to the same
- * same raw certificate and the reference count in bumped up.
+ * certificate and the reference count in bumped up.
  *
  * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */

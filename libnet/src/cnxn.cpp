@@ -2,6 +2,18 @@
 #include "error.h"
 #include <algorithm>
 
+/*
+ * Server name callback for SNI.
+ * This is set using SSL_CTX_set_tlsext_servername_callback() or equivalent.
+ * Finds the server name specfied in the TLS extension and switch to the
+ * matching context.
+ *
+ * @param [in] ssl - raw SSL object.
+ * @param [in] arg - argument to function set using SSL_CTX_set_tlsext_servername_arg()
+ *                   or equivalent.
+ *
+ * @return 1 on success, 0 on failure.
+ */
 extern "C" int
 sni_cb(SSL *ssl, int *, void *arg)
 {
@@ -110,6 +122,14 @@ connection::switch_context(const std::string &servername)
 	}
 }
 
+/*
+ * Gets the server name for SNI specified in the TLS extension. Only TLS server
+ * calls this private function.
+ *
+ * @return server name.
+ *
+ * @throws snf::net::ssl::ssl_exception if the server name could not be retrieved.
+ */
 std::string
 connection::get_sni()
 {
@@ -119,7 +139,7 @@ connection::get_sni()
 	const char *name = ssl_library::instance().ssl_get_servername()
 				(m_ssl, TLSEXT_NAMETYPE_host_name);
 	if ((name == nullptr) || (*name == '\0'))
-		throw ssl_exception("failed to get SNI from SSL");
+		throw ssl_exception("failed to get SNI from TLS extension");
 
 	return std::string(name);
 }
@@ -273,6 +293,12 @@ connection::operator=(connection &&d)
 	return *this;
 }
 
+/*
+ * Used by TLS server to add context in case the server has multiple names
+ * and supports unique certificate for each server name.
+ *
+ * @param [in] ctx - SSL context.
+ */
 void
 connection::add_context(context &ctx)
 {
@@ -286,6 +312,17 @@ connection::add_context(context &ctx)
 	m_contexts.push_back(ci);
 }
 
+/*
+ * Enables host name validation as part of the verification process. The
+ * caller can specify a vector of valid host names. If the peer name matches
+ * any of the host name in the certificate, the verification succeeds,
+ * else the verification fails.
+ *
+ * @param [in] hostnames - vector of valid host names.
+ *
+ * @throws snf::net::ssl::ssl_exception if the host names or verification
+ *         flags could not be set.
+ */
 void
 connection::check_hosts(const std::vector<std::string> &hostnames)
 {
@@ -326,6 +363,16 @@ connection::check_hosts(const std::vector<std::string> &hostnames)
 		(param, flags);
 }
 
+/*
+ * Enables IP address validation as part of the verification process. The
+ * caller can specify an IP address. If the peer IP address matches
+ * any of the IP address in the certificate, the verification succeeds,
+ * else the verification fails.
+ *
+ * @param [in] ia - IP address.
+ *
+ * @throws snf::net::ssl::ssl_exception if the IP address could not be set.
+ */
 void
 connection::check_inaddr(const internet_address &ia)
 {
@@ -343,6 +390,13 @@ connection::check_inaddr(const internet_address &ia)
 	}
 }
 
+/*
+ * Used by the TLS client to set the server name to use in the TLS extension.
+ *
+ * @param [in] servername - server name to use.
+ *
+ * @throws snf::net::ssl::ssl_exception if the server name could not be set.
+ */
 void
 connection::set_sni(const std::string &servername)
 {
@@ -356,11 +410,18 @@ connection::set_sni(const std::string &servername)
 			const_cast<char *>(servername.c_str()));
 	if (retval != 1) {
 		std::ostringstream oss;
-		oss << "failed to set SNI for " << servername << " in SSL";
+		oss << "failed to set " << servername << " for SNI in TLS extension";
 		throw ssl_exception(oss.str());
 	}
 }
 
+/*
+ * Used by the TLS server to enable SNI handling. The server name callback and arguments
+ * are registered for all contexts. All known contexts must be added before calling this
+ * function using add_context().
+ *
+ * @throws snf::net::ssl::ssl_exception if the callback or argument could not be set.
+ */
 void
 connection::enable_sni()
 {
@@ -412,6 +473,12 @@ connection::handshake(const socket &s, int to)
 	} while (retval == E_try_again);
 }
 
+/*
+ * Gets the current SSL session.
+ *
+ * @throws snf::net::ssl::ssl_exception if the session cannot be retrieved or
+ *         no session is active.
+ */
 session
 connection::get_session()
 {
@@ -421,6 +488,14 @@ connection::get_session()
 	return session { sess };
 }
 
+/*
+ * Sets the SSL session to use for resumption.
+ *
+ * @param [in] sess - SSL session to resume.
+ *
+ * @throws snf::net::ssl::ssl_exception if the session could not be set for
+ *         resumption.
+ */
 void
 connection::set_session(session &sess)
 {
@@ -428,6 +503,9 @@ connection::set_session(session &sess)
 		throw ssl_exception("failed to set SSL session");
 }
 
+/*
+ * Determines if the session set, using set_session(), is resumed/reused.
+ */
 bool
 connection::is_session_reused()
 {

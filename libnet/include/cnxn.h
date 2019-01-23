@@ -21,6 +21,13 @@ namespace ssl {
 enum class operation;
 struct error_info;
 
+/*
+ * Represents secured SSL connection. Manages all aspects of a secured connection.
+ * - supports Server Name Identification (SNI): multiple contexts can be added and
+ *   context switch occurs transparently.
+ * - supports SSL session resumption: session ID context and session ticket based.
+ * - supports simple host/ip addr checks.
+ */
 class connection : public snf::net::nio
 {
 private:

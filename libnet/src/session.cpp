@@ -96,7 +96,7 @@ session::session(SSL_SESSION *s)
 
 /*
  * Copy constructor. No copy is done, the class simply points to the same
- * same raw SSL session and the reference count in bumped up.
+ * raw SSL session and the reference count in bumped up.
  *
  * @param [in] s - SSL session.
  *
@@ -132,7 +132,7 @@ session::~session()
 
 /*
  * Copy operator. No copy is done, the class simply points to the same
- * same raw SSL session and the reference count in bumped up.
+ * raw SSL session and the reference count in bumped up.
  *
  * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */

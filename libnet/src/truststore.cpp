@@ -45,7 +45,7 @@ truststore::truststore(X509_STORE *store)
 
 /*
  * Copy constructor. No copy is done, the class simply points to the same
- * same raw trust store and the reference count in bumped up.
+ * raw trust store and the reference count in bumped up.
  *
  * @param [in] store - trust store.
  *
@@ -81,7 +81,7 @@ truststore::~truststore()
 
 /*
  * Copy operator. No copy is done, the class simply points to the same
- * same raw trust store and the reference count in bumped up.
+ * raw trust store and the reference count in bumped up.
  *
  * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
  */
