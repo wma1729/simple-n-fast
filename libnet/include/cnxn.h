@@ -22,10 +22,10 @@ enum class operation;
 struct error_info;
 
 /*
- * Represents secured SSL connection. Manages all aspects of a secured connection.
+ * Represents secured TLS connection. Manages all aspects of a secured connection.
  * - supports Server Name Identification (SNI): multiple contexts can be added and
  *   context switch occurs transparently.
- * - supports SSL session resumption: session ID context and session ticket based.
+ * - supports TLS session resumption: session ID context and session ticket based.
  * - supports simple host/ip addr checks.
  */
 class connection : public snf::net::nio
@@ -62,10 +62,10 @@ public:
 	void check_inaddr(const internet_address &);
 	void set_sni(const std::string &);
 	void enable_sni();
-	void handshake(const socket &, int to = POLL_WAIT_FOREVER);
 	session get_session();
 	void set_session(session &);
 	bool is_session_reused();
+	void handshake(const socket &, int to = POLL_WAIT_FOREVER);
 	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	void shutdown();

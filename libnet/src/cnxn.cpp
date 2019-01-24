@@ -35,6 +35,7 @@ namespace snf {
 namespace net {
 namespace ssl {
 
+/* Operation codes for better exception messages. */
 enum class operation
 {
 	unknown,
@@ -45,6 +46,7 @@ enum class operation
 	shutdown
 };
 
+/* Tracks error(s) and the associated operation. */
 struct error_info
 {
 	int         error;
@@ -55,6 +57,9 @@ struct error_info
 	error_info() : error(0), ssl_error(0), os_error(0), op(operation::unknown) { }
 };
 
+/*
+ * Stream operator to generate the detailed error message.
+ */
 static std::ostream &
 operator<< (std::ostream &os, const error_info &ei)
 {
@@ -91,6 +96,18 @@ operator<< (std::ostream &os, const error_info &ei)
 	return os;
 }
 
+/*
+ * Switches SSL context based on the given server name.
+ * The X509 certificate associated with each added SSL context is
+ * retrieved. The server name is then compared to the server
+ * name in the certificate. If the name matches, it switches to
+ * the matching SSL context.
+ *
+ * @param [in] servername - server name to use to find a match.
+ *
+ * @throws snf::net::ssl::ssl_exception if the context for the given
+ *         server name is not found.
+ */
 void
 connection::switch_context(const std::string &servername)
 {
@@ -144,6 +161,16 @@ connection::get_sni()
 	return std::string(name);
 }
 
+/*
+ * Handles SSL error.
+ * - Populates error_info nased on the SSL error code.
+ * - Poll for the socket to get ready if appropriate when the SSL
+ *   error code is SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ *
+ * @throws snf::net::ssl::ssl_exception if a non-retryable error is seen.
+ */
 int
 connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
 {
@@ -179,10 +206,22 @@ connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
 				retval = E_syscall_failed;
 			} else if (ei.error == -1) {
 				ei.os_error = snf::net::error();
-				if ((ei.op == operation::shutdown) && (ei.os_error == 0))
-					retval = E_ok;
-				else
+				if (ei.op == operation::connect) {
+					retval = E_connect_failed;
+				} else if (ei.op == operation::accept) {
+					retval = E_accept_failed;
+				} else if (ei.op == operation::read) {
+					retval = E_read_failed;
+				} else if (ei.op == operation::write) {
+					retval = E_write_failed;
+				} else if (ei.op == operation::shutdown) {
+					if (ei.os_error == 0)
+						retval = E_ok;
+					else
+						retval = E_close_failed;
+				} else {
 					retval = E_syscall_failed;
+				}
 			}
 			break;
 
@@ -209,18 +248,22 @@ connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
 		std::ostringstream oss;
 		oss << ei;
 		throw ssl_exception(oss.str());
-	} else if (E_syscall_failed == retval) {
-		std::ostringstream oss;
-		oss << ei;
-		throw std::system_error(
-			ei.os_error,
-			std::system_category(),
-			oss.str());
 	}
 
 	return retval;
 }
 
+/*
+ * Constructs the TLS connection.
+ *
+ * @param [in] m   - Connection mode: client or server.
+ *                   Depending on the value, the connection is
+ *                   set in either connect (client) or
+ *                   accept (server) state.
+ * @param [in] ctx - SSL context. The default (current) SSL context.
+ *
+ * @throws snf::net::ssl::ssl_exception if the connection could not be created.
+ */
 connection::connection(connection_mode m, context &ctx)
 	: m_mode(m)
 {
@@ -239,27 +282,42 @@ connection::connection(connection_mode m, context &ctx)
 	m_contexts.push_back(ci);
 }
 
-connection::connection(const connection &d)
+/*
+ * Copy constructor. Unlike other SSL objects, there is a real (deep)
+ * copy done. The internal SSL object is not reference counted.
+ * Use this with caution.
+ *
+ * @param [in] c - TLS connection.
+ *
+ * @throws snf::net::ssl::ssl_exception if copy fails.
+ */
+connection::connection(const connection &c)
 {
-	m_mode = d.m_mode;
-	m_contexts = d.m_contexts;
+	m_mode = c.m_mode;
+	m_contexts = c.m_contexts;
 
-	m_ssl = ssl_library::instance().ssl_dup()(d.m_ssl);
+	m_ssl = ssl_library::instance().ssl_dup()(c.m_ssl);
 	if (m_ssl == nullptr)
 		throw ssl_exception("failed to duplicate SSL object");
 }
 
-connection::connection(connection &&d)
+/*
+ * Move constructor.
+ */
+connection::connection(connection &&c)
 {
-	m_mode = d.m_mode;
-	m_contexts = std::move(d.m_contexts);
-	m_ssl = d.m_ssl;
-	d.m_ssl = nullptr;
+	m_mode = c.m_mode;
+	m_contexts = std::move(c.m_contexts);
+	m_ssl = c.m_ssl;
+	c.m_ssl = nullptr;
 }
 
+/*
+ * Destructor. This instance of the TLS connection is freed.
+ * Remember: the internal SSL object is not reference counted.
+ */
 connection::~connection()
 {
-	shutdown();
 	if (m_ssl) {
 		ssl_library::instance().ssl_free()(m_ssl);
 		m_ssl = nullptr;
@@ -267,28 +325,38 @@ connection::~connection()
 	m_contexts.clear();
 }
 
+/*
+ * Copy operator. Unlike other SSL objects, there is a real (deep)
+ * copy done. The internal SSL object is not reference counted.
+ * Use this with caution.
+ *
+ * @throws snf::net::ssl::ssl_exception if copy fails.
+ */
 const connection &
-connection::operator=(const connection &d)
+connection::operator=(const connection &c)
 {
-	if (this != &d) {
-		m_mode = d.m_mode;
-		m_contexts = d.m_contexts;
+	if (this != &c) {
+		m_mode = c.m_mode;
+		m_contexts = c.m_contexts;
 
-		m_ssl = ssl_library::instance().ssl_dup()(d.m_ssl);
+		m_ssl = ssl_library::instance().ssl_dup()(c.m_ssl);
 		if (m_ssl == nullptr)
 			throw ssl_exception("failed to duplicate SSL object");
 	}
 	return *this;
 }
 
+/*
+ * Move operator.
+ */
 connection &
-connection::operator=(connection &&d)
+connection::operator=(connection &&c)
 {
-	if (this != &d) {
-		m_mode = d.m_mode;
-		m_contexts = std::move(d.m_contexts);
-		m_ssl = d.m_ssl;
-		d.m_ssl = nullptr;
+	if (this != &c) {
+		m_mode = c.m_mode;
+		m_contexts = std::move(c.m_contexts);
+		m_ssl = c.m_ssl;
+		c.m_ssl = nullptr;
 	}
 	return *this;
 }
@@ -443,36 +511,6 @@ connection::enable_sni()
 	}
 }
 
-void
-connection::handshake(const socket &s, int to)
-{
-	sock_t sock = s;
-	int retval = ssl_library::instance().ssl_set_fd()(m_ssl, static_cast<int>(sock));
-	if (retval != 1) {
-		std::ostringstream oss;
-		oss << "failed to set socket "
-			<< static_cast<int64_t>(sock)
-			<< " for TLS communication";
-		throw ssl_exception(oss.str());
-	}
-
-	do {
-		error_info ei;
-
-		if (connection_mode::client == m_mode) {
-			ei.op = operation::connect;
-			ei.error = ssl_library::instance().ssl_connect()(m_ssl);
-		} else /* if (connection_mode::server == m_mode) */ {
-			ei.op = operation::accept;
-			ei.error = ssl_library::instance().ssl_accept()(m_ssl);
-		}
-
-		retval = handle_ssl_error(sock, to, ei);
-		if (E_ok == retval)
-			break;
-	} while (retval == E_try_again);
-}
-
 /*
  * Gets the current SSL session.
  *
@@ -518,6 +556,65 @@ connection::is_session_reused()
 			(m_ssl, SSL_CTRL_GET_SESSION_REUSED, 0, NULL) == 1);
 }
 
+/*
+ * Associate the raw socket with the TLS connection and
+ * perform secured connect (client) or accept (server) to
+ * perform the TLS handshake. This is the initial handshake.
+ * Both the TLS client and the TLS server must do this.
+ *
+ * @param [in] s  - socket to associate with TLS connection.
+ * @param [in] to - timeout in milliseconds.
+ *
+ * @throws snf::net::ssl::ssl_exception if the socket could not be associate with
+ *         the TLS connection or the TLS handshake fails.
+ */
+void
+connection::handshake(const socket &s, int to)
+{
+	sock_t sock = s;
+	int retval = ssl_library::instance().ssl_set_fd()(m_ssl, static_cast<int>(sock));
+	if (retval != 1) {
+		std::ostringstream oss;
+		oss << "failed to set socket "
+			<< static_cast<int64_t>(sock)
+			<< " for TLS communication";
+		throw ssl_exception(oss.str());
+	}
+
+	do {
+		error_info ei;
+
+		if (connection_mode::client == m_mode) {
+			ei.op = operation::connect;
+			ei.error = ssl_library::instance().ssl_connect()(m_ssl);
+		} else /* if (connection_mode::server == m_mode) */ {
+			ei.op = operation::accept;
+			ei.error = ssl_library::instance().ssl_accept()(m_ssl);
+		}
+
+		retval = handle_ssl_error(sock, to, ei);
+		if (E_ok == retval)
+			break;
+	} while (retval == E_try_again);
+}
+
+/**
+ * Reads from the TLS connection.
+ *
+ * @param [out] buf     - buffer to read the data into.
+ * @param [in]  to_read - number of bytes to read.
+ * @param [out] bread   - number of bytes read. This
+ *                        can be less than to_read.
+ * @param [in]  to      - timeout in milliseconds.
+ *                        POLL_WAIT_FOREVER for inifinite wait.
+ *                        POLL_WAIT_NONE for no wait.
+ * @param [out] oserr   - system error code.
+ *
+ * @return E_ok on success, -ve error code on success.
+ *
+ * @throws snf::net::ssl::ssl_exception if the internal socket could not be
+ *         retrieved or a SSL occurs while reading.
+ */
 int
 connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
 {
@@ -565,6 +662,23 @@ connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
 	return retval;
 }
 
+/**
+ * Writes to the TLS connection. SIGPIPE must be handled
+ * explicitly while using this.
+ *
+ * @param [in]  buf      - buffer to write the data from.
+ * @param [in]  to_write - number of bytes to write.
+ * @param [out] bwritten - number of bytes written.
+ * @param [in]  to       - timeout in milliseconds.
+ *                         POLL_WAIT_FOREVER for inifinite wait.
+ *                         POLL_WAIT_NONE for no wait.
+ * @param [out] oserr    - system error code.
+ *
+ * @return E_ok on success, -ve error code on success.
+ *
+ * @throws snf::net::ssl::ssl_exception if the internal socket could not be
+ *         retrieved or a SSL occurs while writing.
+ */
 int
 connection::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 {
@@ -612,6 +726,9 @@ connection::write(const void *buf, int to_write, int *bwritten, int to, int *ose
 	return retval;
 }
 
+/*
+ * Shuts down the TLS connection.
+ */
 void
 connection::shutdown()
 {
@@ -628,13 +745,24 @@ connection::shutdown()
 	}
 }
 
+/*
+ * Resets the TLS connection. Look at SSL_clear() for more details.
+ *
+ * @throws snf::net::ssl::ssl_exception if the connection could not be reset.
+ */
 void
 connection::reset()
 {
 	if (ssl_library::instance().ssl_clear()(m_ssl) != 1)
-		throw ssl_exception("failed to prepare TLS object for new connection");
+		throw ssl_exception("failed to prepare SSL object for new connection");
 }
 
+/*
+ * Gets the peer certificate.
+ *
+ * @return pointer to the peer certificate or nullptr if the peer certificate
+ *         could not be obtained or is not available.
+ */
 x509_certificate *
 connection::get_peer_certificate()
 {
@@ -647,6 +775,15 @@ connection::get_peer_certificate()
 	return nullptr;
 }
 
+/*
+ * Determines if the certificate verification completed successfully after
+ * the handshake operation. If there is a failure, error message describing
+ * the failure reason is obtained.
+ *
+ * @param [out] errstr - reason for certificate verification failure.
+ *
+ * @return true if the verification passes, false otherwise.
+ */
 bool
 connection::is_verification_successful(std::string &errstr)
 {
