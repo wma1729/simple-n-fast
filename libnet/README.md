@@ -1,0 +1,147 @@
+# libnet
+
+Libnet is a networking library that makes it simple to to do basic network programming.
+- Simple consistent interface.
+- Hides platform differences.
+- Support for secured communication.
+
+### Library interface
+
+Look at the include files for interface. The code is well documented to give you an idea. For more details, continue reading.
+
+### Initialization & Finalization
+
+```C++
+void snf::net::initialize(bool use_ssl);
+void snf::net::finalize();
+```
+
+### Classes for un-secured communication
+
+The library provides the following classes for basic networking:
+
+Class Name | Purpose
+---------- | -------
+`snf::net::internet_address` | Encapsulates AF_INET and AF_INET6 internet address.
+`snf::net::socket_address`   | Encapsulates socket address: address family, address, and port.
+`snf::net::host`             | Host lookup related functionality. There is a `snf::net::hosteq` function that determines if two hosts are equal.
+`snf::net::nio`              | Implemented by `snf::net::socket` and `snf::net::ssl::connection` to provide a consistent read/write interfaces.
+`snf::net::socket`           | Implements most of the commonly used TCP socket functionality: opening and closing of socket, getting/setting socket options, connect/bind/listen/accept and related operations, etc.
+
+Most of the functions provide timeout feature. The commonly thrown exceptions are:
+- `std::invalid_argument`
+- `std::runtime_error`
+- `std::system_error`
+
+Check source code documentation for details.
+
+### Classes for secured communication
+
+The library provides the following classes for secured networking:
+
+Class Name | Purpose
+---------- | -------
+`snf::net::ssl::pkey` | Encapsulates OpenSSL key (EVP_PKEY).
+`snf::net::ssl::x509_certificate` | Encapsulates OpenSSL X509 Certificate (X509).
+`snf::net::ssl::x509_crl` | Encapsulates OpenSSL X509 Certificate Revocation List (X509_crl).
+`snf::net::ssl::truststore` | Encapsulates OpenSSL X509 trust store (X509_STORE).
+`snf::net::ssl::session` | Encapsulates OpenSSL session (SSL_SESSION).
+`snf::net::ssl::context` | Encapsulates OpenSSL SSL context (SSL_CTX).
+`snf::net::ssl::connection` | Represents secured TLS connection. Manages all aspects of a secured connection.
+
+The commonly thrown exception other than the ones listed above is `snf::net::ssl::exception`. Here is a simple example on how to catch and log the exception:
+
+```C++
+try {
+    ...
+} catch (snf::net::ssl::exception &ex) {
+    std::cerr << ex.what() << std::endl;
+    for (auto it = ex.begin(); it != ex.end(); ++it)
+        std::cerr << *it << std::endl;
+}
+```
+
+### Prepare SSL context
+
+```C++
+// Create context.
+snf::net::ssl::context ctx;
+
+// Add private key (from file)
+snf::net::ssl::pkey key { key_format, key_file, key_file_password };
+ctx.use_private_key(key);
+
+// Add certificate (from file)
+snf::net::ssl::x509_certificate cert { cert_format, cert_file };
+ctx.use_certificate(cert);
+
+// Check if the private key matches the certificate?
+ctx.check_private_key();
+
+// Add trust store
+snf::net::ssl::truststore store { cert_chain_file };
+snf::net::ssl::x509_crl crl { crl_file};
+store.add_crl(crl);
+ctx.use_truststore(store);
+
+// Set ciphers to use (default list)
+ctx.set_ciphers(); 
+
+// Verify peer
+ctx.verify_peer(require_peer_certificate);
+
+// Set certificate chain depth
+ctx.limit_certificate_chain_depth(depth);
+
+// If using session ID based session resumption, set session ID context on TLS server.
+ctx.set_session_context(session_id_ctx);
+
+// If you intend to use session ticket based session resumption, enable it.
+// Connection mode is snf::net::connection_mode: client or server.
+ctx.session_ticket(connection_mode, true);
+```
+
+### Perform handshake
+
+#### Client
+
+```C++
+// Prepare SSL context
+
+// Create socket.
+snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
+
+// Set socket options as needed.
+...
+
+// Establish the connection.
+sock.connect(AF_INET, host, port);
+
+// Create secured connection.
+snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
+
+// Perform TLS handshake.
+cnxn.handshake(sock);
+```
+
+#### Server
+
+```C++
+// Prepare SSL context
+
+/*
+ * Create socket.
+ * Set socket options as needed.
+ * Bind the socket.
+ * Start listening on the socket.
+ */
+
+// Accept new connection.
+snf::net::socket nsock = std::move(sock.accept());
+
+// Create secured connection.
+snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
+
+// Perform TLS handshake.
+cnxn.handshake(nsock);
+```
