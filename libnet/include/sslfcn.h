@@ -216,7 +216,7 @@ operator<< (std::ostream &os, const ssl_error &e)
 	return os;
 }
 
-class ssl_exception : public std::runtime_error
+class exception : public std::runtime_error
 {
 private:
 	std::vector<ssl_error> m_error;
@@ -224,8 +224,8 @@ private:
 	void init();
 
 public:
-	ssl_exception(const std::string &msg) : std::runtime_error(msg) { init(); }
-	ssl_exception(const char *msg) : std::runtime_error(msg) { init(); }
+	exception(const std::string &msg) : std::runtime_error(msg) { init(); }
+	exception(const char *msg) : std::runtime_error(msg) { init(); }
 
 	std::vector<ssl_error>::const_iterator begin() const { return m_error.begin(); }
 	std::vector<ssl_error>::const_iterator end() const { return m_error.end(); }

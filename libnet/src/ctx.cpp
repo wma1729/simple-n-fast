@@ -173,14 +173,14 @@ context::disable_session_caching()
 /*
  * Gets the X509 certificate stored in the SSL context.
  *
- * @throws snf::net::ssl::ssl_exception if failed to fetch the certificate.
+ * @throws snf::net::ssl::exception if failed to fetch the certificate.
  */
 x509_certificate
 context::get_certificate()
 {
 	X509 *c = ssl_library::instance().ssl_ctx_get0_cert()(m_ctx);
 	if (c == nullptr)
-		throw ssl_exception("failed to get certificate from SSL context");
+		throw exception("failed to get certificate from SSL context");
 
 	x509_certificate cert(c);
 	return cert;
@@ -196,7 +196,7 @@ context::get_certificate()
  * - SSL context option is set to:
  *       SSL_OP_NO_TICKET
  *
- * @throws snf::net::ssl::ssl_exception if the SSL context could not
+ * @throws snf::net::ssl::exception if the SSL context could not
  *         be created or the mode/options could not be applied.
  */
 context::context()
@@ -204,16 +204,16 @@ context::context()
 	m_ctx = ssl_library::instance().ssl_ctx_new()
 			(ssl_library::instance().tls_method()());
 	if (m_ctx == nullptr)
-		throw ssl_exception("failed to create ssl context");
+		throw exception("failed to create ssl context");
 
 	if (ssl_library::instance().ssl_ctx_set_min_ver()(m_ctx, TLS1_VERSION) != 1) {
 		ssl_library::instance().ssl_ctx_free()(m_ctx);
-		throw ssl_exception("failed to set minimum protocol version");
+		throw exception("failed to set minimum protocol version");
 	}
 
 	if (ssl_library::instance().ssl_ctx_set_max_ver()(m_ctx, 0) != 1) {
 		ssl_library::instance().ssl_ctx_free()(m_ctx);
-		throw ssl_exception("failed to set maximum protocol version");
+		throw exception("failed to set maximum protocol version");
 	}
 
 	// mimics SSL_CTX_set_mode
@@ -232,12 +232,12 @@ context::context()
  *
  * @param [in] ctx - SSL context.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 context::context(const context &ctx)
 {
 	if (ssl_library::instance().ssl_ctx_up_ref()(ctx.m_ctx) != 1)
-		throw ssl_exception("failed to increment the ssl context reference count");
+		throw exception("failed to increment the ssl context reference count");
 	m_ctx = ctx.m_ctx;
 }
 
@@ -266,14 +266,14 @@ context::~context()
  * Copy operator. No copy is done, the class simply points to the same
  * raw SSL context and the reference count in bumped up.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 const context &
 context::operator=(const context &ctx)
 {
 	if (this != &ctx) {
 		if (ssl_library::instance().ssl_ctx_up_ref()(ctx.m_ctx) != 1)
-			throw ssl_exception("failed to increment the ssl context reference count");
+			throw exception("failed to increment the ssl context reference count");
 		if (m_ctx)
 			ssl_library::instance().ssl_ctx_free()(m_ctx);
 		m_ctx = ctx.m_ctx;
@@ -348,20 +348,20 @@ context::session_timeout(time_t to)
  *
  * @param [in] ctx - session ID context.
  *
- * @throws snf::net::ssl::ssl_exception if the session ID context is too
+ * @throws snf::net::ssl::exception if the session ID context is too
  *         large or if the session ID context could not be set.
  */
 void
 context::set_session_context(const std::string &ctx)
 {
 	if (ctx.size() > SSL_MAX_SSL_SESSION_ID_LENGTH)
-		throw ssl_exception("session ID context is too large");
+		throw exception("session ID context is too large");
 
 	unsigned int ctxlen = static_cast<unsigned int>(ctx.size());
 	const unsigned char *pctx = reinterpret_cast<const unsigned char *>(ctx.c_str());
 
 	if (ssl_library::instance().ssl_ctx_set_sid_ctx()(m_ctx, pctx, ctxlen) != 1)
-		throw ssl_exception("failed to set session ID context");
+		throw exception("failed to set session ID context");
 }
 
 /*
@@ -374,7 +374,7 @@ context::set_session_context(const std::string &ctx)
  *                      resumption using session ticket is disabled.
  *                      The callback function is un-registered.
  *
- * @throws snf::net::ssl::ssl_exception if the callback handler could
+ * @throws snf::net::ssl::exception if the callback handler could
  *         not be registered or un-registered.
  */
 void
@@ -395,7 +395,7 @@ context::session_ticket(connection_mode mode, bool enable)
 			(m_ctx,
 			SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB,
 			reinterpret_cast<void (*)(void)>(cb)) != 1)
-			throw ssl_exception("failed to set ticket key callback for session resumption");
+			throw exception("failed to set ticket key callback for session resumption");
 		disable_session_caching();
 	}
 }
@@ -406,7 +406,7 @@ context::session_ticket(connection_mode mode, bool enable)
  *
  * @param [in] ciphers - cipher list to use.
  *
- * @throws snf::net::ssl::ssl_exception if the cipher list could not be set.
+ * @throws snf::net::ssl::exception if the cipher list could not be set.
  */
 void
 context::set_ciphers(const std::string &ciphers)
@@ -414,7 +414,7 @@ context::set_ciphers(const std::string &ciphers)
 	if (ssl_library::instance().ssl_ctx_set_ciphers()(m_ctx, ciphers.c_str()) != 1) {
 		std::ostringstream oss;
 		oss << "failed to set cipher list using " << ciphers;
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 }
 
@@ -423,13 +423,13 @@ context::set_ciphers(const std::string &ciphers)
  *
  * @param [in] key - private key.
  *
- * @throws snf::net::ssl::ssl_exception if the private key could not be used.
+ * @throws snf::net::ssl::exception if the private key could not be used.
  */
 void
 context::use_private_key(pkey &key)
 {
 	if (ssl_library::instance().ssl_ctx_use_private_key()(m_ctx, key) != 1)
-		throw ssl_exception("failed to use private key");
+		throw exception("failed to use private key");
 }
 
 /*
@@ -437,13 +437,13 @@ context::use_private_key(pkey &key)
  *
  * @param [in] crt - X509 certificate.
  *
- * @throws snf::net::ssl::ssl_exception if the X509 certificate could not be used.
+ * @throws snf::net::ssl::exception if the X509 certificate could not be used.
  */
 void
 context::use_certificate(x509_certificate &crt)
 {
 	if (ssl_library::instance().ssl_ctx_use_certificate()(m_ctx, crt) != 1)
-		throw ssl_exception("failed to use X509 certificate");
+		throw exception("failed to use X509 certificate");
 }
 
 /*
@@ -451,14 +451,14 @@ context::use_certificate(x509_certificate &crt)
  *
  * @param [in] store - trust store.
  *
- * @throws snf::net::ssl::ssl_exception if the trust store could not be used.
+ * @throws snf::net::ssl::exception if the trust store could not be used.
  */
 void
 context::use_truststore(truststore &store)
 {
 	X509_STORE *s = store;
 	if (ssl_library::instance().x509_store_up_ref()(s) != 1)
-		throw ssl_exception("failed to increment the X509 trust store reference count");
+		throw exception("failed to increment the X509 trust store reference count");
 
 	ssl_library::instance().ssl_ctx_use_truststore()(m_ctx, s);
 }
@@ -468,33 +468,33 @@ context::use_truststore(truststore &store)
  *
  * @param [in] crl - CRL.
  *
- * @throws snf::net::ssl::ssl_exception if the CRL could not be used.
+ * @throws snf::net::ssl::exception if the CRL could not be used.
  */
 void
 context::use_crl(x509_crl &crl)
 {
 	X509_STORE *store = ssl_library::instance().ssl_ctx_get_cert_store()(m_ctx);
 	if (store == nullptr)
-		throw ssl_exception("failed to get X509 trust store for the current context");
+		throw exception("failed to get X509 trust store for the current context");
 
 	if (ssl_library::instance().x509_store_add_crl()(store, crl) != 1)
-		throw ssl_exception("failed to add CRL to the X509 trust store");
+		throw exception("failed to add CRL to the X509 trust store");
 
 	unsigned long flags = X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
 	if (ssl_library::instance().x509_store_set_flags()(store, flags) != 1)
-		throw ssl_exception("failed to set flags for the X509 trust store");
+		throw exception("failed to set flags for the X509 trust store");
 }
 
 /*
  * Checks if the private key and the certificate matches.
  *
- * @throws snf::net::ssl::ssl_exception if the private key and the certificate do not match.
+ * @throws snf::net::ssl::exception if the private key and the certificate do not match.
  */
 void
 context::check_private_key()
 {
 	if (ssl_library::instance().ssl_ctx_check_private_key()(m_ctx) != 1)
-		throw ssl_exception("private key and X509 certificate do not match");
+		throw exception("private key and X509 certificate do not match");
 }
 
 /*

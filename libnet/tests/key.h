@@ -98,7 +98,7 @@ public:
 			pkey9.verify();
 			ASSERT_EQ(bool, true, true, "private key 9 verification passed");
 
-		} catch (const snf::net::ssl::ssl_exception &ex) {
+		} catch (const snf::net::ssl::exception &ex) {
 			std::cerr << ex.what() << std::endl;
 			for (auto I = ex.begin(); I != ex.end(); ++I)
 				std::cerr << *I << std::endl;

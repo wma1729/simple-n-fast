@@ -10,7 +10,7 @@ namespace ssl {
  *
  * @param [in] fp - pointer to the file containing the key.
  *
- * @throws snf::net::ssl::ssl_exception if the key could not be read or
+ * @throws snf::net::ssl::exception if the key could not be read or
  *         the key could not be converted to EVP_PKEY.
  */
 void
@@ -20,7 +20,7 @@ pkey::init_der(snf::file_ptr &fp)
 	if (m_pkey == nullptr) {
 		std::ostringstream oss;
 		oss << "failed to read DER key from file " << fp.name();
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 }
 
@@ -30,7 +30,7 @@ pkey::init_der(snf::file_ptr &fp)
  * @param [in] key    - key.
  * @param [in] keylen - key length.
  *
- * @throws snf::net::ssl::ssl_exception if the key could not converted to EVP_PKEY.
+ * @throws snf::net::ssl::exception if the key could not converted to EVP_PKEY.
  */
 void
 pkey::init_der(const uint8_t *key, size_t keylen)
@@ -40,7 +40,7 @@ pkey::init_der(const uint8_t *key, size_t keylen)
 	m_pkey = ssl_library::instance().d2i_auto_private_key()
 			(nullptr, &kptr, static_cast<long>(keylen));
 	if ((m_pkey == nullptr) || (kptr != (key + keylen)))
-		throw ssl_exception("failed to load DER key");
+		throw exception("failed to load DER key");
 }
 
 /*
@@ -49,7 +49,7 @@ pkey::init_der(const uint8_t *key, size_t keylen)
  * @param [in] fp     - pointer to the file containing the key.
  * @param [in] passwd - password to the pem key.
  *
- * @throws snf::net::ssl::ssl_exception if the key could not be read or
+ * @throws snf::net::ssl::exception if the key could not be read or
  *         the key could not be converted to EVP_PKEY or
  *         the key password is incorrect.
  */
@@ -62,7 +62,7 @@ pkey::init_pem(snf::file_ptr &fp, const char *passwd)
 	if (m_pkey == nullptr) {
 		std::ostringstream oss;
 		oss << "failed to read PEM key from file " << fp.name();
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 }
 
@@ -73,7 +73,7 @@ pkey::init_pem(snf::file_ptr &fp, const char *passwd)
  * @param [in] keylen - key length.
  * @param [in] passwd - password to the pem key.
  *
- * @throws snf::net::ssl::ssl_exception if the key could not converted to EVP_PKEY or
+ * @throws snf::net::ssl::exception if the key could not converted to EVP_PKEY or
  *         the key password is incorrect.
  */
 void
@@ -89,13 +89,13 @@ pkey::init_pem(const uint8_t *key, size_t keylen, const char *passwd)
 	m_pkey = ssl_library::instance().pem_read_bio_private_key()
 		(pkbio.get(), nullptr, nullptr, pwd);
 	if (m_pkey == nullptr)
-		throw ssl_exception("failed to load PEM key");
+		throw exception("failed to load PEM key");
 }
 
 /*
  * Verifies RSA key.
  *
- * @throws snf::net::ssl::ssl_exception if the key is not a RSA key or
+ * @throws snf::net::ssl::exception if the key is not a RSA key or
  *         the key is invalid.
  */
 void
@@ -106,17 +106,17 @@ pkey::verify_rsa() const
 		int r = ssl_library::instance().rsa_key_check()(rsa);
 		ssl_library::instance().rsa_free()(rsa);
 		if (1 != r) {
-			throw ssl_exception("RSA key is not valid");
+			throw exception("RSA key is not valid");
 		}
 	} else {
-		throw ssl_exception("RSA key could not be extracted from private key");
+		throw exception("RSA key could not be extracted from private key");
 	}
 }
 
 /*
  * Verifies DH key.
  *
- * @throws snf::net::ssl::ssl_exception if the key is not a DH key or
+ * @throws snf::net::ssl::exception if the key is not a DH key or
  *         the key is invalid.
  */
 void
@@ -131,20 +131,20 @@ pkey::verify_dh() const
 			if (codes != 0) {
 				std::ostringstream oss;
 				oss << "DH key is not valid; codes = 0x" << std::hex << codes;
-				throw ssl_exception(oss.str());
+				throw exception(oss.str());
 			}
 		} else {
-			throw ssl_exception("DH key is not valid");
+			throw exception("DH key is not valid");
 		}
 	} else {
-		throw ssl_exception("DH key could not be extracted from private key");
+		throw exception("DH key could not be extracted from private key");
 	}
 }
 
 /*
  * Verifies EC key.
  *
- * @throws snf::net::ssl::ssl_exception if the key is not an EC key or
+ * @throws snf::net::ssl::exception if the key is not an EC key or
  *         the key is invalid.
  */
 void
@@ -155,10 +155,10 @@ pkey::verify_ec() const
 		int r = ssl_library::instance().ec_key_check()(eckey);
 		ssl_library::instance().ec_key_free()(eckey);
 		if (1 != r) {
-			throw ssl_exception("EC key is not valid");
+			throw exception("EC key is not valid");
 		}
 	} else {
-		throw ssl_exception("EC key could not be extracted from private key");
+		throw exception("EC key could not be extracted from private key");
 	}
 }
 
@@ -170,7 +170,7 @@ pkey::verify_ec() const
  * @param [in] passwd - password to the pem key. The password is
  *                      applicable only to pem format.
  *
- * @throws snf::net::ssl::ssl_exception if the key could not be read or
+ * @throws snf::net::ssl::exception if the key could not be read or
  *         the key could not be converted to EVP_PKEY or
  *         the key password is incorrect.
  */
@@ -197,7 +197,7 @@ pkey::pkey(
  * @param [in] passwd - password to the pem key. The password is
  *                      applicable only to pem format.
  *
- * @throws snf::net::ssl::ssl_exception if the key could not converted to EVP_PKEY or
+ * @throws snf::net::ssl::exception if the key could not converted to EVP_PKEY or
  *         the key password is incorrect.
  */
 pkey::pkey(
@@ -219,12 +219,12 @@ pkey::pkey(
  *
  * @param [in] key - raw key.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 pkey::pkey(EVP_PKEY *key)
 {
 	if (ssl_library::instance().evp_pkey_up_ref()(key) != 1)
-		throw ssl_exception("failed to increment the key reference count");
+		throw exception("failed to increment the key reference count");
 	m_pkey = key;
 }
 
@@ -234,12 +234,12 @@ pkey::pkey(EVP_PKEY *key)
  *
  * @param [in] key - key.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 pkey::pkey(const pkey &key)
 {
 	if (ssl_library::instance().evp_pkey_up_ref()(key.m_pkey) != 1)
-		throw ssl_exception("failed to increment the key reference count");
+		throw exception("failed to increment the key reference count");
 	m_pkey = key.m_pkey;
 }
 
@@ -268,14 +268,14 @@ pkey::~pkey()
  * Copy operator. No copy is done, the class simply points to the same
  * raw key and the reference count in bumped up.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 const pkey &
 pkey::operator=(const pkey &pkey)
 {
 	if (this != &pkey) {
 		if (ssl_library::instance().evp_pkey_up_ref()(pkey.m_pkey) != 1)
-			throw ssl_exception("failed to increment the key reference count");
+			throw exception("failed to increment the key reference count");
 		if (m_pkey)
 			ssl_library::instance().evp_pkey_free()(m_pkey);
 		m_pkey = pkey.m_pkey;
@@ -313,7 +313,7 @@ pkey::type() const
 /*
  * Verifies the key.
  *
- * @throws snf::net::ssl::ssl_exception if the key is invalid.
+ * @throws snf::net::ssl::exception if the key is invalid.
  */
 void
 pkey::verify() const
@@ -342,7 +342,7 @@ pkey::verify() const
 			break;
 
 		default:
-			throw ssl_exception("invalid key type");
+			throw exception("invalid key type");
 			break;
 	}
 }

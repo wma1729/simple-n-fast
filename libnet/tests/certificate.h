@@ -114,7 +114,7 @@ public:
 			const std::vector<std::string> &ocsp = cert9.ocsp_end_points();
 			ASSERT_EQ(size_t, ocsp.size(), 1, "number of ocsp matches");
 			ASSERT_EQ(const std::string &, ocsp[0], "http://localhost:2560/", "ocsp matches");
-		} catch (const snf::net::ssl::ssl_exception &ex) {
+		} catch (const snf::net::ssl::exception &ex) {
 			std::cerr << ex.what() << std::endl;
 			for (auto I = ex.begin(); I != ex.end(); ++I)
 				std::cerr << *I << std::endl;

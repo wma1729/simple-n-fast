@@ -13,7 +13,7 @@ namespace ssl {
  *
  * @param [in] fp - pointer to the file containing the certificate.
  *
- * @throws snf::net::ssl::ssl_exception if the certificate could not be read or
+ * @throws snf::net::ssl::exception if the certificate could not be read or
  *         the certificate could not be converted to X509.
  */
 void
@@ -23,7 +23,7 @@ x509_certificate::init_der(snf::file_ptr &fp)
 	if (m_crt == nullptr) {
 		std::ostringstream oss;
 		oss << "failed to read DER certificate from file " << fp.name();
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 }
 
@@ -33,7 +33,7 @@ x509_certificate::init_der(snf::file_ptr &fp)
  * @param [in] crt    - certificate.
  * @param [in] crtlen - certificate length.
  *
- * @throws snf::net::ssl::ssl_exception if the certificate could not converted to X509.
+ * @throws snf::net::ssl::exception if the certificate could not converted to X509.
  */
 void
 x509_certificate::init_der(const uint8_t *crt, size_t crtlen)
@@ -43,7 +43,7 @@ x509_certificate::init_der(const uint8_t *crt, size_t crtlen)
 	m_crt = ssl_library::instance().d2i_x509()
 			(nullptr, &cptr, static_cast<long>(crtlen));
 	if ((m_crt == nullptr) || (cptr != (crt + crtlen)))
-		throw ssl_exception("failed to load DER certificate");
+		throw exception("failed to load DER certificate");
 }
 
 /*
@@ -52,7 +52,7 @@ x509_certificate::init_der(const uint8_t *crt, size_t crtlen)
  * @param [in] fp     - pointer to the file containing the certificate.
  * @param [in] passwd - password to the pem certificate.
  *
- * @throws snf::net::ssl::ssl_exception if the certificate could not be read or
+ * @throws snf::net::ssl::exception if the certificate could not be read or
  *         the certificate could not be converted to X509 or
  *         the certificate password is incorrect.
  */
@@ -65,7 +65,7 @@ x509_certificate::init_pem(snf::file_ptr &fp, const char *passwd)
 	if (m_crt == nullptr) {
 		std::ostringstream oss;
 		oss << "failed to read PEM certificate from file " << fp.name();
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 }
 
@@ -76,7 +76,7 @@ x509_certificate::init_pem(snf::file_ptr &fp, const char *passwd)
  * @param [in] crtlen - certificate length.
  * @param [in] passwd - password to the pem certificate.
  *
- * @throws snf::net::ssl::ssl_exception if the certificate could not converted to X509 or
+ * @throws snf::net::ssl::exception if the certificate could not converted to X509 or
  *         the certificate password is incorrect.
  */
 void
@@ -92,7 +92,7 @@ x509_certificate::init_pem(const uint8_t *crt, size_t crtlen, const char *passwd
 	m_crt = ssl_library::instance().pem_read_bio_x509()
 		(cbio.get(), nullptr, nullptr, pwd);
 	if (m_crt == nullptr)
-		throw ssl_exception("failed to load PEM certificate");
+		throw exception("failed to load PEM certificate");
 }
 
 /*
@@ -171,7 +171,7 @@ x509_certificate::equal(const std::string &name1, const std::string &name2)
  * @param [in] passwd - password to the pem certificate. The password is
  *                      applicable only to pem format.
  *
- * @throws snf::net::ssl::ssl_exception if the certificate could not be read or
+ * @throws snf::net::ssl::exception if the certificate could not be read or
  *         the certificate could not be converted to X509 or
  *         the certificate password is incorrect.
  */
@@ -198,7 +198,7 @@ x509_certificate::x509_certificate(
  * @param [in] passwd - password to the pem certificate. The password is
  *                      applicable only to pem format.
  *
- * @throws snf::net::ssl::ssl_exception if the certificate could not converted to X509 or
+ * @throws snf::net::ssl::exception if the certificate could not converted to X509 or
  *         the certificate password is incorrect.
  */
 x509_certificate::x509_certificate(
@@ -220,12 +220,12 @@ x509_certificate::x509_certificate(
  *
  * @param [in] crt - raw certificate.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 x509_certificate::x509_certificate(X509 *crt)
 {
 	if (ssl_library::instance().x509_up_ref()(crt) != 1)
-		throw ssl_exception("failed to increment the certificate reference count");
+		throw exception("failed to increment the certificate reference count");
 	m_crt = crt;
 }
 
@@ -235,12 +235,12 @@ x509_certificate::x509_certificate(X509 *crt)
  *
  * @param [in] crt - certificate.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 x509_certificate::x509_certificate(const x509_certificate &crt)
 {
 	if (ssl_library::instance().x509_up_ref()(crt.m_crt) != 1)
-		throw ssl_exception("failed to increment the certificate reference count");
+		throw exception("failed to increment the certificate reference count");
 	m_crt = crt.m_crt;
 	m_subject = crt.m_subject;
 	m_issuer = crt.m_issuer;
@@ -281,14 +281,14 @@ x509_certificate::~x509_certificate()
  * Copy operator. No copy is done, the class simply points to the same
  * certificate and the reference count in bumped up.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 const x509_certificate &
 x509_certificate::operator=(const x509_certificate &crt)
 {
 	if (this != &crt) {
 		if (ssl_library::instance().x509_up_ref()(crt.m_crt) != 1)
-			throw ssl_exception("failed to increment the certificate reference count");
+			throw exception("failed to increment the certificate reference count");
 		if (m_crt)
 			ssl_library::instance().x509_free()(m_crt);
 		m_crt = crt.m_crt;
@@ -326,7 +326,7 @@ x509_certificate::operator=(x509_certificate &&crt)
 /*
  * Gets the certificate's subject. The common name is also retrieved here.
  *
- * @throws snf::net::ssl::ssl_exception if the subject and/or the common
+ * @throws snf::net::ssl::exception if the subject and/or the common
  *         name could not be retrieved from the certificate.
  */
 const std::string &
@@ -341,7 +341,7 @@ x509_certificate::subject()
 
 	n = ssl_library::instance().x509_get_subject()(m_crt);
 	if (n == nullptr)
-		throw ssl_exception("failed to get subject from certificate");
+		throw exception("failed to get subject from certificate");
 
 	std::unique_ptr<BIO, decltype(&bio_free)> bio {
 		ssl_library::instance().bio_new()(ssl_library::instance().bio_s_mem()()),
@@ -351,12 +351,12 @@ x509_certificate::subject()
 	len = ssl_library::instance().x509_name_get()
 		(bio.get(), n, 0, XN_FLAG_ONELINE);
 	if (len < 0)
-		throw ssl_exception("failed to transfer X509 name to bio");
+		throw exception("failed to transfer X509 name to bio");
 
 	len = ssl_library::instance().bio_read()
 		(bio.get(), buf, static_cast<int>(sizeof(buf)) - 1);
 	if (len < 0)
-		throw ssl_exception("failed to fetch subject from bio");
+		throw exception("failed to fetch subject from bio");
 
 	m_subject.insert(0, buf, len);
 
@@ -372,7 +372,7 @@ x509_certificate::subject()
 /*
  * Gets the certificate's issuer.
  *
- * @throws snf::net::ssl::ssl_exception if the issuer
+ * @throws snf::net::ssl::exception if the issuer
  *         could not be retrieved from the certificate.
  */
 const std::string &
@@ -387,7 +387,7 @@ x509_certificate::issuer()
 
 	n = ssl_library::instance().x509_get_issuer()(m_crt);
 	if (n == nullptr)
-		throw ssl_exception("failed to get issuer from certificate");
+		throw exception("failed to get issuer from certificate");
 
 	std::unique_ptr<BIO, decltype(&bio_free)> bio {
 		ssl_library::instance().bio_new()(ssl_library::instance().bio_s_mem()()),
@@ -397,12 +397,12 @@ x509_certificate::issuer()
 	len = ssl_library::instance().x509_name_get()
 		(bio.get(), n, 0, XN_FLAG_ONELINE);
 	if (len < 0)
-		throw ssl_exception("failed to transfer X509 name to bio");
+		throw exception("failed to transfer X509 name to bio");
 
 	len = ssl_library::instance().bio_read()
 		(bio.get(), buf, static_cast<int>(sizeof(buf)) - 1);
 	if (len < 0)
-		throw ssl_exception("failed to fetch issuer from bio");
+		throw exception("failed to fetch issuer from bio");
 
 	m_issuer.insert(0, buf, len);
 
@@ -412,7 +412,7 @@ x509_certificate::issuer()
 /*
  * Gets the certificate's common name.
  *
- * @throws snf::net::ssl::ssl_exception if the common
+ * @throws snf::net::ssl::exception if the common
  *         name could not be retrieved from the certificate.
  */
 const std::string &
@@ -429,7 +429,7 @@ x509_certificate::common_name()
 /*
  * Gets the certificate's serial number.
  *
- * @throws snf::net::ssl::ssl_exception if the serial
+ * @throws snf::net::ssl::exception if the serial
  *         number could not be retrieved from the certificate.
  */
 const std::string &
@@ -442,13 +442,13 @@ x509_certificate::serial()
 	BIGNUM *bnserial = ssl_library::instance().asn1_integer_to_bn()
 				(aiserial, nullptr);
 	if (bnserial == nullptr) {
-		throw ssl_exception("failed to convert ASN1_INTEGER to BIGNUM");
+		throw exception("failed to convert ASN1_INTEGER to BIGNUM");
 	}
 
 	char *hexserial = ssl_library::instance().bn2hex()(bnserial);
 	if (hexserial == nullptr) {
 		ssl_library::instance().bn_free()(bnserial);
-		throw ssl_exception("failed to convert BIGNUM to hex string");
+		throw exception("failed to convert BIGNUM to hex string");
 	}
 
 	m_serial = hexserial;
@@ -464,7 +464,7 @@ x509_certificate::serial()
  * type GEN_DNS, GEN_URI, and GEN_IPADD are handled. No alternate
  * names is not an error.
  *
- * @throws snf::net::ssl::ssl_exception if the alternate
+ * @throws snf::net::ssl::exception if the alternate
  *         names could not be retrieved from the certificate.
  */
 const std::vector<x509_certificate::altname> &
@@ -514,7 +514,7 @@ x509_certificate::alternate_names()
  * Gets the certification revocation list (CRL) distribution points
  * from the certificate. No data is not an error.
  *
- * @throws snf::net::ssl::ssl_exception if the CRL
+ * @throws snf::net::ssl::exception if the CRL
  *         distribution points could not be retrieved from the certificate.
  */
 const std::vector<std::string> &
@@ -569,7 +569,7 @@ x509_certificate::crl_distribution_points()
  * Gets the online certificate status protocol (OCSP) end points
  * from the certificate. No data is not an error.
  *
- * @throws snf::net::ssl::ssl_exception if the OCSP
+ * @throws snf::net::ssl::exception if the OCSP
  *         end points could not be retrieved from the certificate.
  */
 const std::vector<std::string> &

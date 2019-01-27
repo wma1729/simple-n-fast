@@ -24,7 +24,7 @@ sni_cb(SSL *ssl, int *, void *arg)
 	try {
 		std::string servername = std::move(ssock->get_sni());
 		ssock->switch_context(servername);
-	} catch (snf::net::ssl::ssl_exception &) {
+	} catch (snf::net::ssl::exception &) {
 		return 0;
 	}
 
@@ -105,7 +105,7 @@ operator<< (std::ostream &os, const error_info &ei)
  *
  * @param [in] servername - server name to use to find a match.
  *
- * @throws snf::net::ssl::ssl_exception if the context for the given
+ * @throws snf::net::ssl::exception if the context for the given
  *         server name is not found.
  */
 void
@@ -130,7 +130,7 @@ connection::switch_context(const std::string &servername)
 	if (it == m_contexts.end()) {
 		std::ostringstream oss;
 		oss << "SSL context for server name " << servername << " not found";
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	} else {
 		std::for_each(m_contexts.begin(), m_contexts.end(),
 			[](ctxinfo &ci) { ci.cur = false; });
@@ -145,18 +145,18 @@ connection::switch_context(const std::string &servername)
  *
  * @return server name.
  *
- * @throws snf::net::ssl::ssl_exception if the server name could not be retrieved.
+ * @throws snf::net::ssl::exception if the server name could not be retrieved.
  */
 std::string
 connection::get_sni()
 {
 	if (connection_mode::client == m_mode)
-		throw ssl_exception("getting server name for SNI only possible in server mode");
+		throw exception("getting server name for SNI only possible in server mode");
 
 	const char *name = ssl_library::instance().ssl_get_servername()
 				(m_ssl, TLSEXT_NAMETYPE_host_name);
 	if ((name == nullptr) || (*name == '\0'))
-		throw ssl_exception("failed to get SNI from TLS extension");
+		throw exception("failed to get SNI from TLS extension");
 
 	return std::string(name);
 }
@@ -169,7 +169,7 @@ connection::get_sni()
  *
  * @return E_ok on success, -ve error code on failure.
  *
- * @throws snf::net::ssl::ssl_exception if a non-retryable error is seen.
+ * @throws snf::net::ssl::exception if a non-retryable error is seen.
  */
 int
 connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
@@ -247,7 +247,7 @@ connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
 	if (E_ssl_error == retval) {
 		std::ostringstream oss;
 		oss << ei;
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 
 	return retval;
@@ -262,14 +262,14 @@ connection::handle_ssl_error(sock_t sock, int to, error_info &ei)
  *                   accept (server) state.
  * @param [in] ctx - SSL context. The default (current) SSL context.
  *
- * @throws snf::net::ssl::ssl_exception if the connection could not be created.
+ * @throws snf::net::ssl::exception if the connection could not be created.
  */
 connection::connection(connection_mode m, context &ctx)
 	: m_mode(m)
 {
 	m_ssl = ssl_library::instance().ssl_new()(ctx);
 	if (m_ssl == nullptr)
-		throw ssl_exception("failed to create SSL object");
+		throw exception("failed to create SSL object");
 
 	if (connection_mode::client == m_mode)
 		ssl_library::instance().ssl_set_connect_state()(m_ssl);
@@ -289,7 +289,7 @@ connection::connection(connection_mode m, context &ctx)
  *
  * @param [in] c - TLS connection.
  *
- * @throws snf::net::ssl::ssl_exception if copy fails.
+ * @throws snf::net::ssl::exception if copy fails.
  */
 connection::connection(const connection &c)
 {
@@ -298,7 +298,7 @@ connection::connection(const connection &c)
 
 	m_ssl = ssl_library::instance().ssl_dup()(c.m_ssl);
 	if (m_ssl == nullptr)
-		throw ssl_exception("failed to duplicate SSL object");
+		throw exception("failed to duplicate SSL object");
 }
 
 /*
@@ -330,7 +330,7 @@ connection::~connection()
  * copy done. The internal SSL object is not reference counted.
  * Use this with caution.
  *
- * @throws snf::net::ssl::ssl_exception if copy fails.
+ * @throws snf::net::ssl::exception if copy fails.
  */
 const connection &
 connection::operator=(const connection &c)
@@ -341,7 +341,7 @@ connection::operator=(const connection &c)
 
 		m_ssl = ssl_library::instance().ssl_dup()(c.m_ssl);
 		if (m_ssl == nullptr)
-			throw ssl_exception("failed to duplicate SSL object");
+			throw exception("failed to duplicate SSL object");
 	}
 	return *this;
 }
@@ -371,7 +371,7 @@ void
 connection::add_context(context &ctx)
 {
 	if (connection_mode::client == m_mode)
-		throw ssl_exception("only 1 SSL context can be added in client mode");
+		throw exception("only 1 SSL context can be added in client mode");
 
 	std::lock_guard<std::mutex> guard(m_lock);
 	ctxinfo ci;
@@ -388,7 +388,7 @@ connection::add_context(context &ctx)
  *
  * @param [in] hostnames - vector of valid host names.
  *
- * @throws snf::net::ssl::ssl_exception if the host names or verification
+ * @throws snf::net::ssl::exception if the host names or verification
  *         flags could not be set.
  */
 void
@@ -398,7 +398,7 @@ connection::check_hosts(const std::vector<std::string> &hostnames)
 
 	X509_VERIFY_PARAM *param = ssl_library::instance().ssl_get0_param()(m_ssl);
 	if (param == nullptr)
-		throw ssl_exception("failed to get X509 verify parameters");
+		throw exception("failed to get X509 verify parameters");
 
 	std::vector<std::string>::const_iterator it = hostnames.begin();
 	if (it != hostnames.end()) {
@@ -407,7 +407,7 @@ connection::check_hosts(const std::vector<std::string> &hostnames)
 		if (retval != 1) {
 			std::ostringstream oss;
 			oss << "failed to set " << *it << " to X509 verify parameters";
-			throw ssl_exception(oss.str());
+			throw exception(oss.str());
 		}
 		it++;
 	}
@@ -418,7 +418,7 @@ connection::check_hosts(const std::vector<std::string> &hostnames)
 		if (retval != 1) {
 			std::ostringstream oss;
 			oss << "failed to add " << *it << " to X509 verify parameters";
-			throw ssl_exception(oss.str());
+			throw exception(oss.str());
 		}
 		it++;
 	}
@@ -439,14 +439,14 @@ connection::check_hosts(const std::vector<std::string> &hostnames)
  *
  * @param [in] ia - IP address.
  *
- * @throws snf::net::ssl::ssl_exception if the IP address could not be set.
+ * @throws snf::net::ssl::exception if the IP address could not be set.
  */
 void
 connection::check_inaddr(const internet_address &ia)
 {
 	X509_VERIFY_PARAM *param = ssl_library::instance().ssl_get0_param()(m_ssl);
 	if (param == nullptr)
-		throw ssl_exception("failed to get X509 verify parameters");
+		throw exception("failed to get X509 verify parameters");
 
 	std::string ip = std::move(ia.str(true));
 	int retval = ssl_library::instance().x509_verify_param_set1_ip_asc()
@@ -454,7 +454,7 @@ connection::check_inaddr(const internet_address &ia)
 	if (retval != 1) {
 		std::ostringstream oss;
 		oss << "failed to set " << ia << " to X509 verify parameters";
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 }
 
@@ -463,13 +463,13 @@ connection::check_inaddr(const internet_address &ia)
  *
  * @param [in] servername - server name to use.
  *
- * @throws snf::net::ssl::ssl_exception if the server name could not be set.
+ * @throws snf::net::ssl::exception if the server name could not be set.
  */
 void
 connection::set_sni(const std::string &servername)
 {
 	if (connection_mode::server == m_mode)
-		throw ssl_exception("setting server name for SNI only possible in client mode");
+		throw exception("setting server name for SNI only possible in client mode");
 
 	int retval = ssl_library::instance().ssl_ctrl()
 			(m_ssl,
@@ -479,7 +479,7 @@ connection::set_sni(const std::string &servername)
 	if (retval != 1) {
 		std::ostringstream oss;
 		oss << "failed to set " << servername << " for SNI in TLS extension";
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 }
 
@@ -488,13 +488,13 @@ connection::set_sni(const std::string &servername)
  * are registered for all contexts. All known contexts must be added before calling this
  * function using add_context().
  *
- * @throws snf::net::ssl::ssl_exception if the callback or argument could not be set.
+ * @throws snf::net::ssl::exception if the callback or argument could not be set.
  */
 void
 connection::enable_sni()
 {
 	if (connection_mode::client == m_mode)
-		throw ssl_exception("handling SNI requests can only be enabled in server mode");
+		throw exception("handling SNI requests can only be enabled in server mode");
 
 	std::lock_guard<std::mutex> guard(m_lock);
 
@@ -503,18 +503,18 @@ connection::enable_sni()
 		if (ssl_library::instance().ssl_ctx_cb_ctrl()
 			(it->ctx, SSL_CTRL_SET_TLSEXT_SERVERNAME_CB,
 			reinterpret_cast<void (*)(void)>(sni_cb)) != 1)
-				throw ssl_exception("failed to set SNI callback function");
+				throw exception("failed to set SNI callback function");
 		if (ssl_library::instance().ssl_ctx_ctrl()
 			(it->ctx, SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG, 0,
 			reinterpret_cast<void *>(this)) != 1)
-				throw ssl_exception("failed to set SNI callback argument");
+				throw exception("failed to set SNI callback argument");
 	}
 }
 
 /*
  * Gets the current SSL session.
  *
- * @throws snf::net::ssl::ssl_exception if the session cannot be retrieved or
+ * @throws snf::net::ssl::exception if the session cannot be retrieved or
  *         no session is active.
  */
 session
@@ -522,7 +522,7 @@ connection::get_session()
 {
 	SSL_SESSION *sess = ssl_library::instance().ssl_get_session()(m_ssl);
 	if (sess == nullptr)
-		throw ssl_exception("no SSL session avaliable");
+		throw exception("no SSL session avaliable");
 	return session { sess };
 }
 
@@ -531,14 +531,14 @@ connection::get_session()
  *
  * @param [in] sess - SSL session to resume.
  *
- * @throws snf::net::ssl::ssl_exception if the session could not be set for
+ * @throws snf::net::ssl::exception if the session could not be set for
  *         resumption.
  */
 void
 connection::set_session(session &sess)
 {
 	if (ssl_library::instance().ssl_set_session()(m_ssl, sess) != 1)
-		throw ssl_exception("failed to set SSL session");
+		throw exception("failed to set SSL session");
 }
 
 /*
@@ -565,7 +565,7 @@ connection::is_session_reused()
  * @param [in] s  - socket to associate with TLS connection.
  * @param [in] to - timeout in milliseconds.
  *
- * @throws snf::net::ssl::ssl_exception if the socket could not be associate with
+ * @throws snf::net::ssl::exception if the socket could not be associate with
  *         the TLS connection or the TLS handshake fails.
  */
 void
@@ -578,7 +578,7 @@ connection::handshake(const socket &s, int to)
 		oss << "failed to set socket "
 			<< static_cast<int64_t>(sock)
 			<< " for TLS communication";
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 
 	do {
@@ -612,7 +612,7 @@ connection::handshake(const socket &s, int to)
  *
  * @return E_ok on success, -ve error code on success.
  *
- * @throws snf::net::ssl::ssl_exception if the internal socket could not be
+ * @throws snf::net::ssl::exception if the internal socket could not be
  *         retrieved or a SSL occurs while reading.
  */
 int
@@ -634,7 +634,7 @@ connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
 
 	sock = ssl_library::instance().ssl_get_fd()(m_ssl);
 	if (sock < 1)
-		throw ssl_exception("failed to get internal socket");
+		throw exception("failed to get internal socket");
 
 	do {
 		error_info ei;
@@ -676,7 +676,7 @@ connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
  *
  * @return E_ok on success, -ve error code on success.
  *
- * @throws snf::net::ssl::ssl_exception if the internal socket could not be
+ * @throws snf::net::ssl::exception if the internal socket could not be
  *         retrieved or a SSL occurs while writing.
  */
 int
@@ -698,7 +698,7 @@ connection::write(const void *buf, int to_write, int *bwritten, int to, int *ose
 
 	sock = ssl_library::instance().ssl_get_fd()(m_ssl);
 	if (sock < 1)
-		throw ssl_exception("failed to get internal socket");
+		throw exception("failed to get internal socket");
 
 	do {
 		error_info ei;
@@ -748,13 +748,13 @@ connection::shutdown()
 /*
  * Resets the TLS connection. Look at SSL_clear() for more details.
  *
- * @throws snf::net::ssl::ssl_exception if the connection could not be reset.
+ * @throws snf::net::ssl::exception if the connection could not be reset.
  */
 void
 connection::reset()
 {
 	if (ssl_library::instance().ssl_clear()(m_ssl) != 1)
-		throw ssl_exception("failed to prepare SSL object for new connection");
+		throw exception("failed to prepare SSL object for new connection");
 }
 
 /*

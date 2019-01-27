@@ -15,7 +15,7 @@ namespace ssl {
  * @param [in] data - session data.
  * @param [in] len  - session data length.
  *
- * @throws snf::net::ssl::ssl_exception if the SSL session could not
+ * @throws snf::net::ssl::exception if the SSL session could not
  *         be imported from the given data.
  */
 session::session(const uint8_t *data, size_t len)
@@ -23,7 +23,7 @@ session::session(const uint8_t *data, size_t len)
 	m_session = ssl_library::instance().ssl_session_d2i()
 			(nullptr, &data, static_cast<long>(len));
 	if (m_session == nullptr)
-		throw ssl_exception("failed to import SSL session");
+		throw exception("failed to import SSL session");
 }
 
 /*
@@ -32,7 +32,7 @@ session::session(const uint8_t *data, size_t len)
  * @param [in] name - session file name.
  *
  * @throws std::system_error if the file could not be opened or read,
- *         snf::net::ssl::ssl_exception if the SSL session could not
+ *         snf::net::ssl::exception if the SSL session could not
  *         be imported from the file content.
  */
 session::session(const std::string &name)
@@ -71,7 +71,7 @@ session::session(const std::string &name)
 			(nullptr, &buf, static_cast<long>(len));
 	if (m_session == nullptr) {
 		delete [] data;
-		throw ssl_exception("failed to import SSL session");
+		throw exception("failed to import SSL session");
 	}
 
 	delete [] data;
@@ -85,12 +85,12 @@ session::session(const std::string &name)
  *
  * @param [in] s - raw SSL_SESSION.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 session::session(SSL_SESSION *s)
 {
 	if (ssl_library::instance().ssl_session_up_ref()(s) != 1)
-		throw ssl_exception("failed to increment the SSL session reference count");
+		throw exception("failed to increment the SSL session reference count");
 	m_session = s;
 }
 
@@ -100,12 +100,12 @@ session::session(SSL_SESSION *s)
  *
  * @param [in] s - SSL session.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 session::session(const session &s)
 {
 	if (ssl_library::instance().ssl_session_up_ref()(s.m_session) != 1)
-		throw ssl_exception("failed to increment the SSL session reference count");
+		throw exception("failed to increment the SSL session reference count");
 	m_session = s.m_session;
 }
 
@@ -134,14 +134,14 @@ session::~session()
  * Copy operator. No copy is done, the class simply points to the same
  * raw SSL session and the reference count in bumped up.
  *
- * @throws snf::net::ssl::ssl_exception if the reference count could not be incremented.
+ * @throws snf::net::ssl::exception if the reference count could not be incremented.
  */
 const session &
 session::operator=(const session &s)
 {
 	if (this != &s) {
 		if (ssl_library::instance().ssl_session_up_ref()(s.m_session) != 1)
-			throw ssl_exception("failed to increment the SSL session reference count");
+			throw exception("failed to increment the SSL session reference count");
 		if (m_session)
 			ssl_library::instance().ssl_session_free()(m_session);
 		m_session = s.m_session;
@@ -172,7 +172,7 @@ session::operator=(session &&s)
  *
  * @return pointer to the session data.
  *
- * @throws snf::net::ssl::ssl_exception if the SSL session could not be exported.
+ * @throws snf::net::ssl::exception if the SSL session could not be exported.
  */
 uint8_t *
 session::to_bytes(size_t *len)
@@ -191,12 +191,12 @@ session::to_bytes(size_t *len)
 		std::ostringstream oss;
 		oss << "SSL session export length mismatch; expected " << exp_len
 			<< ", found " << *len;
-		throw ssl_exception(oss.str());
+		throw exception(oss.str());
 	}
 
 	if (data + *len != exp_data) {
 		delete [] data;
-		throw ssl_exception("SSL session export data mismatch");
+		throw exception("SSL session export data mismatch");
 	}
 
 	return data;
@@ -208,7 +208,7 @@ session::to_bytes(size_t *len)
  * @param [in] name - SSL session file name.
  *
  * @throws std::system_error if the file could not be opened or written to,
- *         snf::net::ssl::ssl_exception if the SSL session could not be exported.
+ *         snf::net::ssl::exception if the SSL session could not be exported.
  */
 void
 session::to_file(const std::string &name)
@@ -335,14 +335,14 @@ session::timeout()
  *
  * @param [in] to - timeout in seconds.
  *
- * @throws snf::net::ssl::ssl_exception if could not set the timeout.
+ * @throws snf::net::ssl::exception if could not set the timeout.
  */
 void
 session::timeout(time_t to)
 {
 	long lto = static_cast<long>(to);
 	if (ssl_library::instance().ssl_session_set_timeout()(m_session, lto) != 1)
-		throw ssl_exception("failed to set the session timeout");
+		throw exception("failed to set the session timeout");
 }
 
 /*

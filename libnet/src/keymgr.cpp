@@ -19,7 +19,7 @@ namespace ssl {
  * @return key record or nullptr if the key could not be
  *         created.
  *
- * @throws snf::net::ssl::ssl_exception if the key could not
+ * @throws snf::net::ssl::exception if the key could not
  *         be created.
  */
 const keyrec *
@@ -40,7 +40,7 @@ basic_keymgr::get()
 		uint8_t buf[KEY_SIZE + AES_SIZE + HMAC_SIZE];
 		if (ssl_library::instance().rand_bytes()
 			(buf, KEY_SIZE + AES_SIZE + HMAC_SIZE) != 1)
-			throw ssl_exception("failed to generate random data");
+			throw exception("failed to generate random data");
 
 		m_cur = DBG_NEW keyrec;
 		uint8_t *ptr = buf;

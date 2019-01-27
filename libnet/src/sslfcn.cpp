@@ -7,7 +7,7 @@ namespace net {
 namespace ssl {
 
 void
-ssl_exception::init()
+exception::init()
 {
 	unsigned long code;
 	int flags = 0, line = 0;

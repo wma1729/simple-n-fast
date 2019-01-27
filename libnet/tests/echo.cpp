@@ -542,7 +542,7 @@ try {
 	return retval;
 } catch (const std::invalid_argument &ex) {
 	std::cerr << ex.what() << std::endl;
-} catch (const snf::net::ssl::ssl_exception &ex) {
+} catch (const snf::net::ssl::exception &ex) {
 	std::cerr << ex.what() << std::endl;
 	for (auto I = ex.begin(); I != ex.end(); ++I)
 		std::cerr << *I << std::endl;
