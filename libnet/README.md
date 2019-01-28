@@ -129,12 +129,17 @@ cnxn.handshake(sock);
 ```C++
 // Prepare SSL context
 
-/*
- * Create socket.
- * Set socket options as needed.
- * Bind the socket.
- * Start listening on the socket.
- */
+// Create socket.
+snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
+
+// Set socket options as needed.
+...
+
+// Bind to the port.
+sock.bind(AF_INET, port);
+
+// Start listening...
+sock.listen(backlog);
 
 // Accept new connection.
 snf::net::socket nsock = std::move(sock.accept());
