@@ -141,11 +141,11 @@ sock.bind(AF_INET, port);
 // Start listening...
 sock.listen(backlog);
 
-// Accept new connection.
+// Accept new connection: in a loop or when the socket is ready (select/poll)
 snf::net::socket nsock = std::move(sock.accept());
 
 // Create secured connection.
-snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
+snf::net::ssl::connection cnxn { snf::net::connection_mode::server, ctx };
 
 // Perform TLS handshake.
 cnxn.handshake(nsock);
