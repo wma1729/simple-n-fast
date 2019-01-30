@@ -9,7 +9,7 @@ Libnet is a networking library that makes it simple to to do basic network progr
 Platform | Default SSL Library Name | Override With               | Lookup
 -------- | ------------------------ | --------------------------- | ------
 Linux    | libssl.so                | Environment Variable LIBSSL | LD_LIBRARY_PATH
-Windows  | ssl.dll                  | Environment Variable LIBSSL | Path
+Windows  | ssl.dll                  | Environment Variable LIBSSL | PATH
 
 ### Library interface
 
