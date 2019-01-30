@@ -4,6 +4,12 @@ Libnet is a networking library that makes it simple to to do basic network progr
 - Simple consistent interface.
 - Hides platform differences.
 - Support for secured communication.
+- Dynamically loads OpenSSL/LibreSSL libraries.
+
+Platform | Default SSL Library Name | Override With               | Lookup
+-------- | ------------------------ | --------------------------- | ------
+Linux    | libssl.so                | Environment Variable LIBSSL | LD_LIBRARY_PATH
+Windows  | ssl.dll                  | Environment Variable LIBSSL | Path
 
 ### Library interface
 
@@ -62,7 +68,6 @@ try {
 ```
 
 ### Prepare SSL context
-
 ```C++
 // Create context.
 snf::net::ssl::context ctx;
@@ -97,14 +102,13 @@ ctx.limit_certificate_chain_depth(depth);
 ctx.set_session_context(session_id_ctx);
 
 // If you intend to use session ticket based session resumption, enable it.
-// Connection mode is snf::net::connection_mode: client or server.
+// Connection mode is snf::net::connection_mode : client or server.
 ctx.session_ticket(connection_mode, true);
 ```
 
 ### Perform handshake
 
 #### Client
-
 ```C++
 // Prepare SSL context
 
@@ -125,7 +129,6 @@ cnxn.handshake(sock);
 ```
 
 #### Server
-
 ```C++
 // Prepare SSL context
 
@@ -146,6 +149,39 @@ snf::net::socket nsock = std::move(sock.accept());
 
 // Create secured connection.
 snf::net::ssl::connection cnxn { snf::net::connection_mode::server, ctx };
+
+// Perform TLS handshake.
+cnxn.handshake(nsock);
+```
+
+### Host Name Validation
+
+Very basic host name validation is provided. The side (client or server) that wants to perform validation sets the host name(s) or internet address before beginning the handshake. The SSL context must have peer verification set. If any of the host name or the internet address matches any of the host name/internet address in the peer certificate, the verification passes. Otherwise the verification fails and so does the handshake.
+
+#### Validation code for host name(s)
+```C++
+...
+
+// Create secured connection.
+snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
+
+// Add the host names to be checked
+cnxn.check_hosts( { "www.example.com", "example.com" } );
+
+// Perform TLS handshake.
+cnxn.handshake(nsock);
+```
+
+#### Validation code for internet address
+```C++
+...
+
+// Create secured connection.
+snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
+
+// Add the internet address to be checked
+snf::net::internet_address ia { "172.18.0.1" };
+cnxn.check_inaddr(ia);
 
 // Perform TLS handshake.
 cnxn.handshake(nsock);

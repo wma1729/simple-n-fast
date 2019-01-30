@@ -1,4 +1,5 @@
 #include "sslfcn.h"
+#include "netplat.h"
 #include <openssl/rand.h>
 #include "dbg.h"
 
@@ -42,7 +43,7 @@ exception::init()
 
 ssl_library::ssl_library()
 {
-	const char *libname = "libssl.so";
+	const char *libname = LIBSSL;
 	const char *env = getenv("LIBSSL");
 	if (env && *env)
 		libname = env;

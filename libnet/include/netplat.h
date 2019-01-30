@@ -6,6 +6,8 @@
 #include <WinSock2.h>
 #include <ws2tcpip.h>
 
+#define LIBSSL "ssl.dll"
+
 using in_port_t = uint16_t;
 using sock_t = SOCKET;
 
@@ -28,6 +30,8 @@ constexpr bool connect_in_progress(int e) { return (e == WSAEWOULDBLOCK); }
 #include <netdb.h>
 #include <fcntl.h>
 #include <poll.h>
+
+#define LIBSSL "libssl.so"
 
 using sock_t = int;
 constexpr sock_t INVALID_SOCKET = -1;
