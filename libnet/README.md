@@ -108,7 +108,7 @@ ctx.session_ticket(connection_mode, true);
 
 ### Perform handshake
 
-#### Client
+#### TLS Client
 ```C++
 // Prepare SSL context
 
@@ -128,7 +128,7 @@ snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
 cnxn.handshake(sock);
 ```
 
-#### Server
+#### TLS Server
 ```C++
 // Prepare SSL context
 
@@ -154,7 +154,7 @@ snf::net::ssl::connection cnxn { snf::net::connection_mode::server, ctx };
 cnxn.handshake(nsock);
 ```
 
-### Host Name Validation
+### Host Name (or internet address) Validation
 
 Very basic host name validation is provided. The side (client or server) that wants to perform validation sets the host name(s) or internet address before beginning the handshake. The SSL context must have peer verification set. If any of the host name or the internet address matches any of the host name/internet address in the peer certificate, the verification passes. Otherwise the verification fails and so does the handshake.
 
@@ -185,4 +185,59 @@ cnxn.check_inaddr(ia);
 
 // Perform TLS handshake.
 cnxn.handshake(nsock);
+```
+
+### TLS session resumption
+TLS handshake is expensive. To speed up things, TLS provides session resumption. The idea is to save session state from a previously successful handshake and reusing the state for the next connection. There are two methods available.
+
+### TLS resumption uisng session ID
+TLS server maintains the session state in this approach. When the client and server decide to resume a previous session the TLS client sends the session ID of the session to be resumed to the TLS server. The server then checks its session cache for a match. If a match is found, and the server is willing to re-establish the connection, the session state is reused. If a session ID match is not found, the server generates a new session ID, and the TLS client and server perform a full handshake.
+
+#### TLS Client
+```C++
+// Prepare SSL context
+
+// Create socket.
+snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
+
+// Set socket options as needed.
+...
+
+// Establish the connection.
+sock.connect(AF_INET, host, port);
+
+// Create secured connection.
+snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
+
+// Assuming that the session state is stored in a file (from last successful handshake)
+snf::net::ssl::session sess { session_file };
+cnxn->set_session(sess);
+
+// Perform TLS handshake.
+cnxn.handshake(sock);
+
+// Get session details after the handshake.
+snf::net::ssl::session sess = std::move(cnxn->get_session());
+std::cout << "session id = " << sess.get_id() << std::endl;
+
+// Check if the session is reused?
+if (cnxn->is_session_reused())
+	std::cout << "SSL session is reused" << std::endl;
+else
+	std::cout << "SSL session is not reused" << std::endl;
+
+// Persist the session if needed.
+sess.to_file(session_file);
+```
+
+#### TLS Server
+Nothing is needed on the server side other than make sure that session context is set.
+```C++
+// Prepare SSL context
+
+// Set the session ID context.
+ctx.set_session_context(session_id_ctx);
+
+// The rest of the code remains the same.
+
 ```
