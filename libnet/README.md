@@ -290,3 +290,69 @@ ctx.session_ticket(snf::net::connection_mode::server, true);
 
 // The rest of the code remains the same.
 ```
+
+### Server Name Indication (SNI)
+A TLS server may be running on a host that has multiple DNS host names. Let's say the host names are H1, H2, H3, ... Hn. One possible approach is to have a single certificate with H1 as the subject Common Name and H2, H3, ... Hn as the Subject Alternate Names. Now the TLS client has the responsibility of verifying that the server name it connected to matches one of the names in the certificate. This approach is fine in most cases. But when it becomes difficult (and it happens fairly often in reality) to find all the server names in advance (as the names may change), this approach does not work. It sort of work but is very static.
+
+SNI, a TLS extension, comes to the rescue here. The solution is to have one certificate per host name on the TLS server. All the certificates (in different SSL contexts) are registered with the TLS server. When the client starts the TLS handshake, it passes in the name of the server. The TLS servr looks at the server name and switches to the right certificate (SSL context) transparently.
+
+#### TLS Client
+```C++
+// Prepare SSL context.
+
+// Create socket.
+snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
+
+// Set socket options as needed.
+...
+
+// Establish the connection.
+sock.connect(AF_INET, host, port);
+
+// Create secured connection.
+snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
+
+// Set the server name that you are connecting to.
+cnxn.set_sni(host);
+
+// Check the server name as part of verification.
+cnxn.check_hosts( { host } );
+
+// Perform TLS handshake.
+cnxn.handshake(sock);
+
+// If the handshake is successful, it is because the certificate is for the host name 'host'.
+```
+
+#### TLS server
+```C++
+// Prepare SSL context.
+
+// Create socket.
+snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
+
+// Set socket options as needed.
+...
+
+// Bind to the port.
+sock.bind(AF_INET, port);
+
+// Start listening...
+sock.listen(backlog);
+
+// Accept new connection: in a loop or when the socket is ready (select/poll).
+snf::net::socket nsock = std::move(sock.accept());
+
+// Create secured connection.
+snf::net::ssl::connection cnxn { snf::net::connection_mode::server, ctx };
+
+// Prepare SSL contexts (one for each host name) and register them with connection.
+for (auto c : contexts)
+	cnxn.add_context(c);
+
+// Enable SNI (this registers callback that does SSL context switch).
+cnxn.enable_sni();
+
+// Perform TLS handshake.
+cnxn.handshake(nsock);
+```
