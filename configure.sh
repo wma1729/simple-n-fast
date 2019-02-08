@@ -69,7 +69,7 @@ if [ "$PLAT" = "Linux" ]; then
 		M = $HARDWARE
 		INSTDIR = $INSTPATH
 		CC = $CC -m64
-		CFLAGS = -c -Wall
+		CFLAGS = -c -Wall -std=c++11
 		DEFINES = -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -D_FILE_OFFSET_BITS=64
 		LD = $CC -shared -m64
 		LDFLAGS =

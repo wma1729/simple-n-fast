@@ -28,7 +28,7 @@ enum class file_type
 /**
  * File type to string representation.
  */
-constexpr const char *
+inline const char *
 file_type_string(file_type ft)
 {
 	switch (ft)

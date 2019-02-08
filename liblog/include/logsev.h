@@ -23,7 +23,7 @@ enum class severity
 /**
  * Log severity to string representation.
  */
-constexpr const char *
+inline const char *
 severity_string(severity sev)
 {
 	switch (sev)
