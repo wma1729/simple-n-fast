@@ -44,8 +44,6 @@
 #define ERRSTRLEN       255
 #endif
 
-#define is_set(V, F)    (((V) & (F)) == (F))
-
 #define STUPID_WINDOWS(ARG)     ARG
 
 #define VA_ARGS_CNT_(_1, _2, _3, _4, _5, N, ...) N
@@ -57,6 +55,29 @@
 #define CALL_MACRO(MACRO, ...)      EXPAND_MACRO(MACRO, VA_ARGS_CNT(__VA_ARGS__))(__VA_ARGS__)
 
 namespace snf {
+
+template<typename T>
+constexpr bool
+is_flag_set(T value, T flags)
+{
+	return ((value & flags) == flags);
+}
+
+constexpr bool
+isnewline(int c)
+{
+	return ((c == '\n') || (c == '\r'));
+}
+
+constexpr char
+pathsep(void)
+{
+#if defined(_WIN32)
+	return '\\';
+#else
+	return '/';
+#endif
+}
 
 template<typename T, typename S>
 T narrow_cast(S v)
@@ -80,22 +101,6 @@ streq(const std::string &s1, const std::string &s2, bool ic = true)
 	return std::equal(s1.begin(), s1.end(), s2.begin(),
 			[](char c1, char c2) { return std::toupper(c1) == std::toupper(c2); }
 		);
-}
-
-constexpr bool
-isnewline(int c)
-{
-	return ((c == '\n') || (c == '\r'));
-}
-
-constexpr char
-pathsep(void)
-{
-#if defined(_WIN32)
-	return '\\';
-#else
-	return '/';
-#endif
 }
 
 inline int

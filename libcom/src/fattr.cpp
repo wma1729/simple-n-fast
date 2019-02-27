@@ -98,14 +98,14 @@ file_attr::init(const WIN32_FIND_DATAW &fd)
 		throw std::runtime_error("invalid file name");
 	}
 
-	if (is_set(fd.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)) {
+	if (is_flag_set<DWORD>(fd.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)) {
 		f_type = file_type::directory;
-	} else if (is_set(fd.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT)) {
-		if (is_set(fd.dwReserved0, IO_REPARSE_TAG_MOUNT_POINT))
+	} else if (is_flag_set<DWORD>(fd.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT)) {
+		if (is_flag_set<DWORD>(fd.dwReserved0, IO_REPARSE_TAG_MOUNT_POINT))
 			f_type = file_type::mntpoint;
-		else if (is_set(fd.dwReserved0, IO_REPARSE_TAG_SYMLINK))
+		else if (is_flag_set<DWORD>(fd.dwReserved0, IO_REPARSE_TAG_SYMLINK))
 			f_type = file_type::symlink;
-	} else if (is_set(fd.dwFileAttributes, FILE_ATTRIBUTE_NORMAL)) {
+	} else if (is_flag_set<DWORD>(fd.dwFileAttributes, FILE_ATTRIBUTE_NORMAL)) {
 		f_type = file_type::regular;
 	} else {
 		std::ostringstream oss;
@@ -135,11 +135,11 @@ file_attr::init(const WIN32_FIND_DATAW &fd)
 void
 file_attr::init(const WIN32_FILE_ATTRIBUTE_DATA &fad)
 {
-	if (is_set(fad.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)) {
+	if (is_flag_set<DWORD>(fad.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)) {
 		f_type = file_type::directory;
-	} else if (is_set(fad.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT)) {
+	} else if (is_flag_set<DWORD>(fad.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT)) {
 		f_type = file_type::symlink;
-	} else if (is_set(fad.dwFileAttributes, FILE_ATTRIBUTE_NORMAL)) {
+	} else if (is_flag_set<DWORD>(fad.dwFileAttributes, FILE_ATTRIBUTE_NORMAL)) {
 		f_type = file_type::regular;
 	} else {
 		std::ostringstream oss;
@@ -170,11 +170,11 @@ void
 file_attr::init(const BY_HANDLE_FILE_INFORMATION &fi, DWORD ft)
 {
 	if (ft == FILE_TYPE_DISK) {
-		if (is_set(fi.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)) {
+		if (is_flag_set<DWORD>(fi.dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)) {
 			f_type = file_type::directory;
-		} else if (is_set(fi.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT)) {
+		} else if (is_flag_set<DWORD>(fi.dwFileAttributes, FILE_ATTRIBUTE_REPARSE_POINT)) {
 			f_type = file_type::symlink;
-		} else if (is_set(fi.dwFileAttributes, FILE_ATTRIBUTE_NORMAL)) {
+		} else if (is_flag_set<DWORD>(fi.dwFileAttributes, FILE_ATTRIBUTE_NORMAL)) {
 			f_type = file_type::regular;
 		} else {
 			std::ostringstream oss;
