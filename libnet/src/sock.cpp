@@ -81,6 +81,75 @@ socket::setopt(int level, int optname, void *value, int vlen)
 }
 
 /*
+ * Constructs a socket pair. This is straight-forward on Unix
+ * platforms as this simply calls socketpair with family of
+ * AF_UNIX and type set to SOCK_STREAM. Windows, on the other
+ * hand, does not support socketpair. The implementation creates
+ * a listener socket. Later two connected sockets are created
+ * using connect and accept calls.
+ *
+ * @returns an array of connected sockets of size 2.
+ *
+ * @throws std::system_error in case of error.
+ */
+std::array<socket, 2>
+socket::socketpair()
+{
+#ifndef _WIN32
+	sock_t s[2];
+	if (::socketpair(AF_UNIX, SOCK_STREAM, 0, s) < 0) {
+		throw std::system_error(
+			snf::net::error(),
+			std::system_category(),
+			"failed to create socket pair");
+	}
+
+	return std::array<socket, 2> { s[0], s[1] };
+#else
+	socket listener(AF_INET, socket_type::tcp);
+
+	listener.reuseaddr(true);
+	listener.bind(AF_INET, 0);
+	listener.listen(1);
+
+	const socket_address &sa = listener.local_address();
+
+	socket s1(AF_INET, socket_type::tcp);
+	s1.connect(sa);
+
+	socket s2 = std::move(listener.accept());
+
+	return std::array<socket, 2> { std::move(s1), std::move(s2) };
+#endif
+}
+
+/*
+ * Constructs the socket object from raw socket.
+ *
+ * @param [in] s   - raw socket.
+ *
+ * @throws std::invalid_argument if
+ *         - the socket type is neither SOCK_STREAM nor SOCK_DGRAM.
+ *         std::system_error if the socket type could not be determined.
+ */
+socket::socket(sock_t s)
+	: m_sock(s)
+{
+	int value = 0;
+	int vlen = static_cast<int>(sizeof(value));
+
+	getopt(SOL_SOCKET, SO_TYPE, &value, &vlen);
+
+	if (value == SOCK_STREAM) {
+		m_type = socket_type::tcp;
+	} else if (value == SOCK_DGRAM) {
+		m_type = socket_type::udp;
+	} else {
+		throw std::invalid_argument("invalid socket type");
+	}
+}
+
+/*
  * Constructs the socket object from raw socket and peer address.
  *
  * @param [in] s   - raw socket.

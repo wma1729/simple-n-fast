@@ -3,6 +3,7 @@
 
 #include "net.h"
 #include "nio.h"
+#include <array>
 
 namespace snf {
 namespace net {
@@ -32,6 +33,7 @@ private:
 	void setopt(int, int, void *, int);
 
 protected:
+	socket(sock_t);
 	socket(sock_t, const sockaddr_storage &, socklen_t);
 
 public:
@@ -41,6 +43,8 @@ public:
 		none,	// no lingering
 		timed	// linger for the specified time
 	};
+
+	static std::array<socket, 2> socketpair();
 
 	socket(int, socket_type);
 	socket(const socket &) = delete;
