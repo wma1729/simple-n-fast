@@ -79,19 +79,8 @@ public:
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
 		m_valid = false;
-		m_cv.notify_all();
-	}
-
-	void clear()
-	{
-		std::lock_guard<std::mutex> guard(m_lock);
 		while (!m_queue.empty())
 			m_queue.pop_back();
-	}
-
-	void notify_all()
-	{
-		std::lock_guard<std::mutex> guard(m_lock);
 		m_cv.notify_all();
 	}
 };
@@ -110,7 +99,7 @@ private:
 		auto worker = [this] {
 			while (!m_done) {
 				fcn_type fcn;
-				m_queue.get(fcn);
+				this->m_queue.get(fcn);
 				(fcn)();
 			}
 		};
