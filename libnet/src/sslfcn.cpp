@@ -41,13 +41,27 @@ exception::init()
 	ssl_library::instance().err_clear()();
 }
 
+const char *
+ssl_library::library_name(const std::string &id)
+{
+	const char *libname = nullptr;
+	const char *env = getenv(id.c_str());			
+
+	if (env && *env) {
+		libname = env;
+	} else if (id == "LIBCRYPTO") {
+		libname = LIBCRYPTO;
+	} else if (id == "LIBSSL") {
+		libname = LIBSSL;
+	}
+
+	return libname;
+}
+
 ssl_library::ssl_library()
 {
-	const char *libname = LIBSSL;
-	const char *env = getenv("LIBSSL");
-	if (env && *env)
-		libname = env;
-	m_ssl = DBG_NEW snf::dll(libname);
+	m_crypto = DBG_NEW snf::dll(library_name("LIBCRYPTO"));
+	m_ssl = DBG_NEW snf::dll(library_name("LIBSSL"));
 }
 
 p_openssl_version_num
@@ -55,7 +69,7 @@ ssl_library::openssl_version_num()
 {
 	if (!m_openssl_version_num)
 		m_openssl_version_num = reinterpret_cast<p_openssl_version_num>
-			(m_ssl->symbol("OpenSSL_version_num"));
+			(m_crypto->symbol("OpenSSL_version_num"));
 	return m_openssl_version_num;
 }
 
@@ -64,7 +78,7 @@ ssl_library::openssl_version_str()
 {
 	if (!m_openssl_version_str)
 		m_openssl_version_str = reinterpret_cast<p_openssl_version_str>
-			(m_ssl->symbol("OpenSSL_version"));
+			(m_crypto->symbol("OpenSSL_version"));
 	return m_openssl_version_str;
 }
 
@@ -91,7 +105,7 @@ ssl_library::free_error_strings()
 {
 	if (!m_free_error_strings)
 		m_free_error_strings = reinterpret_cast<p_free_error_strings>
-			(m_ssl->symbol("ERR_free_strings"));
+			(m_crypto->symbol("ERR_free_strings"));
 	return m_free_error_strings;
 }
 
@@ -100,7 +114,7 @@ ssl_library::bio_s_mem()
 {
 	if (!m_bio_s_mem)
 		m_bio_s_mem = reinterpret_cast<p_bio_s_mem>
-			(m_ssl->symbol("BIO_s_mem"));
+			(m_crypto->symbol("BIO_s_mem"));
 	return m_bio_s_mem;
 }
 
@@ -109,7 +123,7 @@ ssl_library::bio_new()
 {
 	if (!m_bio_new)
 		m_bio_new = reinterpret_cast<p_bio_new>
-			(m_ssl->symbol("BIO_new"));
+			(m_crypto->symbol("BIO_new"));
 	return m_bio_new;
 }
 
@@ -118,7 +132,7 @@ ssl_library::bio_read()
 {
 	if (!m_bio_read)
 		m_bio_read = reinterpret_cast<p_bio_read>
-			(m_ssl->symbol("BIO_read"));
+			(m_crypto->symbol("BIO_read"));
 	return m_bio_read;
 }
 
@@ -127,7 +141,7 @@ ssl_library::bio_new_mem_buf()
 {
 	if (!m_bio_new_mem_buf)
 		m_bio_new_mem_buf = reinterpret_cast<p_bio_new_mem_buf>
-			(m_ssl->symbol("BIO_new_mem_buf"));
+			(m_crypto->symbol("BIO_new_mem_buf"));
 	return m_bio_new_mem_buf;
 }
 
@@ -136,7 +150,7 @@ ssl_library::bio_free()
 {
 	if (!m_bio_free)
 		m_bio_free = reinterpret_cast<p_bio_free>
-			(m_ssl->symbol("BIO_free"));
+			(m_crypto->symbol("BIO_free"));
 	return m_bio_free;
 }
 
@@ -145,7 +159,8 @@ ssl_library::d2i_private_key_fp()
 {
 	if (!m_d2i_private_key_fp)
 		m_d2i_private_key_fp = reinterpret_cast<p_d2i_private_key_fp>
-			(m_ssl->symbol("d2i_PrivateKey_fp"));
+			(m_crypto->symbol("d2i_PrivateKey_fp"));
+	printf("%p\n", m_d2i_private_key_fp);
 	return m_d2i_private_key_fp;
 }
 
@@ -154,7 +169,7 @@ ssl_library::d2i_auto_private_key()
 {
 	if (!m_d2i_auto_private_key)
 		m_d2i_auto_private_key = reinterpret_cast<p_d2i_auto_private_key>
-			(m_ssl->symbol("d2i_AutoPrivateKey"));
+			(m_crypto->symbol("d2i_AutoPrivateKey"));
 	return m_d2i_auto_private_key;
 }
 
@@ -163,7 +178,7 @@ ssl_library::pem_read_private_key()
 {
 	if (!m_pem_read_private_key)
 		m_pem_read_private_key = reinterpret_cast<p_pem_read_private_key>
-			(m_ssl->symbol("PEM_read_PrivateKey"));
+			(m_crypto->symbol("PEM_read_PrivateKey"));
 	return m_pem_read_private_key;
 }
 
@@ -172,7 +187,7 @@ ssl_library::pem_read_bio_private_key()
 {
 	if (!m_pem_read_bio_private_key)
 		m_pem_read_bio_private_key = reinterpret_cast<p_pem_read_bio_private_key>
-			(m_ssl->symbol("PEM_read_bio_PrivateKey"));
+			(m_crypto->symbol("PEM_read_bio_PrivateKey"));
 	return m_pem_read_bio_private_key;
 }
 
@@ -181,7 +196,7 @@ ssl_library::evp_pkey_up_ref()
 {
 	if (!m_evp_pkey_up_ref)
 		m_evp_pkey_up_ref = reinterpret_cast<p_evp_pkey_up_ref>
-			(m_ssl->symbol("EVP_PKEY_up_ref"));
+			(m_crypto->symbol("EVP_PKEY_up_ref"));
 	return m_evp_pkey_up_ref;
 }
 
@@ -190,7 +205,7 @@ ssl_library::evp_pkey_base_id()
 {
 	if (!m_evp_pkey_base_id)
 		m_evp_pkey_base_id = reinterpret_cast<p_evp_pkey_base_id>
-			(m_ssl->symbol("EVP_PKEY_base_id"));
+			(m_crypto->symbol("EVP_PKEY_base_id"));
 	return m_evp_pkey_base_id;
 }
 
@@ -199,7 +214,7 @@ ssl_library::evp_pkey_free()
 {
 	if (!m_evp_pkey_free)
 		m_evp_pkey_free = reinterpret_cast<p_evp_pkey_free>
-			(m_ssl->symbol("EVP_PKEY_free"));
+			(m_crypto->symbol("EVP_PKEY_free"));
 	return m_evp_pkey_free;
 }
 
@@ -208,7 +223,7 @@ ssl_library::get1_rsa()
 {
 	if (!m_get1_rsa)
 		m_get1_rsa = reinterpret_cast<p_get1_rsa>
-			(m_ssl->symbol("EVP_PKEY_get1_RSA"));
+			(m_crypto->symbol("EVP_PKEY_get1_RSA"));
 	return m_get1_rsa;
 }
 
@@ -217,7 +232,7 @@ ssl_library::rsa_free()
 {
 	if (!m_rsa_free)
 		m_rsa_free = reinterpret_cast<p_rsa_free>
-			(m_ssl->symbol("RSA_free"));
+			(m_crypto->symbol("RSA_free"));
 	return m_rsa_free;
 }
 
@@ -226,7 +241,7 @@ ssl_library::rsa_key_check()
 {
 	if (!m_rsa_key_check)
 		m_rsa_key_check = reinterpret_cast<p_rsa_key_check>
-			(m_ssl->symbol("RSA_check_key"));
+			(m_crypto->symbol("RSA_check_key"));
 	return m_rsa_key_check;
 }
 
@@ -235,7 +250,7 @@ ssl_library::get1_dh()
 {
 	if (!m_get1_dh)
 		m_get1_dh = reinterpret_cast<p_get1_dh>
-			(m_ssl->symbol("EVP_PKEY_get1_DH"));
+			(m_crypto->symbol("EVP_PKEY_get1_DH"));
 	return m_get1_dh;
 }
 
@@ -244,7 +259,7 @@ ssl_library::dh_free()
 {
 	if (!m_dh_free)
 		m_dh_free = reinterpret_cast<p_dh_free>
-			(m_ssl->symbol("DH_free"));
+			(m_crypto->symbol("DH_free"));
 	return m_dh_free;
 }
 
@@ -253,7 +268,7 @@ ssl_library::dh_key_check()
 {
 	if (!m_dh_key_check)
 		m_dh_key_check = reinterpret_cast<p_dh_key_check>
-			(m_ssl->symbol("DH_check"));
+			(m_crypto->symbol("DH_check"));
 	return m_dh_key_check;
 }
 
@@ -262,7 +277,7 @@ ssl_library::get1_ec_key()
 {
 	if (!m_get1_ec_key)
 		m_get1_ec_key = reinterpret_cast<p_get1_ec_key>
-			(m_ssl->symbol("EVP_PKEY_get1_EC_KEY"));
+			(m_crypto->symbol("EVP_PKEY_get1_EC_KEY"));
 	return m_get1_ec_key;
 }
 
@@ -271,7 +286,7 @@ ssl_library::ec_key_free()
 {
 	if (!m_ec_key_free)
 		m_ec_key_free = reinterpret_cast<p_ec_key_free>
-			(m_ssl->symbol("EC_KEY_free"));
+			(m_crypto->symbol("EC_KEY_free"));
 	return m_ec_key_free;
 }
 
@@ -280,7 +295,7 @@ ssl_library::ec_key_check()
 {
 	if (!m_ec_key_check)
 		m_ec_key_check = reinterpret_cast<p_ec_key_check>
-			(m_ssl->symbol("EC_KEY_check_key"));
+			(m_crypto->symbol("EC_KEY_check_key"));
 	return m_ec_key_check;
 }
 
@@ -289,7 +304,7 @@ ssl_library::d2i_x509_fp()
 {
 	if (!m_d2i_x509_fp)
 		m_d2i_x509_fp = reinterpret_cast<p_d2i_x509_fp>
-			(m_ssl->symbol("d2i_X509_fp"));
+			(m_crypto->symbol("d2i_X509_fp"));
 	return m_d2i_x509_fp;
 }
 
@@ -298,7 +313,7 @@ ssl_library::d2i_x509()
 {
 	if (!m_d2i_x509)
 		m_d2i_x509 = reinterpret_cast<p_d2i_x509>
-			(m_ssl->symbol("d2i_X509"));
+			(m_crypto->symbol("d2i_X509"));
 	return m_d2i_x509;
 }
 
@@ -307,7 +322,7 @@ ssl_library::pem_read_x509()
 {
 	if (!m_pem_read_x509)
 		m_pem_read_x509 = reinterpret_cast<p_pem_read_x509>
-			(m_ssl->symbol("PEM_read_X509"));
+			(m_crypto->symbol("PEM_read_X509"));
 	return m_pem_read_x509;
 }
 
@@ -316,7 +331,7 @@ ssl_library::pem_read_bio_x509()
 {
 	if (!m_pem_read_bio_x509)
 		m_pem_read_bio_x509 = reinterpret_cast<p_pem_read_bio_x509>
-			(m_ssl->symbol("PEM_read_bio_X509"));
+			(m_crypto->symbol("PEM_read_bio_X509"));
 	return m_pem_read_bio_x509;
 }
 
@@ -325,7 +340,7 @@ ssl_library::x509_up_ref()
 {
 	if (!m_x509_up_ref)
 		m_x509_up_ref = reinterpret_cast<p_x509_up_ref>
-			(m_ssl->symbol("X509_up_ref"));
+			(m_crypto->symbol("X509_up_ref"));
 	return m_x509_up_ref;
 }
 
@@ -334,7 +349,7 @@ ssl_library::x509_free()
 {
 	if (!m_x509_free)
 		m_x509_free = reinterpret_cast<p_x509_free>
-			(m_ssl->symbol("X509_free"));
+			(m_crypto->symbol("X509_free"));
 	return m_x509_free;
 }
 
@@ -343,7 +358,7 @@ ssl_library::x509_get_subject()
 {
 	if (!m_x509_get_subject)
 		m_x509_get_subject = reinterpret_cast<p_x509_get_subject>
-			(m_ssl->symbol("X509_get_subject_name"));
+			(m_crypto->symbol("X509_get_subject_name"));
 	return m_x509_get_subject;
 }
 
@@ -352,7 +367,7 @@ ssl_library::x509_get_issuer()
 {
 	if (!m_x509_get_issuer)
 		m_x509_get_issuer = reinterpret_cast<p_x509_get_issuer>
-			(m_ssl->symbol("X509_get_issuer_name"));
+			(m_crypto->symbol("X509_get_issuer_name"));
 	return m_x509_get_issuer;
 }
 
@@ -361,7 +376,7 @@ ssl_library::x509_name_get()
 {
 	if (!m_x509_name_get)
 		m_x509_name_get = reinterpret_cast<p_x509_name_get>
-			(m_ssl->symbol("X509_NAME_print_ex"));
+			(m_crypto->symbol("X509_NAME_print_ex"));
 	return m_x509_name_get;
 }
 
@@ -370,7 +385,7 @@ ssl_library::x509_name_get_text_by_nid()
 {
 	if (!m_x509_name_get_text_by_nid)
 		m_x509_name_get_text_by_nid = reinterpret_cast<p_x509_name_get_text_by_nid>
-			(m_ssl->symbol("X509_NAME_get_text_by_NID"));
+			(m_crypto->symbol("X509_NAME_get_text_by_NID"));
 	return m_x509_name_get_text_by_nid;
 }
 
@@ -379,7 +394,7 @@ ssl_library::x509_get_serial()
 {
 	if (!m_x509_get_serial)
 		m_x509_get_serial = reinterpret_cast<p_x509_get_serial>
-			(m_ssl->symbol("X509_get_serialNumber"));
+			(m_crypto->symbol("X509_get_serialNumber"));
 	return m_x509_get_serial;
 }
 
@@ -388,7 +403,7 @@ ssl_library::x509_get_ext_d2i()
 {
 	if (!m_x509_get_ext_d2i)
 		m_x509_get_ext_d2i = reinterpret_cast<p_x509_get_ext_d2i>
-			(m_ssl->symbol("X509_get_ext_d2i"));
+			(m_crypto->symbol("X509_get_ext_d2i"));
 	return m_x509_get_ext_d2i;
 }
 
@@ -397,7 +412,7 @@ ssl_library::pem_read_x509_crl()
 {
 	if (!m_pem_read_x509_crl)
 		m_pem_read_x509_crl = reinterpret_cast<p_pem_read_x509_crl>
-			(m_ssl->symbol("PEM_read_X509_CRL"));
+			(m_crypto->symbol("PEM_read_X509_CRL"));
 	return m_pem_read_x509_crl;
 }
 
@@ -406,7 +421,7 @@ ssl_library::pem_read_bio_x509_crl()
 {
 	if (!m_pem_read_bio_x509_crl)
 		m_pem_read_bio_x509_crl = reinterpret_cast<p_pem_read_bio_x509_crl>
-			(m_ssl->symbol("PEM_read_X509_CRL"));
+			(m_crypto->symbol("PEM_read_X509_CRL"));
 	return m_pem_read_bio_x509_crl;
 }
 
@@ -415,7 +430,7 @@ ssl_library::x509_crl_up_ref()
 {
 	if (!m_x509_crl_up_ref)
 		m_x509_crl_up_ref = reinterpret_cast<p_x509_crl_up_ref>
-			(m_ssl->symbol("X509_CRL_up_ref"));
+			(m_crypto->symbol("X509_CRL_up_ref"));
 	return m_x509_crl_up_ref;
 }
 
@@ -424,7 +439,7 @@ ssl_library::x509_crl_free()
 {
 	if (!m_x509_crl_free)
 		m_x509_crl_free = reinterpret_cast<p_x509_crl_free>
-			(m_ssl->symbol("X509_CRL_free"));
+			(m_crypto->symbol("X509_CRL_free"));
 	return m_x509_crl_free;
 }
 
@@ -433,7 +448,7 @@ ssl_library::x509_store_new()
 {
 	if (!m_x509_store_new)
 		m_x509_store_new = reinterpret_cast<p_x509_store_new>
-			(m_ssl->symbol("X509_STORE_new"));
+			(m_crypto->symbol("X509_STORE_new"));
 	return m_x509_store_new;
 }
 
@@ -442,7 +457,7 @@ ssl_library::x509_store_up_ref()
 {
 	if (!m_x509_store_up_ref)
 		m_x509_store_up_ref = reinterpret_cast<p_x509_store_up_ref>
-			(m_ssl->symbol("X509_STORE_up_ref"));
+			(m_crypto->symbol("X509_STORE_up_ref"));
 	return m_x509_store_up_ref;
 }
 
@@ -451,7 +466,7 @@ ssl_library::x509_store_free()
 {
 	if (!m_x509_store_free)
 		m_x509_store_free = reinterpret_cast<p_x509_store_free>
-			(m_ssl->symbol("X509_STORE_free"));
+			(m_crypto->symbol("X509_STORE_free"));
 	return m_x509_store_free;
 }
 
@@ -460,7 +475,7 @@ ssl_library::x509_store_load()
 {
 	if (!m_x509_store_load)
 		m_x509_store_load = reinterpret_cast<p_x509_store_load>
-			(m_ssl->symbol("X509_STORE_load_locations"));
+			(m_crypto->symbol("X509_STORE_load_locations"));
 	return m_x509_store_load;
 }
 
@@ -469,7 +484,7 @@ ssl_library::x509_store_add_cert()
 {
 	if (!m_x509_store_add_cert)
 		m_x509_store_add_cert = reinterpret_cast<p_x509_store_add_cert>
-			(m_ssl->symbol("X509_STORE_add_cert"));
+			(m_crypto->symbol("X509_STORE_add_cert"));
 	return m_x509_store_add_cert;
 }
 
@@ -478,7 +493,7 @@ ssl_library::x509_store_add_crl()
 {
 	if (!m_x509_store_add_crl)
 		m_x509_store_add_crl = reinterpret_cast<p_x509_store_add_crl>
-			(m_ssl->symbol("X509_STORE_add_crl"));
+			(m_crypto->symbol("X509_STORE_add_crl"));
 	return m_x509_store_add_crl;
 }
 
@@ -487,7 +502,7 @@ ssl_library::x509_store_set_flags()
 {
 	if (!m_x509_store_set_flags)
 		m_x509_store_set_flags = reinterpret_cast<p_x509_store_set_flags>
-			(m_ssl->symbol("X509_STORE_set_flags"));
+			(m_crypto->symbol("X509_STORE_set_flags"));
 	return m_x509_store_set_flags;
 }
 
@@ -496,7 +511,7 @@ ssl_library::stk_num()
 {
 	if (!m_stk_num)
 		m_stk_num = reinterpret_cast<p_stk_num>
-			(m_ssl->symbol("sk_num"));
+			(m_crypto->symbol("sk_num"));
 	return m_stk_num;
 }
 
@@ -505,7 +520,7 @@ ssl_library::stk_val()
 {
 	if (!m_stk_val)
 		m_stk_val = reinterpret_cast<p_stk_val>
-			(m_ssl->symbol("sk_value"));
+			(m_crypto->symbol("sk_value"));
 	return m_stk_val;
 }
 
@@ -514,7 +529,7 @@ ssl_library::stk_deep_free()
 {
 	if (!m_stk_deep_free)
 		m_stk_deep_free = reinterpret_cast<p_stk_deep_free>
-			(m_ssl->symbol("sk_pop_free"));
+			(m_crypto->symbol("sk_pop_free"));
 	return m_stk_deep_free;
 }
 
@@ -523,7 +538,7 @@ ssl_library::gen_name_free()
 {
 	if (!m_gen_name_free)
 		m_gen_name_free = reinterpret_cast<p_gen_name_free>
-			(m_ssl->symbol("GENERAL_NAME_free"));
+			(m_crypto->symbol("GENERAL_NAME_free"));
 	return m_gen_name_free;
 }
 
@@ -532,7 +547,7 @@ ssl_library::crl_dps_free()
 {
 	if (!m_crl_dps_free)
 		m_crl_dps_free = reinterpret_cast<p_crl_dps_free>
-			(m_ssl->symbol("CRL_DIST_POINTS_free"));
+			(m_crypto->symbol("CRL_DIST_POINTS_free"));
 	return m_crl_dps_free;
 }
 
@@ -541,7 +556,7 @@ ssl_library::aia_free()
 {
 	if (!m_aia_free)
 		m_aia_free = reinterpret_cast<p_aia_free>
-			(m_ssl->symbol("AUTHORITY_INFO_ACCESS_free"));
+			(m_crypto->symbol("AUTHORITY_INFO_ACCESS_free"));
 	return m_aia_free;
 }
 
@@ -550,7 +565,7 @@ ssl_library::obj2nid()
 {
 	if (!m_obj2nid)
 		m_obj2nid = reinterpret_cast<p_obj2nid>
-			(m_ssl->symbol("OBJ_obj2nid"));
+			(m_crypto->symbol("OBJ_obj2nid"));
 	return m_obj2nid;
 }
 
@@ -559,7 +574,7 @@ ssl_library::asn1_string_type()
 {
 	if (!m_asn1_string_type)
 		m_asn1_string_type = reinterpret_cast<p_asn1_string_type>
-			(m_ssl->symbol("ASN1_STRING_type"));
+			(m_crypto->symbol("ASN1_STRING_type"));
 	return m_asn1_string_type;
 }
 
@@ -568,7 +583,7 @@ ssl_library::asn1_string_len()
 {
 	if (!m_asn1_string_len)
 		m_asn1_string_len = reinterpret_cast<p_asn1_string_len>
-			(m_ssl->symbol("ASN1_STRING_length"));
+			(m_crypto->symbol("ASN1_STRING_length"));
 	return m_asn1_string_len;
 }
 
@@ -577,7 +592,7 @@ ssl_library::asn1_string_val()
 {
 	if (!m_asn1_string_val)
 		m_asn1_string_val = reinterpret_cast<p_asn1_string_val>
-			(m_ssl->symbol("ASN1_STRING_get0_data"));
+			(m_crypto->symbol("ASN1_STRING_get0_data"));
 	return m_asn1_string_val;
 }
 
@@ -586,7 +601,7 @@ ssl_library::asn1_integer_to_bn()
 {
 	if (!m_asn1_integer_to_bn)
 		m_asn1_integer_to_bn = reinterpret_cast<p_asn1_integer_to_bn>
-			(m_ssl->symbol("ASN1_INTEGER_to_BN"));
+			(m_crypto->symbol("ASN1_INTEGER_to_BN"));
 	return m_asn1_integer_to_bn;
 }
 
@@ -595,7 +610,7 @@ ssl_library::bn_to_asn1_integer()
 {
 	if (!m_bn_to_asn1_integer)
 		m_bn_to_asn1_integer = reinterpret_cast<p_bn_to_asn1_integer>
-			(m_ssl->symbol("BN_to_ASN1_INTEGER"));
+			(m_crypto->symbol("BN_to_ASN1_INTEGER"));
 	return m_bn_to_asn1_integer;
 }
 
@@ -604,7 +619,7 @@ ssl_library::bn2hex()
 {
 	if (!m_bn2hex)
 		m_bn2hex = reinterpret_cast<p_bn2hex>
-			(m_ssl->symbol("BN_bn2hex"));
+			(m_crypto->symbol("BN_bn2hex"));
 	return m_bn2hex;
 }
 
@@ -613,7 +628,7 @@ ssl_library::hex2bn()
 {
 	if (!m_hex2bn)
 		m_hex2bn = reinterpret_cast<p_hex2bn>
-			(m_ssl->symbol("BN_hex2bn"));
+			(m_crypto->symbol("BN_hex2bn"));
 	return m_hex2bn;
 }
 
@@ -622,7 +637,7 @@ ssl_library::bn_free()
 {
 	if (!m_bn_free)
 		m_bn_free = reinterpret_cast<p_bn_free>
-			(m_ssl->symbol("BN_free"));
+			(m_crypto->symbol("BN_free"));
 	return m_bn_free;
 }
 
@@ -631,7 +646,7 @@ ssl_library::err_line_data()
 {
 	if (!m_err_line_data)
 		m_err_line_data = reinterpret_cast<p_err_line_data>
-			(m_ssl->symbol("ERR_get_error_line_data"));
+			(m_crypto->symbol("ERR_get_error_line_data"));
 	return m_err_line_data;
 }
 
@@ -640,7 +655,7 @@ ssl_library::err_lib_string()
 {
 	if (!m_err_lib_string)
 		m_err_lib_string = reinterpret_cast<p_err_lib_string>
-			(m_ssl->symbol("ERR_lib_error_string"));
+			(m_crypto->symbol("ERR_lib_error_string"));
 	return m_err_lib_string;
 }
 
@@ -649,7 +664,7 @@ ssl_library::err_fcn_string()
 {
 	if (!m_err_fcn_string)
 		m_err_fcn_string = reinterpret_cast<p_err_fcn_string>
-			(m_ssl->symbol("ERR_func_error_string"));
+			(m_crypto->symbol("ERR_func_error_string"));
 	return m_err_fcn_string;
 }
 
@@ -658,7 +673,7 @@ ssl_library::err_reason_string()
 {
 	if (!m_err_reason_string)
 		m_err_reason_string = reinterpret_cast<p_err_reason_string>
-			(m_ssl->symbol("ERR_reason_error_string"));
+			(m_crypto->symbol("ERR_reason_error_string"));
 	return m_err_reason_string;
 }
 
@@ -667,7 +682,7 @@ ssl_library::err_clear()
 {
 	if (!m_err_clear)
 		m_err_clear = reinterpret_cast<p_err_clear>
-			(m_ssl->symbol("ERR_clear_error"));
+			(m_crypto->symbol("ERR_clear_error"));
 	return m_err_clear;
 }
 
@@ -676,7 +691,7 @@ ssl_library::err_peek()
 {
 	if (!m_err_peek)
 		m_err_peek = reinterpret_cast<p_err_peek>
-			(m_ssl->symbol("ERR_peek_error"));
+			(m_crypto->symbol("ERR_peek_error"));
 	return m_err_peek;
 }
 
@@ -1244,7 +1259,7 @@ ssl_library::x509_verify_param_set_hostflags()
 	if (!m_x509_verify_param_set_hostflags)
 		m_x509_verify_param_set_hostflags =
 			reinterpret_cast<p_x509_verify_param_set_hostflags>
-				(m_ssl->symbol("X509_VERIFY_PARAM_set_hostflags"));
+				(m_crypto->symbol("X509_VERIFY_PARAM_set_hostflags"));
 	return m_x509_verify_param_set_hostflags;
 }
 
@@ -1254,7 +1269,7 @@ ssl_library::x509_verify_param_set1_host()
 	if (!m_x509_verify_param_set1_host)
 		m_x509_verify_param_set1_host =
 			reinterpret_cast<p_x509_verify_param_set1_host>
-				(m_ssl->symbol("X509_VERIFY_PARAM_set1_host"));
+				(m_crypto->symbol("X509_VERIFY_PARAM_set1_host"));
 	return m_x509_verify_param_set1_host;
 }
 
@@ -1264,7 +1279,7 @@ ssl_library::x509_verify_param_add1_host()
 	if (!m_x509_verify_param_add1_host)
 		m_x509_verify_param_add1_host =
 			reinterpret_cast<p_x509_verify_param_add1_host>
-				(m_ssl->symbol("X509_VERIFY_PARAM_add1_host"));
+				(m_crypto->symbol("X509_VERIFY_PARAM_add1_host"));
 	return m_x509_verify_param_add1_host;
 }
 
@@ -1274,7 +1289,7 @@ ssl_library::x509_verify_param_set1_ip_asc()
 	if (!m_x509_verify_param_set1_ip_asc)
 		m_x509_verify_param_set1_ip_asc =
 			reinterpret_cast<p_x509_verify_param_set1_ip_asc>
-				(m_ssl->symbol("X509_VERIFY_PARAM_set1_ip_asc"));
+				(m_crypto->symbol("X509_VERIFY_PARAM_set1_ip_asc"));
 	return m_x509_verify_param_set1_ip_asc;
 }
 
@@ -1284,7 +1299,7 @@ ssl_library::x509_verify_cert_error_string()
 	if (!m_x509_verify_cert_error_string)
 		m_x509_verify_cert_error_string =
 			reinterpret_cast<p_x509_verify_cert_error_string>
-				(m_ssl->symbol("X509_verify_cert_error_string"));
+				(m_crypto->symbol("X509_verify_cert_error_string"));
 	return m_x509_verify_cert_error_string;
 }
 
@@ -1293,7 +1308,7 @@ ssl_library::rand_bytes()
 {
 	if (!m_rand_bytes)
 		m_rand_bytes = reinterpret_cast<p_rand_bytes>
-			(m_ssl->symbol("RAND_bytes"));
+			(m_crypto->symbol("RAND_bytes"));
 	return m_rand_bytes;
 }
 
@@ -1302,7 +1317,7 @@ ssl_library::evp_sha256()
 {
 	if (!m_evp_sha256)
 		m_evp_sha256 = reinterpret_cast<p_evp_sha256>
-			(m_ssl->symbol("EVP_sha256"));
+			(m_crypto->symbol("EVP_sha256"));
 	return m_evp_sha256;
 }
 
@@ -1311,7 +1326,7 @@ ssl_library::hmac_init_ex()
 {
 	if (!m_hmac_init_ex)
 		m_hmac_init_ex = reinterpret_cast<p_hmac_init_ex>
-			(m_ssl->symbol("HMAC_Init_ex"));
+			(m_crypto->symbol("HMAC_Init_ex"));
 	return m_hmac_init_ex;
 }
 
@@ -1320,7 +1335,7 @@ ssl_library::evp_aes_256_cbc()
 {
 	if (!m_evp_aes_256_cbc)
 		m_evp_aes_256_cbc = reinterpret_cast<p_evp_aes_256_cbc>
-			(m_ssl->symbol("EVP_aes_256_cbc"));
+			(m_crypto->symbol("EVP_aes_256_cbc"));
 	return m_evp_aes_256_cbc;
 }
 
@@ -1329,7 +1344,7 @@ ssl_library::evp_encrypt_init_ex()
 {
 	if (!m_evp_encrypt_init_ex)
 		m_evp_encrypt_init_ex = reinterpret_cast<p_evp_encrypt_init_ex>
-			(m_ssl->symbol("EVP_EncryptInit_ex"));
+			(m_crypto->symbol("EVP_EncryptInit_ex"));
 	return m_evp_encrypt_init_ex;
 }
 
@@ -1338,7 +1353,7 @@ ssl_library::evp_decrypt_init_ex()
 {
 	if (!m_evp_decrypt_init_ex)
 		m_evp_decrypt_init_ex = reinterpret_cast<p_evp_decrypt_init_ex>
-			(m_ssl->symbol("EVP_DecryptInit_ex"));
+			(m_crypto->symbol("EVP_DecryptInit_ex"));
 	return m_evp_decrypt_init_ex;
 }
 

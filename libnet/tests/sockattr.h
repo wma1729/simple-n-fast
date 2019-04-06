@@ -125,6 +125,8 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
+		snf::net::initialize(false);
+
 		try {
 			snf::net::socket s(AF_INET, snf::net::socket_type::tcp);
 
@@ -147,11 +149,22 @@ public:
 			s.blocking(true);
 			std::cout << "socket is blocking now" << std::endl;
 
+			std::array<snf::net::socket, 2> sp = std::move(snf::net::socket::socketpair());
+			std::array<int, 5> iarr { 101, 507, 93, 1023, 2398 };
+			for (int i : iarr) {
+				int j = -1;
+				sp[0].write_integral(i);
+				sp[1].read_integral(&j);
+				ASSERT_EQ(int, i, j, "socketpair passed");
+			}
+
 		} catch (const std::invalid_argument &ex) {
 			std::cerr << "invalid argument: " << ex.what() << std::endl;
+			return false;
 		} catch (const std::system_error &ex) {
 			std::cerr << "system error: " << ex.code() << std::endl;
 			std::cerr << ex.what() << std::endl;
+			return false;
 		}
 
 		return true;

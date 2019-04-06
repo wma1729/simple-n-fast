@@ -104,7 +104,8 @@ socket::socketpair()
 			"failed to create socket pair");
 	}
 
-	return std::array<socket, 2> { s[0], s[1] };
+	socket s1(s[0]);
+	socket s2(s[1]);
 #else
 	socket listener(AF_INET, socket_type::tcp);
 
@@ -115,12 +116,12 @@ socket::socketpair()
 	const socket_address &sa = listener.local_address();
 
 	socket s1(AF_INET, socket_type::tcp);
-	s1.connect(sa);
+	s1.connect(AF_INET, "localhost", sa.port());
 
 	socket s2 = std::move(listener.accept());
+#endif
 
 	return std::array<socket, 2> { std::move(s1), std::move(s2) };
-#endif
 }
 
 /*

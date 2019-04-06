@@ -235,6 +235,7 @@ class ssl_library
 {
 private:
 	snf::dll                    *m_ssl = nullptr;
+	snf::dll                    *m_crypto = nullptr;
 
 	p_openssl_version_num       m_openssl_version_num = nullptr;
 	p_openssl_version_str       m_openssl_version_str = nullptr;
@@ -394,9 +395,22 @@ private:
 	p_evp_encrypt_init_ex       m_evp_encrypt_init_ex = nullptr;
 	p_evp_decrypt_init_ex       m_evp_decrypt_init_ex = nullptr;
 
+	const char *library_name(const std::string &);
+
 	ssl_library();
 
-	void cleanup() { if (m_ssl) { delete m_ssl; m_ssl = nullptr; } }
+	void cleanup()
+	{
+		if (m_crypto) {
+			delete m_crypto;
+			m_crypto = nullptr;
+		}
+
+		if (m_ssl) {
+			delete m_ssl;
+			m_ssl = nullptr;
+		}
+	}
 
 public:
 	static ssl_library &instance()
