@@ -21,60 +21,100 @@ reactor::reactor(int to)
 }
 
 void
-reactor::start()
+reactor::set_poll_vector(std::vector<pollfd> &poll_vec)
 {
-	while (!m_stopped) {
-		std::vector<pollfd> poll_vec;
+	poll_vec.clear();
 
-		{
-			std::lock_guard<std::mutex> guard(m_lock);
-			for (auto &h : m_handlers) {
-				pollfd fdelem = { h.first, 0, 0 };
-				for (auto &ei : h.second)
+	std::lock_guard<std::mutex> guard(m_lock);
+
+	for (auto &h : m_handlers) {
+		pollfd fdelem = { h.first, 0, 0 };
+		for (auto &ei : h.second) {
+			switch (ei.e) {
+				case event::read:
+				case event::write:
 					fdelem.events |= static_cast<short>(ei.e);
-				poll_vec.push_back(fdelem);
+					break;
+
+				default:
+					break;
 			}
 		}
 
-		
-		int syserr;
-		int retval = snf::net::poll(poll_vec, m_timeout, &syserr);
-		if (SOCKET_ERROR == retval) {
+		if (fdelem.events != 0)
+			poll_vec.push_back(fdelem);
+	}
+}
+
+void
+reactor::process_poll_vector(std::vector<pollfd> &poll_vec, int nready)
+{
+	for (auto &fdelem : poll_vec) {
+		if (nready && (fdelem.revents != 0)) {
+
+			std::lock_guard<std::mutex> guard(m_lock);
+
+			ev_handler_type::iterator H;
+			H = m_handlers.find(fdelem.fd);
+			if (H != m_handlers.end()) {
+
+				ev_info_type::iterator E = H->second.begin();
+				while (E != H->second.end()) {
+					short e = static_cast<short>(E->e);
+
+					if ((fdelem.events & e) && (fdelem.revents & e)) {
+						E->h(fdelem.fd, E->e);
+						fdelem.revents &= ~e;
+					} else if ((fdelem.events & e) && (fdelem.revents & e)) {
+						E->h(fdelem.fd, E->e);
+						fdelem.revents &= ~e;
+					}
+
+					if (fdelem.revents & POLLHUP)
+						E->h(fdelem.fd, event::hup);
+					else if (fdelem.revents & POLLNVAL)
+						E->h(fdelem.fd, event::invalid);
+					else if (fdelem.revents != 0)
+						E->h(fdelem.fd, event::error);
+
+					nready--;
+
+					if (E->o)
+						E = H->second.erase(E);			
+					else
+						++E;
+				}
+
+				if (H->second.empty()) 
+					m_handlers.erase(fdelem.fd);
+			}
+		}
+	}
+}
+
+void
+reactor::start()
+{
+	int nready;
+	int syserr;
+	std::vector<pollfd> poll_vec;
+
+	while (!m_stopped) {
+
+		syserr = 0;
+
+		set_poll_vector(poll_vec);
+
+		nready = snf::net::poll(poll_vec, m_timeout, &syserr);
+		if (SOCKET_ERROR == nready) {
 			std::ostringstream oss;
 			oss << "poll failed";
 			throw std::system_error(
 				syserr,
 				std::system_category(),
 				oss.str());
-		} else if (retval > 0) {
-			for (auto &elem : poll_vec) {
-				if (retval && (elem.revents != 0)) {
-					std::lock_guard<std::mutex> guard(m_lock);
-
-					ev_handler_type::iterator H;
-					H = m_handlers.find(elem.fd);
-					if (H != m_handlers.end()) {
-						for (auto &ei : H->second) {
-							short e = static_cast<short>(ei.e);
-							if ((ei.e == event::read) && (elem.revents & e)) {
-								ei.h(elem.fd, ei.e);
-								elem.revents &= ~e;
-							} else if ((ei.e == event::write) && (elem.revents & e)) {
-								ei.h(elem.fd, ei.e);
-								elem.revents &= ~POLLOUT;
-							}
-
-							if (elem.revents & POLLHUP)
-								ei.h(elem.fd, event::hup);
-							else if (elem.revents & POLLNVAL)
-								ei.h(elem.fd, event::invalid);
-							else if (elem.revents != 0)
-								ei.h(elem.fd, event::error);
-						}
-						retval--;
-					}
-				}
-			}
+		} else if (nready > 0) {
+			process_poll_vector(poll_vec, nready);
 		}
 	}
 }
@@ -88,7 +128,7 @@ reactor::stop()
 }
 
 void
-reactor::add_handler(sock_t s, event e, handler h, bool one_shot)
+reactor::add_handler(sock_t s, event e, std::function<void(sock_t, event)> h, bool one_shot)
 {
 	ev_info ei { e, std::move(h), one_shot };
 
@@ -134,12 +174,13 @@ reactor::remove_handler(sock_t s, event e)
 	ev_handler_type::iterator H;
 	H = m_handlers.find(s);
 	if (H != m_handlers.end()) {
-		ev_info_type::iterator E;
-		for (E = H->second.begin(); E != H->second.end(); ++E) {
+		ev_info_type::iterator E = H->second.begin();
+		while (E != H->second.end()) {
 			if (E->e == e) {
 				H->second.erase(E);
 				break;
 			}
+			++E;
 		}
 
 		if (H->second.empty())

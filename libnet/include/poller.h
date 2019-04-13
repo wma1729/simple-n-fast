@@ -23,7 +23,6 @@ constexpr short POLLRD = POLLIN;
 constexpr short POLLWR = POLLOUT;
 #endif
 
-
 /*
  * Following events can be registered with the reactor.
  */
@@ -39,15 +38,12 @@ enum class event : short
 
 class reactor
 {
-public:
-	using handler = std::function<void(sock_t, event)>;
-
 private:
 	struct ev_info
 	{
-		event   e;      // events
-		handler h;      // handler
-		bool    o;      // run only once
+		event                               e;      // events
+		std::function<void(sock_t, event)>  h;      // handler
+		bool                                o;      // run only once
 	};
 
 	using ev_info_type    = std::vector<ev_info>;
@@ -60,6 +56,9 @@ private:
 	std::mutex                        m_lock;
 	ev_handler_type                   m_handlers;
 
+	void set_poll_vector(std::vector<pollfd> &);
+	void process_poll_vector(std::vector<pollfd> &, int);
+
 public:
 	reactor(int to = 5000);
 	reactor(const reactor &) = delete;
@@ -70,11 +69,9 @@ public:
 
 	void start();
 	void stop();
-	void add_handler(sock_t, event, handler, bool one_shot = false);
+	void add_handler(sock_t, event, std::function<void(sock_t, event)>, bool one_shot = false);
 	void remove_handler(sock_t);
 	void remove_handler(sock_t, event);
-
-
 };
 
 } // namespace poller
