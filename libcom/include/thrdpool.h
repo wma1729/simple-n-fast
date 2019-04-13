@@ -7,12 +7,20 @@
 
 namespace snf {
 
+/*
+ * A synchronized queue. No copy or move operation allowed.
+ * Elements are put in the queue using put() and fetched
+ * using get() methods. waiting() could be used to get the
+ * number of threads waiting on the get() method. The queue
+ * could be made invalid (drained and all blocked thread
+ * notified) using invalidate() method.
+ */
 template<typename T>
 class sync_queue
 {
 private:
 	std::deque<T>           m_queue;
-	bool                    m_valid = true;
+	std::atomic<bool>       m_valid { true };
 	size_t                  m_waiting = 0;
 	std::mutex              m_lock;
 	std::condition_variable m_cv;
@@ -63,16 +71,21 @@ public:
 		}
 	}
 
-	void get(T &elem)
+	bool get(T &elem)
 	{
 		std::unique_lock<std::mutex> lock(m_lock);
 		m_waiting++;
-		m_cv.wait(lock, [this] { return !(m_valid && m_queue.empty()); });
+		m_cv.wait(lock, [this] {
+			return !(this->m_valid && this->m_queue.empty());
+		});
 		m_waiting--;
 		if (m_valid && !m_queue.empty()) {
 			elem = std::move(m_queue.front());
 			m_queue.pop_front();
+			return true;
 		}
+
+		return false;
 	}
 
 	void invalidate()
@@ -85,6 +98,12 @@ public:
 	}
 };
 
+/*
+ * A pool of threads. No copy or move operation allowed.
+ * The user can specify the number of threads needed
+ * via the constructor. Requests are submitted to the
+ * pool using submit() methods.
+ */
 class thread_pool
 {
 private:
@@ -97,10 +116,10 @@ private:
 	void start(size_t n)
 	{
 		auto worker = [this] {
-			while (!m_done) {
+			while (!this->m_done) {
 				fcn_type fcn;
-				this->m_queue.get(fcn);
-				(fcn)();
+				if (this->m_queue.get(fcn))
+					(fcn)();
 			}
 		};
 
@@ -108,6 +127,18 @@ private:
 			std::unique_ptr<std::thread> uniq_thrd{new std::thread{worker}};
 			m_threads.emplace_back(std::move(uniq_thrd));
 		}
+	}
+
+	void stop()
+	{
+		m_done = true;
+		m_queue.invalidate();
+		for (auto &t : m_threads) {
+			if (t->joinable()) {
+				t->join();
+			}
+		}
+		m_threads.clear();
 	}
 
 public:
@@ -133,18 +164,6 @@ public:
 
 	const thread_pool & operator= (const thread_pool &) = delete;
 	thread_pool & operator= (thread_pool &&) = delete;
-
-	void stop()
-	{
-		m_done = true;
-		m_queue.invalidate();
-		for (auto &t : m_threads) {
-			if (t->joinable()) {
-				t->join();
-			}
-		}
-		m_threads.clear();
-	}
 
 	size_t thread_count() const { return m_threads.size(); }
 	size_t request_count() { return m_queue.size(); }

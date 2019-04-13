@@ -1,0 +1,28 @@
+include ../../Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+CMNTS_OBJS =  $(P)\cmnts.obj
+
+INCL = $(INCLCOM) $(INCLTF)
+
+all: platform $(P)\cmnts.exe
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\cmnts.exe: $(CMNTS_OBJS) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** /Fe$@
+
+{.}.cpp{$(P)}.obj:
+	$(CC) $(CFLAGS) /utf-8 $(DBG) $(DEFINES) $(INCL) $< /Fo$@
+
+test:
+	@$(P)\cmnts.exe -name "libcom-test-suite" -desc "test suite for libcom" -v
+
+install:
+
+clean:
+	@del /q $(CMNTS_OBJS) $(P)\*.pdb $(P)\cmnts.*

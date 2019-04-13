@@ -1,0 +1,34 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+CMNTS_OBJS =  ${P}/cmnts.o
+
+INCL = ${INCLCOM} ${INCLTF}
+
+LIBS = -lpthread
+
+all: platform ${P}/cmnts
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/cmnts: ${CMNTS_OBJS} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+test:
+ifeq (${DBG},-g)
+	@valgrind --quiet --leak-check=full --show-leak-kinds=all ${P}/cmnts -name "libcom-test-suite" -desc "test suite for libcom" -v
+else
+	@${P}/cmnts -name "libcom-test-suite" -desc "test suite for libcom" -v
+endif
+
+install:
+
+clean:
+	@/bin/rm -rf ${CMNTS_OBJS} ${P}/cmnts
