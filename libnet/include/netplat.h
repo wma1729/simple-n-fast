@@ -9,7 +9,6 @@
 constexpr const char *LIBSSL = "ssl.dll";
 constexpr const char *LIBCRYPTO = "crypto.dll";
 
-
 using in_port_t = uint16_t;
 using sock_t = SOCKET;
 
