@@ -44,6 +44,33 @@ private:
 		event                               e;      // events
 		std::function<void(sock_t, event)>  h;      // handler
 		bool                                o;      // run only once
+
+		ev_info(event ee, std::function<void(sock_t, event)> &&hh, bool oo)
+			: e(ee), h(std::move(hh)), o(oo) {}
+		ev_info(const ev_info &ei)
+			: e(ei.e) , h(ei.h) , o(ei.o) {}
+		ev_info(ev_info &&ei)
+			: e(ei.e), h(std::move(ei.h)), o(ei.o) {}
+
+		const ev_info &operator=(const ev_info &ei)
+		{
+			if (this != &ei) {
+				e = ei.e;
+				h = ei.h;
+				o = ei.o;
+			}
+			return *this;
+		}
+
+		ev_info &operator=(ev_info &&ei)
+		{
+			if (this != &ei) {
+				e = ei.e;
+				h = std::move(ei.h);
+				o = ei.o;
+			}
+			return *this;
+		}
 	};
 
 	using ev_info_type    = std::vector<ev_info>;
@@ -58,6 +85,8 @@ private:
 
 	void set_poll_vector(std::vector<pollfd> &);
 	void process_poll_vector(std::vector<pollfd> &, int);
+	void start();
+	void stop();
 
 public:
 	reactor(int to = 5000);
@@ -67,8 +96,6 @@ public:
 	reactor &operator=(reactor &&) = delete;
 	~reactor() { stop(); }
 
-	void start();
-	void stop();
 	void add_handler(sock_t, event, std::function<void(sock_t, event)>, bool one_shot = false);
 	void remove_handler(sock_t);
 	void remove_handler(sock_t, event);

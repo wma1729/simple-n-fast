@@ -21,6 +21,7 @@ private:
 	socket_type     m_type;
 	socket_address  *m_local = nullptr;
 	socket_address  *m_peer = nullptr;
+	bool            m_skip_close = false;
 
 #if defined(_WIN32)
 	bool            m_blocking = true;
@@ -33,7 +34,6 @@ private:
 	void setopt(int, int, void *, int);
 
 protected:
-	socket(sock_t);
 	socket(sock_t, const sockaddr_storage &, socklen_t);
 
 public:
@@ -47,6 +47,7 @@ public:
 	static std::array<socket, 2> socketpair();
 
 	socket(int, socket_type);
+	socket(sock_t, bool skip_close = false);
 	socket(const socket &) = delete;
 	socket(socket &&);
 

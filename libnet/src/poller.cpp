@@ -5,21 +5,6 @@ namespace snf {
 namespace net {
 namespace poller {
 
-reactor::reactor(int to)
-	: m_timeout(to)
-	, m_sockpair(std::move(snf::net::socket::socketpair()))
-{
-	m_sockpair[0].blocking(false);
-	sock_t s = m_sockpair[0];
-
-	add_handler(s, event::read, [this] (sock_t s, event e) {
-		int dummy = 0;
-		this->m_sockpair[0].read_integral(&dummy, POLL_WAIT_NONE);
-	});
-
-	m_future = std::async(std::launch::async, &reactor::start, this);
-}
-
 void
 reactor::set_poll_vector(std::vector<pollfd> &poll_vec)
 {
@@ -61,25 +46,22 @@ reactor::process_poll_vector(std::vector<pollfd> &poll_vec, int nready)
 				ev_info_type::iterator E = H->second.begin();
 				while (E != H->second.end()) {
 					short e = static_cast<short>(E->e);
+					bool handled = true;
 
-					if ((fdelem.events & e) && (fdelem.revents & e)) {
+					if (fdelem.revents & e)
 						E->h(fdelem.fd, E->e);
-						fdelem.revents &= ~e;
-					} else if ((fdelem.events & e) && (fdelem.revents & e)) {
-						E->h(fdelem.fd, E->e);
-						fdelem.revents &= ~e;
-					}
-
-					if (fdelem.revents & POLLHUP)
+					else if (fdelem.revents & POLLHUP)
 						E->h(fdelem.fd, event::hup);
 					else if (fdelem.revents & POLLNVAL)
 						E->h(fdelem.fd, event::invalid);
 					else if (fdelem.revents != 0)
 						E->h(fdelem.fd, event::error);
+					else
+						handled = false;
 
 					nready--;
 
-					if (E->o)
+					if (handled && E->o)
 						E = H->second.erase(E);			
 					else
 						++E;
@@ -127,30 +109,44 @@ reactor::stop()
 	m_future.wait();
 }
 
+reactor::reactor(int to)
+	: m_timeout(to)
+	, m_sockpair(std::move(snf::net::socket::socketpair()))
+{
+	m_sockpair[0].blocking(false);
+	sock_t s = m_sockpair[0];
+
+	add_handler(s, event::read, [this] (sock_t s, event e) {
+		int dummy = 0;
+		this->m_sockpair[0].read_integral(&dummy, POLL_WAIT_NONE);
+	});
+
+	m_future = std::async(std::launch::async, &reactor::start, this);
+}
+
 void
 reactor::add_handler(sock_t s, event e, std::function<void(sock_t, event)> h, bool one_shot)
 {
-	ev_info ei { e, std::move(h), one_shot };
-
 	std::lock_guard<std::mutex> guard(m_lock);
 
 	ev_handler_type::iterator H;
 	H = m_handlers.find(s);
 	if (H != m_handlers.end()) {
 		bool found = false;
-		for (auto &evinfo : H->second) {
-			if (evinfo.e == e) {
-				evinfo.h = std::move(h);
-				evinfo.o = one_shot;
+		for (auto &ei : H->second) {
+			if (ei.e == e) {
+				ei.h = std::move(h);
+				ei.o = one_shot;
 				found = true;
 				break;
 			}
 		}
 
 		if (!found)
-			H->second.emplace_back(ei);
+			H->second.emplace_back(e, std::move(h), one_shot);
 	} else {
-		ev_info_type eivec(1, ei);
+		ev_info_type eivec;
+		eivec.emplace_back(e, std::move(h), one_shot);
 		m_handlers.insert(std::make_pair(s, eivec));
 	}
 

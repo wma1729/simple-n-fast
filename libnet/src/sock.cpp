@@ -127,14 +127,18 @@ socket::socketpair()
 /*
  * Constructs the socket object from raw socket.
  *
- * @param [in] s   - raw socket.
+ * @param [in] s            - raw socket.
+ * @param [in] skip_close   - do not close the socket on destruction.
+ *                            It could, however, be closed explicitly
+ *                            using close() or shutdown().
  *
  * @throws std::invalid_argument if
  *         - the socket type is neither SOCK_STREAM nor SOCK_DGRAM.
  *         std::system_error if the socket type could not be determined.
  */
-socket::socket(sock_t s)
+socket::socket(sock_t s, bool skip_close)
 	: m_sock(s)
+	, m_skip_close(skip_close)
 {
 	int value = 0;
 	int vlen = static_cast<int>(sizeof(value));
@@ -244,6 +248,8 @@ socket::socket(socket &&s)
 		s.m_peer = nullptr;
 	}
 
+	m_skip_close = s.m_skip_close;
+
 #if defined(_WIN32)
 	m_blocking = s.m_blocking;
 	m_rcvtimeo = s.m_rcvtimeo;
@@ -256,7 +262,9 @@ socket::socket(socket &&s)
  */
 socket::~socket()
 {
-	close();
+	if (!m_skip_close)
+		close();
+
 	if (m_local) {
 		delete m_local;
 		m_local = nullptr;
@@ -288,6 +296,8 @@ socket::operator=(socket &&s)
 			m_peer = s.m_peer;
 			s.m_peer = nullptr;
 		}
+
+		m_skip_close = s.m_skip_close;
 
 #if defined(_WIN32)
 		m_blocking = s.m_blocking;
