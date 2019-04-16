@@ -36,6 +36,15 @@ enum class event : short
 	invalid = POLLNVAL
 };
 
+/*
+ * Flag     Linux  Windows
+ * POLLRD   0x0001 0x0100
+ * POLLRW   0x0004 0x0200
+ * POLLERR  0x0008 0x0001
+ * POLLHUP  0x0010 0x0002
+ * POLLNVAL 0x0020 0x0004
+ */
+
 class reactor
 {
 private:

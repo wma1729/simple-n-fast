@@ -48,14 +48,14 @@ reactor::process_poll_vector(std::vector<pollfd> &poll_vec, int nready)
 					short e = static_cast<short>(E->e);
 					bool handled = true;
 
-					if (fdelem.revents & e)
-						E->h(fdelem.fd, E->e);
+					if (fdelem.revents & POLLERR)
+						E->h(fdelem.fd, event::error);
 					else if (fdelem.revents & POLLHUP)
 						E->h(fdelem.fd, event::hup);
 					else if (fdelem.revents & POLLNVAL)
 						E->h(fdelem.fd, event::invalid);
-					else if (fdelem.revents != 0)
-						E->h(fdelem.fd, event::error);
+					else if (fdelem.revents & e)
+						E->h(fdelem.fd, E->e);
 					else
 						handled = false;
 
