@@ -15,10 +15,10 @@ reactor::set_poll_vector(std::vector<pollfd> &poll_vec)
 	for (auto &h : m_handlers) {
 		pollfd fdelem = { h.first, 0, 0 };
 		for (auto &ei : h.second) {
-			switch (ei.e) {
+			switch (ei->e) {
 				case event::read:
 				case event::write:
-					fdelem.events |= static_cast<short>(ei.e);
+					fdelem.events |= static_cast<short>(ei->e);
 					break;
 
 				default:
@@ -45,23 +45,22 @@ reactor::process_poll_vector(std::vector<pollfd> &poll_vec, int nready)
 
 				ev_info_type::iterator E = H->second.begin();
 				while (E != H->second.end()) {
-					short e = static_cast<short>(E->e);
-					bool handled = true;
+					std::unique_ptr<ev_info> &uptr = *E;
+					short e = static_cast<short>(uptr->e);
+					bool ok = true;
 
 					if (fdelem.revents & POLLERR)
-						E->h(fdelem.fd, event::error);
+						ok = uptr->h(fdelem.fd, event::error);
 					else if (fdelem.revents & POLLHUP)
-						E->h(fdelem.fd, event::hup);
+						ok = uptr->h(fdelem.fd, event::hup);
 					else if (fdelem.revents & POLLNVAL)
-						E->h(fdelem.fd, event::invalid);
+						ok = uptr->h(fdelem.fd, event::invalid);
 					else if (fdelem.revents & e)
-						E->h(fdelem.fd, E->e);
-					else
-						handled = false;
+						ok = uptr->h(fdelem.fd, uptr->e);
 
 					nready--;
 
-					if (handled && E->o)
+					if (!ok)
 						E = H->second.erase(E);			
 					else
 						++E;
@@ -89,12 +88,10 @@ reactor::start()
 
 		nready = snf::net::poll(poll_vec, m_timeout, &syserr);
 		if (SOCKET_ERROR == nready) {
-			std::ostringstream oss;
-			oss << "poll failed";
 			throw std::system_error(
 				syserr,
 				std::system_category(),
-				oss.str());
+				"poll failed");
 		} else if (nready > 0) {
 			process_poll_vector(poll_vec, nready);
 		}
@@ -119,14 +116,21 @@ reactor::reactor(int to)
 	add_handler(s, event::read, [this] (sock_t s, event e) {
 		int dummy = 0;
 		this->m_sockpair[0].read_integral(&dummy, POLL_WAIT_NONE);
+		return true;
 	});
 
 	m_future = std::async(std::launch::async, &reactor::start, this);
 }
 
 void
-reactor::add_handler(sock_t s, event e, std::function<void(sock_t, event)> h, bool one_shot)
+reactor::add_handler(sock_t s, event e, std::function<bool(sock_t, event)> h)
 {
+	if (s == INVALID_SOCKET)
+		throw std::invalid_argument("invalid socket");
+
+	if ((e != event::read) && (e != event::write))
+		throw std::invalid_argument("invalid event type: only read/write could be registered");
+
 	std::lock_guard<std::mutex> guard(m_lock);
 
 	ev_handler_type::iterator H;
@@ -134,20 +138,22 @@ reactor::add_handler(sock_t s, event e, std::function<void(sock_t, event)> h, bo
 	if (H != m_handlers.end()) {
 		bool found = false;
 		for (auto &ei : H->second) {
-			if (ei.e == e) {
-				ei.h = std::move(h);
-				ei.o = one_shot;
+			if (ei->e == e) {
+				ei->h = std::move(h);
 				found = true;
 				break;
 			}
 		}
 
-		if (!found)
-			H->second.emplace_back(e, std::move(h), one_shot);
+		if (!found) {
+			std::unique_ptr<ev_info> ei(new ev_info(e, std::move(h)));
+			H->second.emplace_back(std::move(ei));
+		}
 	} else {
 		ev_info_type eivec;
-		eivec.emplace_back(e, std::move(h), one_shot);
-		m_handlers.insert(std::make_pair(s, eivec));
+		std::unique_ptr<ev_info> ei(new ev_info(e, std::move(h)));
+		eivec.emplace_back(std::move(ei));
+		m_handlers[s] = std::move(eivec);
 	}
 
 	m_sockpair[1].write_integral(1);
@@ -172,7 +178,7 @@ reactor::remove_handler(sock_t s, event e)
 	if (H != m_handlers.end()) {
 		ev_info_type::iterator E = H->second.begin();
 		while (E != H->second.end()) {
-			if (E->e == e) {
+			if ((*E)->e == e) {
 				H->second.erase(E);
 				break;
 			}

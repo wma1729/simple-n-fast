@@ -6,6 +6,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <memory>
 #include <functional>
 #include <mutex>
 #include <atomic>
@@ -51,22 +52,20 @@ private:
 	struct ev_info
 	{
 		event                               e;      // events
-		std::function<void(sock_t, event)>  h;      // handler
-		bool                                o;      // run only once
+		std::function<bool(sock_t, event)>  h;      // handler
 
-		ev_info(event ee, std::function<void(sock_t, event)> &&hh, bool oo)
-			: e(ee), h(std::move(hh)), o(oo) {}
+		ev_info(event ee, std::function<bool(sock_t, event)> &&hh)
+			: e(ee), h(std::move(hh)) {}
 		ev_info(const ev_info &ei)
-			: e(ei.e) , h(ei.h) , o(ei.o) {}
+			: e(ei.e), h(ei.h) {}
 		ev_info(ev_info &&ei)
-			: e(ei.e), h(std::move(ei.h)), o(ei.o) {}
+			: e(ei.e), h(std::move(ei.h)) {}
 
 		const ev_info &operator=(const ev_info &ei)
 		{
 			if (this != &ei) {
 				e = ei.e;
 				h = ei.h;
-				o = ei.o;
 			}
 			return *this;
 		}
@@ -76,13 +75,12 @@ private:
 			if (this != &ei) {
 				e = ei.e;
 				h = std::move(ei.h);
-				o = ei.o;
 			}
 			return *this;
 		}
 	};
 
-	using ev_info_type    = std::vector<ev_info>;
+	using ev_info_type    = std::vector<std::unique_ptr<ev_info>>;
 	using ev_handler_type = std::map<sock_t, ev_info_type>;
 
 	int                               m_timeout;
@@ -105,7 +103,7 @@ public:
 	reactor &operator=(reactor &&) = delete;
 	~reactor() { stop(); }
 
-	void add_handler(sock_t, event, std::function<void(sock_t, event)>, bool one_shot = false);
+	void add_handler(sock_t, event, std::function<bool(sock_t, event)>);
 	void remove_handler(sock_t);
 	void remove_handler(sock_t, event);
 };
