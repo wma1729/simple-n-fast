@@ -72,7 +72,7 @@ public:
 
 	virtual void test_merge(const std::string &base)
 	{
-		snf::net::uri base_uri { base };
+		snf::http::uri base_uri { base };
 
 		for (auto t : table) {
 			std::cout
@@ -81,8 +81,8 @@ public:
 				<< ", target = " << t.target
 				<< std::endl;
 
-			snf::net::uri relative { t.relative };
-			snf::net::uri target = std::move(base_uri.merge(relative));
+			snf::http::uri relative { t.relative };
+			snf::http::uri target = std::move(base_uri.merge(relative));
 			std::ostringstream oss;
 			oss << target;
 			ASSERT_EQ(const std::string &, t.target, oss.str(), "target matches");
@@ -94,7 +94,7 @@ public:
 		try {
 			std::ostringstream oss;
 
-			snf::net::uri uri_1 { "foo://rd@example.com:8042/over/there?name=ferret#nose" };
+			snf::http::uri uri_1 { "foo://rd@example.com:8042/over/there?name=ferret#nose" };
 
 			oss.str("");
 			oss << uri_1.get_scheme();
@@ -124,7 +124,7 @@ public:
 			oss << uri_1.get_fragment();
 			ASSERT_EQ(const std::string &, "nose", oss.str(), "fragment matches");
 
-			snf::net::uri uri_2 { "urn:example:animal:ferret:nose" };
+			snf::http::uri uri_2 { "urn:example:animal:ferret:nose" };
 
 			oss.str("");
 			oss << uri_2.get_scheme();
@@ -134,7 +134,7 @@ public:
 			oss << uri_2.get_path();
 			ASSERT_EQ(const std::string &, "example:animal:ferret:nose", oss.str(), "path matches");
 
-			snf::net::uri uri_3 { "ldap://[2001:db8::7]/c=GB?objectClass?one" };
+			snf::http::uri uri_3 { "ldap://[2001:db8::7]/c=GB?objectClass?one" };
 
 			oss.str("");
 			oss << uri_3.get_scheme();
@@ -152,7 +152,7 @@ public:
 			oss << uri_3.get_query();
 			ASSERT_EQ(const std::string &, "objectClass?one", oss.str(), "query matches");
 
-			snf::net::uri uri_4 { "mailto:fred@example.com" };
+			snf::http::uri uri_4 { "mailto:fred@example.com" };
 
 			oss.str("");
 			oss << uri_4.get_scheme();
@@ -162,7 +162,7 @@ public:
 			oss << uri_4.get_path();
 			ASSERT_EQ(const std::string &, "fred@example.com", oss.str(), "path matches");
 
-			snf::net::uri uri_5 { "foo://info.example.com?fred" };
+			snf::http::uri uri_5 { "foo://info.example.com?fred" };
 
 			oss.str("");
 			oss << uri_5.get_scheme();
@@ -176,7 +176,7 @@ public:
 			oss << uri_5.get_query();
 			ASSERT_EQ(const std::string &, "fred", oss.str(), "query matches");
 
-			snf::net::uri uri_6 { "news:comp.infosystems.www.servers.unix" };
+			snf::http::uri uri_6 { "news:comp.infosystems.www.servers.unix" };
 
 			oss.str("");
 			oss << uri_6.get_scheme();
@@ -186,7 +186,7 @@ public:
 			oss << uri_6.get_path();
 			ASSERT_EQ(const std::string &, "comp.infosystems.www.servers.unix", oss.str(), "path matches");
 
-			snf::net::uri uri_7 { "tel:+1-816-555-1212" };
+			snf::http::uri uri_7 { "tel:+1-816-555-1212" };
 
 			oss.str("");
 			oss << uri_7.get_scheme();
@@ -196,7 +196,7 @@ public:
 			oss << uri_7.get_path();
 			ASSERT_EQ(const std::string &, "+1-816-555-1212", oss.str(), "path matches");
 
-			snf::net::uri uri_8 { "telnet://192.0.2.16:80/" };
+			snf::http::uri uri_8 { "telnet://192.0.2.16:80/" };
 
 			oss.str("");
 			oss << uri_8.get_scheme();

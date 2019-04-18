@@ -10,7 +10,7 @@
 #include <algorithm>
 
 namespace snf {
-namespace net {
+namespace http {
 
 inline bool
 uri_generic_delimiter(int c)
@@ -437,7 +437,7 @@ operator<<(std::ostream &os, const uri &u)
 	return os;
 }
 
-} // namespace net
+} // namespace http
 } // namespace snf
 
 #endif // _SNF_URI_H_

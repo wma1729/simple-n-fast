@@ -1,0 +1,28 @@
+include ../../Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS = $(P)\httpts.obj
+
+INCL = $(INCLHTTPCMN) $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLTF)
+
+all: platform $(P)\httpts.exe
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\httpts.exe: $(OBJS) $(LIBHTTPCMN) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
+
+{.}.cpp{$(P)}.obj:
+	$(CC) $(CFLAGS) /utf-8 $(DBG) $(DEFINES) $(INCL) $< /Fo$@
+
+test:
+	@$(P)\httpts.exe -name "http-test-suite" -desc "test suite for http" -v
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\*.pdb $(P)\httpts.*

@@ -1,0 +1,25 @@
+include ../../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS = ${P}/uri.o
+
+INCL = ${INCLHTTPCMN} ${INCLNET} ${INCLLOG} ${INCLCOM}
+
+all: platform ${P}/libhttpcmn.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/libhttpcmn.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/libhttpcmn.a

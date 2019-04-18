@@ -81,6 +81,7 @@ if [ "$PLAT" = "Linux" ]; then
 		INCLJSON = -I`pwd`/libjson/include
 		INCLLOG = -I`pwd`/liblog/include
 		INCLNET = -I`pwd`/libnet/include
+		INCLHTTPCMN = -I`pwd`/http/include/common
 		INCLTF = -I`pwd`/tf
 		INCLSSL = -I`pwd`/ssl/$BLDPLAT/include
 		LIBCOM = `pwd`/libcom/src/$BLDPLAT/libcom.a
@@ -88,6 +89,7 @@ if [ "$PLAT" = "Linux" ]; then
 		LIBJSON = `pwd`/libjson/src/$BLDPLAT/libjson.a
 		LIBLOG = `pwd`/liblog/src/$BLDPLAT/liblog.a
 		LIBNET = `pwd`/libnet/src/$BLDPLAT/libnet.a
+		LIBHTTPCMN = `pwd`/http/src/common/$BLDPLAT/libhttpcmn.a
 LINUX_CONFIG
 
 else

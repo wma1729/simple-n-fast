@@ -1,0 +1,33 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS = ${P}/httpts.o
+
+INCL = ${INCLHTTPCMN} ${INCLCOM} ${INCLNET} ${INCLLOG} ${INCLTF}
+LIBS = -ldl -lpthread
+
+all: platform ${P}/httpts
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/httpts: ${OBJS} ${LIBHTTPCMN} ${LIBLOG} ${LIBNET} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+test:
+ifeq (${DBG},-g)
+	@valgrind --quiet --leak-check=full --show-leak-kinds=definite ${P}/httpts -name "http-test-suite" -desc "test suite for http" -v
+else
+	@${P}/httpts -name "http-test-suite" -desc "test suite for http" -v
+endif
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/httpts

@@ -5,7 +5,7 @@
 #include <iomanip>
 
 namespace snf {
-namespace net {
+namespace http {
 
 /*
  * Generic % encode string. Can be used directly
@@ -243,13 +243,13 @@ uri_host::is_valid(const std::string &host) const
 
 	if (('[' == host.front()) && (']' == host.back())) {
 		try {
-			internet_address ia { AF_INET6, host.substr(1, host.size() - 2) };
+			snf::net::internet_address ia { AF_INET6, host.substr(1, host.size() - 2) };
 		} catch (std::runtime_error &) {
 			valid = false;
 		}
 	} else {
 		try {
-			internet_address ia { AF_INET, host };
+			snf::net::internet_address ia { AF_INET, host };
 		} catch (std::runtime_error &) {
 			if (!is_regular_hostname(host))
 				valid = false;
@@ -983,5 +983,5 @@ uri::merge(const uri &rel) const
 	return target;
 }
 
-} // namespace net
+} // namespace http
 } // namespace snf

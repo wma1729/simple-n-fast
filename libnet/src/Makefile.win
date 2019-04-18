@@ -7,7 +7,7 @@ include ..\..\Makefile.constants
 OBJS =  $(P)\net.obj $(P)\addrinfo.obj $(P)\ia.obj $(P)\sa.obj $(P)\host.obj $(P)\sock.obj \
 	$(P)\poller.obj $(P)\nio.obj $(P)\sslfcn.obj $(P)\pkey.obj $(P)\crt.obj $(P)\crl.obj \
 	$(P)\truststore.obj $(P)\ctx.obj $(P)\cnxn.obj $(P)\session.obj \
-	$(P)\keymgr.obj $(P)\uri.obj
+	$(P)\keymgr.obj
 
 INCL = $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 
