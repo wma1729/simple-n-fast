@@ -32,43 +32,50 @@ reactor::set_poll_vector(std::vector<pollfd> &poll_vec)
 }
 
 void
-reactor::process_poll_vector(std::vector<pollfd> &poll_vec, int nready)
+reactor::process_poll_vector(std::vector<pollfd> &poll_vec)
 {
+	std::chrono::system_clock::time_point now = 
+		std::chrono::system_clock::now();
+
 	for (auto &fdelem : poll_vec) {
-		if (nready && (fdelem.revents != 0)) {
+		std::lock_guard<std::mutex> guard(m_lock);
 
-			std::lock_guard<std::mutex> guard(m_lock);
+		ev_handler_type::iterator H;
+		H = m_handlers.find(fdelem.fd);
+		if (H != m_handlers.end()) {
+			ev_info_type::iterator E = H->second.begin();
+			while (E != H->second.end()) {
+				std::unique_ptr<ev_info> &uptr = *E;
+				bool ok = true;
 
-			ev_handler_type::iterator H;
-			H = m_handlers.find(fdelem.fd);
-			if (H != m_handlers.end()) {
-
-				ev_info_type::iterator E = H->second.begin();
-				while (E != H->second.end()) {
-					std::unique_ptr<ev_info> &uptr = *E;
+				if (fdelem.revents != 0) {
 					short e = static_cast<short>(uptr->e);
-					bool ok = true;
 
-					if (fdelem.revents & POLLERR)
+					if (fdelem.revents & POLLERR) {
 						ok = uptr->h(fdelem.fd, event::error);
-					else if (fdelem.revents & POLLHUP)
+					} else if (fdelem.revents & POLLHUP) {
 						ok = uptr->h(fdelem.fd, event::hup);
-					else if (fdelem.revents & POLLNVAL)
+					} else if (fdelem.revents & POLLNVAL) {
 						ok = uptr->h(fdelem.fd, event::invalid);
-					else if (fdelem.revents & e)
+					} else if (fdelem.revents & e) {
 						ok = uptr->h(fdelem.fd, uptr->e);
-
-					nready--;
-
-					if (!ok)
-						E = H->second.erase(E);			
-					else
-						++E;
+						if (ok && (uptr->to != std::chrono::milliseconds::zero()))
+							uptr->exp = now + uptr->to;
+					}
+				} else {
+					if (now > uptr->exp)
+						ok = uptr->h(fdelem.fd, event::timeout);
 				}
 
-				if (H->second.empty()) 
-					m_handlers.erase(fdelem.fd);
+				if (!ok) {
+					E = H->second.erase(E);			
+				} else {
+					++E;
+				}
 			}
+
+			if (H->second.empty()) 
+				m_handlers.erase(fdelem.fd);
 		}
 	}
 }
@@ -93,7 +100,7 @@ reactor::start()
 				std::system_category(),
 				"poll failed");
 		} else if (nready > 0) {
-			process_poll_vector(poll_vec, nready);
+			process_poll_vector(poll_vec);
 		}
 	}
 }
@@ -123,7 +130,7 @@ reactor::reactor(int to)
 }
 
 void
-reactor::add_handler(sock_t s, event e, std::function<bool(sock_t, event)> h)
+reactor::add_handler(sock_t s, event e, std::function<bool(sock_t, event)> h, int to)
 {
 	if (s == INVALID_SOCKET)
 		throw std::invalid_argument("invalid socket");
@@ -146,12 +153,12 @@ reactor::add_handler(sock_t s, event e, std::function<bool(sock_t, event)> h)
 		}
 
 		if (!found) {
-			std::unique_ptr<ev_info> ei(new ev_info(e, std::move(h)));
+			std::unique_ptr<ev_info> ei(new ev_info(e, to, std::move(h)));
 			H->second.emplace_back(std::move(ei));
 		}
 	} else {
 		ev_info_type eivec;
-		std::unique_ptr<ev_info> ei(new ev_info(e, std::move(h)));
+		std::unique_ptr<ev_info> ei(new ev_info(e, to, std::move(h)));
 		eivec.emplace_back(std::move(ei));
 		m_handlers[s] = std::move(eivec);
 	}
