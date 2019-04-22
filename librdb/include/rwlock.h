@@ -2,6 +2,7 @@
 #define _SNF_RDB_RWLOCK_H_
 
 #if defined(_WIN32)
+#define NOMINMAX
 #include <Windows.h>
 #else
 #include <pthread.h>

@@ -4,7 +4,7 @@ ifndef P
 $(error P is not set)
 endif
 
-OBJS = ${P}/uri.o
+OBJS = ${P}/uri.o ${P}/bufio.o
 
 INCL = ${INCLHTTPCMN} ${INCLNET} ${INCLLOG} ${INCLCOM}
 

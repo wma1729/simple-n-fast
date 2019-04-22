@@ -859,26 +859,26 @@ socket::connect(const socket_address &sa, int to)
 	socklen_t len = 0;
 	const sockaddr *saddr = sa.get_sa(&len);
 
-	if ((POLL_WAIT_FOREVER == to) && blocking()) {
-		retval = ::connect(m_sock, saddr, len);
-		if (SOCKET_ERROR == retval) {
-			std::ostringstream oss;
-			oss << "failed to connect to " << sa;
-			throw std::system_error(
-				snf::net::error(),
-				std::system_category(),
-				oss.str());
-		}
-	} else {
-		bool reset = false;
+	bool reset = false;
+	if (POLL_WAIT_FOREVER != to) {
 		if (blocking()) {
 			reset = true;
 			blocking(false);
 		}
+	}
 
-		retval = ::connect(m_sock, saddr, len);
-		if (SOCKET_ERROR == retval) {
-			retval = snf::net::error();
+	retval = ::connect(m_sock, saddr, len);
+	if (SOCKET_ERROR == retval) {
+		retval = snf::net::error();
+
+		if (blocking()) {
+			std::ostringstream oss;
+			oss << "failed to connect to " << sa;
+			throw std::system_error(
+				retval,
+				std::system_category(),
+				oss.str());
+		} else {
 			if (connect_in_progress(retval)) {
 				pollfd fdelem = { m_sock, POLLOUT | POLLERR, 0 };
 				std::vector<pollfd> fdvec { 1, fdelem };
@@ -909,10 +909,10 @@ socket::connect(const socket_address &sa, int to)
 				}
 			}
 		}
-
-		if (reset)
-			blocking(true);
 	}
+
+	if (reset)
+		blocking(true);
 }
 
 /*
@@ -1097,31 +1097,49 @@ socket::read(void *buf, int to_read, int *bread, int to, int *oserr)
 	if (bread == nullptr)
 		return E_invalid_arg;
 
+	bool reset = false;
+	if (POLL_WAIT_FOREVER != to) {
+		if (blocking()) {
+			blocking(false);
+			reset = true;
+		}
+	}
+
 	do {
-		if (is_readable(to, oserr)) {
+		if (blocking()) {
 			n = ::recv(m_sock, cbuf, to_read, 0);
-			if (SOCKET_ERROR == n) {
-				int error = snf::net::error();
-#if !defined(_WIN32)
-				if (EINTR == error)
-					continue;
-#endif
-				if (oserr) *oserr = error;
-				retval = map_system_error(error, E_read_failed);
-				break;
-			} else if (0 == n) {
-				break;
-			} else {
-				cbuf += n;
-				to_read -= n;
-				nbytes += n;
-			}
 		} else {
-			retval = map_system_error(*oserr, E_read_failed);
+			if (is_readable(to, oserr)) {
+				n = ::recv(m_sock, cbuf, to_read, 0);
+			} else {
+				retval = map_system_error(*oserr, E_read_failed);
+				break;
+			}
+		}
+
+		if (SOCKET_ERROR == n) {
+			int error = snf::net::error();
+#if !defined(_WIN32)
+			if (EINTR == error)
+				continue;
+#endif
+			if (oserr) *oserr = error;
+			retval = map_system_error(error, E_read_failed);
+			break;
+		} else if (0 == n) {
+			break;
+		} else {
+			cbuf += n;
+			to_read -= n;
+			nbytes += n;
 		}
 	} while (to_read > 0);
 
 	*bread = nbytes;
+
+	if (reset)
+		blocking(true);
+
 	return retval;
 }
 
@@ -1160,31 +1178,49 @@ socket::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 	flags = MSG_NOSIGNAL;
 #endif
 
+	bool reset = false;
+	if (POLL_WAIT_FOREVER != to) {
+		if (blocking()) {
+			blocking(false);
+			reset = true;
+		}
+	}
+
 	do {
-		if (is_writable(to, oserr)) {
+		if (blocking()) {
 			n = ::send(m_sock, cbuf, to_write, flags);
-			if (SOCKET_ERROR == n) {
-				int error = snf::net::error();
-#if !defined(_WIN32)
-				if (EINTR == error)
-					continue;
-#endif
-				if (oserr) *oserr = error;
-				retval = map_system_error(error, E_write_failed);
-				break;
-			} else if (0 == n) {
-				break;
-			} else {
-				cbuf += n;
-				to_write -= n;
-				nbytes += n;
-			}
 		} else {
-			retval = map_system_error(*oserr, E_write_failed);
+			if (is_writable(to, oserr)) {
+				n = ::send(m_sock, cbuf, to_write, flags);
+			} else {
+				retval = map_system_error(*oserr, E_write_failed);
+				break;
+			}
+		}
+
+		if (SOCKET_ERROR == n) {
+			int error = snf::net::error();
+#if !defined(_WIN32)
+			if (EINTR == error)
+				continue;
+#endif
+			if (oserr) *oserr = error;
+			retval = map_system_error(error, E_write_failed);
+			break;
+		} else if (0 == n) {
+			break;
+		} else {
+			cbuf += n;
+			to_write -= n;
+			nbytes += n;
 		}
 	} while (to_write > 0);
 
 	*bwritten = nbytes;
+
+	if (reset)
+		blocking(true);
+
 	return retval;
 }
 

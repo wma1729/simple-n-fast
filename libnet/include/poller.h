@@ -65,9 +65,6 @@ private:
 			, h(std::move(_h))
 		{
 			if (_to <= 0) {
-#if defined(_WIN32)
-#undef max
-#endif
 				to = std::chrono::milliseconds::zero();
 				exp = std::chrono::system_clock::time_point::max();
 			} else {
