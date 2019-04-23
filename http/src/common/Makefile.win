@@ -4,7 +4,7 @@ include ..\..\..\Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-OBJS = $(P)\uri.obj $(P)\bufio.obj
+OBJS = $(P)\uri.obj $(P)\bufio.obj $(P)\method.obj $(P)\status.obj
 
 INCL = $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 
