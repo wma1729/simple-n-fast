@@ -8,7 +8,6 @@ namespace http {
 
 enum class method_type
 {
-	UNKNOWN = 0,
 	GET,
 	HEAD,
 	POST,

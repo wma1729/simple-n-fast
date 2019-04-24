@@ -1,4 +1,7 @@
 #include "method.h"
+#include <stdexcept>
+#include <ostream>
+#include <sstream>
 
 namespace snf {
 namespace http {
@@ -23,7 +26,9 @@ method(const std::string &str)
 	else if (str == "TRACE")
 		return method_type::TRACE;
 
-	return method_type::UNKNOWN;
+	std::ostringstream oss;
+	oss << "invalid HTTP method (" << str << ")";
+	throw std::runtime_error(oss.str());
 }
 
 } // namespace http

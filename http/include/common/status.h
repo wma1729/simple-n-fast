@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ostream>
+#include <stdexcept>
 
 namespace snf {
 namespace http {
@@ -59,6 +60,29 @@ std::ostream & operator<< (std::ostream &os, status_code s)
 	os << static_cast<int>(s) << " " << reason_phrase(s);
 	return os;
 }
+
+class http_exception : public std::runtime_error
+{
+private:
+	status_code m_status;
+
+public:
+	http_exception(const std::string &msg, status_code s)
+		: std::runtime_error(msg)
+		, m_status(s)
+	{
+	}
+
+	http_exception(const char *msg, status_code s)
+		: std::runtime_error(msg)
+		, m_status(s)
+	{
+	}
+
+	virtual ~http_exception() {}
+
+	status_code get_status_code() const { return m_status; }
+};
 
 } // namespace http
 } // namespace snf
