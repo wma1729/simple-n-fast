@@ -4,11 +4,11 @@ include ..\..\..\Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-OBJS = $(P)\uri.obj $(P)\bufio.obj $(P)\method.obj $(P)\status.obj $(P)\version.obj
+OBJS = $(P)\uri.obj $(P)\bufio.obj $(P)\method.obj $(P)\status.obj $(P)\version.obj $(P)\rqst.obj
 
 INCL = $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 
-LIBNETPDB = $(P)\libhttpcmn.pdb
+LIBHTTPCMNPDB = $(P)\libhttpcmn.pdb
 
 all: platform $(P)\httpcmn.lib
 
@@ -19,7 +19,7 @@ $(P)\httpcmn.lib: $(OBJS)
 	$(AR) $(ARFLAGS) $** /OUT:$@
 
 $(OBJS): $(*B).cpp
-	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBRDBPDB) $(*B).cpp /Fo$@
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBHTTPCMNPDB) $(*B).cpp /Fo$@
 
 install:
 

@@ -55,7 +55,8 @@ enum class status_code : int
 
 const char *reason_phrase(status_code);
 
-std::ostream & operator<< (std::ostream &os, status_code s)
+inline std::ostream &
+operator<< (std::ostream &os, status_code s)
 {
 	os << static_cast<int>(s) << " " << reason_phrase(s);
 	return os;

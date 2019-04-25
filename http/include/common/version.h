@@ -11,6 +11,12 @@ struct version
 	int m_major;
 	int m_minor;
 
+	version()
+		: m_major(1)
+		, m_minor(1)
+	{
+	}
+
 	version(int major, int minor)
 		: m_major(major)
 		, m_minor(minor)
