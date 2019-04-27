@@ -14,7 +14,6 @@ is_tchar(int c)
 	if (std::isalpha(c) || std::isdigit(c)) {
 		valid = true;
 	} else {
-
 		switch (c) {
 			case '!': case '#': case '$':
 			case '%': case '&': case '\'':
@@ -30,6 +29,65 @@ is_tchar(int c)
 	}
 
 	return valid;
+}
+
+inline bool
+is_vchar(int c)
+{
+	return ((c >= 0x21) && (c <= 0x7E));
+}
+
+inline bool
+is_whitespace(int c)
+{
+	return ((c == ' ') || (c == '\t'));
+}
+
+inline bool
+is_opaque(int c)
+{
+	return ((c >= 0x80) && (c <= 0xFF));
+}
+
+/*
+ * 0x21 - 0x7E
+ * Excluded:
+ * - 0x22 "
+ * - 0x5C \
+ */
+inline bool
+is_quoted(int c)
+{
+	if (is_whitespace(c) || is_opaque(c))
+		return true;
+	else if ((c == 0x21) || ((c >= 0x23) && (c <= 0x5B)) || ((c >= 0x5D) && (c <= 0x7E)))
+		return true;
+
+	return false;
+}
+
+/*
+ * 0x21 - 0x7E
+ * Excluded:
+ * - 0x28 (
+ * - 0x29 )
+ * - 0x5C \
+ */
+inline bool
+is_commented(int c)
+{
+	if (is_whitespace(c) || is_opaque(c))
+		return true;
+	else if (((c >= 0x21) && (c <= 0x27)) || ((c >= 0x2A) && (c <= 0x5B)) || ((c >= 0x5D) && (c <= 0x7E)))
+		return true;
+
+	return false;
+}
+
+inline bool
+is_escaped(int c)
+{
+	return is_whitespace(c) || is_vchar(c) || is_opaque(c);
 }
 
 } // namespace http

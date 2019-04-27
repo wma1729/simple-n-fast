@@ -4,6 +4,7 @@
 #include "method.h"
 #include "uri.h"
 #include "version.h"
+#include "headers.h"
 #include <string>
 
 namespace snf {
@@ -19,6 +20,7 @@ private:
 	method_type m_type = method_type::GET;
 	uri         m_uri;
 	version     m_version;
+	headers     m_headers;
 
 	request() {}
 
@@ -80,6 +82,10 @@ public:
 	}
 
 	request_builder & request_line(const std::string &);
+
+	request_builder & with_header(const std::string &, const std::string &);
+
+	request_builder & header_line(const std::string &);
 
 	request build()
 	{
