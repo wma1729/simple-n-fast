@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_RQST_H_
-#define _SNF_HTTP_RQST_H_
+#ifndef _SNF_HTTP_REQUEST_H_
+#define _SNF_HTTP_REQUEST_H_
 
 #include "method.h"
 #include "uri.h"
@@ -25,9 +25,48 @@ private:
 	request() {}
 
 public:
+	request(const request &req)
+		: m_type(req.m_type)
+		, m_uri(req.m_uri)
+		, m_version(req.m_version)
+		, m_headers(req.m_headers)
+	{
+	}
+
+	request(request &&req)
+		: m_type(req.m_type)
+		, m_uri(std::move(req.m_uri))
+		, m_version(req.m_version)
+		, m_headers(std::move(req.m_headers))
+	{
+	}
+
+	const request & operator=(const request &req)
+	{
+		if (this != &req) {
+			m_type = req.m_type;
+			m_uri = req.m_uri;
+			m_version = req.m_version;
+			m_headers = req.m_headers;
+		}
+		return *this;
+	}
+
+	request & operator=(request &&req)
+	{
+		if (this != &req) {
+			m_type = req.m_type;
+			m_uri = std::move(req.m_uri);
+			m_version = req.m_version;
+			m_headers = std::move(req.m_headers);
+		}
+		return *this;
+	}
+
 	method_type get_method() const { return m_type; }
 	const uri & get_uri() const { return m_uri; }
 	const version & get_version() const { return m_version; }
+	const headers & get_headers() const { return m_headers; }
 };
 
 class request_builder
@@ -96,4 +135,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_RQST_H_
+#endif // _SNF_HTTP_REQUEST_H_

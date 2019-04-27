@@ -1,4 +1,4 @@
-#include "rqst.h"
+#include "request.h"
 #include "status.h"
 #include "charset.h"
 
@@ -25,16 +25,16 @@ request_builder::request_line(const std::string &istr)
 	}
 
 	if (mstr.empty())
-		throw http_exception("empty method", status_code::BAD_REQUEST);
+		throw std::runtime_error("empty method");
 
 	if (i >= len) {
 		oss << "no uri after method (" << mstr << ")";
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw std::runtime_error(oss.str());
 	}
 
 	if (istr[i] != ' ') {
 		oss << "no space after method (" << mstr << ")";
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw std::runtime_error(oss.str());
 	}
 
 	for (i = i + 1; i < len; ++i) {
@@ -44,16 +44,16 @@ request_builder::request_line(const std::string &istr)
 	}
 
 	if (ustr.empty())
-		throw http_exception("empty URI", status_code::BAD_REQUEST);
+		throw std::runtime_error("empty URI");
 
 	if (i >= len) {
 		oss << "no version after " << mstr << " " << ustr;
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw std::runtime_error(oss.str());
 	}
 
 	if (istr[i] != ' ') {
 		oss << "no space after " << mstr << " " << ustr;
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw std::runtime_error(oss.str());
 	}
 
 	for (i = i + 1; i < len; ++i) {
@@ -63,11 +63,11 @@ request_builder::request_line(const std::string &istr)
 	}
 
 	if (vstr.empty())
-		throw http_exception("empty version", status_code::BAD_REQUEST);
+		throw std::runtime_error("empty version");
 
 	if (is_whitespace(istr[i])) {
 		oss << "unexpected space found after " << mstr << " " << ustr << " " << vstr;
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw std::runtime_error(oss.str());
 	}
 
 	m_request.m_type = snf::http::method(mstr);
