@@ -3,8 +3,7 @@
 
 #include "method.h"
 #include "uri.h"
-#include "version.h"
-#include "headers.h"
+#include "message.h"
 #include <string>
 
 namespace snf {
@@ -12,42 +11,38 @@ namespace http {
 
 class request_builder;
 
-class request
+class request : public message
 {
 	friend class request_builder;
 
 private:
 	method_type m_type = method_type::GET;
 	uri         m_uri;
-	version     m_version;
-	headers     m_headers;
 
-	request() {}
+	request() : message() {}
 
 public:
 	request(const request &req)
-		: m_type(req.m_type)
+		: message(req.m_version, req.m_headers)
+		, m_type(req.m_type)
 		, m_uri(req.m_uri)
-		, m_version(req.m_version)
-		, m_headers(req.m_headers)
 	{
 	}
 
 	request(request &&req)
-		: m_type(req.m_type)
+		: message(req.m_version, std::move(req.m_headers))
+		, m_type(req.m_type)
 		, m_uri(std::move(req.m_uri))
-		, m_version(req.m_version)
-		, m_headers(std::move(req.m_headers))
 	{
 	}
 
 	const request & operator=(const request &req)
 	{
 		if (this != &req) {
-			m_type = req.m_type;
-			m_uri = req.m_uri;
 			m_version = req.m_version;
 			m_headers = req.m_headers;
+			m_type = req.m_type;
+			m_uri = req.m_uri;
 		}
 		return *this;
 	}
@@ -55,18 +50,16 @@ public:
 	request & operator=(request &&req)
 	{
 		if (this != &req) {
-			m_type = req.m_type;
-			m_uri = std::move(req.m_uri);
 			m_version = req.m_version;
 			m_headers = std::move(req.m_headers);
+			m_type = req.m_type;
+			m_uri = std::move(req.m_uri);
 		}
 		return *this;
 	}
 
 	method_type get_method() const { return m_type; }
 	const uri & get_uri() const { return m_uri; }
-	const version & get_version() const { return m_version; }
-	const headers & get_headers() const { return m_headers; }
 };
 
 class request_builder
@@ -122,9 +115,9 @@ public:
 
 	request_builder & request_line(const std::string &);
 
-	request_builder & with_header(const std::string &, const std::string &);
+	request_builder & with_headers(const headers &);
 
-	request_builder & header_line(const std::string &);
+	request_builder & with_headers(headers &&);
 
 	request build()
 	{

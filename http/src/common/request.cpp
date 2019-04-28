@@ -78,16 +78,16 @@ request_builder::request_line(const std::string &istr)
 }
 
 request_builder &
-request_builder::with_header(const std::string &name, const std::string &value)
+request_builder::with_headers(const headers &hdrs)
 {
-	m_request.m_headers.add(name, value);
+	m_request.m_headers = hdrs;
 	return *this;
 }
 
 request_builder &
-request_builder::header_line(const std::string &istr)
+request_builder::with_headers(headers &&hdrs)
 {
-	m_request.m_headers.add(istr);
+	m_request.m_headers = std::move(hdrs);
 	return *this;
 }
 

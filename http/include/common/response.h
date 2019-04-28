@@ -1,9 +1,8 @@
 #ifndef _SNF_HTTP_RESPONSE_H_
 #define _SNF_HTTP_RESPONSE_H_
 
-#include "version.h"
 #include "status.h"
-#include "headers.h"
+#include "message.h"
 #include <string>
 
 namespace snf {
@@ -11,32 +10,28 @@ namespace http {
 
 class response_builder;
 
-class response
+class response : public message
 {
 	friend class response_builder;
 
 private:
-	version     m_version;
 	status_code m_status = status_code::OK;
 	std::string m_reason;
-	headers     m_headers;
 
-	response() {}
+	response() : message() {}
 
 public:
 	response(const response &resp)
-		: m_version(resp.m_version)
+		: message(resp.m_version, resp.m_headers)
 		, m_status(resp.m_status)
 		, m_reason(resp.m_reason)
-		, m_headers(resp.m_headers)
 	{
 	}
 
 	response(response &&resp)
-		: m_version(resp.m_version)
+		: message(resp.m_version, std::move(resp.m_headers))
 		, m_status(resp.m_status)
 		, m_reason(std::move(resp.m_reason))
-		, m_headers(std::move(resp.m_headers))
 	{
 	}
 
@@ -62,10 +57,8 @@ public:
 		return *this;
 	}
 
-	const version & get_version() const { return m_version; }
 	const status_code & get_status() const { return m_status; }
 	const std::string &get_reason() const { return m_reason; }
-	const headers & get_headers() const { return m_headers; }
 };
 
 class response_builder
@@ -109,9 +102,9 @@ public:
 
 	response_builder & response_line(const std::string &);
 
-	response_builder & with_header(const std::string &, const std::string &);
+	response_builder & with_headers(const headers &);
 
-	response_builder & header_line(const std::string &);
+	response_builder & with_headers(headers &&);
 
 	response build()
 	{

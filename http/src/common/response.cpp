@@ -87,16 +87,16 @@ response_builder::response_line(const std::string &istr)
 }
 
 response_builder &
-response_builder::with_header(const std::string &name, const std::string &value)
+response_builder::with_headers(const headers &hdrs)
 {
-	m_response.m_headers.add(name, value);
+	m_response.m_headers = hdrs;
 	return *this;
 }
 
 response_builder &
-response_builder::header_line(const std::string &istr)
+response_builder::with_headers(headers &&hdrs)
 {
-	m_response.m_headers.add(istr);
+	m_response.m_headers = std::move(hdrs);
 	return *this;
 }
 

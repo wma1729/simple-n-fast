@@ -9,19 +9,6 @@ namespace snf {
 namespace http {
 
 void
-headers::add(const std::string &name, const std::string &value)
-{
-	std::string v = std::move(snf::trim(value));
-	std::map<std::string, std::string>::iterator I = m_headers.find(name);
-	if (I == m_headers.end()) {
-		m_headers.insert(std::make_pair(name, v));
-	} else {
-		I->second.append(1, ',');
-		I->second.append(v);
-	}
-}
-
-void
 headers::add(const std::string &istr)
 {
 	size_t i;
@@ -98,7 +85,69 @@ headers::add(const std::string &istr)
 		throw http_exception(oss.str(), status_code::BAD_REQUEST);
 	}
 
-	add(name, value);
+	add(name, snf::trim(value));
+}
+
+void
+headers::add(const std::string &name, const std::string &value)
+{
+	std::map<std::string, std::string>::iterator I = m_headers.find(name);
+	if (I == m_headers.end()) {
+		m_headers.insert(std::make_pair(name, value));
+	} else {
+		I->second.append(", ");
+		I->second.append(value);
+	}
+}
+
+void
+headers::update(const std::string &name, const std::string &value)
+{
+	std::map<std::string, std::string>::iterator I = m_headers.find(name);
+	if (I == m_headers.end()) {
+		m_headers.insert(std::make_pair(name, value));
+	} else {
+		I->second = value;
+	}
+}
+
+bool
+headers::is_set(const std::string &name) const
+{
+	headers_map_t::const_iterator it = m_headers.find(name);
+	if (it != m_headers.end())
+		return true;
+	return false;
+}
+
+std::string
+headers::get(const std::string &name) const
+{
+	std::string s;
+
+	headers_map_t::const_iterator it = m_headers.find(name);
+	if (it != m_headers.end()) {
+		s = it->second;
+	} else {
+		std::ostringstream oss;
+		oss << "header field name (" << name << ") not found";
+		throw std::out_of_range(oss.str());
+	}
+
+	return s;
+}
+
+int64_t
+headers::content_length() const
+{
+	std::string s = std::move(get(CONTENT_LENGTH));
+	return std::stoll(s);
+}
+
+void
+headers::content_length(int64_t length)
+{
+	update(CONTENT_LENGTH, std::to_string(length));
 }
 
 } // namespace http

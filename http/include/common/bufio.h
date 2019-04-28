@@ -47,7 +47,7 @@ private:
 	buf             m_buf;
 
 public:
-	buffered_reader(snf::net::nio &io, int size = 8192)
+	buffered_reader(snf::net::nio &io, int size = 4096)
 		: m_io(io) , m_buf(size) {}
 	~buffered_reader() {}
 
