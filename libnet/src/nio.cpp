@@ -6,6 +6,65 @@ namespace snf {
 namespace net {
 
 /*
+ * Reads a single character.
+ *
+ * @param [out] c     - character to read.
+ * @param [in]  to    - timeout in milliseconds.
+ *                      POLL_WAIT_FOREVER for inifinite wait.
+ *                      POLL_WAIT_NONE for no wait.
+ * @param [out] oserr - system error in case of failure, if not null.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ *
+ * The call can possibly throw one or more exceptions if the derived
+ * class of implementation of read throws one.
+ */
+int
+nio::get_char(char &c, int to, int *oserr)
+{
+	int bread = 0;
+	char buf[1];
+
+	int retval = read(buf, 1, &bread, to, oserr);
+	if (E_ok == retval)
+		if (1 != bread)
+			retval = E_read_failed;
+
+	if (E_ok == retval)
+		c = buf[0];
+
+	return retval;
+}
+
+/*
+ * Writes a singe character.
+ *
+ * @param [out] c     - character to write.
+ * @param [in]  to    - timeout in milliseconds.
+ *                      POLL_WAIT_FOREVER for inifinite wait.
+ *                      POLL_WAIT_NONE for no wait.
+ * @param [out] oserr - system error in case of failure, if not null.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ *
+ * The call can possibly throw one or more exceptions if the derived
+ * class of implementation of write throws one.
+ */
+int
+nio::put_char(char c, int to, int *oserr)
+{
+	int bwritten = 0;
+	char buf[1] = { c };
+
+	int retval = write(buf, 1, &bwritten, to, oserr);
+	if (E_ok == retval)
+		if (1 != bwritten)
+			retval = E_write_failed;
+
+	return retval;
+}
+
+/*
  * Reads string. String is read as <4-byte-string-length><string>.
  *
  * @param [out] str   - string to read.

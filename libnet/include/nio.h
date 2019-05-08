@@ -30,6 +30,9 @@ public:
 	virtual int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0) = 0;
 	virtual int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0) = 0;
 
+	int get_char(char &, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int put_char(char, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+
 	int read_string(std::string &, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	int write_string(const std::string &, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 
