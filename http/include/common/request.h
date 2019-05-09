@@ -16,7 +16,7 @@ class request : public message
 	friend class request_builder;
 
 private:
-	method_type m_type = method_type::GET;
+	method_type m_type = method_type::M_GET;
 	uri         m_uri;
 
 	request() : message() {}

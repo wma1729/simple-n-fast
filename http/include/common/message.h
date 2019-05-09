@@ -3,6 +3,7 @@
 
 #include "version.h"
 #include "headers.h"
+#include <functional>
 
 namespace snf {
 namespace http {

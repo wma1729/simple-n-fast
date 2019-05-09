@@ -616,7 +616,7 @@ connection::handshake(const socket &s, int to)
  *         retrieved or a SSL occurs while reading.
  */
 int
-connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
+connection::readn(void *buf, int to_read, int *bread, int to, int *oserr)
 {
 	int     retval = E_ok;
 	int     n = 0, nbytes = 0;
@@ -680,7 +680,7 @@ connection::read(void *buf, int to_read, int *bread, int to, int *oserr)
  *         retrieved or a SSL occurs while writing.
  */
 int
-connection::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
+connection::writen(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 {
 	int         retval = E_ok;
 	int         n = 0, nbytes = 0;

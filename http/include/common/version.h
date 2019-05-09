@@ -2,6 +2,7 @@
 #define _SNF_HTTP_VERSION_H_
 
 #include <string>
+#include <ostream>
 
 namespace snf {
 namespace http {
@@ -26,6 +27,12 @@ struct version
 	version(const std::string &);
 };
 
+inline std::ostream &
+operator<<(std::ostream &os, const version &v)
+{
+	os << "HTTP/" << v.m_major << "." << v.m_minor;
+	return os;
+}
 } // namespace http
 } // namespace snf
 

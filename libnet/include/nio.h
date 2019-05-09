@@ -26,9 +26,28 @@ private:
 		int64_t i;      // hopefully an equal sized integer
 	};
 
+	bool m_buffered = false;    // is read buffered?
+	char *m_buf = nullptr;      // data buffer
+	int  m_max = 0;             // maximum buffer size
+	int  m_len = 0;             // valid data in the buffer
+	int  m_idx = 0;             // next i/o index
+
+	int read_buffered(void *, int, int *, int, int *);
+
 public:
-	virtual int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0) = 0;
-	virtual int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0) = 0;
+	virtual ~nio()
+	{
+		if (m_buf)
+			delete [] m_buf;
+	}
+
+	virtual int readn(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0) = 0;
+	virtual int writen(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0) = 0;
+
+	void setbuf(int);
+
+	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 
 	int get_char(char &, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	int put_char(char, int to = POLL_WAIT_FOREVER, int *oserr = 0);
@@ -189,6 +208,8 @@ public:
 				retval = E_write_failed;
 		return retval;
 	}
+
+	int readline(std::string &, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 };
 
 } // namespace net

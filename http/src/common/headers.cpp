@@ -8,6 +8,32 @@
 namespace snf {
 namespace http {
 
+std::ostream &
+operator<<(std::ostream &os, const headers &hdrs)
+{
+	for (auto &hdr : hdrs.m_headers)
+		os << hdr.first << ": " << hdr.second << "\r\n";
+	return os;
+}
+
+hdr_vec_t::iterator
+headers::find(const std::string &name)
+{
+	for (hdr_vec_t::iterator I = m_headers.begin(); I != m_headers.end(); ++I)
+		if (snf::streq(name, I->first, true))
+			return I;
+	return m_headers.end();
+}
+
+hdr_vec_t::const_iterator
+headers::find(const std::string &name) const
+{
+	for (hdr_vec_t::const_iterator I = m_headers.begin(); I != m_headers.end(); ++I)
+		if (snf::streq(name, I->first, true))
+			return I;
+	return m_headers.end();
+}
+
 void
 headers::add(const std::string &istr)
 {
@@ -91,9 +117,9 @@ headers::add(const std::string &istr)
 void
 headers::add(const std::string &name, const std::string &value)
 {
-	std::map<std::string, std::string>::iterator I = m_headers.find(name);
+	hdr_vec_t::iterator I = find(name);
 	if (I == m_headers.end()) {
-		m_headers.insert(std::make_pair(name, value));
+		m_headers.push_back(std::make_pair(name, value));
 	} else {
 		I->second.append(", ");
 		I->second.append(value);
@@ -103,9 +129,9 @@ headers::add(const std::string &name, const std::string &value)
 void
 headers::update(const std::string &name, const std::string &value)
 {
-	std::map<std::string, std::string>::iterator I = m_headers.find(name);
+	hdr_vec_t::iterator I = find(name);
 	if (I == m_headers.end()) {
-		m_headers.insert(std::make_pair(name, value));
+		m_headers.push_back(std::make_pair(name, value));
 	} else {
 		I->second = value;
 	}
@@ -114,8 +140,8 @@ headers::update(const std::string &name, const std::string &value)
 bool
 headers::is_set(const std::string &name) const
 {
-	headers_map_t::const_iterator it = m_headers.find(name);
-	if (it != m_headers.end())
+	hdr_vec_t::const_iterator I = find(name);
+	if (I != m_headers.end())
 		return true;
 	return false;
 }
@@ -125,7 +151,7 @@ headers::get(const std::string &name) const
 {
 	std::string s;
 
-	headers_map_t::const_iterator it = m_headers.find(name);
+	hdr_vec_t::const_iterator it = find(name);
 	if (it != m_headers.end()) {
 		s = it->second;
 	} else {
@@ -148,6 +174,70 @@ void
 headers::content_length(int64_t length)
 {
 	update(CONTENT_LENGTH, std::to_string(length));
+}
+
+std::string
+headers::transfer_encoding() const
+{
+	return get(TRANSFER_ENCODING);
+}
+
+void
+headers::transfer_encoding(const std::string &coding)
+{
+	if (snf::streq(coding, "chunked", true))
+		update(TRANSFER_ENCODING, "chunked");
+	else
+		throw std::runtime_error("only chunked transfer encoding is supported");
+}
+
+bool
+headers::is_message_chunked() const
+{
+	try {
+		std::string s = std::move(transfer_encoding());
+		if (snf::streq(s, "chunked", true))
+			return true;
+
+		throw http_exception("only chunked transfer encoding is supported",
+			status_code::NOT_IMPLEMENTED);
+	} catch (std::out_of_range &) {
+		return false;
+	}
+
+	return false;
+}
+
+std::string
+headers::te() const
+{
+	return get(TE);
+}
+
+void
+headers::te(const std::string &coding)
+{
+	if (snf::streq(coding, "trailers", true))
+		update(TRANSFER_ENCODING, "trailers");
+	else
+		throw std::runtime_error("only trailers transfer encoding is accepted");
+}
+
+bool
+headers::is_trailer_included() const
+{
+	try {
+		std::string s = std::move(te());
+		if (snf::streq(s, "trailers", true))
+			return true;
+
+		throw http_exception("only trailers transfer encoding is accepted",
+			status_code::NOT_IMPLEMENTED);
+	} catch (std::out_of_range &) {
+		return false;
+	}
+
+	return false;
 }
 
 } // namespace http

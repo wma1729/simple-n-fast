@@ -90,8 +90,8 @@ public:
 	socket accept();
 	bool is_readable(int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	bool is_writable(int to = POLL_WAIT_FOREVER, int *oserr = 0);
-	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
-	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int readn(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int writen(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	void close();
 	void shutdown(int);
 };

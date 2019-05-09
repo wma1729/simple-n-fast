@@ -1082,7 +1082,7 @@ socket::is_writable(int to, int *oserr)
  * @return E_ok on success, -ve error code on success.
  */
 int
-socket::read(void *buf, int to_read, int *bread, int to, int *oserr)
+socket::readn(void *buf, int to_read, int *bread, int to, int *oserr)
 {
 	int     retval = E_ok;
 	int     n = 0, nbytes = 0;
@@ -1158,7 +1158,7 @@ socket::read(void *buf, int to_read, int *bread, int to, int *oserr)
  * @return E_ok on success, -ve error code on success.
  */
 int
-socket::write(const void *buf, int to_write, int *bwritten, int to, int *oserr)
+socket::writen(const void *buf, int to_write, int *bwritten, int to, int *oserr)
 {
 	int         retval = E_ok;
 	int         flags = 0;

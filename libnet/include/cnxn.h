@@ -66,8 +66,8 @@ public:
 	void set_session(session &);
 	bool is_session_reused();
 	void handshake(const socket &, int to = POLL_WAIT_FOREVER);
-	int read(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
-	int write(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int readn(void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
+	int writen(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	void shutdown();
 	void reset();
 	x509_certificate *get_peer_certificate();
