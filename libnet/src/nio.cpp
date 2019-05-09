@@ -64,7 +64,7 @@ nio::read_buffered(void *buf, int to_read, int *bread, int to, int *oserr)
 				retval = E_invalid_state;
 			} else {
 				m_idx = m_len = 0;
-				retval = read(m_buf, m_max, &m_len, to, oserr);
+				retval = readn(m_buf, m_max, &m_len, to, oserr);
 			}
 
 			if ((retval != E_ok) || (m_len == 0))
