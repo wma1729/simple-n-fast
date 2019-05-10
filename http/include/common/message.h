@@ -37,7 +37,10 @@ public:
 
 	const version & get_version() const { return m_version; }
 	const headers & get_headers() const { return m_headers; }
-	body *get_body() { return m_body.get(); }
+	body *get_body() const { return m_body.get(); }
+	void set_body(body *b) { m_body.reset(b); }
+
+	void validate();
 };
 
 } // namespace http

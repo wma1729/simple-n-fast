@@ -5,7 +5,7 @@ $(error P is not set)
 endif
 
 OBJS = ${P}/uri.o ${P}/method.o ${P}/status.o ${P}/version.o ${P}/headers.o \
-	${P}/request.o ${P}/response.o ${P}/body.o ${P}/transmit.o
+	${P}/message.o ${P}/request.o ${P}/response.o ${P}/body.o ${P}/transmit.o
 
 INCL = ${INCLHTTPCMN} ${INCLNET} ${INCLLOG} ${INCLCOM}
 

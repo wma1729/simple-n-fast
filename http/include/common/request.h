@@ -127,11 +127,9 @@ public:
 		return *this;
 	}
 
-	void validate();
-
 	request build()
 	{
-		validate();
+		m_request.validate();
 		return std::move(m_request);
 	}
 };

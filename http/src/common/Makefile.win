@@ -5,7 +5,7 @@ include ..\..\..\Makefile.constants
 !ENDIF
 
 OBJS = $(P)\uri.obj $(P)\method.obj $(P)\status.obj $(P)\version.obj $(P)\headers.obj \
-	$(P)\request.obj $(P)\response.obj $(P)\body.obj $(P)\transmit.obj
+	$(P)\message.o $(P)\request.obj $(P)\response.obj $(P)\body.obj $(P)\transmit.obj
 
 INCL = $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 

@@ -1,5 +1,5 @@
-#ifndef _SNF_HEADERS_H_
-#define _SNF_HEADERS_H_
+#ifndef _SNF_HTTP_HEADERS_H_
+#define _SNF_HTTP_HEADERS_H_
 
 #include <string>
 #include <utility>
@@ -66,4 +66,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HEADERS_H_
+#endif // _SNF_HTTP_HEADERS_H_
