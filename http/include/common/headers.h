@@ -11,6 +11,7 @@ namespace http {
 
 static const std::string CONTENT_LENGTH("Content-Length");
 static const std::string TRANSFER_ENCODING("Transfer-Encoding");
+static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 static const std::string TE("TE");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
@@ -46,6 +47,7 @@ public:
 	void add(const std::string &);
 	void add(const std::string &, const std::string &);
 	void update(const std::string &, const std::string &);
+	void remove(const std::string &);
 	bool is_set(const std::string &) const;
 	std::string get(const std::string &) const;
 

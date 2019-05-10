@@ -22,14 +22,14 @@ private:
 
 public:
 	response(const response &resp)
-		: message(resp.m_version, resp.m_headers)
+		: message(resp.m_version, resp.m_headers, resp.m_body)
 		, m_status(resp.m_status)
 		, m_reason(resp.m_reason)
 	{
 	}
 
 	response(response &&resp)
-		: message(resp.m_version, std::move(resp.m_headers))
+		: message(resp.m_version, std::move(resp.m_headers), std::move(resp.m_body))
 		, m_status(resp.m_status)
 		, m_reason(std::move(resp.m_reason))
 	{
@@ -40,6 +40,7 @@ public:
 		if (this != &resp) {
 			m_version = resp.m_version;
 			m_status = resp.m_status;
+			m_body = resp.m_body;
 			m_reason = resp.m_reason;
 			m_headers = resp.m_headers;
 		}
@@ -51,6 +52,7 @@ public:
 		if (this != &resp) {
 			m_version = resp.m_version;
 			m_status = resp.m_status;
+			m_body = std::move(resp.m_body);
 			m_reason = std::move(resp.m_reason);
 			m_headers = std::move(resp.m_headers);
 		}
@@ -106,11 +108,17 @@ public:
 
 	response_builder & with_headers(headers &&);
 
+	response_builder & with_body(std::unique_ptr<body> b)
+	{
+		m_response.m_body = std::move(b);
+		return *this;
+	}
+
 	response build()
 	{
 		if (m_response.m_reason.empty())
 			m_response.m_reason = reason_phrase(m_response.m_status);
-		return m_response;
+		return std::move(m_response);
 	}
 };
 

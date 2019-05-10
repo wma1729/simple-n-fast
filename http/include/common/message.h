@@ -3,7 +3,8 @@
 
 #include "version.h"
 #include "headers.h"
-#include <functional>
+#include "body.h"
+#include <memory>
 
 namespace snf {
 namespace http {
@@ -11,21 +12,24 @@ namespace http {
 class message
 {
 protected:
-	version     m_version;
-	headers     m_headers;
+	version                 m_version;
+	headers                 m_headers;
+	std::shared_ptr<body>   m_body;
 
 public:
 	message() {}
 
-	message(const version &ver, const headers &hdrs)
+	message(const version &ver, const headers &hdrs, const std::shared_ptr<body> &body)
 		: m_version(ver)
 		, m_headers(hdrs)
+		, m_body(body)
 	{
 	}
 
-	message(const version &ver, headers &&hdrs)
+	message(const version &ver, headers &&hdrs, std::shared_ptr<body> &&body)
 		: m_version(ver)
 		, m_headers(std::move(hdrs))
+		, m_body(std::move(body))
 	{
 	}
 
@@ -33,6 +37,7 @@ public:
 
 	const version & get_version() const { return m_version; }
 	const headers & get_headers() const { return m_headers; }
+	body *get_body() { return m_body.get(); }
 };
 
 } // namespace http

@@ -23,14 +23,14 @@ private:
 
 public:
 	request(const request &req)
-		: message(req.m_version, req.m_headers)
+		: message(req.m_version, req.m_headers, req.m_body)
 		, m_type(req.m_type)
 		, m_uri(req.m_uri)
 	{
 	}
 
 	request(request &&req)
-		: message(req.m_version, std::move(req.m_headers))
+		: message(req.m_version, std::move(req.m_headers), std::move(req.m_body))
 		, m_type(req.m_type)
 		, m_uri(std::move(req.m_uri))
 	{
@@ -41,6 +41,7 @@ public:
 		if (this != &req) {
 			m_version = req.m_version;
 			m_headers = req.m_headers;
+			m_body = req.m_body;
 			m_type = req.m_type;
 			m_uri = req.m_uri;
 		}
@@ -52,6 +53,7 @@ public:
 		if (this != &req) {
 			m_version = req.m_version;
 			m_headers = std::move(req.m_headers);
+			m_body = std::move(req.m_body);
 			m_type = req.m_type;
 			m_uri = std::move(req.m_uri);
 		}
@@ -119,9 +121,18 @@ public:
 
 	request_builder & with_headers(headers &&);
 
+	request_builder & with_body(std::unique_ptr<body> b)
+	{
+		m_request.m_body = std::move(b);
+		return *this;
+	}
+
+	void validate();
+
 	request build()
 	{
-		return m_request;
+		validate();
+		return std::move(m_request);
 	}
 };
 

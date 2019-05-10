@@ -137,6 +137,15 @@ headers::update(const std::string &name, const std::string &value)
 	}
 }
 
+void
+headers::remove(const std::string &name)
+{
+	hdr_vec_t::iterator I = find(name);
+	if (I != m_headers.end()) {
+		m_headers.erase(I);
+	}
+}
+
 bool
 headers::is_set(const std::string &name) const
 {
@@ -185,8 +194,8 @@ headers::transfer_encoding() const
 void
 headers::transfer_encoding(const std::string &coding)
 {
-	if (snf::streq(coding, "chunked", true))
-		update(TRANSFER_ENCODING, "chunked");
+	if (snf::streq(coding, TRANSFER_ENCODING_CHUNKED, true))
+		update(TRANSFER_ENCODING, TRANSFER_ENCODING_CHUNKED);
 	else
 		throw std::runtime_error("only chunked transfer encoding is supported");
 }
@@ -196,7 +205,7 @@ headers::is_message_chunked() const
 {
 	try {
 		std::string s = std::move(transfer_encoding());
-		if (snf::streq(s, "chunked", true))
+		if (snf::streq(s, TRANSFER_ENCODING_CHUNKED, true))
 			return true;
 
 		throw http_exception("only chunked transfer encoding is supported",
@@ -218,7 +227,7 @@ void
 headers::te(const std::string &coding)
 {
 	if (snf::streq(coding, "trailers", true))
-		update(TRANSFER_ENCODING, "trailers");
+		update(TE, "trailers");
 	else
 		throw std::runtime_error("only trailers transfer encoding is accepted");
 }
