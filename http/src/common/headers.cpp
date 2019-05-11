@@ -53,16 +53,16 @@ headers::add(const std::string &istr)
 	}
 
 	if (name.empty())
-		throw http_exception("no header field name", status_code::BAD_REQUEST);
+		throw exception("no header field name", status_code::BAD_REQUEST);
 
 	if (i >= len) {
 		oss << "no header field value for field name (" << name << ")";
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw exception(oss.str(), status_code::BAD_REQUEST);
 	}
 
 	if (istr[i] != ':') {
 		oss << "header field name (" << name << ") does not terminate with :";
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw exception(oss.str(), status_code::BAD_REQUEST);
 	}
 
 	for (i = i + 1; i < len; ++i)
@@ -108,7 +108,7 @@ headers::add(const std::string &istr)
 
 	if (i != len) {
 		oss << "invalid header field value (" << name << ")";
-		throw http_exception(oss.str(), status_code::BAD_REQUEST);
+		throw exception(oss.str(), status_code::BAD_REQUEST);
 	}
 
 	add(name, snf::trim(value));
@@ -208,7 +208,7 @@ headers::is_message_chunked() const
 		if (snf::streq(s, TRANSFER_ENCODING_CHUNKED, true))
 			return true;
 
-		throw http_exception("only chunked transfer encoding is supported",
+		throw exception("only chunked transfer encoding is supported",
 			status_code::NOT_IMPLEMENTED);
 	} catch (std::out_of_range &) {
 		return false;
@@ -240,7 +240,7 @@ headers::is_trailer_included() const
 		if (snf::streq(s, "trailers", true))
 			return true;
 
-		throw http_exception("only trailers transfer encoding is accepted",
+		throw exception("only trailers transfer encoding is accepted",
 			status_code::NOT_IMPLEMENTED);
 	} catch (std::out_of_range &) {
 		return false;

@@ -6,6 +6,9 @@
 namespace snf {
 namespace http {
 
+/*
+ * HTTP method.
+ */
 enum class method_type
 {
 	M_GET,
@@ -19,7 +22,7 @@ enum class method_type
 };
 
 method_type method(const std::string &);
-std::string method(method_type);
+std::string method(method_type) noexcept;
 
 } // namespace http
 } // namespace snf

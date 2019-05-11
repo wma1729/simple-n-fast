@@ -7,6 +7,22 @@
 namespace snf {
 namespace http {
 
+/*
+ * HTTP message, either request or response, body.
+ * The factory class should be employed to get
+ * HTTP body from different sources.
+ *
+ * To read the body data, the following style could
+ * be employed:
+ *
+ * body *req_body = body_factory::instance().from_socket(io);
+ * while (req_body->has_next) {
+ *     size_t datalen = 0;
+ *     const voud *data = req_body->next(datalen);
+ *     // process data
+ * }
+ *
+ */
 class body
 {
 public:
@@ -20,6 +36,23 @@ public:
 
 using body_functor_t = std::function<int(void *, size_t, size_t *)>;
 
+/*
+ * HTTP body factory.
+ * A few common body creation methods are supplied:
+ * - from_buffer:         body constructed from a buffer.
+ * - from string:         body constructed from string.
+ * - from_file:           body constructed from file content.
+ * - from_functor:        body constructed from a callable.
+ * - from socket:         body constructed from data read
+ *                        from socket. The size of the data
+ *                        to be read in known in advance,
+ *                        most likely from Content-Length
+ *                        header.
+ * - from socket_chunked: body constructed from data read
+ *                        from socket. The body is assumed
+ *                        to be chunked probably determined
+ *                        from Transfer-Encoding header.
+ */
 class body_factory
 {
 private:

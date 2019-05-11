@@ -7,7 +7,7 @@ namespace snf {
 namespace http {
 
 inline bool
-is_tchar(int c)
+is_tchar(int c) noexcept
 {
 	bool valid = false;
 
@@ -32,19 +32,19 @@ is_tchar(int c)
 }
 
 inline bool
-is_vchar(int c)
+is_vchar(int c) noexcept
 {
 	return ((c >= 0x21) && (c <= 0x7E));
 }
 
 inline bool
-is_whitespace(int c)
+is_whitespace(int c) noexcept
 {
 	return ((c == ' ') || (c == '\t'));
 }
 
 inline bool
-is_opaque(int c)
+is_opaque(int c) noexcept
 {
 	return ((c >= 0x80) && (c <= 0xFF));
 }
@@ -56,7 +56,7 @@ is_opaque(int c)
  * - 0x5C \
  */
 inline bool
-is_quoted(int c)
+is_quoted(int c) noexcept
 {
 	if (is_whitespace(c) || is_opaque(c))
 		return true;
@@ -74,7 +74,7 @@ is_quoted(int c)
  * - 0x5C \
  */
 inline bool
-is_commented(int c)
+is_commented(int c) noexcept
 {
 	if (is_whitespace(c) || is_opaque(c))
 		return true;
@@ -85,7 +85,7 @@ is_commented(int c)
 }
 
 inline bool
-is_escaped(int c)
+is_escaped(int c) noexcept
 {
 	return is_whitespace(c) || is_vchar(c) || is_opaque(c);
 }

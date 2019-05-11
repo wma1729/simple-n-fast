@@ -3,8 +3,16 @@
 namespace snf {
 namespace http {
 
+/*
+ * Gets the reason phrase for the HTTP status code.
+ *
+ * @param [in] s - HTTP status code.
+ *
+ * @return reason phrase for the HTTP status code or
+ * nullptr if the HTTP status code is not known.
+ */
 const char *
-reason_phrase(status_code s)
+reason_phrase(status_code s) noexcept
 {
 	switch (s) {
 		case status_code::CONTINUE:

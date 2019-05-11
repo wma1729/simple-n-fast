@@ -1,6 +1,9 @@
 #include "body.h"
 #include <string>
 #include <algorithm>
+#include <stdexcept>
+#include <ostream>
+#include <sstream>
 #include "file.h"
 #include "status.h"
 #include "error.h"
@@ -37,14 +40,17 @@ public:
 
 	const void *next(size_t &buflen)
 	{
+		const void *ptr = nullptr;
+
 		if (m_begin < m_end) {
 			buflen = m_buflen;
 			m_begin += buflen;
-			return m_buf;
+			ptr = m_buf;
 		} else {
 			buflen = 0;
-			return nullptr;
 		}
+
+		return ptr;
 	}
 };
 
@@ -77,29 +83,33 @@ public:
 
 	const void *next(size_t &buflen)
 	{
+		const void *ptr = nullptr;
+
 		if (m_begin < m_end) {
 			buflen = m_str.size();
 			m_begin += buflen;
-			return m_str.data();
+			ptr = m_str.data();
 		} else {
 			buflen = 0;
-			return nullptr;
 		}
+
+		return ptr;
 	}
 };
 
 class body_from_file : public body
 {
 private:
+	snf::file           *m_file;
 	std::string         m_filename;
-	snf::file           *m_file = nullptr;
-	size_t              m_read = 0;
-	size_t              m_filesize = 0;
+	size_t              m_filesize;
+	size_t              m_read;
 	char                m_buf[body::BUFSIZE];
 
 public:
 	body_from_file(const std::string filename)
 		: m_filename(filename)
+		, m_read(0)
 	{
 		snf::file::open_flags oflags;
 		oflags.o_read = true;
@@ -108,20 +118,19 @@ public:
 		m_file = DBG_NEW snf::file(m_filename, 0022);
 		if (m_file->open(oflags, 0600, &syserr) != E_ok) {
 			std::ostringstream oss;
-			oss << "failed to open file " << m_filename << " for reading";
+			oss << "failed to open file (" << m_filename << ") for reading";
 			throw std::system_error(
 				syserr,
 				std::system_category(),
 				oss.str());
-		} else {
-			m_filesize = m_file->size();
 		}
+
+		m_filesize = m_file->size();
 	}
 
 	~body_from_file()
 	{
-		if (m_file)
-			delete m_file;
+		delete m_file;
 	}
 
 	size_t length() const { return m_filesize; }
@@ -131,10 +140,11 @@ public:
 	{
 		int bread = 0;
 		int syserr = 0;
+		const void *ptr = nullptr;
 
 		if (m_file->read(m_buf, body::BUFSIZE, &bread, &syserr) != E_ok) {
 			std::ostringstream oss;
-			oss << "failed to read from file " << m_filename << " at index " << m_read;
+			oss << "failed to read from file (" << m_filename << ") at index " << m_read;
 			throw std::system_error(
 				syserr,
 				std::system_category(),
@@ -144,11 +154,12 @@ public:
 		if (bread) {
 			m_read += bread;
 			buflen = bread;
-			return m_buf;
+			ptr = m_buf;
 		} else {
 			buflen = 0;
-			return nullptr;
 		}
+
+		return ptr;
 	}
 };
 
@@ -156,17 +167,19 @@ class body_from_functor : public body
 {
 private:
 	body_functor_t      m_functor;
-	size_t              m_read = 0;
+	size_t              m_read;
 	char                m_buf[body::BUFSIZE];
 
 public:
 	body_from_functor(body_functor_t &f)
 		: m_functor(f)
+		, m_read(0)
 	{
 	}
 
 	body_from_functor(body_functor_t &&f)
 		: m_functor(std::move(f))
+		, m_read(0)
 	{
 	}
 
@@ -174,37 +187,44 @@ public:
 
 	bool has_next()
 	{
-		if (m_functor(m_buf, body::BUFSIZE, &m_read) != E_ok) {
+		if (m_read != 0)
+			return true;
+
+		if (m_functor(m_buf, body::BUFSIZE, &m_read) != E_ok)
 			throw std::runtime_error("call to the functor failed");
-		}
+
 		return (m_read != 0);
 	}
 
 	const void *next(size_t &buflen)
 	{
+		const void *ptr = nullptr;
+
 		if (m_read) {
 			buflen = m_read;
 			m_read = 0;
-			return m_buf;
+			ptr = m_buf;
 		} else {
 			buflen = 0;
-			return nullptr;
 		}
+
+		return ptr;
 	}
 };
 
 class body_from_socket : public body
 {
 private:
-	snf::net::nio       *m_io = nullptr;
-	size_t              m_size = 0;
-	size_t              m_read = 0;
+	snf::net::nio       *m_io;
+	size_t              m_size;
+	size_t              m_read;
 	char                m_buf[body::BUFSIZE];
 
 public:
 	body_from_socket(snf::net::nio *io, size_t len)
 		: m_io(io)
 		, m_size(len)
+		, m_read(0)
 	{
 	}
 
@@ -219,37 +239,33 @@ public:
 		to_read = std::min(body::BUFSIZE, to_read);
 		int bread = 0;
 		int syserr = 0;
+		const void *ptr = nullptr;
 
-		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok) {
+		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok)
 			throw std::system_error(
 				syserr,
 				std::system_category(),
 				"failed to read from socket");
-		}
 
 		if (bread) {
 			m_read += bread;
 			buflen = bread;
-			return m_buf;
+			ptr = m_buf;
 		} else {
 			buflen = 0;
-			return nullptr;
 		}
+
+		return ptr;
 	}
 };
 
 class body_from_socket_chunked : public body
 {
 private:
-	snf::net::nio       *m_io = nullptr;
-	size_t              m_chunk_size = 0;
-	size_t              m_chunk_offset = 0;
+	snf::net::nio       *m_io;
+	size_t              m_chunk_size;
+	size_t              m_chunk_offset;
 	char                m_buf[body::BUFSIZE];
-
-	int available_in_chunk()
-	{
-		return static_cast<int>(m_chunk_size - m_chunk_offset);
-	}
 
 	int getc()
 	{
@@ -268,6 +284,8 @@ private:
 public:
 	body_from_socket_chunked(snf::net::nio *io)
 		: m_io(io)
+		, m_chunk_size(0)
+		, m_chunk_offset(0)
 	{
 	}
 
@@ -277,25 +295,24 @@ public:
 
 	bool has_next()
 	{
-		int c1, c2;
+		int c;
 		std::string hex;
 
-		if (available_in_chunk() > 0)
+		if (m_chunk_offset < m_chunk_size)
 			return true;
 
-		while ((c1 = getc()) != '\r') {
-			if (std::isxdigit(c1))
-				hex.push_back(c1);
+		while ((c = getc()) != '\r') {
+			if (std::isxdigit(c))
+				hex.push_back(c);
 			else
 				break;
 		}
 
 		if (hex.empty())
-			throw http_exception("no chunk length", status_code::BAD_REQUEST);
+			throw exception("no chunk size", status_code::BAD_REQUEST);
 
-		c2 = getc();
-		if ((c1 != '\r') || (c2 != '\n'))
-			throw http_exception(
+		if (('\r' != c) || ('\n' != getc()))
+			throw exception(
 				"chunk size line not terminated properly",
 				status_code::BAD_REQUEST);
 
@@ -303,30 +320,30 @@ public:
 		m_chunk_offset = 0;
 
 		if (m_chunk_size == 0) {
-			c1 = getc();
-			c2 = getc();
-			if ((c1 != '\r') || (c2 != '\n'))
-				throw http_exception(
-					"body not terminated properly",
+			if (('\r' != getc()) || ('\n' != getc()))
+				throw exception(
+					"message body not terminated properly",
 					status_code::BAD_REQUEST);
 		}
 
-		return (available_in_chunk() > 0);
+		return (m_chunk_offset < m_chunk_size);
 	}
 
 	const void *next(size_t &buflen)
 	{
-		int to_read = std::min(body::BUFSIZE, available_in_chunk());
+		int to_read = static_cast<int>(m_chunk_size - m_chunk_offset);
+		if (to_read > body::BUFSIZE)
+			to_read = body::BUFSIZE;
+
 		int bread = 0;
 		int syserr = 0;
-		void *ptr = nullptr;
+		const void *ptr = nullptr;
 
-		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok) {
+		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok)
 			throw std::system_error(
 				syserr,
 				std::system_category(),
 				"failed to read from socket");
-		}
 
 		if (bread) {
 			m_chunk_offset += bread;
@@ -336,9 +353,9 @@ public:
 			buflen = 0;
 		}
 
-		if (available_in_chunk() <= 0)
+		if (m_chunk_offset >= m_chunk_size)
 			if (('\r' != getc()) || ('\n' != getc()))
-				throw http_exception(
+				throw exception(
 					"chunk data not terminated properly",
 					status_code::BAD_REQUEST);
 

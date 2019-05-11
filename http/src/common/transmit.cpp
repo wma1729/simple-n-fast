@@ -90,7 +90,7 @@ transmitter::recv_line(std::string &line, const std::string &exceptstr)
 
 	size_t len = line.size();
 	if ((len < 2) || (line[len - 1] != '\n') || (line[len - 2] != '\r'))
-		throw http_exception(
+		throw exception(
 			"invalid request line/header",
 			status_code::BAD_REQUEST);
 

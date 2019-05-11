@@ -7,6 +7,9 @@
 namespace snf {
 namespace http {
 
+/*
+ * HTTP version.
+ */
 struct version
 {
 	int m_major;
@@ -33,6 +36,7 @@ operator<<(std::ostream &os, const version &v)
 	os << "HTTP/" << v.m_major << "." << v.m_minor;
 	return os;
 }
+
 } // namespace http
 } // namespace snf
 

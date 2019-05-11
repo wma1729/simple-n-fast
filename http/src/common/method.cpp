@@ -6,6 +6,15 @@
 namespace snf {
 namespace http {
 
+/*
+ * Method name to method type.
+ *
+ * @param [in] str - method name.
+ *
+ * @return method type.
+ *
+ * @throws std::invalid_argument if the method name is invalid.
+ */
 method_type
 method(const std::string &str)
 {
@@ -28,11 +37,18 @@ method(const std::string &str)
 
 	std::ostringstream oss;
 	oss << "invalid HTTP method (" << str << ")";
-	throw std::runtime_error(oss.str());
+	throw std::invalid_argument(oss.str());
 }
 
+/*
+ * Method type to method name.
+ *
+ * @param [in] mtype - method type.
+ *
+ * @return method name.
+ */
 std::string
-method(method_type mtype)
+method(method_type mtype) noexcept
 {
 	switch (mtype) {
 		case method_type::M_GET:

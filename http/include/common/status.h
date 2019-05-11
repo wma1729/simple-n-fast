@@ -8,6 +8,9 @@
 namespace snf {
 namespace http {
 
+/*
+ * HTTP status codes.
+ */
 enum class status_code : int
 {
 	CONTINUE = 100,
@@ -53,34 +56,39 @@ enum class status_code : int
 	HTTP_VERSION_NOT_SUPPORTED = 505
 };
 
-const char *reason_phrase(status_code);
+const char *reason_phrase(status_code) noexcept;
 
 inline std::ostream &
 operator<< (std::ostream &os, status_code s)
 {
-	os << static_cast<int>(s) << " " << reason_phrase(s);
+	os << static_cast<int>(s);
 	return os;
 }
 
-class http_exception : public std::runtime_error
+/*
+ * HTTP exception.
+ * Encapsulates the error string and the
+ * HTTP status code.
+ */
+class exception : public std::runtime_error
 {
 private:
 	status_code m_status;
 
 public:
-	http_exception(const std::string &msg, status_code s)
+	exception(const std::string &msg, status_code s)
 		: std::runtime_error(msg)
 		, m_status(s)
 	{
 	}
 
-	http_exception(const char *msg, status_code s)
+	exception(const char *msg, status_code s)
 		: std::runtime_error(msg)
 		, m_status(s)
 	{
 	}
 
-	virtual ~http_exception() {}
+	virtual ~exception() {}
 
 	status_code get_status_code() const { return m_status; }
 };
