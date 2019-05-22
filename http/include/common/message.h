@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_MESSAGE_H_
-#define _SNF_HTTP_MESSAGE_H_
+#ifndef _SNF_HTTP_CMN_MESSAGE_H_
+#define _SNF_HTTP_CMN_MESSAGE_H_
 
 #include "version.h"
 #include "headers.h"
@@ -46,4 +46,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_MESSAGE_H_
+#endif // _SNF_HTTP_CMN_MESSAGE_H_

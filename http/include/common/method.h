@@ -1,5 +1,5 @@
-#ifndef _SNF_METHOD_H_
-#define _SNF_METHOD_H_
+#ifndef _SNF_HTTP_CMN_METHOD_H_
+#define _SNF_HTTP_CMN_METHOD_H_
 
 #include <string>
 
@@ -27,4 +27,4 @@ std::string method(method_type) noexcept;
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_METHOD_H_
+#endif // _SNF_HTTP_CMN_METHOD_H_

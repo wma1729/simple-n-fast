@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_STATUS_H_
-#define _SNF_HTTP_STATUS_H_
+#ifndef _SNF_HTTP_CMN_STATUS_H_
+#define _SNF_HTTP_CMN_STATUS_H_
 
 #include <string>
 #include <ostream>
@@ -96,4 +96,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_STATUS_H_
+#endif // _SNF_HTTP_CMN_STATUS_H_

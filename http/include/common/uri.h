@@ -1,5 +1,5 @@
-#ifndef _SNF_URI_H_
-#define _SNF_URI_H_
+#ifndef _SNF_HTTP_CMN_URI_H_
+#define _SNF_HTTP_CMN_URI_H_
 
 #include "common.h"
 #include "netplat.h"
@@ -440,4 +440,4 @@ operator<<(std::ostream &os, const uri &u)
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_URI_H_
+#endif // _SNF_HTTP_CMN_URI_H_

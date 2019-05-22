@@ -63,7 +63,7 @@ public:
 	snf::local_time get_timestamp() const { return m_timestamp; }
 
 	record & operator<< (record_terminator terminator) { return terminator(*this); }
-	template<typename T> record & operator<< (const T t) { m_text << t; return *this; }
+	template<typename T> record & operator<< (const T &t) { m_text << t; return *this; }
 
 	std::string format(const std::string &) const;
 	std::string str(bool pretty = false) const;

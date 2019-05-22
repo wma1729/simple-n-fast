@@ -86,6 +86,8 @@ ECHO INCLJSON = /I"%BLDDIR%libjson\include" >> Makefile.constants
 ECHO INCLLOG = /I"%BLDDIR%liblog\include" >> Makefile.constants
 ECHO INCLNET = /I"%BLDDIR%libnet\include" >> Makefile.constants
 ECHO INCLHTTPCMN = /I"%BLDDIR%http\include\common" >> Makefile.constants
+ECHO INCLHTTPSRVR = /I"%BLDDIR%http\include\server" >> Makefile.constants
+ECHO INCLHTTPCLNT = /I"%BLDDIR%http\include\client" >> Makefile.constants
 ECHO INCLTF = /I"%BLDDIR%tf" >> Makefile.constants
 ECHO INCLSSL = /I"%BLDDIR%ssl\%BLDPLAT%\include" >> Makefile.constants
 ECHO LIBCOM = "%BLDDIR%libcom\src\%BLDPLAT%\com.lib" >> Makefile.constants
@@ -94,6 +96,8 @@ ECHO LIBJSON = "%BLDDIR%libjson\src\%BLDPLAT%\json.lib" >> Makefile.constants
 ECHO LIBLOG = "%BLDDIR%liblog\src\%BLDPLAT%\log.lib" >> Makefile.constants
 ECHO LIBNET = "%BLDDIR%libnet\src\%BLDPLAT%\net.lib" >> Makefile.constants
 ECHO LIBHTTPCMN = "%BLDDIR%http\src\common\%BLDPLAT%\httpcmn.lib" >> Makefile.constants
+ECHO LIBHTTPSRVR = "%BLDDIR%http\src\common\%BLDPLAT%\httpsrvr.lib" >> Makefile.constants
+ECHO LIBHTTPCLNT = "%BLDDIR%http\src\common\%BLDPLAT%\httpclnt.lib" >> Makefile.constants
 
 ECHO Makefile.constants generated successfully
 

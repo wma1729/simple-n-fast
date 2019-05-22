@@ -78,6 +78,7 @@ public:
 	void tcpnodelay(bool);
 	bool blocking();
 	void blocking(bool);
+	std::string dump_options();
 	const socket_address &local_address();
 	const socket_address &peer_address();
 	void connect(int, const std::string &, in_port_t, int to = POLL_WAIT_FOREVER); 
@@ -94,6 +95,8 @@ public:
 	int writen(const void *, int, int *, int to = POLL_WAIT_FOREVER, int *oserr = 0);
 	void close();
 	void shutdown(int);
+
+	std::string str(bool brief = true) const;
 };
 
 inline std::ostream &
@@ -106,6 +109,13 @@ operator<<(std::ostream &os, socket::linger_type lt)
 	else // if (lt == socket::linger_type::timed)
 		os << "timed";
 
+	return os;
+}
+
+inline std::ostream &
+operator<<(std::ostream &os, const socket &s)
+{
+	os << s.str(false);
 	return os;
 }
 

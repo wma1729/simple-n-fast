@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_BODY_H_
-#define _SNF_HTTP_BODY_H_
+#ifndef _SNF_HTTP_CMN_BODY_H_
+#define _SNF_HTTP_CMN_BODY_H_
 
 #include <functional>
 #include "nio.h"
@@ -83,4 +83,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_BODY_H_
+#endif // _SNF_HTTP_CMN_BODY_H_

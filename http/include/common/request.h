@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_REQUEST_H_
-#define _SNF_HTTP_REQUEST_H_
+#ifndef _SNF_HTTP_CMN_REQUEST_H_
+#define _SNF_HTTP_CMN_REQUEST_H_
 
 #include "method.h"
 #include "uri.h"
@@ -137,4 +137,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_REQUEST_H_
+#endif // _SNF_HTTP_CMN_REQUEST_H_

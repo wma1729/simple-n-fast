@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_TRANSMIT_H_
-#define _SNF_HTTP_TRANSMIT_H_
+#ifndef _SNF_HTTP_CMN_TRANSMIT_H_
+#define _SNF_HTTP_CMN_TRANSMIT_H_
 
 #include "nio.h"
 #include "request.h"
@@ -48,4 +48,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_TRANSMIT_H_
+#endif // _SNF_HTTP_CMN_TRANSMIT_H_

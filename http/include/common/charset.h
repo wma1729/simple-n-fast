@@ -1,5 +1,5 @@
-#ifndef _SNF_CHARSET_H_
-#define _SNF_CHARSET_H_
+#ifndef _SNF_HTTP_CMN_CHARSET_H_
+#define _SNF_HTTP_CMN_CHARSET_H_
 
 #include <cctype>
 
@@ -93,4 +93,4 @@ is_escaped(int c) noexcept
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_CHARSET_H_
+#endif // _SNF_HTTP_CMN_CHARSET_H_

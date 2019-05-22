@@ -88,6 +88,12 @@ public:
 		return false;
 	}
 
+	void validate()
+	{
+		std::lock_guard<std::mutex> guard(m_lock);
+		m_valid = true;
+	}
+
 	void invalidate()
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
@@ -115,6 +121,8 @@ private:
 
 	void start(size_t n)
 	{
+		m_queue.validate();
+
 		auto worker = [this] {
 			while (!this->m_done) {
 				fcn_type fcn;
@@ -127,18 +135,6 @@ private:
 			std::unique_ptr<std::thread> uniq_thrd{new std::thread{worker}};
 			m_threads.emplace_back(std::move(uniq_thrd));
 		}
-	}
-
-	void stop()
-	{
-		m_done = true;
-		m_queue.invalidate();
-		for (auto &t : m_threads) {
-			if (t->joinable()) {
-				t->join();
-			}
-		}
-		m_threads.clear();
 	}
 
 public:
@@ -168,6 +164,20 @@ public:
 	size_t thread_count() const { return m_threads.size(); }
 	size_t request_count() { return m_queue.size(); }
 	size_t threads_waiting() { return m_queue.waiting(); }
+
+	void stop()
+	{
+		if (!m_done) {
+			m_done = true;
+			m_queue.invalidate();
+			for (auto &t : m_threads) {
+				if (t->joinable()) {
+					t->join();
+				}
+			}
+			m_threads.clear();
+		}
+	}
 
 	template<typename Func, typename... Args>
 	auto submit(Func && f, Args && ... args) -> std::future<decltype(f(args...))>

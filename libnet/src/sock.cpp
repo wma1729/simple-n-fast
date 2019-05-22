@@ -742,6 +742,40 @@ socket::blocking(bool blk)
 }
 
 /*
+ * Dump socket attributes.
+ *
+ * @returns a string containing socket attributes.
+ *
+ * @throws std::system_error if the socket options could not be fetched.
+ */
+std::string
+socket::dump_options()
+{
+	std::ostringstream oss;
+
+	oss << std::boolalpha
+		<< ", keepalive=" << keepalive()
+		<< ", reuseaddr=" << reuseaddr()
+		<< ", tcpnodelay=" << tcpnodelay()
+		<< ", blocking=" << blocking()
+		<< std::noboolalpha;
+
+	int to = 0;
+	linger_type lt = linger(&to);
+	oss << ", linger-type=" << lt;
+	if (lt == socket::linger_type::timed)
+		oss << ", linger-timeout=" << to;
+
+	oss << ", rcvbuf=" << rcvbuf()
+		<< ", sndbuf=" << sndbuf()
+		<< ", rcvtimeout=" << rcvtimeout()
+		<< ", sndtimeout=" << sndtimeout()
+		<< ", error=" << error();
+
+	return oss.str();
+}
+
+/*
  * Gets the local socket address of a connected socket.
  *
  * @return the local socket address.
@@ -1286,6 +1320,27 @@ socket::shutdown(int type)
 				oss.str());
 		}
 	}
+}
+
+/*
+ * Display socket id and end-points.
+ *
+ * @return socket detail string.
+ */
+std::string
+socket::str(bool) const
+{
+	std::ostringstream oss;
+
+	oss << "id=" << static_cast<int64_t>(m_sock);
+
+	if (m_local)
+		oss << ", local-address=" << *m_local;
+
+	if (m_peer)
+		oss << ", peer-address=" << *m_peer;
+
+	return oss.str();
 }
 
 } // namespace net

@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_VERSION_H_
-#define _SNF_HTTP_VERSION_H_
+#ifndef _SNF_HTTP_CMN_VERSION_H_
+#define _SNF_HTTP_CMN_VERSION_H_
 
 #include <string>
 #include <ostream>
@@ -40,4 +40,4 @@ operator<<(std::ostream &os, const version &v)
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_VERSION_H_
+#endif // _SNF_HTTP_CMN_VERSION_H_

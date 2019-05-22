@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_HEADERS_H_
-#define _SNF_HTTP_HEADERS_H_
+#ifndef _SNF_HTTP_CMN_HEADERS_H_
+#define _SNF_HTTP_CMN_HEADERS_H_
 
 #include <string>
 #include <utility>
@@ -16,6 +16,9 @@ static const std::string TE("TE");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
 
+/*
+ * HTTP headers. Maintained as a vector of key/value pair.
+ */
 class headers
 {
 private:
@@ -51,8 +54,8 @@ public:
 	bool is_set(const std::string &) const;
 	std::string get(const std::string &) const;
 
-	int64_t content_length() const;
-	void content_length(int64_t);
+	size_t content_length() const;
+	void content_length(size_t);
 
 	std::string transfer_encoding() const;
 	void transfer_encoding(const std::string &);
@@ -66,4 +69,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_HEADERS_H_
+#endif // _SNF_HTTP_CMN_HEADERS_H_

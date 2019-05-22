@@ -1,9 +1,34 @@
 #include "net.h"
-#include "poller.h"
+#include "reactor.h"
 
 namespace snf {
 namespace net {
-namespace poller {
+
+class sockpair_handler : public handler
+{
+private:
+	socket  *m_reader = nullptr;
+
+public:
+	sockpair_handler(socket *reader)
+		: m_reader(reader)
+	{
+	}
+
+	virtual ~sockpair_handler()
+	{
+	}
+
+	virtual bool operator()(sock_t s, event e) override
+	{
+		if (m_reader) {
+			int dummy = 0;
+			m_reader->read_integral(&dummy, POLL_WAIT_NONE);
+			return true;
+		}
+		return false;
+	}
+};
 
 void
 reactor::set_poll_vector(std::vector<pollfd> &poll_vec)
@@ -52,19 +77,19 @@ reactor::process_poll_vector(std::vector<pollfd> &poll_vec)
 					short e = static_cast<short>(uptr->e);
 
 					if (fdelem.revents & POLLERR) {
-						ok = uptr->h(fdelem.fd, event::error);
+						ok = (*uptr->h)(fdelem.fd, event::error);
 					} else if (fdelem.revents & POLLHUP) {
-						ok = uptr->h(fdelem.fd, event::hup);
+						ok = (*uptr->h)(fdelem.fd, event::hup);
 					} else if (fdelem.revents & POLLNVAL) {
-						ok = uptr->h(fdelem.fd, event::invalid);
+						ok = (*uptr->h)(fdelem.fd, event::invalid);
 					} else if (fdelem.revents & e) {
-						ok = uptr->h(fdelem.fd, uptr->e);
+						ok = (*uptr->h)(fdelem.fd, uptr->e);
 						if (ok && (uptr->to != std::chrono::milliseconds::zero()))
 							uptr->exp = now + uptr->to;
 					}
 				} else {
 					if (now > uptr->exp)
-						ok = uptr->h(fdelem.fd, event::timeout);
+						ok = (*uptr->h)(fdelem.fd, event::timeout);
 				}
 
 				if (!ok) {
@@ -80,12 +105,26 @@ reactor::process_poll_vector(std::vector<pollfd> &poll_vec)
 	}
 }
 
+reactor::reactor(int to)
+	: m_timeout(to)
+	, m_sockpair(std::move(snf::net::socket::socketpair()))
+{
+	m_sockpair[0].blocking(false);
+	sock_t s = m_sockpair[0];
+
+	add_handler(s, event::read, new sockpair_handler(&(m_sockpair[0])));
+
+	m_future = std::async(std::launch::async, &reactor::start, this);
+}
+
 void
 reactor::start()
 {
 	int nready;
 	int syserr;
 	std::vector<pollfd> poll_vec;
+
+	m_stopped = false;
 
 	while (!m_stopped) {
 
@@ -108,29 +147,14 @@ reactor::start()
 void
 reactor::stop()
 {
-	m_stopped = true;
-	m_sockpair[1].write_integral(1);
-	m_future.wait();
-}
-
-reactor::reactor(int to)
-	: m_timeout(to)
-	, m_sockpair(std::move(snf::net::socket::socketpair()))
-{
-	m_sockpair[0].blocking(false);
-	sock_t s = m_sockpair[0];
-
-	add_handler(s, event::read, [this] (sock_t s, event e) {
-		int dummy = 0;
-		this->m_sockpair[0].read_integral(&dummy, POLL_WAIT_NONE);
-		return true;
-	});
-
-	m_future = std::async(std::launch::async, &reactor::start, this);
+	if (!m_stopped) {
+		m_stopped = true;
+		m_sockpair[1].write_integral(1);
+	}
 }
 
 void
-reactor::add_handler(sock_t s, event e, std::function<bool(sock_t, event)> h, int to)
+reactor::add_handler(sock_t s, event e, handler *h, int to)
 {
 	if (s == INVALID_SOCKET)
 		throw std::invalid_argument("invalid socket");
@@ -146,19 +170,19 @@ reactor::add_handler(sock_t s, event e, std::function<bool(sock_t, event)> h, in
 		bool found = false;
 		for (auto &ei : H->second) {
 			if (ei->e == e) {
-				ei->h = std::move(h);
+				ei->h.reset(h);
 				found = true;
 				break;
 			}
 		}
 
 		if (!found) {
-			std::unique_ptr<ev_info> ei(new ev_info(e, to, std::move(h)));
+			std::unique_ptr<ev_info> ei(new ev_info(e, to, h));
 			H->second.emplace_back(std::move(ei));
 		}
 	} else {
 		ev_info_type eivec;
-		std::unique_ptr<ev_info> ei(new ev_info(e, to, std::move(h)));
+		std::unique_ptr<ev_info> ei(new ev_info(e, to, h));
 		eivec.emplace_back(std::move(ei));
 		m_handlers[s] = std::move(eivec);
 	}
@@ -200,6 +224,5 @@ reactor::remove_handler(sock_t s, event e)
 }
 
 
-} // namespace poller
 } // namespace net
 } // namespace snf

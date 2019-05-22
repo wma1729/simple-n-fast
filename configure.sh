@@ -82,6 +82,8 @@ if [ "$PLAT" = "Linux" ]; then
 		INCLLOG = -I`pwd`/liblog/include
 		INCLNET = -I`pwd`/libnet/include
 		INCLHTTPCMN = -I`pwd`/http/include/common
+		INCLHTTPSRVR = -I`pwd`/http/include/server
+		INCLHTTPCLNT = -I`pwd`/http/include/client
 		INCLTF = -I`pwd`/tf
 		INCLSSL = -I`pwd`/ssl/$BLDPLAT/include
 		LIBCOM = `pwd`/libcom/src/$BLDPLAT/libcom.a
@@ -90,6 +92,8 @@ if [ "$PLAT" = "Linux" ]; then
 		LIBLOG = `pwd`/liblog/src/$BLDPLAT/liblog.a
 		LIBNET = `pwd`/libnet/src/$BLDPLAT/libnet.a
 		LIBHTTPCMN = `pwd`/http/src/common/$BLDPLAT/libhttpcmn.a
+		LIBHTTPSRVR = `pwd`/http/src/common/$BLDPLAT/libhttpsrvr.a
+		LIBHTTPCLNT = `pwd`/http/src/common/$BLDPLAT/libhttpclnt.a
 LINUX_CONFIG
 
 else

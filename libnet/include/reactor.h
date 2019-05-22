@@ -1,5 +1,5 @@
-#ifndef _SNF_POLLER_H_
-#define _SNF_POLLER_H_
+#ifndef _SNF_REACTOR_H_
+#define _SNF_REACTOR_H_
 
 #include <chrono>
 #include "netplat.h"
@@ -8,14 +8,12 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <functional>
 #include <mutex>
 #include <atomic>
 #include <future>
 
 namespace snf {
 namespace net {
-namespace poller {
 
 /*
  * Flag     Linux  Windows
@@ -50,19 +48,28 @@ enum class event : short
 	timeout = POLLTO
 };
 
+class handler
+{
+public:
+	virtual ~handler() {}
+	virtual bool operator()(sock_t, event) = 0;
+};
+
+class sockpair_handler;
+
 class reactor
 {
 private:
 	struct ev_info
 	{
 		event                                   e;   // events
-		std::function<bool(sock_t, event)>      h;   // handler
+		std::unique_ptr<handler>                h;   // handler
 		std::chrono::milliseconds               to;  // timeout
 		std::chrono::system_clock::time_point   exp; // expiration
 
-		ev_info(event _e, int _to, std::function<bool(sock_t, event)> &&_h)
+		ev_info(event _e, int _to, handler *_h)
 			: e(_e)
-			, h(std::move(_h))
+			, h(_h)
 		{
 			if (_to <= 0) {
 				to = std::chrono::milliseconds::zero();
@@ -72,44 +79,6 @@ private:
 				exp = std::chrono::system_clock::now();
 				exp += to;
 			}
-		}
-
-		ev_info(const ev_info &ei)
-			: e(ei.e)
-			, h(ei.h)
-			, to(ei.to)
-			, exp(ei.exp)
-		{
-		}
-
-		ev_info(ev_info &&ei)
-			: e(ei.e)
-			, h(std::move(ei.h))
-			, to(ei.to)
-			, exp(ei.exp)
-		{
-		}
-
-		const ev_info &operator=(const ev_info &ei)
-		{
-			if (this != &ei) {
-				e = ei.e;
-				h = ei.h;
-				to = ei.to;
-				exp = ei.exp;
-			}
-			return *this;
-		}
-
-		ev_info &operator=(ev_info &&ei)
-		{
-			if (this != &ei) {
-				e = ei.e;
-				h = std::move(ei.h);
-				to = ei.to;
-				exp = ei.exp;
-			}
-			return *this;
 		}
 	};
 
@@ -125,8 +94,6 @@ private:
 
 	void set_poll_vector(std::vector<pollfd> &);
 	void process_poll_vector(std::vector<pollfd> &);
-	void start();
-	void stop();
 
 public:
 	reactor(int to = 5000);
@@ -134,15 +101,16 @@ public:
 	reactor(reactor &&) = delete;
 	const reactor &operator=(const reactor &) = delete;
 	reactor &operator=(reactor &&) = delete;
-	~reactor() { stop(); }
+	~reactor() { stop(); m_future.wait(); }
 
-	void add_handler(sock_t, event, std::function<bool(sock_t, event)>, int to = 0);
+	void start();
+	void stop();
+	void add_handler(sock_t, event, handler *, int to = 0);
 	void remove_handler(sock_t);
 	void remove_handler(sock_t, event);
 };
 
-} // namespace poller
 } // namespace net
 } // namespace snf
 
-#endif // _SNF_POLLER_H_
+#endif // _SNF_REACTOR_H_

@@ -1,5 +1,5 @@
-#ifndef _SNF_HTTP_RESPONSE_H_
-#define _SNF_HTTP_RESPONSE_H_
+#ifndef _SNF_HTTP_CMN_RESPONSE_H_
+#define _SNF_HTTP_CMN_RESPONSE_H_
 
 #include "status.h"
 #include "message.h"
@@ -126,4 +126,4 @@ public:
 } // namespace http
 } // namespace snf
 
-#endif // _SNF_HTTP_RESPONSE_H_
+#endif // _SNF_HTTP_CMN_RESPONSE_H_
