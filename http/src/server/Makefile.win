@@ -1,0 +1,27 @@
+include ..\..\..\Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS = $(P)\server.obj $(P)\handler.obj
+
+INCL = $(INCLHTTPSRVR) $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
+
+LIBPDB = $(P)\libhttpsrvr.pdb
+
+all: platform $(P)\httpsrvr.lib
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\httpsrvr.lib: $(OBJS)
+	$(AR) $(ARFLAGS) $** /OUT:$@
+
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBPDB) $(*B).cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\httpsrvr.lib $(LIBPDB)

@@ -6,7 +6,7 @@ endif
 
 OBJS = ${P}/httpts.o
 
-INCL = ${INCLHTTPCMN} ${INCLCOM} ${INCLNET} ${INCLLOG} ${INCLTF}
+INCL = ${INCLHTTPCMN} ${INCLCOM} ${INCLNET} ${INCLSSL} ${INCLLOG} ${INCLTF}
 LIBS = -ldl -lpthread
 
 all: platform ${P}/httpts

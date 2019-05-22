@@ -6,7 +6,7 @@ include ../../Makefile.constants
 
 OBJS = $(P)\httpts.obj
 
-INCL = $(INCLHTTPCMN) $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLTF)
+INCL = $(INCLHTTPCMN) $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLSSL) $(INCLTF)
 
 all: platform $(P)\httpts.exe
 

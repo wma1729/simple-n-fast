@@ -35,24 +35,28 @@ public:
 	const sync_queue<T> & operator= (const sync_queue<T> &) = delete;
 	sync_queue<T> & operator= (sync_queue<T> &&) = delete;
 
+	// Is the queue empty?
 	bool empty()
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
 		return m_queue.empty();
 	}
 
+	// Get the size of the queue.
 	size_t size()
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
 		return m_queue.size();
 	}
 
+	// How many threads are waiting on the queue?
 	size_t waiting()
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
 		return m_waiting;
 	}
 
+	// Put an element into the queue.
 	void put(const T &elem)
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
@@ -62,6 +66,7 @@ public:
 		}
 	}
 
+	// Put an element into the queue (using move).
 	void put(T &&elem)
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
@@ -71,6 +76,14 @@ public:
 		}
 	}
 
+	/*
+	 * Get an element from the queue.
+	 *
+	 * @param [out] elem - element fetched from the queue.
+	 *
+	 * @return true if the element is fetched, false if the
+	 *         element is not fetched.
+	 */
 	bool get(T &elem)
 	{
 		std::unique_lock<std::mutex> lock(m_lock);
@@ -88,12 +101,10 @@ public:
 		return false;
 	}
 
-	void validate()
-	{
-		std::lock_guard<std::mutex> guard(m_lock);
-		m_valid = true;
-	}
-
+	/*
+	 * Invalidate the queue. The queue is drained and no operation
+	 * can be done on the queue beyond this.
+	 */
 	void invalidate()
 	{
 		std::lock_guard<std::mutex> guard(m_lock);
@@ -119,10 +130,9 @@ private:
 	std::vector<std::unique_ptr<std::thread>>   m_threads;
 	sync_queue<fcn_type>                        m_queue;
 
+	// Start the thread pool with 'n' threads.
 	void start(size_t n)
 	{
-		m_queue.validate();
-
 		auto worker = [this] {
 			while (!this->m_done) {
 				fcn_type fcn;
@@ -138,6 +148,10 @@ private:
 	}
 
 public:
+	/*
+	 * Create and start the thread pool. Number of threads in
+	 * the pool is determined by std::thread::hardware_concurrency() - 1.
+	 */
 	thread_pool()
 	{
 		size_t hc = std::thread::hardware_concurrency();
@@ -148,11 +162,13 @@ public:
 		start(hc);
 	}
 
+	// Create and start the thread pool with 'n' threads.
 	thread_pool(size_t n)
 	{
 		start(n);
 	}
 
+	// Stops and destroys the thread pool
 	~thread_pool() { stop(); }
 
 	thread_pool(const thread_pool &) = delete;
@@ -161,10 +177,16 @@ public:
 	const thread_pool & operator= (const thread_pool &) = delete;
 	thread_pool & operator= (thread_pool &&) = delete;
 
+	// how many threads are there in the thread pool?
 	size_t thread_count() const { return m_threads.size(); }
+
+	// how many requests are there in the thread pool?
 	size_t request_count() { return m_queue.size(); }
+
+	// how many threads are waiting for request in the thread pool?
 	size_t threads_waiting() { return m_queue.waiting(); }
 
+	// Stops the thread pool.
 	void stop()
 	{
 		if (!m_done) {
@@ -179,6 +201,7 @@ public:
 		}
 	}
 
+	// Submit request into the thread pool.
 	template<typename Func, typename... Args>
 	auto submit(Func && f, Args && ... args) -> std::future<decltype(f(args...))>
 	{
@@ -190,6 +213,7 @@ public:
 		return pkgd_task->get_future();
 	}
 
+	// Submit request into the thread pool.
 	template<typename Functor>
 	auto submit(Functor && f) -> std::future<decltype(f())>
 	{

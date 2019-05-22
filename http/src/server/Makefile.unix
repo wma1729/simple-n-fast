@@ -1,0 +1,25 @@
+include ../../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS = ${P}/handler.o ${P}/server.o
+
+INCL = ${INCLHTTPSRVR} ${INCLHTTPCMN} ${INCLNET} ${INCLLOG} ${INCLCOM} ${INCLSSL}
+
+all: platform ${P}/libhttpsrvr.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/libhttpsrvr.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/libhttpsrvr.a

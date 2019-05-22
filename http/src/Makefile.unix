@@ -1,6 +1,6 @@
 include ../../Makefile.constants
 
-DIRS = common
+DIRS = common server
 
 all:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done

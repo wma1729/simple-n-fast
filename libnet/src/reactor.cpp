@@ -4,36 +4,45 @@
 namespace snf {
 namespace net {
 
+/*
+ * Socket pair handler.
+ */
 class sockpair_handler : public handler
 {
 private:
-	socket  *m_reader = nullptr;
+	socket  &m_reader;
 
 public:
-	sockpair_handler(socket *reader)
-		: m_reader(reader)
-	{
-	}
-
-	virtual ~sockpair_handler()
-	{
-	}
+	sockpair_handler(socket &reader) : m_reader(reader) { }
+	virtual ~sockpair_handler() {}
 
 	virtual bool operator()(sock_t s, event e) override
 	{
-		if (m_reader) {
-			int dummy = 0;
-			m_reader->read_integral(&dummy, POLL_WAIT_NONE);
-			return true;
+		if (e != event::read) {
+			m_reader.close();
+			return false;
 		}
-		return false;
+
+		if (s != m_reader) {
+			m_reader.close();
+			return false;
+		}
+
+		int dummy = 0;
+		m_reader.read_integral(&dummy, POLL_WAIT_NONE);
+		return true;
 	}
 };
 
-void
-reactor::set_poll_vector(std::vector<pollfd> &poll_vec)
+/*
+ * Prepares the poll vector to be used with poll()
+ * system call by iterating over the registered
+ * handlers.
+ */
+std::vector<pollfd>
+reactor::set_poll_vector()
 {
-	poll_vec.clear();
+	std::vector<pollfd> poll_vec;
 
 	std::lock_guard<std::mutex> guard(m_lock);
 
@@ -54,8 +63,16 @@ reactor::set_poll_vector(std::vector<pollfd> &poll_vec)
 		if (fdelem.events != 0)
 			poll_vec.push_back(fdelem);
 	}
+
+	return poll_vec;
 }
 
+/*
+ * Process the poll vector after call to poll() system call.
+ * Calls the registered handlers when the socket is ready.
+ * Depending on the return value of the handler, the handler
+ * is re-registered or removed.
+ */
 void
 reactor::process_poll_vector(std::vector<pollfd> &poll_vec)
 {
@@ -105,34 +122,19 @@ reactor::process_poll_vector(std::vector<pollfd> &poll_vec)
 	}
 }
 
-reactor::reactor(int to)
-	: m_timeout(to)
-	, m_sockpair(std::move(snf::net::socket::socketpair()))
-{
-	m_sockpair[0].blocking(false);
-	sock_t s = m_sockpair[0];
-
-	add_handler(s, event::read, new sockpair_handler(&(m_sockpair[0])));
-
-	m_future = std::async(std::launch::async, &reactor::start, this);
-}
-
+/*
+ * Starts the reactor.
+ *
+ * @throws std::system_error in case of poll() system call failure.
+ */
 void
 reactor::start()
 {
-	int nready;
-	int syserr;
-	std::vector<pollfd> poll_vec;
-
-	m_stopped = false;
-
 	while (!m_stopped) {
+		std::vector<pollfd> poll_vec = std::move(set_poll_vector());
+		int syserr = 0;
 
-		syserr = 0;
-
-		set_poll_vector(poll_vec);
-
-		nready = snf::net::poll(poll_vec, m_timeout, &syserr);
+		int nready = snf::net::poll(poll_vec, m_timeout, &syserr);
 		if (SOCKET_ERROR == nready) {
 			throw std::system_error(
 				syserr,
@@ -144,15 +146,47 @@ reactor::start()
 	}
 }
 
+/*
+ * Constructs the reactor and starts it in a separate thread.
+ *
+ * @param [in]    to    - timeout in milliseconds.
+ *                        POLL_WAIT_FOREVER for inifinite wait.
+ *                        POLL_WAIT_NONE for no wait.
+ */
+reactor::reactor(int to)
+	: m_timeout(to)
+	, m_sockpair(std::move(snf::net::socket::socketpair()))
+{
+	m_sockpair[0].blocking(false);
+	sock_t s = m_sockpair[0];
+
+	add_handler(s, event::read, new sockpair_handler(m_sockpair[0]));
+
+	m_future = std::async(std::launch::async, &reactor::start, this);
+}
+
 void
 reactor::stop()
 {
 	if (!m_stopped) {
 		m_stopped = true;
 		m_sockpair[1].write_integral(1);
+		m_future.wait();
 	}
 }
 
+/*
+ * Adds/registers the event handler.
+ *
+ * @param [in] s  - socket ID.
+ * @param [in] e  - event to wait for.
+ * @param [in] h  - socket event handler.
+ * @param [in] to - timeout in milliseconds. A value of <= 0
+ *                  indicates no timeout.
+ *
+ * @throws std::invalid_argument if any of the arguments is
+ *         invalid.
+ */
 void
 reactor::add_handler(sock_t s, event e, handler *h, int to)
 {
@@ -161,6 +195,9 @@ reactor::add_handler(sock_t s, event e, handler *h, int to)
 
 	if ((e != event::read) && (e != event::write))
 		throw std::invalid_argument("invalid event type: only read/write could be registered");
+
+	if (h == nullptr)
+		throw std::invalid_argument("invalid handler");
 
 	std::lock_guard<std::mutex> guard(m_lock);
 
@@ -190,6 +227,11 @@ reactor::add_handler(sock_t s, event e, handler *h, int to)
 	m_sockpair[1].write_integral(1);
 }
 
+/*
+ * Removes all the handlers for the given socket.
+ *
+ * @param [in] s - socket ID.
+ */
 void
 reactor::remove_handler(sock_t s)
 {
@@ -199,6 +241,13 @@ reactor::remove_handler(sock_t s)
 
 	m_sockpair[1].write_integral(1);
 }
+
+/*
+ * Removes handler for the given socket and event.
+ *
+ * @param [in] s - socket ID.
+ * @param [in] e - event type.
+ */
 void
 reactor::remove_handler(sock_t s, event e)
 {

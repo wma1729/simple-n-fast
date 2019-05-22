@@ -29,8 +29,9 @@
 #define E_connect_failed        -25
 #define E_connection_reset      -26
 #define E_accept_failed         -27
-#define E_broken_pipe           -28
-#define E_timed_out             -29
-#define E_ssl_error             -30
+#define E_bind_failed           -28
+#define E_broken_pipe           -29
+#define E_timed_out             -30
+#define E_ssl_error             -31
 
 #endif // _SNF_ERROR_H_
