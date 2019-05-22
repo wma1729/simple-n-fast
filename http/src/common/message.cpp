@@ -6,24 +6,33 @@ namespace http {
 void
 message::validate()
 {
-	int64_t body_length = m_body ? m_body->length() : 0;
-	int64_t mesg_length = m_headers.is_set(CONTENT_LENGTH) ?
-				m_headers.content_length() : 0;
+	bool trust_body = false;
 
-	bool body_chunked = m_body ? m_body->chunked() : false;
+	size_t body_length = 0;
+	bool body_chunked = false;
+	if (m_body) {
+		body_length = m_body->length();
+		body_chunked = m_body->chunked();
+		trust_body = true;
+	}
+
+	size_t mesg_length = m_headers.is_set(CONTENT_LENGTH) ?
+				m_headers.content_length() : 0;
 	bool mesg_chunked = m_headers.is_message_chunked();
+
 
 	// trust body info over message info
 
 	if (body_length != mesg_length) {
-		m_headers.content_length(body_length);
+		if (trust_body)
+			m_headers.content_length(body_length);
 	}
 
 	if (body_chunked) {
 		if (!mesg_chunked) {
 			m_headers.transfer_encoding(TRANSFER_ENCODING_CHUNKED);
 		}
-	} else {
+	} else if (trust_body) {
 		if (mesg_chunked) {
 			m_headers.remove(TRANSFER_ENCODING);
 		}

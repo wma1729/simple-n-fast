@@ -107,7 +107,7 @@ headers::add(const std::string &istr)
 	}
 
 	if (i != len) {
-		oss << "invalid header field value (" << name << ")";
+		oss << "invalid header field value for (" << name << ")";
 		throw exception(oss.str(), status_code::BAD_REQUEST);
 	}
 
@@ -141,18 +141,14 @@ void
 headers::remove(const std::string &name)
 {
 	hdr_vec_t::iterator I = find(name);
-	if (I != m_headers.end()) {
+	if (I != m_headers.end())
 		m_headers.erase(I);
-	}
 }
 
 bool
 headers::is_set(const std::string &name) const
 {
-	hdr_vec_t::const_iterator I = find(name);
-	if (I != m_headers.end())
-		return true;
-	return false;
+	return (m_headers.end() != find(name));
 }
 
 std::string
@@ -172,7 +168,7 @@ headers::get(const std::string &name) const
 	return s;
 }
 
-int64_t
+size_t
 headers::content_length() const
 {
 	std::string s = std::move(get(CONTENT_LENGTH));
@@ -180,7 +176,7 @@ headers::content_length() const
 }
 
 void
-headers::content_length(int64_t length)
+headers::content_length(size_t length)
 {
 	update(CONTENT_LENGTH, std::to_string(length));
 }
