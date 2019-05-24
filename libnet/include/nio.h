@@ -36,19 +36,7 @@ private:
 
 public:
 	nio() {}
-
-	nio(const nio &io)
-		: m_buffered(io.m_buffered)
-		, m_buf(nullptr)
-		, m_max(io.m_max)
-		, m_len(io.m_len)
-		, m_idx(io.m_idx)
-	{
-		if (io.m_buf) {
-			m_buf = DBG_NEW char[m_max];
-			memcpy(m_buf, io.m_buf, m_max);
-		}
-	}
+	nio(const nio &) = delete;
 
 	nio(nio &&io)
 		: m_buffered(io.m_buffered)
@@ -66,29 +54,7 @@ public:
 			delete [] m_buf;
 	}
 
-	virtual const nio & operator=(const nio &io)
-	{
-		if (this != &io) {
-			m_buffered = io.m_buffered;
-
-			if (m_buf) {
-				delete [] m_buf;
-				m_buf = nullptr;
-			}
-
-			if (io.m_buf) {
-				m_buf = DBG_NEW char[m_max];
-				memcpy(m_buf, io.m_buf, m_max);
-			}
-
-			m_buf = io.m_buf;
-			m_max = io.m_max;
-			m_len = io.m_len;
-			m_idx = io.m_idx;
-		}
-
-		return *this;
-	}
+	const nio & operator=(const nio &) = delete;
 
 	virtual nio & operator=(nio &&io)
 	{

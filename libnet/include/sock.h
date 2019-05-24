@@ -48,12 +48,12 @@ public:
 
 	socket(int, socket_type);
 	socket(sock_t, bool skip_close = false);
-	socket(const socket &);
+	socket(const socket &) = delete;
 	socket(socket &&);
 
 	virtual ~socket();
 
-	const socket &operator=(const socket &);
+	const socket &operator=(const socket &) = delete;
 	socket &operator=(socket &&);
 
 	operator sock_t () const { return m_sock; }
