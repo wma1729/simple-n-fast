@@ -107,8 +107,8 @@ server::start(const server_config *cfg)
 	if (r != E_ok)
 		return r;
 
-	m_http_sock.reset(setup_socket(m_config->http_port()));
-	if (!m_http_sock) {
+	snf::net::socket *sock = setup_socket(m_config->http_port());
+	if (!sock) {
 		ERROR_STRM("server")
 			<< "failed to get socket bound to http port "
 			<< m_config->http_port()
@@ -117,37 +117,38 @@ server::start(const server_config *cfg)
 	} else {
 		INFO_STRM("server")
 			<< "created http socket "
-			<< *m_http_sock
-			<< ", " << m_http_sock->dump_options()
+			<< *sock
+			<< ", " << sock->dump_options()
 			<< snf::log::record::endl;
 	}
 
-	m_https_sock.reset(setup_socket(m_config->https_port()));
-	if (!m_https_sock) {
+	snf::net::socket *sec_sock = setup_socket(m_config->https_port());
+	if (!sec_sock) {
 		ERROR_STRM("server")
 			<< "failed to get socket bound to https port "
 			<< m_config->https_port()
 			<< snf::log::record::endl;
+		delete sock;
 		return E_bind_failed;
 	} else {
 		INFO_STRM("server")
 			<< "created https socket "
-			<< *m_https_sock
-			<< ", " << m_https_sock->dump_options()
+			<< *sec_sock
+			<< ", " << sec_sock->dump_options()
 			<< snf::log::record::endl;
 	}
 
 	m_thrdpool.reset(DBG_NEW snf::thread_pool(m_config->worker_thread_count()));
 
 	m_reactor.add_handler(
-			*m_http_sock, 
+			*sock, 
 			snf::net::event::read,
-			DBG_NEW accept_handler(*m_http_sock, snf::net::event::read));
+			DBG_NEW accept_handler(sock, snf::net::event::read));
 
 	m_reactor.add_handler(
-			*m_https_sock,
+			*sec_sock,
 			snf::net::event::read,
-			DBG_NEW accept_handler(*m_https_sock, snf::net::event::read, true));
+			DBG_NEW accept_handler(sec_sock, snf::net::event::read, true));
 
 	m_started = true;
 
@@ -159,8 +160,6 @@ server::stop()
 {
 	m_reactor.stop();
 	m_thrdpool->stop();
-	m_http_sock->close();
-	m_https_sock->close();
 	m_started = false;
 	m_stopped = true;
 	return 0;

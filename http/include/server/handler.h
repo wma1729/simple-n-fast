@@ -10,12 +10,12 @@ namespace http {
 class accept_handler : public snf::net::handler
 {
 protected:
-	snf::net::socket    &m_sock;
-	snf::net::event     m_event;
-	bool                m_secured;
+	std::unique_ptr<snf::net::socket>   m_sock;
+	snf::net::event                     m_event;
+	bool                                m_secured;
 
 public:
-	accept_handler(snf::net::socket &s, snf::net::event e, bool secured = false)
+	accept_handler(snf::net::socket *s, snf::net::event e, bool secured = false)
 		: m_sock(s)
 		, m_event(e)
 		, m_secured(secured)
@@ -32,12 +32,12 @@ public:
 class read_handler : public snf::net::handler
 {
 protected:
-	snf::net::socket    m_sock;
-	snf::net::event     m_event;
+	std::unique_ptr<snf::net::socket>   m_sock;
+	snf::net::event                     m_event;
 
 public:
-	read_handler(snf::net::socket &&s, snf::net::event e)
-		: m_sock(std::move(s))
+	read_handler(snf::net::socket *s, snf::net::event e)
+		: m_sock(s)
 		, m_event(e)
 	{
 	}

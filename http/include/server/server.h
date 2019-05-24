@@ -15,8 +15,6 @@ class server
 {
 private:
 	const server_config                 *m_config = nullptr;
-	std::unique_ptr<snf::net::socket>   m_http_sock;
-	std::unique_ptr<snf::net::socket>   m_https_sock;
 	snf::net::ssl::context              m_ctx;
 	snf::net::reactor                   m_reactor;
 	std::unique_ptr<snf::thread_pool>   m_thrdpool;
