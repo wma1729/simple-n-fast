@@ -29,6 +29,24 @@ public:
 	virtual bool operator()(sock_t, snf::net::event) override;
 };
 
+class read_handler : public snf::net::handler
+{
+protected:
+	snf::net::socket    m_sock;
+	snf::net::event     m_event;
+
+public:
+	read_handler(snf::net::socket &&s, snf::net::event e)
+		: m_sock(std::move(s))
+		, m_event(e)
+	{
+	}
+
+	virtual ~read_handler() {}
+
+	virtual bool operator()(sock_t, snf::net::event) override;
+};
+
 } // namespace http
 } // namespace snf
 

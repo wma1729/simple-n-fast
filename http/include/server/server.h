@@ -46,6 +46,8 @@ public:
 	int start(const server_config *);
 	int stop();
 	snf::net::ssl::context &ssl_context() { return m_ctx; }
+	snf::net::reactor &reactor() { return m_reactor; }
+	snf::thread_pool *thread_pool() { return m_thrdpool.get(); }
 };
 
 } // namespace http

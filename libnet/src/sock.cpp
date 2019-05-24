@@ -230,8 +230,31 @@ socket::socket(int family, socket_type type)
 	m_type = type;
 }
 
+/* Copy constructor */
+socket::socket(const socket &s)
+	: nio(s)
+{
+	m_sock = s.m_sock;
+	m_type = s.m_type;
+
+	if (s.m_local)
+		m_local = DBG_NEW socket_address(*s.m_local);
+
+	if (s.m_peer)
+		m_peer = DBG_NEW socket_address(*s.m_peer);
+
+	m_skip_close = s.m_skip_close;
+
+#if defined(_WIN32)
+	m_blocking = s.m_blocking;
+	m_rcvtimeo = s.m_rcvtimeo;
+	m_sndtimeo = s.m_sndtimeo;
+#endif
+}
+
 /* Move constructor */
 socket::socket(socket &&s)
+	: nio(std::move(s))
 {
 	m_sock = s.m_sock;
 	s.m_sock = INVALID_SOCKET;
@@ -275,24 +298,71 @@ socket::~socket()
 	}
 }
 
+/* Copy operator */
+const socket &
+socket::operator=(const socket &s)
+{
+	if (this != &s) {
+		nio::operator=(s);
+
+		m_sock = s.m_sock;
+		m_type = s.m_type;
+
+		if (m_local) {
+			delete m_local;
+			m_local = nullptr;
+		}
+
+		if (s.m_local)
+			m_local = DBG_NEW socket_address(*s.m_local);
+
+		if (m_peer) {
+			delete m_peer;
+			m_peer = nullptr;
+		}
+
+		if (s.m_peer)
+			m_peer = DBG_NEW socket_address(*s.m_peer);
+
+		m_skip_close = s.m_skip_close;
+
+#if defined(_WIN32)
+		m_blocking = s.m_blocking;
+		m_rcvtimeo = s.m_rcvtimeo;
+		m_sndtimeo = s.m_sndtimeo;
+#endif
+	}
+	return *this;
+}
+
 /* Move operator */
 socket &
 socket::operator=(socket &&s)
 {
 	if (this != &s) {
+		nio::operator=(std::move(s));
+
 		m_sock = s.m_sock;
 		s.m_sock = INVALID_SOCKET;
 
 		m_type = s.m_type;
 
+		if (m_local) {
+			delete m_local;
+			m_local = nullptr;
+		}
+
 		if (s.m_local) {
-			if (m_local) delete m_local;
 			m_local = s.m_local;
 			s.m_local = nullptr;
 		}
 
+		if (m_peer) {
+			delete m_peer;
+			m_peer = nullptr;
+		}
+
 		if (s.m_peer) {
-			if (m_peer) delete m_peer;
 			m_peer = s.m_peer;
 			s.m_peer = nullptr;
 		}
