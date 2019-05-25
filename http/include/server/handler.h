@@ -32,12 +32,21 @@ public:
 class read_handler : public snf::net::handler
 {
 protected:
-	std::unique_ptr<snf::net::socket>   m_sock;
-	snf::net::event                     m_event;
+	std::unique_ptr<snf::net::nio>     m_io;
+	std::unique_ptr<snf::net::socket>  m_sock;
+	snf::net::event                    m_event;
 
 public:
-	read_handler(snf::net::socket *s, snf::net::event e)
-		: m_sock(s)
+	read_handler(snf::net::nio *io, snf::net::event e)
+		: m_io(io)
+		, m_sock(nullptr)
+		, m_event(e)
+	{
+	}
+
+	read_handler(snf::net::nio *io, snf::net::socket*s, snf::net::event e)
+		: m_io(io)
+		, m_sock(s)
 		, m_event(e)
 	{
 	}

@@ -29,7 +29,7 @@ process_ssl_handshake(snf::net::socket *s)
 			server::instance().reactor().add_handler(
 				*sock,
 				snf::net::event::read,
-				DBG_NEW read_handler(sock.release(), snf::net::event::read));
+				DBG_NEW read_handler(cnxn.release(), sock.release(), snf::net::event::read));
 		} else {
 			ERROR_STRM(nullptr)
 				<< "SSL handshake failed for socket "
@@ -93,15 +93,30 @@ accept_handler::operator()(sock_t s, snf::net::event e)
 }
 
 void
-process_request(snf::net::socket *s)
+process_request(snf::net::nio *io, snf::net::socket *s)
 {
-	std::unique_ptr<snf::net::socket> sock(s);
+	std::unique_ptr<snf::net::nio> ioptr(io);
+	std::unique_ptr<snf::net::socket> sockptr(s);
 }
 
 bool
 read_handler::operator()(sock_t s, snf::net::event e)
 {
-	if (*m_sock != s) {
+	snf::net::socket *sock = nullptr;
+
+	if (m_sock)
+		sock = dynamic_cast<snf::net::socket *>(m_sock.get());
+	else
+		sock = dynamic_cast<snf::net::socket *>(m_io.get());
+
+	if (sock == nullptr) {
+		ERROR_STRM("read_handler")
+			<< "invalid socket"
+			<< snf::log::record::endl;
+		return false;
+	}
+
+	if (*sock != s) {
 		ERROR_STRM("read_handler")
 			<< "socket mismatch"
 			<< snf::log::record::endl;
@@ -113,11 +128,11 @@ read_handler::operator()(sock_t s, snf::net::event e)
 			<< "unexpected event received "
 			<< snf::net::eventstr(e)
 			<< snf::log::record::endl;
-		m_sock->close();
+		sock->close();
 		return false;
 	}
 
-	server::instance().thread_pool()->submit(process_request, m_sock.release());
+	server::instance().thread_pool()->submit(process_request, m_io.release(), m_sock.release());
 
 	// Do not register it again.
 	return false;
