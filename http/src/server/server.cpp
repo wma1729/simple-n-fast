@@ -35,7 +35,10 @@ server::setup_context()
 		m_ctx.check_private_key();
 
 		if (m_config->cafile().empty()) {
-			throw std::runtime_error("CA file not specified");
+			ERROR_STRM("server")
+				<< "CA file not specified"
+				<< snf::log::record::endl;
+			return E_not_found;
 		} else {
 			snf::net::ssl::truststore store(m_config->cafile());
 			m_ctx.use_truststore(store);
@@ -44,6 +47,8 @@ server::setup_context()
 		m_ctx.set_ciphers();
 		m_ctx.verify_peer(false);
 		m_ctx.limit_certificate_chain_depth(m_config->certificate_chain_depth());
+
+		return E_ok;
 	} catch (snf::net::ssl::exception ex) {
 		ERROR_STRM("server")
 			<< ex.what()
@@ -54,31 +59,28 @@ server::setup_context()
 				<< snf::log::record::endl;
 		return E_ssl_error;
 	}
-
-	return E_ok;
 }
 
 snf::net::socket *
 server::setup_socket(in_port_t port)
 {
-	snf::net::socket *s = DBG_NEW snf::net::socket(AF_INET, snf::net::socket_type::tcp);
-	s->keepalive(true);
-	s->tcpnodelay(true);
-	s->reuseaddr(true);
-	s->blocking(false);
-
 	try {
+		std::unique_ptr<snf::net::socket> s(
+			DBG_NEW snf::net::socket(AF_INET, snf::net::socket_type::tcp));
+		s->keepalive(true);
+		s->tcpnodelay(true);
+		s->reuseaddr(true);
+		s->blocking(false);
 		s->bind(AF_INET, port);
 		s->listen(20);
+
+		return s.release();
 	} catch (std::system_error &ex) {
 		ERROR_STRM("server", ex.code().value())
 			<< ex.what()
 			<< snf::log::record::endl;
-		delete s;
 		return nullptr;
 	}
-
-	return s;
 }
 
 int
@@ -107,7 +109,9 @@ server::start(const server_config *cfg)
 	if (r != E_ok)
 		return r;
 
-	snf::net::socket *sock = setup_socket(m_config->http_port());
+	m_thrdpool.reset(DBG_NEW snf::thread_pool(m_config->worker_thread_count()));
+
+	std::unique_ptr<snf::net::socket> sock(setup_socket(m_config->http_port()));
 	if (!sock) {
 		ERROR_STRM("server")
 			<< "failed to get socket bound to http port "
@@ -120,15 +124,19 @@ server::start(const server_config *cfg)
 			<< *sock
 			<< ", " << sock->dump_options()
 			<< snf::log::record::endl;
+
+		m_reactor.add_handler(
+				*sock, 
+				snf::net::event::read,
+				DBG_NEW accept_handler(sock.release(), snf::net::event::read));
 	}
 
-	snf::net::socket *sec_sock = setup_socket(m_config->https_port());
+	std::unique_ptr<snf::net::socket> sec_sock(setup_socket(m_config->https_port()));
 	if (!sec_sock) {
 		ERROR_STRM("server")
 			<< "failed to get socket bound to https port "
 			<< m_config->https_port()
 			<< snf::log::record::endl;
-		delete sock;
 		return E_bind_failed;
 	} else {
 		INFO_STRM("server")
@@ -136,19 +144,12 @@ server::start(const server_config *cfg)
 			<< *sec_sock
 			<< ", " << sec_sock->dump_options()
 			<< snf::log::record::endl;
+
+		m_reactor.add_handler(
+				*sec_sock,
+				snf::net::event::read,
+				DBG_NEW accept_handler(sec_sock.release(), snf::net::event::read, true));
 	}
-
-	m_thrdpool.reset(DBG_NEW snf::thread_pool(m_config->worker_thread_count()));
-
-	m_reactor.add_handler(
-			*sock, 
-			snf::net::event::read,
-			DBG_NEW accept_handler(sock, snf::net::event::read));
-
-	m_reactor.add_handler(
-			*sec_sock,
-			snf::net::event::read,
-			DBG_NEW accept_handler(sec_sock, snf::net::event::read, true));
 
 	m_started = true;
 

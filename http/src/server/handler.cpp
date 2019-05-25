@@ -64,7 +64,6 @@ accept_handler::operator()(sock_t s, snf::net::event e)
 			<< "unexpected event received "
 			<< snf::net::eventstr(e)
 			<< snf::log::record::endl;
-		m_sock->close();
 		return false;
 	}
 
