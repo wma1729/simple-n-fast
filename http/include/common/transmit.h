@@ -8,6 +8,9 @@
 namespace snf {
 namespace http {
 
+/*
+ * Transmits HTTP request/response message.
+ */
 class transmitter
 {
 private:

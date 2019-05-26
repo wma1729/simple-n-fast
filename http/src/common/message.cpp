@@ -10,6 +10,7 @@ message::validate()
 
 	size_t body_length = 0;
 	bool body_chunked = false;
+
 	if (m_body) {
 		body_length = m_body->length();
 		body_chunked = m_body->chunked();

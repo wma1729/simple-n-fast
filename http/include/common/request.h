@@ -61,7 +61,10 @@ public:
 	}
 
 	method_type get_method() const { return m_type; }
+	void set_method(method_type type) { m_type = type; }
+
 	const uri & get_uri() const { return m_uri; }
+	void set_uri(const uri &u) { m_uri = u; }
 };
 
 class request_builder

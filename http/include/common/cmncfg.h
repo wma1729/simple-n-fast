@@ -8,6 +8,9 @@
 namespace snf {
 namespace http {
 
+/*
+ * Common HTTP configuration.
+ */
 class common_config
 {
 private:

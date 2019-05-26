@@ -4,6 +4,17 @@
 namespace snf {
 namespace http {
 
+/*
+ * Sends the HTTP message data.
+ *
+ * @param [in] data      - data to send.
+ * @param [in] datalen   - length of the data to be sent.
+ * @param [in] exceptstr - exception message in case of error.
+ *
+ * @throws std::system_error in case of write error.
+ *
+ * @return E_ok on success, -ve error code on failure.
+ */
 int
 transmitter::send_data(const void *data, size_t datalen, const std::string &exceptstr)
 {
@@ -25,6 +36,15 @@ transmitter::send_data(const void *data, size_t datalen, const std::string &exce
 	return retval;
 }
 
+/*
+ * Sends HTTP message body.
+ *
+ * @param [in] body - message body.
+ *
+ * @throws std::system_error in case of write errors.
+ *
+ * @return E_ok on success, -ve error code in case of failure.
+ */
 int
 transmitter::send_body(body *body)
 {
@@ -75,6 +95,17 @@ transmitter::send_body(body *body)
 	return retval;
 }
 
+/*
+ * Receives a line of HTTP message.
+ *
+ * @param [out] line      - message line.
+ * @param [in]  exceptstr - exception message in case of error.
+ *
+ * @throws std::runtime_error in case of read error.
+ *         snf::http::exception in case of invalid message line.
+ *
+ * @return E_ok on success, -ve error code in case of failure.
+ */
 int
 transmitter::recv_line(std::string &line, const std::string &exceptstr)
 {
@@ -100,6 +131,15 @@ transmitter::recv_line(std::string &line, const std::string &exceptstr)
 	return retval;
 }
 
+/*
+ * Sends HTTP request.
+ *
+ * @param [in] req - HTTP request.
+ *
+ * @throws std::system_error in case of write errors.
+ *
+ * @return E_ok on success, -ve error code in case of failure.
+ */
 int
 transmitter::send_request(const request &req)
 {
@@ -130,6 +170,14 @@ transmitter::send_request(const request &req)
 	return retval;
 }
 
+/*
+ * Receives HTTP request.
+ *
+ * @throws std::runtime_error in case of read error.
+ *         snf::http::exception in case of invalid message line.
+ *
+ * @return E_ok on success, -ve error code in case of failure.
+ */
 request
 transmitter::recv_request()
 {
@@ -149,7 +197,7 @@ transmitter::recv_request()
 	}
 
 	request_builder req_bldr;
-	request req = req_bldr.request_line(req_line).with_headers(hdrs).build();
+	request req = std::move(req_bldr.request_line(req_line).with_headers(hdrs).build());
 
 	body *b = nullptr;
 
@@ -164,6 +212,15 @@ transmitter::recv_request()
 	return req;
 }
 
+/*
+ * Sends HTTP responde.
+ *
+ * @param [in] resp - HTTP response.
+ *
+ * @throws std::system_error in case of write errors.
+ *
+ * @return E_ok on success, -ve error code in case of failure.
+ */
 int
 transmitter::send_response(const response &resp)
 {
@@ -185,6 +242,14 @@ transmitter::send_response(const response &resp)
 	return retval;
 }
 
+/*
+ * Receives HTTP response.
+ *
+ * @throws std::runtime_error in case of read error.
+ *         snf::http::exception in case of invalid message line.
+ *
+ * @return E_ok on success, -ve error code in case of failure.
+ */
 response
 transmitter::recv_response()
 {
@@ -204,7 +269,7 @@ transmitter::recv_response()
 	}
 
 	response_builder resp_bldr;
-	response resp = resp_bldr.response_line(resp_line).with_headers(hdrs).build();
+	response resp = std::move(resp_bldr.response_line(resp_line).with_headers(hdrs).build());
 
 	body *b = nullptr;
 

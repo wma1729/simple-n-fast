@@ -59,8 +59,11 @@ public:
 		return *this;
 	}
 
-	const status_code & get_status() const { return m_status; }
+	status_code get_status() const { return m_status; }
+	void set_status(status_code s) { m_status = s; }
+
 	const std::string &get_reason() const { return m_reason; }
+	void set_reason(const std::string &r) { m_reason = r; }
 };
 
 class response_builder

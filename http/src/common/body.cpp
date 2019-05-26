@@ -12,6 +12,9 @@
 namespace snf {
 namespace http {
 
+/*
+ * Get the HTTP body from the specified buffer.
+ */
 class body_from_buffer : public body
 {
 private:
@@ -21,7 +24,7 @@ private:
 	char    *m_end = nullptr;
 
 public:
-	body_from_buffer(void *buf, size_t buflen)
+	body_from_buffer(const void *buf, size_t buflen)
 		: m_buflen(buflen)
 	{
 		m_buf = DBG_NEW char[m_buflen];
@@ -54,6 +57,9 @@ public:
 	}
 };
 
+/*
+ * Get the HTTP body from the specified string.
+ */
 class body_from_string : public body
 {
 private:
@@ -97,6 +103,11 @@ public:
 	}
 };
 
+/*
+ * Get the HTTP body from the specified file.
+ * Some of the operations can throw std::system_error
+ * exception.
+ */
 class body_from_file : public body
 {
 private:
@@ -107,7 +118,7 @@ private:
 	char                m_buf[body::BUFSIZE];
 
 public:
-	body_from_file(const std::string filename)
+	body_from_file(const std::string &filename)
 		: m_filename(filename)
 		, m_read(0)
 	{
@@ -163,6 +174,12 @@ public:
 	}
 };
 
+/*
+ * Get the HTTP body from the specified functor.
+ * Some of the operations can throw std::runtime_error
+ * exception or any exception that the functor could
+ * throw.
+ */
 class body_from_functor : public body
 {
 private:
@@ -212,6 +229,11 @@ public:
 	}
 };
 
+/*
+ * Get the HTTP body from the specified file.
+ * Some of the operations can throw std::system_error
+ * exception.
+ */
 class body_from_socket : public body
 {
 private:
@@ -259,6 +281,11 @@ public:
 	}
 };
 
+/*
+ * Get the HTTP body from the specified file.
+ * Some of the operations can throw std::system_error
+ * or snf::http::exception exception.
+ */
 class body_from_socket_chunked : public body
 {
 private:
