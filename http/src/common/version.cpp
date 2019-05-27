@@ -1,6 +1,6 @@
 #include "version.h"
+#include "status.h"
 #include <cctype>
-#include <stdexcept>
 #include <ostream>
 #include <sstream>
 
@@ -15,7 +15,7 @@ constexpr size_t HTTP_VERSION_LENGTH = 8;
  *
  * @param [in] vstr - version string.
  *
- * @throws std::invalid_argument exception if the
+ * @throws snf::http::bad_message exception if the
  * version string is not rightly formatted.
  */
 version::version(const std::string &vstr)
@@ -24,21 +24,21 @@ version::version(const std::string &vstr)
 	oss << "invalid HTTP version (" << vstr << ")";
 
 	if (vstr.size() < HTTP_VERSION_LENGTH)
-		throw std::invalid_argument(oss.str());
+		throw bad_message(oss.str());
 
 	if (vstr.compare(0, 4, "HTTP/") != 0)
-		throw std::invalid_argument(oss.str());
+		throw bad_message(oss.str());
 
 	if (!std::isdigit(vstr[5]))
-		throw std::invalid_argument(oss.str());
+		throw bad_message(oss.str());
 	else
 		m_major = static_cast<int>(vstr[5] - '0');
 
 	if (vstr[6] != '.')
-		throw std::invalid_argument(oss.str());
+		throw bad_message(oss.str());
 
 	if (!std::isdigit(vstr[7]))
-		throw std::invalid_argument(oss.str());
+		throw bad_message(oss.str());
 	else
 		m_minor = static_cast<int>(vstr[7] - '0');
 }

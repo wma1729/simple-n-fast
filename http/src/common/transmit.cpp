@@ -101,7 +101,7 @@ transmitter::send_body(body *body)
  * @param [out] line      - message line.
  * @param [in]  exceptstr - exception message in case of error.
  *
- * @throws std::runtime_error in case of read error.
+ * @throws std::system_error in case of read error.
  *         snf::http::exception in case of invalid message line.
  *
  * @return E_ok on success, -ve error code in case of failure.
@@ -121,9 +121,7 @@ transmitter::recv_line(std::string &line, const std::string &exceptstr)
 
 	size_t len = line.size();
 	if ((len < 2) || (line[len - 1] != '\n') || (line[len - 2] != '\r'))
-		throw exception(
-			"invalid request line/header",
-			status_code::BAD_REQUEST);
+		throw bad_message("invalid request line/header");
 
 	line.pop_back();
 	line.pop_back();
@@ -173,7 +171,7 @@ transmitter::send_request(const request &req)
 /*
  * Receives HTTP request.
  *
- * @throws std::runtime_error in case of read error.
+ * @throws std::system_error in case of read error.
  *         snf::http::exception in case of invalid message line.
  *
  * @return E_ok on success, -ve error code in case of failure.
@@ -245,7 +243,7 @@ transmitter::send_response(const response &resp)
 /*
  * Receives HTTP response.
  *
- * @throws std::runtime_error in case of read error.
+ * @throws std::system_error in case of read error.
  *         snf::http::exception in case of invalid message line.
  *
  * @return E_ok on success, -ve error code in case of failure.

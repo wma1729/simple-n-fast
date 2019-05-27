@@ -66,6 +66,28 @@ operator<< (std::ostream &os, status_code s)
 }
 
 /*
+ * Bad HTTP message: request or response.
+ */
+class bad_message : public std::runtime_error
+{
+public:
+	bad_message(const std::string &msg) : std::runtime_error(msg) { }
+	bad_message(const char *msg) : std::runtime_error(msg) { }
+	virtual ~bad_message() { }
+};
+
+/*
+ * HTTP feature not implemented.
+ */
+class not_implemented : public std::runtime_error
+{
+public:
+	not_implemented(const std::string &msg) : std::runtime_error(msg) { }
+	not_implemented(const char *msg) : std::runtime_error(msg) { }
+	virtual ~not_implemented() { }
+};
+
+/*
  * HTTP exception.
  * Encapsulates the error string and the
  * HTTP status code.

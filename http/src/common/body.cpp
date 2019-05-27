@@ -1,7 +1,6 @@
 #include "body.h"
 #include <string>
 #include <algorithm>
-#include <stdexcept>
 #include <ostream>
 #include <sstream>
 #include "file.h"
@@ -336,21 +335,17 @@ public:
 		}
 
 		if (hex.empty())
-			throw exception("no chunk size", status_code::BAD_REQUEST);
+			throw bad_message("no chunk size");
 
 		if (('\r' != c) || ('\n' != getc()))
-			throw exception(
-				"chunk size line not terminated properly",
-				status_code::BAD_REQUEST);
+			throw bad_message("chunk size line not terminated properly");
 
 		m_chunk_size = std::stoll(hex, 0, 16);
 		m_chunk_offset = 0;
 
 		if (m_chunk_size == 0) {
 			if (('\r' != getc()) || ('\n' != getc()))
-				throw exception(
-					"message body not terminated properly",
-					status_code::BAD_REQUEST);
+				throw bad_message("message body not terminated properly");
 		}
 
 		return (m_chunk_offset < m_chunk_size);
@@ -382,9 +377,7 @@ public:
 
 		if (m_chunk_offset >= m_chunk_size)
 			if (('\r' != getc()) || ('\n' != getc()))
-				throw exception(
-					"chunk data not terminated properly",
-					status_code::BAD_REQUEST);
+				throw bad_message("chunk data not terminated properly");
 
 		return ptr;
 	}

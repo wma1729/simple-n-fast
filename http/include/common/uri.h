@@ -87,6 +87,17 @@ uri_percent_encoded(const std::string &str, size_t index)
 		std::isxdigit(str[index + 2]));
 }
 
+/*
+ * Bad URI.
+ */
+class bad_uri : public std::runtime_error
+{
+public:
+	bad_uri(const std::string &msg) : std::runtime_error(msg) { }
+	bad_uri(const char *msg) : std::runtime_error(msg) { }
+	virtual ~bad_uri() { }
+};
+
 class uri_component
 {
 protected:

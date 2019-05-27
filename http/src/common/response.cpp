@@ -25,16 +25,16 @@ response_builder::response_line(const std::string &istr)
 	}
 
 	if (vstr.empty())
-		throw std::runtime_error("empty version");
+		throw bad_message("empty version");
 
 	if (i >= len) {
 		oss << "no status code after version (" << vstr << ")";
-		throw std::runtime_error(oss.str());
+		throw bad_message(oss.str());
 	}
 
 	if (istr[i] != ' ') {
 		oss << "no space after version (" << vstr << ")";
-		throw std::runtime_error(oss.str());
+		throw bad_message(oss.str());
 	}
 
 	for (i = i + 1; i < len; ++i) {
@@ -42,28 +42,28 @@ response_builder::response_line(const std::string &istr)
 			break;
 		if (!std::isdigit(istr[i])) {
 			oss << "unexpected character (" << istr[i] << ") in status code";
-			throw std::runtime_error("empty status code");
+			throw bad_message("empty status code");
 		}
 
 		sstr.push_back(istr[i]);
 	}
 
 	if (sstr.empty())
-		throw std::runtime_error("empty status code");
+		throw bad_message("empty status code");
 
 	if (i >= len) {
 		oss << "no reason phrase after " << vstr << " " << sstr;
-		throw std::runtime_error(oss.str());
+		throw bad_message(oss.str());
 	}
 
 	if (istr[i] != ' ') {
 		oss << "no space after " << vstr << " " << sstr;
-		throw std::runtime_error(oss.str());
+		throw bad_message(oss.str());
 	}
 
 	if (sstr.size() != 3) {
 		oss << "invalid status code (" << sstr << ")";
-		throw std::runtime_error(oss.str());
+		throw bad_message(oss.str());
 	}
 
 	for (i = i + 1; i < len; ++i) {
@@ -74,10 +74,10 @@ response_builder::response_line(const std::string &istr)
 	}
 
 	if (rstr.empty())
-		throw std::runtime_error("empty reason phrase");
+		throw bad_message("empty reason phrase");
 
 	if (i != len)
-		throw std::runtime_error("unexpected character found in reason phrase");
+		throw bad_message("unexpected character found in reason phrase");
 
 	m_response.m_version = snf::http::version(vstr);
 	m_response.m_status = static_cast<status_code>(std::stoi(sstr));

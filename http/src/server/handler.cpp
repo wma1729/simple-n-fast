@@ -1,6 +1,9 @@
 #include "handler.h"
 #include "server.h"
 #include "logmgr.h"
+#include "uri.h"
+#include "transmit.h"
+#include "status.h"
 #include <ostream>
 #include <sstream>
 #include <thread>
@@ -96,6 +99,16 @@ process_request(snf::net::nio *io, snf::net::socket *s)
 {
 	std::unique_ptr<snf::net::nio> ioptr(io);
 	std::unique_ptr<snf::net::socket> sockptr(s);
+
+	transmitter xfer(ioptr.get());
+	try {
+		request req = std::move(xfer.recv_request());
+	} catch (bad_message &ex) {
+	} catch (bad_uri &ex) {
+	} catch (not_implemented &ex) {
+	} catch (std::system_error &ex) {
+	} catch (std::runtime_error &ex) {
+	}
 }
 
 bool

@@ -1,4 +1,5 @@
 #include "message.h"
+#include "status.h"
 
 namespace snf {
 namespace http {
@@ -70,7 +71,7 @@ message::validate()
 	}
 
 	if (error) {
-		throw std::runtime_error(oss.str());
+		throw bad_message(oss.str());
 	}
 }
 

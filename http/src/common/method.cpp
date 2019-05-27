@@ -1,5 +1,5 @@
 #include "method.h"
-#include <stdexcept>
+#include "status.h"
 #include <ostream>
 #include <sstream>
 
@@ -13,7 +13,7 @@ namespace http {
  *
  * @return method type.
  *
- * @throws std::invalid_argument if the method name is invalid.
+ * @throws snf::http::bad_message if the method name is invalid.
  */
 method_type
 method(const std::string &str)
@@ -37,7 +37,7 @@ method(const std::string &str)
 
 	std::ostringstream oss;
 	oss << "invalid HTTP method (" << str << ")";
-	throw std::invalid_argument(oss.str());
+	throw bad_message(oss.str());
 }
 
 /*

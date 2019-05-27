@@ -64,7 +64,7 @@ uri_component::decode(const std::string &istr) const
 			ostr.push_back(c);
 			i += 2;
 		} else {
-			throw std::runtime_error("invalid component: " + istr);
+			throw bad_uri("invalid component: " + istr);
 		}
 	}
 
@@ -101,13 +101,13 @@ uri_scheme::is_valid(const std::string &scheme) const
  *
  * @param [in] scheme - scheme name.
  *
- * @throws std::runtime_error if the scheme name is invalid.
+ * @throws snf::http::bad_uri if the scheme name is invalid.
  */
 void
 uri_scheme::set(const std::string &scheme)
 {
 	if (!is_valid(scheme))
-		throw std::runtime_error("invalid scheme: " + scheme);
+		throw bad_uri("invalid scheme: " + scheme);
 
 	m_component = scheme;
 }
@@ -195,7 +195,7 @@ uri_userinfo::decode(const std::string &istr) const
 			ostr.push_back(c);
 			i += 2;
 		} else {
-			throw std::runtime_error("invalid userinfo: " + istr);
+			throw bad_uri("invalid userinfo: " + istr);
 		}
 	}
 
@@ -314,7 +314,7 @@ uri_host::decode(const std::string &istr) const
 			ostr.push_back(c);
 			i += 2;
 		} else {
-			throw std::runtime_error("invalid host: " + istr);
+			throw bad_uri("invalid host: " + istr);
 		}
 	}
 
@@ -354,13 +354,13 @@ uri_port::is_valid(const std::string &port) const
  *
  * @param [in] port - port string.
  *
- * @throws std::runtime_error if the port is invalid.
+ * @throws snf::http::bad_uri if the port is invalid.
  */
 void
 uri_port::set(const std::string &port)
 {
 	if (!is_valid(port))
-		throw std::runtime_error("invalid port: " + port);
+		throw bad_uri("invalid port: " + port);
 
 	m_component = port;
 }
@@ -459,7 +459,7 @@ uri_path::decode(const std::string &istr) const
 			ostr.push_back(c);
 			i += 2;
 		} else {
-			throw std::runtime_error("invalid path: " + istr);
+			throw bad_uri("invalid path: " + istr);
 		}
 	}
 
@@ -509,7 +509,7 @@ uri_path::segments_to_path(
  *
  * @param [in] path - URL path.
  *
- * @throws std::runtime_error if the path is invalid.
+ * @throws snf::http::bad_uri if the path is invalid.
  */
 void
 uri_path::set(const std::string &path)
@@ -675,7 +675,7 @@ uri_fragment::is_valid(const std::string &frag) const
  *
  * @return end index in the URL string where the next component begins.
  *
- * @throws std::runtime_error in case of error.
+ * @throws snf::http::bad_uri in case of error.
  */
 size_t
 uri::parse_scheme(const std::string &str, size_t si)
@@ -689,7 +689,7 @@ uri::parse_scheme(const std::string &str, size_t si)
 	if (str[ei] != ':') {
 		std::ostringstream oss;
 		oss << "invalid scheme at index " << si;
-		throw std::runtime_error(oss.str());
+		throw bad_uri(oss.str());
 	}
 
 	set_scheme(str.substr(si, (ei - si)));
@@ -705,7 +705,7 @@ uri::parse_scheme(const std::string &str, size_t si)
  *
  * @return end index in the URL string where the next component begins.
  *
- * @throws std::runtime_error in case of error.
+ * @throws snf::http::bad_uri in case of error.
  */
 size_t
 uri::parse_authority(const std::string &str, size_t si)
@@ -713,7 +713,7 @@ uri::parse_authority(const std::string &str, size_t si)
 	if ((str[si] != '/') || (str[si + 1] != '/')) {
 		std::ostringstream oss;
 		oss << "invalid authority at index " << si;
-		throw std::runtime_error(oss.str());
+		throw bad_uri(oss.str());
 	}
 
 	si += 2;
@@ -731,7 +731,7 @@ uri::parse_authority(const std::string &str, size_t si)
 		std::string userinfo = auth.substr(0, i);
 
 		if (!m_userinfo.is_valid(userinfo))
-			throw std::runtime_error("invalid userinfo: " + userinfo);
+			throw bad_uri("invalid userinfo: " + userinfo);
 
 		set_userinfo(userinfo);
 		++i;
@@ -752,7 +752,7 @@ uri::parse_authority(const std::string &str, size_t si)
 		if (auth[i] != ']') {
 			std::ostringstream oss;
 			oss << "invalid host at index " << i;
-			throw std::runtime_error(oss.str());
+			throw bad_uri(oss.str());
 		} else {
 			++i;
 		}
@@ -769,7 +769,7 @@ uri::parse_authority(const std::string &str, size_t si)
 	}
 
 	if (!m_host.is_valid(host))
-		throw std::runtime_error("invalid host: " + host);
+		throw bad_uri("invalid host: " + host);
 
 	set_host(host);
 
@@ -788,7 +788,7 @@ uri::parse_authority(const std::string &str, size_t si)
  *
  * @return end index in the URL string where the next component begins.
  *
- * @throws std::runtime_error in case of error.
+ * @throws snf::http::bad_uri in case of error.
  */
 size_t
 uri::parse_path(const std::string &str, size_t si)
@@ -802,7 +802,7 @@ uri::parse_path(const std::string &str, size_t si)
 	std::string path = str.substr(si, (ei - si));
 
 	if (!m_path.is_valid(path))
-		throw std::runtime_error("invalid path 2: " + path);
+		throw bad_uri("invalid path 2: " + path);
 
 	m_path.set(path);
 	return ei;
@@ -817,7 +817,7 @@ uri::parse_path(const std::string &str, size_t si)
  *
  * @return end index in the URL string where the next component begins.
  *
- * @throws std::runtime_error in case of error.
+ * @throws snf::http::bad_uri in case of error.
  */
 size_t
 uri::parse_query(const std::string &str, size_t si)
@@ -825,7 +825,7 @@ uri::parse_query(const std::string &str, size_t si)
 	if (str[si] != '?') {
 		std::ostringstream oss;
 		oss << "invalid query at index " << si;
-		throw std::runtime_error(oss.str());
+		throw bad_uri(oss.str());
 	}
 
 	si++;
@@ -838,7 +838,7 @@ uri::parse_query(const std::string &str, size_t si)
 
 	std::string query = str.substr(si, (ei - si));
 	if (!m_query.is_valid(query))
-		throw std::runtime_error("invalid query: " + query);
+		throw bad_uri("invalid query: " + query);
 
 	set_query(query);
 	return ei;
@@ -852,7 +852,7 @@ uri::parse_query(const std::string &str, size_t si)
  *
  * @return end index in the URL string where the next component begins.
  *
- * @throws std::runtime_error in case of error.
+ * @throws snf::http::bad_uri in case of error.
  */
 size_t
 uri::parse_fragment(const std::string &str, size_t si)
@@ -860,14 +860,14 @@ uri::parse_fragment(const std::string &str, size_t si)
 	if (str[si] != '#') {
 		std::ostringstream oss;
 		oss << "invalid fragment at index " << si;
-		throw std::runtime_error(oss.str());
+		throw bad_uri(oss.str());
 	}
 
 	si++;
 
 	std::string fragment = str.substr(si);
 	if (!m_fragment.is_valid(fragment))
-		throw std::runtime_error("invalid fragment: " + fragment);
+		throw bad_uri("invalid fragment: " + fragment);
 
 	set_fragment(fragment);
 	return str.size();
@@ -884,7 +884,7 @@ uri::parse_fragment(const std::string &str, size_t si)
  *
  * Each of these components are parsed independently then.
  *
- * @throws std::runtime_error in case of error.
+ * @throws snf::http::bad_uri in case of error.
  */
 void
 uri::parse(const std::string &str)

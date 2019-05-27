@@ -53,16 +53,16 @@ headers::add(const std::string &istr)
 	}
 
 	if (name.empty())
-		throw exception("no header field name", status_code::BAD_REQUEST);
+		throw bad_message("no header field name");
 
 	if (i >= len) {
 		oss << "no header field value for field name (" << name << ")";
-		throw exception(oss.str(), status_code::BAD_REQUEST);
+		throw bad_message(oss.str());
 	}
 
 	if (istr[i] != ':') {
 		oss << "header field name (" << name << ") does not terminate with :";
-		throw exception(oss.str(), status_code::BAD_REQUEST);
+		throw bad_message(oss.str());
 	}
 
 	for (i = i + 1; i < len; ++i)
@@ -108,7 +108,7 @@ headers::add(const std::string &istr)
 
 	if (i != len) {
 		oss << "invalid header field value for (" << name << ")";
-		throw exception(oss.str(), status_code::BAD_REQUEST);
+		throw bad_message(oss.str());
 	}
 
 	add(name, snf::trim(value));
@@ -193,7 +193,7 @@ headers::transfer_encoding(const std::string &coding)
 	if (snf::streq(coding, TRANSFER_ENCODING_CHUNKED, true))
 		update(TRANSFER_ENCODING, TRANSFER_ENCODING_CHUNKED);
 	else
-		throw std::runtime_error("only chunked transfer encoding is supported");
+		throw not_implemented("only chunked transfer encoding is supported");
 }
 
 bool
@@ -204,8 +204,7 @@ headers::is_message_chunked() const
 		if (snf::streq(s, TRANSFER_ENCODING_CHUNKED, true))
 			return true;
 
-		throw exception("only chunked transfer encoding is supported",
-			status_code::NOT_IMPLEMENTED);
+		throw not_implemented("only chunked transfer encoding is supported");
 	} catch (std::out_of_range &) {
 		return false;
 	}
@@ -225,7 +224,7 @@ headers::te(const std::string &coding)
 	if (snf::streq(coding, "trailers", true))
 		update(TE, "trailers");
 	else
-		throw std::runtime_error("only trailers transfer encoding is accepted");
+		throw not_implemented("only trailers transfer encoding is accepted");
 }
 
 bool
@@ -236,8 +235,7 @@ headers::is_trailer_included() const
 		if (snf::streq(s, "trailers", true))
 			return true;
 
-		throw exception("only trailers transfer encoding is accepted",
-			status_code::NOT_IMPLEMENTED);
+		throw not_implemented("only trailers transfer encoding is accepted");
 	} catch (std::out_of_range &) {
 		return false;
 	}
