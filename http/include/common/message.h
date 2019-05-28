@@ -20,24 +20,61 @@ protected:
 	headers                 m_headers;
 	std::shared_ptr<body>   m_body;
 
+	void validate_length_chunkiness();
+	void validate();
+
 public:
 	message() {}
 
-	message(const version &ver, const headers &hdrs, const std::shared_ptr<body> &body)
+	message(const version &ver, const headers &hdrs, const std::shared_ptr<body> &b)
 		: m_version(ver)
 		, m_headers(hdrs)
-		, m_body(body)
+		, m_body(b)
 	{
 	}
 
-	message(const version &ver, headers &&hdrs, std::shared_ptr<body> &&body)
+	message(const version &ver, headers &&hdrs, std::shared_ptr<body> &&b)
 		: m_version(ver)
 		, m_headers(std::move(hdrs))
-		, m_body(std::move(body))
+		, m_body(b)
+	{
+	}
+
+	message(const message &msg)
+		: m_version(msg.m_version)
+		, m_headers(msg.m_headers)
+		, m_body(msg.m_body)
+	{
+	}
+
+	message(message &&msg)
+		: m_version(msg.m_version)
+		, m_headers(std::move(msg.m_headers))
+		, m_body(std::move(msg.m_body))
 	{
 	}
 
 	virtual ~message() {}
+
+	const message &operator=(const message &msg)
+	{
+		if (this != &msg) {
+			m_version = msg.m_version;
+			m_headers = msg.m_headers;
+			m_body = msg.m_body;
+		}
+		return *this;
+	}
+
+	message &operator=(message &&msg)
+	{
+		if (this != &msg) {
+			m_version = msg.m_version;
+			m_headers = std::move(msg.m_headers);
+			m_body = std::move(msg.m_body);
+		}
+		return *this;
+	}
 
 	const version & get_version() const { return m_version; }
 	void set_version(const version &v) { m_version = v; }
@@ -51,8 +88,6 @@ public:
 
 	body *get_body() const { return m_body.get(); }
 	void set_body(body *b) { m_body.reset(b); }
-
-	void validate();
 };
 
 } // namespace http

@@ -11,6 +11,9 @@ namespace http {
 
 class request_builder;
 
+/*
+ * HTTP request.
+ */
 class request : public message
 {
 	friend class request_builder;
@@ -39,9 +42,7 @@ public:
 	const request & operator=(const request &req)
 	{
 		if (this != &req) {
-			m_version = req.m_version;
-			m_headers = req.m_headers;
-			m_body = req.m_body;
+			message::operator=(req);
 			m_type = req.m_type;
 			m_uri = req.m_uri;
 		}
@@ -51,9 +52,7 @@ public:
 	request & operator=(request &&req)
 	{
 		if (this != &req) {
-			m_version = req.m_version;
-			m_headers = std::move(req.m_headers);
-			m_body = std::move(req.m_body);
+			message::operator=(std::move(req));
 			m_type = req.m_type;
 			m_uri = std::move(req.m_uri);
 		}
@@ -67,6 +66,9 @@ public:
 	void set_uri(const uri &u) { m_uri = u; }
 };
 
+/*
+ * HTTP request builder.
+ */
 class request_builder
 {
 private:
@@ -120,13 +122,21 @@ public:
 
 	request_builder & request_line(const std::string &);
 
-	request_builder & with_headers(const headers &);
-
-	request_builder & with_headers(headers &&);
-
-	request_builder & with_body(std::unique_ptr<body> b)
+	request_builder & with_headers(const headers &hdrs)
 	{
-		m_request.m_body = std::move(b);
+		m_request.m_headers = hdrs;
+		return *this;
+	}
+
+	request_builder & with_headers(headers &&hdrs)
+	{
+		m_request.m_headers = std::move(hdrs);
+		return *this;
+	}
+
+	request_builder & with_body(body *b)
+	{
+		m_request.m_body.reset(b);
 		return *this;
 	}
 

@@ -1,10 +1,19 @@
 #include "request.h"
-#include "status.h"
 #include "charset.h"
+#include "status.h"
 
 namespace snf {
 namespace http {
 
+/*
+ * Builds the request from the request line. The request
+ * line has the following format: <method> <uri> <version>
+ *
+ * @param [in] str - the request line.
+ *
+ * @throws snf::http::bad_message if the request line could
+ *         not be parsed.
+ */
 request_builder &
 request_builder::request_line(const std::string &istr)
 {
@@ -47,12 +56,14 @@ request_builder::request_line(const std::string &istr)
 		throw bad_message("empty URI");
 
 	if (i >= len) {
-		oss << "no version after " << mstr << " " << ustr;
+		oss << "no version after method/URI ("
+			<< mstr << " " << ustr << ")";
 		throw bad_message(oss.str());
 	}
 
 	if (istr[i] != ' ') {
-		oss << "no space after " << mstr << " " << ustr;
+		oss << "no space after method/URI ("
+			<< mstr << " " << ustr << ")";
 		throw bad_message(oss.str());
 	}
 
@@ -66,7 +77,8 @@ request_builder::request_line(const std::string &istr)
 		throw bad_message("empty version");
 
 	if (is_whitespace(istr[i])) {
-		oss << "unexpected space found after " << mstr << " " << ustr << " " << vstr;
+		oss << "unexpected space found after method/URI/version ("
+			<< mstr << " " << ustr << " " << vstr << ")";
 		throw bad_message(oss.str());
 	}
 
@@ -74,20 +86,6 @@ request_builder::request_line(const std::string &istr)
 	m_request.m_uri = std::move(snf::http::uri(vstr));
 	m_request.m_version = snf::http::version(vstr);
 
-	return *this;
-}
-
-request_builder &
-request_builder::with_headers(const headers &hdrs)
-{
-	m_request.m_headers = hdrs;
-	return *this;
-}
-
-request_builder &
-request_builder::with_headers(headers &&hdrs)
-{
-	m_request.m_headers = std::move(hdrs);
 	return *this;
 }
 

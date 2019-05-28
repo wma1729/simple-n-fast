@@ -4,8 +4,18 @@
 namespace snf {
 namespace http {
 
+/*
+ * Validates if
+ * - Content-Length is appropriately set if the message is
+ *   not chunked.
+ * - Transfer-Encoding is set correctly to chunked if the
+ *   message is chunked.
+ *
+ * @throws snf::http::bad_message if the Content-Length/
+ *         Transfer-Encoding is not set correctly.
+ */
 void
-message::validate()
+message::validate_length_chunkiness()
 {
 	bool trust_body = false;
 
@@ -73,6 +83,20 @@ message::validate()
 	if (error) {
 		throw bad_message(oss.str());
 	}
+}
+
+/*
+ * Validates if the message is formulated correctly.
+ * Things validated:
+ * 1) Content-Length and/or Transfer-Encoding set appropriately.
+ * 2) ...
+ *
+ * @throws snf::http::bad_message if the message is malformed.
+ */
+void
+message::validate()
+{
+	validate_length_chunkiness();
 }
 
 } // namespace http

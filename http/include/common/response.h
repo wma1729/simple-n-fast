@@ -38,11 +38,9 @@ public:
 	const response & operator=(const response &resp)
 	{
 		if (this != &resp) {
-			m_version = resp.m_version;
+			message::operator=(resp);
 			m_status = resp.m_status;
-			m_body = resp.m_body;
 			m_reason = resp.m_reason;
-			m_headers = resp.m_headers;
 		}
 		return *this;
 	}
@@ -50,11 +48,9 @@ public:
 	response & operator=(response &&resp)
 	{
 		if (this != &resp) {
-			m_version = resp.m_version;
+			 message::operator=(std::move(resp));
 			m_status = resp.m_status;
-			m_body = std::move(resp.m_body);
 			m_reason = std::move(resp.m_reason);
-			m_headers = std::move(resp.m_headers);
 		}
 		return *this;
 	}
@@ -107,13 +103,21 @@ public:
 
 	response_builder & response_line(const std::string &);
 
-	response_builder & with_headers(const headers &);
-
-	response_builder & with_headers(headers &&);
-
-	response_builder & with_body(std::unique_ptr<body> b)
+	response_builder & with_headers(const headers &hdrs)
 	{
-		m_response.m_body = std::move(b);
+		m_response.m_headers = hdrs;
+		return *this;
+	}
+
+	response_builder & with_headers(headers &&hdrs)
+	{
+		m_response.m_headers = std::move(hdrs);
+		return *this;
+	}
+
+	response_builder & with_body(body *b)
+	{
+		m_response.m_body.reset(b);
 		return *this;
 	}
 

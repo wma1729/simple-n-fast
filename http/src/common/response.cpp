@@ -5,6 +5,15 @@
 namespace snf {
 namespace http {
 
+/*
+ * Builds the response from the response/status line. The
+ * response line has the following format: <version> <status> <reason>
+ *
+ * @param [in] str - the response line.
+ *
+ * @throws snf::http::bad_message if the response line could
+ *         not be parsed.
+ */
 response_builder &
 response_builder::response_line(const std::string &istr)
 {
@@ -52,12 +61,14 @@ response_builder::response_line(const std::string &istr)
 		throw bad_message("empty status code");
 
 	if (i >= len) {
-		oss << "no reason phrase after " << vstr << " " << sstr;
+		oss << "no reason phrase after version/status ("
+			<< vstr << " " << sstr << ")";
 		throw bad_message(oss.str());
 	}
 
 	if (istr[i] != ' ') {
-		oss << "no space after " << vstr << " " << sstr;
+		oss << "no space after version/status ("
+			<< vstr << " " << sstr << ")";
 		throw bad_message(oss.str());
 	}
 
@@ -83,20 +94,6 @@ response_builder::response_line(const std::string &istr)
 	m_response.m_status = static_cast<status_code>(std::stoi(sstr));
 	m_response.m_reason = std::move(snf::trim(rstr));
 
-	return *this;
-}
-
-response_builder &
-response_builder::with_headers(const headers &hdrs)
-{
-	m_response.m_headers = hdrs;
-	return *this;
-}
-
-response_builder &
-response_builder::with_headers(headers &&hdrs)
-{
-	m_response.m_headers = std::move(hdrs);
 	return *this;
 }
 
