@@ -16,6 +16,13 @@ operator<<(std::ostream &os, const headers &hdrs)
 	return os;
 }
 
+/*
+ * Find the field name in the headers.
+ *
+ * @param [in] name - header field name.
+ *
+ * @return iterator to the field name if found.
+ */         
 hdr_vec_t::iterator
 headers::find(const std::string &name)
 {
@@ -25,6 +32,13 @@ headers::find(const std::string &name)
 	return m_headers.end();
 }
 
+/*
+ * Find the field name in the headers.
+ *
+ * @param [in] name - header field name.
+ *
+ * @return iterator to the field name if found.
+ */         
 hdr_vec_t::const_iterator
 headers::find(const std::string &name) const
 {
@@ -34,6 +48,36 @@ headers::find(const std::string &name) const
 	return m_headers.end();
 }
 
+/*
+ * Validate the header field name and/or value.
+ *
+ * @param [in] name  - header field name.
+ * @param [in] value - header field value.
+ *
+ * @throws snf::http::not_implemented if the header field
+ *         name and/or value is not implemented.
+ */
+void
+headers::validate(const std::string &name, const std::string &value)
+{
+	if (name == TRANSFER_ENCODING) {
+		if (!snf::streq(value, TRANSFER_ENCODING_CHUNKED, true)) {
+			throw not_implemented("only chunked transfer encoding is supported");
+		}
+	}
+}
+
+/*
+ * Parse the header line and add the name/value pair to the
+ * headers list.
+ *
+ * @param [in] istr - HTTP header line.
+ *
+ * @throws snf::http::bad_message if the header line could
+ *         not be parsed.
+ *         snf::http::not_implemented if the header field
+ *         name and/or value is not implemented.
+ */
 void
 headers::add(const std::string &istr)
 {
@@ -114,9 +158,19 @@ headers::add(const std::string &istr)
 	add(name, snf::trim(value));
 }
 
+/*
+ * Add the HTTP header name/value to the headers list.
+ * If the header name already exists, the value passed is
+ * appended to the header value.
+ *
+ * @param [in] name  - HTTP header name.
+ * @param [in] value - HTTP header value.
+ */
 void
 headers::add(const std::string &name, const std::string &value)
 {
+	validate(name, value);
+
 	hdr_vec_t::iterator I = find(name);
 	if (I == m_headers.end()) {
 		m_headers.push_back(std::make_pair(name, value));
@@ -126,9 +180,21 @@ headers::add(const std::string &name, const std::string &value)
 	}
 }
 
+/*
+ * Updates the HTTP header name/value in the headers list.
+ * If the header name already exists, the value passed is
+ * overrides the existing header value. If the header name
+ * does not already exist, header name/value are added to
+ * the headers list.
+ *
+ * @param [in] name  - HTTP header name.
+ * @param [in] value - HTTP header value.
+ */
 void
 headers::update(const std::string &name, const std::string &value)
 {
+	validate(name, value);
+
 	hdr_vec_t::iterator I = find(name);
 	if (I == m_headers.end()) {
 		m_headers.push_back(std::make_pair(name, value));
@@ -137,6 +203,11 @@ headers::update(const std::string &name, const std::string &value)
 	}
 }
 
+/*
+ * Removes the HTTP header field name from the headers list.
+ *
+ * @param [in] name - HTTP header name.
+ */
 void
 headers::remove(const std::string &name)
 {
@@ -145,27 +216,43 @@ headers::remove(const std::string &name)
 		m_headers.erase(I);
 }
 
+/*
+ * Determines if the HTTP header field name is present
+ * in the headers list.
+ *
+ * @param [in] name - HTTP header name.
+ *
+ * @return true if the HTTP header field name is present,
+ *         false otherwise.
+ */
 bool
 headers::is_set(const std::string &name) const
 {
 	return (m_headers.end() != find(name));
 }
 
+/*
+ * Get the HTTP header field value for the given
+ * HTTP header field name.
+ *
+ * @param [in] name - HTTP header name.
+ *
+ * @return HTTP header value.
+ *
+ * @throws std::out_of_range if the name is not
+ *         present in the headers list.
+ */
 std::string
 headers::get(const std::string &name) const
 {
-	std::string s;
-
 	hdr_vec_t::const_iterator it = find(name);
 	if (it != m_headers.end()) {
-		s = it->second;
+		return it->second;
 	} else {
 		std::ostringstream oss;
 		oss << "header field name (" << name << ") not found";
 		throw std::out_of_range(oss.str());
 	}
-
-	return s;
 }
 
 size_t
@@ -190,56 +277,16 @@ headers::transfer_encoding() const
 void
 headers::transfer_encoding(const std::string &coding)
 {
-	if (snf::streq(coding, TRANSFER_ENCODING_CHUNKED, true))
-		update(TRANSFER_ENCODING, TRANSFER_ENCODING_CHUNKED);
-	else
-		throw not_implemented("only chunked transfer encoding is supported");
+	update(TRANSFER_ENCODING, coding);
 }
 
 bool
 headers::is_message_chunked() const
 {
-	try {
-		std::string s = std::move(transfer_encoding());
-		if (snf::streq(s, TRANSFER_ENCODING_CHUNKED, true))
+	hdr_vec_t::const_iterator it = find(TRANSFER_ENCODING);
+	if (it != m_headers.end())
+		if (snf::streq(it->second, TRANSFER_ENCODING_CHUNKED, true))
 			return true;
-
-		throw not_implemented("only chunked transfer encoding is supported");
-	} catch (std::out_of_range &) {
-		return false;
-	}
-
-	return false;
-}
-
-std::string
-headers::te() const
-{
-	return get(TE);
-}
-
-void
-headers::te(const std::string &coding)
-{
-	if (snf::streq(coding, "trailers", true))
-		update(TE, "trailers");
-	else
-		throw not_implemented("only trailers transfer encoding is accepted");
-}
-
-bool
-headers::is_trailer_included() const
-{
-	try {
-		std::string s = std::move(te());
-		if (snf::streq(s, "trailers", true))
-			return true;
-
-		throw not_implemented("only trailers transfer encoding is accepted");
-	} catch (std::out_of_range &) {
-		return false;
-	}
-
 	return false;
 }
 
