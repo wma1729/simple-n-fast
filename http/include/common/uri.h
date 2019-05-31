@@ -196,6 +196,7 @@ public:
 	virtual bool is_valid(const std::string &) const;
 	virtual std::string encode(const std::string &) const;
 	virtual std::string decode(const std::string &) const;
+	virtual void set(const std::string &);
 };
 
 class uri_port : public uri_component

@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <ostream>
+#include "net.h"
 
 namespace snf {
 namespace http {
@@ -14,6 +15,12 @@ static const std::string TRANSFER_ENCODING("Transfer-Encoding");
 static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 static const std::string TE("TE");
 static const std::string TRAILERS("Trailers");
+static const std::string HOST("Host");
+static const std::string VIA("Via");
+static const std::string CONNECTION("Connection");
+static const std::string CONNECTION_CLOSE("close");
+static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
+static const std::string CONNECTION_UPGRADE("upgrade");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
 
@@ -63,6 +70,10 @@ public:
 	std::string transfer_encoding() const;
 	void transfer_encoding(const std::string &);
 	bool is_message_chunked() const;
+
+	std::string host(in_port_t *) const;
+
+	std::string connection() const;
 };
 
 } // namespace http

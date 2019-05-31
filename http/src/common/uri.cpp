@@ -219,10 +219,12 @@ uri_host::is_regular_hostname(const std::string &host) const
 			uri_subcomponent_delimiter(host[i]);
 
 		if (!valid) {
-			if (uri_percent_encoded(host, i))
+			if (uri_percent_encoded(host, i)) {
 				i += 2;
-			else
+				valid = true;
+			} else {
 				break;
+			}
 		}
 	}
 
@@ -319,6 +321,22 @@ uri_host::decode(const std::string &istr) const
 	}
 
 	return ostr;
+}
+
+/*
+ * Set host.
+ *
+ * @param [in] host - host string.
+ *
+ * @throws snf::http::bad_uri if the port is invalid.
+ */
+void
+uri_host::set(const std::string &host)
+{
+	if (!is_valid(host))
+		throw bad_uri("invalid host: " + host);
+
+	m_component = std::move(decode(host));
 }
 
 /*
@@ -767,9 +785,6 @@ uri::parse_authority(const std::string &str, size_t si)
 			++i;
 		}
 	}
-
-	if (!m_host.is_valid(host))
-		throw bad_uri("invalid host: " + host);
 
 	set_host(host);
 

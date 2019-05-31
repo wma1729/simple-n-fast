@@ -210,6 +210,12 @@ public:
 			oss << uri_8.get_port();
 			ASSERT_EQ(const std::string &, "80", oss.str(), "host matches");
 
+			snf::http::uri uri_9 { "*" };
+
+			oss.str("");
+			oss << uri_9.get_path();
+			ASSERT_EQ(const std::string &, "*", oss.str(), "path matches");
+
 			test_merge("http://a/b/c/d;p?q");
 
 		} catch (const snf::http::bad_uri &ex) {

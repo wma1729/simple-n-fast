@@ -2,6 +2,7 @@
 #include "headers.h"
 #include "status.h"
 #include "charset.h"
+#include "uri.h"
 #include <ostream>
 #include <sstream>
 
@@ -56,6 +57,8 @@ headers::find(const std::string &name) const
  *
  * @throws snf::http::not_implemented if the header field
  *         name and/or value is not implemented.
+ * @throws snf::http::bad_message if the header field
+ *         value is not set correctly.
  */
 void
 headers::validate(const std::string &name, const std::string &value)
@@ -63,6 +66,15 @@ headers::validate(const std::string &name, const std::string &value)
 	if (name == TRANSFER_ENCODING) {
 		if (!snf::streq(value, TRANSFER_ENCODING_CHUNKED, true)) {
 			throw not_implemented("only chunked transfer encoding is supported");
+		}
+	} else if (name == CONNECTION) {
+		if (!snf::streq(value, CONNECTION_CLOSE, true) &&
+			!snf::streq(value, CONNECTION_KEEP_ALIVE, true) &&
+			!snf::streq(value, CONNECTION_UPGRADE, true)) {
+
+			std::ostringstream oss;
+			oss << "connection option " << value << " is not supported";
+			throw not_implemented(oss.str());
 		}
 	}
 }
@@ -288,6 +300,58 @@ headers::is_message_chunked() const
 		if (snf::streq(it->second, TRANSFER_ENCODING_CHUNKED, true))
 			return true;
 	return false;
+}
+
+std::string
+headers::host(in_port_t *port) const
+{
+	hdr_vec_t::const_iterator it = find(HOST);
+	if (it == m_headers.end())
+		return std::string();
+
+	size_t i = 0;
+	std::string value(it->second);
+
+	if (value.empty())
+		throw bad_message("host value is not set");
+
+	if (value[i] == '[') {
+		while (i < value.size()) {
+			if (value[i] == ']')
+				break;
+			++i;
+		}
+
+		if (value[i] != ']') {
+			std::ostringstream oss;
+			oss << "invalid host " << value;
+			throw bad_message(oss.str());
+		} else {
+			++i;
+		}
+	} else {
+		while (i < value.size()) {
+			if (value[i] == ':')
+				break;
+			++i;
+		}
+	}
+
+	uri_host h(value.substr(0, i));
+	std::string hoststr = h.get();
+
+	if ((value[i] == ':') && port) {
+		uri_port p(value.substr(i + 1));
+		*port = static_cast<in_port_t>(std::stoi(p.get()));
+	}
+
+	return hoststr;
+}
+
+std::string
+headers::connection() const
+{
+	return get(CONNECTION);
 }
 
 } // namespace http
