@@ -103,11 +103,11 @@ process_request(snf::net::nio *io, snf::net::socket *s)
 	transmitter xfer(ioptr.get());
 	try {
 		request req = std::move(xfer.recv_request());
-	} catch (bad_message &ex) {
-	} catch (bad_uri &ex) {
-	} catch (not_implemented &ex) {
-	} catch (std::system_error &ex) {
-	} catch (std::runtime_error &ex) {
+	} catch (bad_message &) {
+	} catch (bad_uri &) {
+	} catch (not_implemented &) {
+	} catch (std::system_error &) {
+	} catch (std::runtime_error &) {
 	}
 }
 

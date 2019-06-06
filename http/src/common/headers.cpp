@@ -302,6 +302,18 @@ headers::is_message_chunked() const
 	return false;
 }
 
+/*
+ * Gets the value of the host header.
+ *
+ * @param [out] port - optional out port if not nullptr
+ *                     and port is specified in the Host
+ *                     field.
+ *
+ * @return the host name from the Host header field.
+ *
+ * @throws snf::http::bad_message if the host name cannot
+ *         be parsed.
+ */
 std::string
 headers::host(in_port_t *port) const
 {
@@ -309,43 +321,21 @@ headers::host(in_port_t *port) const
 	if (it == m_headers.end())
 		return std::string();
 
-	size_t i = 0;
 	std::string value(it->second);
 
-	if (value.empty())
-		throw bad_message("host value is not set");
+	// make it a URI so that the URI parsing code can be used
+	value.insert(0, "http://");
 
-	if (value[i] == '[') {
-		while (i < value.size()) {
-			if (value[i] == ']')
-				break;
-			++i;
-		}
+	try {
+		snf::http::uri the_uri(value);
 
-		if (value[i] != ']') {
-			std::ostringstream oss;
-			oss << "invalid host " << value;
-			throw bad_message(oss.str());
-		} else {
-			++i;
-		}
-	} else {
-		while (i < value.size()) {
-			if (value[i] == ':')
-				break;
-			++i;
-		}
+		if (port && the_uri.get_port().is_present())
+			*port = the_uri.get_port().numeric_port();
+
+		return the_uri.get_host().get();
+	} catch (snf::http::bad_uri &ex) {
+		throw snf::http::bad_message(ex.what());
 	}
-
-	uri_host h(value.substr(0, i));
-	std::string hoststr = h.get();
-
-	if ((value[i] == ':') && port) {
-		uri_port p(value.substr(i + 1));
-		*port = static_cast<in_port_t>(std::stoi(p.get()));
-	}
-
-	return hoststr;
 }
 
 std::string

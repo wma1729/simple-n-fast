@@ -219,6 +219,11 @@ public:
 	}
 
 	virtual void set(const std::string &);
+
+	in_port_t numeric_port() const
+	{
+		return static_cast<in_port_t>(std::stoi(get()));
+	}
 };
 
 class uri_path : public uri_component
