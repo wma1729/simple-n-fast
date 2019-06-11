@@ -6,6 +6,7 @@
 #include <vector>
 #include <ostream>
 #include "net.h"
+#include "mediatype.h"
 
 namespace snf {
 namespace http {
@@ -21,6 +22,7 @@ static const std::string CONNECTION("Connection");
 static const std::string CONNECTION_CLOSE("close");
 static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
 static const std::string CONNECTION_UPGRADE("upgrade");
+static const std::string CONTENT_TYPE("Content-Type");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
 
@@ -74,6 +76,8 @@ public:
 	std::string host(in_port_t *) const;
 
 	std::string connection() const;
+
+	media_type content_type() const;
 };
 
 } // namespace http

@@ -344,5 +344,12 @@ headers::connection() const
 	return get(CONNECTION);
 }
 
+media_type
+headers::content_type() const
+{
+	std::string str = std::move(get(CONTENT_TYPE));
+	return media_type(str);
+}
+
 } // namespace http
 } // namespace snf
