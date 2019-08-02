@@ -76,6 +76,10 @@ headers::validate(const std::string &name, const std::string &value)
 			oss << "connection option " << value << " is not supported";
 			throw not_implemented(oss.str());
 		}
+	} else if (name == CONTENT_ENCODING) {
+		if (!snf::streq(value, CONTENT_ENCODING_GZIP, true)) {
+			throw not_implemented("only gzip content encoding is supported");
+		}
 	}
 }
 
@@ -338,10 +342,58 @@ headers::host(in_port_t *port) const
 	}
 }
 
+/*
+ * Sets the value of host header.
+ *
+ * @param [in] uristr - Host name or URI.
+ * @param [in] port   - Optional port to use. If not 0,
+ *                      this is the port used. If 0,
+ *                      the port value from URI, if present,
+ *                      is used.
+ *
+ * @throws snf::http::bad_message if the host/URI name cannot
+ *         be parsed. std::invalid_argument if the host component
+ *         is missing in the URL.
+ */
+void
+headers::host(const std::string &uristr, in_port_t port)
+{
+	try {
+		std::string value;
+		snf::http::uri the_uri(uristr);
+
+		if (the_uri.get_host().is_present()) {
+			value = the_uri.get_host().get();
+		} else {
+			std::ostringstream oss;
+			oss << "invalid URI string specified: " << uristr;
+			throw std::invalid_argument(oss.str());
+		}
+
+		if (port != 0) {
+			value += ":";
+			value += std::to_string(port);
+		} else if (the_uri.get_port().is_present()) {
+			value += the_uri.get_port().get();
+			value += ":";
+		}
+
+		update(HOST, value);
+	} catch (snf::http::bad_uri &ex) {
+		throw snf::http::bad_message(ex.what());
+	}
+}
+
 std::string
 headers::connection() const
 {
 	return get(CONNECTION);
+}
+
+void
+headers::connection(const std::string &cnxn)
+{
+	update(CONNECTION, cnxn);
 }
 
 media_type
@@ -349,6 +401,26 @@ headers::content_type() const
 {
 	std::string str = std::move(get(CONTENT_TYPE));
 	return media_type(str);
+}
+
+void
+headers::content_type(const media_type &mt)
+{
+	std::ostringstream oss;
+	oss << mt;
+	update(CONTENT_TYPE, oss.str());
+}
+
+std::string
+headers::content_encoding() const
+{
+	return get(CONTENT_ENCODING);
+}
+
+void
+headers::content_encoding(const std::string &coding)
+{
+	update(CONTENT_ENCODING, coding);
 }
 
 } // namespace http

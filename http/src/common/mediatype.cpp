@@ -8,6 +8,36 @@ namespace snf {
 namespace http {
 
 /*
+ * Validate the type/subtype.
+ * Implemented values are:
+ * - text/plain
+ * - application/json
+ *
+ * @throws snf::http::not_implemented if the content
+ *         type is not implemented.
+ */
+void
+media_type::validate()
+{
+	std::ostringstream oss;
+
+	if (m_type == T_TEXT) {
+		if (m_subtype != ST_PLAIN) {
+			oss << "subtype " << m_subtype << " is not supported for type " << T_TEXT;
+			throw not_implemented(oss.str());
+		}
+	} else if (m_type == T_APPLICATION) {
+		if (m_subtype != ST_JSON) {
+			oss << "subtype " << m_subtype << " is not supported for type " << T_APPLICATION;
+			throw not_implemented(oss.str());
+		}
+	} else if (!m_type.empty()) {
+		oss << "type " << m_type << " is not supported";
+		throw not_implemented(oss.str());
+	}
+}
+
+/*
  * Parse the value of the Content-Type header field.
  *
  * @param [in] istr - value of the content type.
@@ -121,20 +151,23 @@ media_type::parse(const std::string &istr)
 		value.clear();
 	}
 
-	if (type == T_TEXT) {
-		if (subtype != ST_PLAIN) {
-			oss << "subtype " << subtype << " is not supported for type " << T_TEXT;
-			throw not_implemented(oss.str());
-		}
-	} else if (type == T_APPLICATION) {
-		if (subtype != ST_JSON) {
-			oss << "subtype " << subtype << " is not supported for type " << T_APPLICATION;
-			throw not_implemented(oss.str());
-		}
-	} else {
-		oss << "type " << type << " is not supported";
-		throw not_implemented(oss.str());
+	validate();
+}
+
+std::ostream &
+operator<< (std::ostream &os, const media_type &mt)
+{
+	os << mt.type() << "/" << mt.subtype();
+
+	bool first = true;
+	for (auto elem : mt.param()) {
+		if (!first)
+			os << ",";
+		os << elem.first << "=" << elem.second;
+		first = false;
 	}
+
+	return os;
 }
 
 } // namespace http

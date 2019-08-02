@@ -2,6 +2,7 @@
 #define _SNF_HTTP_MEDIA_TYPE_H_
 
 #include <string>
+#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -22,6 +23,8 @@ private:
 	std::string m_subtype;
 	param_vec_t m_parameters;
 
+	void validate();
+
 public:
 	media_type() {}
 
@@ -31,6 +34,7 @@ public:
 		: m_type(t)
 		, m_subtype(st)
 	{
+		validate();
 	}
 
 	media_type(const media_type &mt)
@@ -38,6 +42,7 @@ public:
 		, m_subtype(mt.m_subtype)
 		, m_parameters(mt.m_parameters)
 	{
+		validate();
 	}
 
 	media_type(media_type &&mt)
@@ -45,6 +50,7 @@ public:
 		, m_subtype(std::move(mt.m_subtype))
 		, m_parameters(std::move(mt.m_parameters))
 	{
+		validate();
 	}
 
 	virtual ~media_type() {}
@@ -70,11 +76,7 @@ public:
 	}
 
 	const std::string type() const { return m_type; }
-	void type(const std::string &t) { m_type = t; }
-
 	const std::string subtype() const { return m_subtype; }
-	void subtype(const std::string &st) { m_subtype = st; }
-
 	const param_vec_t &param() const { return m_parameters; }
 
 	void param(const std::pair<std::string, std::string> &kvpair)
@@ -89,6 +91,8 @@ public:
 
 	void parse(const std::string &);
 };
+
+std::ostream & operator<< (std::ostream &, const media_type &);
 
 } // namespace http
 } // namespace snf

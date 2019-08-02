@@ -23,6 +23,8 @@ static const std::string CONNECTION_CLOSE("close");
 static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
 static const std::string CONNECTION_UPGRADE("upgrade");
 static const std::string CONTENT_TYPE("Content-Type");
+static const std::string CONTENT_ENCODING("Content-Encoding");
+static const std::string CONTENT_ENCODING_GZIP("gzip");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
 
@@ -66,18 +68,45 @@ public:
 	bool is_set(const std::string &) const;
 	std::string get(const std::string &) const;
 
+	/*
+	 * Content-Length: <size>
+	 */
 	size_t content_length() const;
 	void content_length(size_t);
 
+	/*
+	 * Transfer-Encoding: chunked
+	 */
 	std::string transfer_encoding() const;
 	void transfer_encoding(const std::string &);
 	bool is_message_chunked() const;
 
+	/*
+	 * Host: <host>[:<port>]
+	 */
 	std::string host(in_port_t *) const;
+	void host(const std::string &, in_port_t port = 0);
 
+	/*
+	 * Connection: close
+	 * Connection: keep-alive
+	 * Connection: upgrade
+	 */
 	std::string connection() const;
+	void connection(const std::string &);
 
+	/*
+	 * Content-Type: text/plain;charset=utf-8
+	 * Content-Type: application/json;charset=iso-8859-1
+	 */
 	media_type content_type() const;
+	void content_type(const media_type &);
+
+	/*
+	 * Content-Encoding: gzip
+	 */
+	std::string content_encoding() const;
+	void content_encoding(const std::string &);
 };
 
 } // namespace http
