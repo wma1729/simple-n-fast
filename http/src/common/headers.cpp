@@ -3,7 +3,7 @@
 #include "status.h"
 #include "charset.h"
 #include "uri.h"
-#include <ostream>
+#include <iostream>
 #include <sstream>
 
 namespace snf {
@@ -421,6 +421,45 @@ void
 headers::content_encoding(const std::string &coding)
 {
 	update(CONTENT_ENCODING, coding);
+}
+
+std::vector<std::string>
+headers::content_language() const
+{
+	std::vector<std::string> languages;
+
+	std::string lang = get(CONTENT_LANGUAGE);
+	if (!lang.empty()) {
+		std::istringstream iss(lang);
+		std::string language;
+
+		while (std::getline(iss, language, ','))
+			languages.push_back(language);
+
+	}
+
+	return std::move(languages);
+}
+
+void
+headers::content_language(const std::string &language)
+{
+	update(CONTENT_LANGUAGE, language);
+}
+
+void
+headers::content_language(const std::vector<std::string> &languages)
+{
+	std::ostringstream oss;
+
+	std::vector<std::string>::const_iterator it;
+	for (it = languages.begin(); it != languages.end(); ++it) {
+		if (it != languages.begin())
+			oss << ", ";
+		oss << *it;
+	}
+
+	update(CONTENT_LANGUAGE, oss.str());
 }
 
 } // namespace http

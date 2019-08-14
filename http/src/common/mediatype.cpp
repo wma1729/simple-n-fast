@@ -162,7 +162,7 @@ operator<< (std::ostream &os, const media_type &mt)
 	bool first = true;
 	for (auto elem : mt.param()) {
 		if (!first)
-			os << ",";
+			os << ";";
 		os << elem.first << "=" << elem.second;
 		first = false;
 	}

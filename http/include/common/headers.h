@@ -25,6 +25,7 @@ static const std::string CONNECTION_UPGRADE("upgrade");
 static const std::string CONTENT_TYPE("Content-Type");
 static const std::string CONTENT_ENCODING("Content-Encoding");
 static const std::string CONTENT_ENCODING_GZIP("gzip");
+static const std::string CONTENT_LANGUAGE("Content-Language");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
 
@@ -107,6 +108,13 @@ public:
 	 */
 	std::string content_encoding() const;
 	void content_encoding(const std::string &);
+
+	/*
+	 * Content-Lanaguage: en-US [, en-UK]
+	 */
+	std::vector<std::string> content_language() const;
+	void content_language(const std::string &);
+	void content_language(const std::vector<std::string> &);
 };
 
 } // namespace http
