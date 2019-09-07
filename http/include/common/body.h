@@ -18,7 +18,7 @@ namespace http {
  * body *req_body = body_factory::instance().from_socket(io);
  * while (req_body->has_next()) {
  *     size_t datalen = 0;
- *     const voud *data = req_body->next(datalen);
+ *     const void *data = req_body->next(datalen);
  *     // process data
  * }
  *
