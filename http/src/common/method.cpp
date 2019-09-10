@@ -7,6 +7,46 @@ namespace snf {
 namespace http {
 
 /*
+ * Stream operator for the method type.
+ *
+ * @param [out] os - output stream.
+ * @param [in]  mt - method type.
+ *
+ * @return stream representation of the method type.
+ */
+std::ostream &
+operator<<(std::ostream &os, method_type mtype)
+{
+	switch (mtype) {
+		case method_type::M_GET: os << "GET"; break;
+		case method_type::M_HEAD: os << "HEAD"; break;
+		case method_type::M_POST: os << "POST"; break;
+		case method_type::M_PUT: os << "PUT"; break;
+		case method_type::M_DELETE: os << "DELETE"; break;
+		case method_type::M_CONNECT: os << "CONNECT"; break;
+		case method_type::M_OPTIONS: os << "OPTIONS"; break;
+		case method_type::M_TRACE: os << "TRACE"; break;
+		default: break;
+	}
+	return os;
+}
+
+/*
+ * Method type to method name.
+ *
+ * @param [in] mtype - method type.
+ *
+ * @return method name.
+ */
+std::string
+method(method_type mtype) noexcept
+{
+	std::ostringstream oss;
+	oss << mtype;
+	return oss.str();
+}
+
+/*
  * Method name to method type.
  *
  * @param [in] str - method name.
@@ -38,46 +78,6 @@ method(const std::string &str)
 	std::ostringstream oss;
 	oss << "invalid HTTP method (" << str << ")";
 	throw bad_message(oss.str());
-}
-
-/*
- * Method type to method name.
- *
- * @param [in] mtype - method type.
- *
- * @return method name.
- */
-std::string
-method(method_type mtype) noexcept
-{
-	switch (mtype) {
-		case method_type::M_GET:
-			return "GET";
-
-		case method_type::M_HEAD:
-			return "HEAD";
-
-		case method_type::M_POST:
-			return "POST";
-
-		case method_type::M_PUT:
-			return "PUT";
-
-		case method_type::M_DELETE:
-			return "DELETE";
-
-		case method_type::M_CONNECT:
-			return "CONNECT";
-
-		case method_type::M_OPTIONS:
-			return "OPTIONS";
-
-		case method_type::M_TRACE:
-			return "TRACE";
-
-		default:
-			return std::string();
-	}
 }
 
 } // namespace http

@@ -83,7 +83,7 @@ request_builder::request_line(const std::string &istr)
 	}
 
 	m_request.m_type = snf::http::method(mstr);
-	m_request.m_uri = std::move(snf::http::uri(vstr));
+	m_request.m_uri = std::move(snf::http::uri(ustr));
 	m_request.m_version = snf::http::version(vstr);
 
 	return *this;

@@ -26,7 +26,7 @@ version::version(const std::string &vstr)
 	if (vstr.size() < HTTP_VERSION_LENGTH)
 		throw bad_message(oss.str());
 
-	if (vstr.compare(0, 4, "HTTP/") != 0)
+	if (vstr.compare(0, 5, "HTTP/") != 0)
 		throw bad_message(oss.str());
 
 	if (!std::isdigit(vstr[5]))

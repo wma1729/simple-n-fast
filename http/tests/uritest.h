@@ -219,7 +219,7 @@ public:
 			test_merge("http://a/b/c/d;p?q");
 
 		} catch (const snf::http::bad_uri &ex) {
-			std::cerr << "runtime error: " << ex.what() << std::endl;
+			std::cerr << ex.what() << std::endl;
 			return false;
 		}
 

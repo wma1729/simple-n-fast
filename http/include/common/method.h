@@ -21,8 +21,9 @@ enum class method_type
 	M_TRACE
 };
 
-method_type method(const std::string &);
+std::ostream &operator<<(std::ostream &, method_type);
 std::string method(method_type) noexcept;
+method_type method(const std::string &);
 
 } // namespace http
 } // namespace snf
