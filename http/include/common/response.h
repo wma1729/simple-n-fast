@@ -126,7 +126,7 @@ public:
 		m_response.validate();
 		if (m_response.m_reason.empty())
 			m_response.m_reason = reason_phrase(m_response.m_status);
-		return std::move(m_response);
+		return m_response;
 	}
 };
 

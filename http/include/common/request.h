@@ -143,7 +143,7 @@ public:
 	request build()
 	{
 		m_request.validate();
-		return std::move(m_request);
+		return m_request;
 	}
 };
 

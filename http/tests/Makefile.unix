@@ -22,7 +22,7 @@ ${P}/%.o: %.cpp
 
 test:
 ifeq (${DBG},-g)
-	@valgrind --quiet --leak-check=full --show-leak-kinds=definite ${P}/httpts -name "http-test-suite" -desc "test suite for http" -v
+	@valgrind --quiet --leak-check=full --show-leak-kinds=all ${P}/httpts -name "http-test-suite" -desc "test suite for http" -v
 else
 	@${P}/httpts -name "http-test-suite" -desc "test suite for http" -v
 endif
