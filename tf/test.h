@@ -335,6 +335,9 @@ public:
 #define ASSERT_MEM_NE(S1, S2, N, STR)   \
 	snf::tf::assertion::mem_ne(S1, #S1, S2, #S2, N, STR, __FILE__, __LINE__)
 
+#define TEST_PASS(MSG)  do { std::cerr << MSG << " ... OK" << std::endl; } while (0)
+#define TEST_FAIL(MSG)  throw snf::tf::assertion_failure(MSG, __FILE__, __LINE__)
+
 } // namespace tf
 } // namespace snf
 

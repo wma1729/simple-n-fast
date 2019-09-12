@@ -63,7 +63,15 @@ headers::find(const std::string &name) const
 void
 headers::validate(const std::string &name, const std::string &value)
 {
-	if (name == TRANSFER_ENCODING) {
+	if (name == CONTENT_LENGTH) {
+		for (size_t i = 0; i < value.length(); ++i) {
+			if (!isdigit(value[i])) {
+				std::ostringstream oss;
+				oss << "incorrect " << CONTENT_LENGTH << " (" << value << ") specified";
+				throw bad_message(oss.str());
+			}
+		}
+	} else if (name == TRANSFER_ENCODING) {
 		if (!snf::streq(value, TRANSFER_ENCODING_CHUNKED, true)) {
 			throw not_implemented("only chunked transfer encoding is supported");
 		}
@@ -275,7 +283,7 @@ size_t
 headers::content_length() const
 {
 	std::string s = std::move(get(CONTENT_LENGTH));
-	return std::stoll(s);
+	return std::stoull(s);
 }
 
 void
