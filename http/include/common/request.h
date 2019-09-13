@@ -66,6 +66,24 @@ public:
 	void set_uri(const uri &u) { m_uri = u; }
 };
 
+inline std::ostream &
+operator<<(std::ostream &os, const request &req)
+{
+	// request line
+	os << method(req.get_method());
+	os << " " << req.get_uri().get_path();
+	if (req.get_uri().get_query().is_present())
+		os << "?" << req.get_uri().get_query();
+	if (req.get_uri().get_fragment().is_present())
+		os << "#" << req.get_uri().get_fragment();
+	os << " " << req.get_version() << "\r\n";
+
+	// request headers
+	os << req.get_headers() << "\r\n";
+
+	return os;
+}
+
 /*
  * HTTP request builder.
  */
@@ -98,6 +116,12 @@ public:
 	request_builder & with_uri(uri &&u)
 	{
 		m_request.m_uri = std::move(u);
+		return *this;
+	}
+
+	request_builder & with_uri(const std::string &str)
+	{
+		m_request.m_uri = std::move(uri(str));
 		return *this;
 	}
 

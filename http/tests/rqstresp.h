@@ -13,16 +13,31 @@ private:
 		std::cout << "HTTP Request Line Test" << std::endl;
 
 		try {
-			snf::http::request_builder reqbldr;
-			snf::http::request rqst1 = std::move(reqbldr.request_line("GET /hello.txt HTTP/1.1\r\n").build());
-			ASSERT_EQ(snf::http::method_type, snf::http::method_type::M_GET, rqst1.get_method(), "method matches");
-			ASSERT_EQ(int, 1, rqst1.get_version().m_major, "major HTTP version matches");
-			ASSERT_EQ(int, 1, rqst1.get_version().m_minor, "minor HTTP version matches");
+			std::ostringstream oss;
 
-			snf::http::request rqst2 = std::move(reqbldr.request_line("POST http://www.example.com/hello.txt HTTP/1.0").build());
-			ASSERT_EQ(snf::http::method_type, snf::http::method_type::M_POST, rqst2.get_method(), "method matches");
+			snf::http::request_builder reqbldr1;
+			snf::http::request_builder reqbldr2;
+			snf::http::request_builder reqbldr3;
+
+			snf::http::request rqst1 = std::move(
+				reqbldr1.method("GET")
+					.with_uri("/hello.txt")
+					.with_version(1, 1)
+					.build());
+			oss << rqst1;
+
+			std::cout << oss.str() << std::endl;
+
+			snf::http::request rqst2 = std::move(reqbldr2.request_line(oss.str()).build());
+
+			ASSERT_EQ(snf::http::method_type, snf::http::method_type::M_GET, rqst2.get_method(), "method matches");
 			ASSERT_EQ(int, 1, rqst2.get_version().m_major, "major HTTP version matches");
-			ASSERT_EQ(int, 0, rqst2.get_version().m_minor, "minor HTTP version matches");
+			ASSERT_EQ(int, 1, rqst2.get_version().m_minor, "minor HTTP version matches");
+
+			snf::http::request rqst3 = std::move(reqbldr3.request_line("POST http://www.example.com/hello.txt HTTP/1.0").build());
+			ASSERT_EQ(snf::http::method_type, snf::http::method_type::M_POST, rqst3.get_method(), "method matches");
+			ASSERT_EQ(int, 1, rqst3.get_version().m_major, "major HTTP version matches");
+			ASSERT_EQ(int, 0, rqst3.get_version().m_minor, "minor HTTP version matches");
 
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << "bad request: " << ex.what() << std::endl;
@@ -37,18 +52,32 @@ private:
 		std::cout << "HTTP Response Line Test" << std::endl;
 
 		try {
-			snf::http::response_builder respbldr;
-			snf::http::response resp1 = std::move(respbldr.response_line("HTTP/1.1 200 OK\r\n").build());
-			ASSERT_EQ(int, 1, resp1.get_version().m_major, "major HTTP version matches");
-			ASSERT_EQ(int, 1, resp1.get_version().m_minor, "minor HTTP version matches");
-			ASSERT_EQ(snf::http::status_code, snf::http::status_code::OK, resp1.get_status(), "HTTP status matches");
-			ASSERT_EQ(const std::string &, "OK", resp1.get_reason(), "reason string matches");
+			std::ostringstream oss;
 
-			snf::http::response resp2 = std::move(respbldr.response_line("HTTP/2.0 200 NOT OK").build());
-			ASSERT_EQ(int, 2, resp2.get_version().m_major, "major HTTP version matches");
-			ASSERT_EQ(int, 0, resp2.get_version().m_minor, "minor HTTP version matches");
+			snf::http::response_builder respbldr1;
+			snf::http::response_builder respbldr2;
+			snf::http::response_builder respbldr3;
+
+			snf::http::response resp1 = std::move(
+				respbldr1.with_version("HTTP/1.1")
+					.with_status(snf::http::status_code::OK)
+					.build());
+
+			oss << resp1;
+
+			std::cout << oss.str() << std::endl;
+
+			snf::http::response resp2 = std::move(respbldr2.response_line(oss.str()).build());
+			ASSERT_EQ(int, 1, resp2.get_version().m_major, "major HTTP version matches");
+			ASSERT_EQ(int, 1, resp2.get_version().m_minor, "minor HTTP version matches");
 			ASSERT_EQ(snf::http::status_code, snf::http::status_code::OK, resp2.get_status(), "HTTP status matches");
-			ASSERT_EQ(const std::string &, "NOT OK", resp2.get_reason(), "reason string matches");
+			ASSERT_EQ(const std::string &, "OK", resp2.get_reason(), "reason string matches");
+
+			snf::http::response resp3 = std::move(respbldr3.response_line("HTTP/2.0 200 NOT OK").build());
+			ASSERT_EQ(int, 2, resp3.get_version().m_major, "major HTTP version matches");
+			ASSERT_EQ(int, 0, resp3.get_version().m_minor, "minor HTTP version matches");
+			ASSERT_EQ(snf::http::status_code, snf::http::status_code::OK, resp3.get_status(), "HTTP status matches");
+			ASSERT_EQ(const std::string &, "NOT OK", resp3.get_reason(), "reason string matches");
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << "bad response: " << ex.what() << std::endl;
 			return false;

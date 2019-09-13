@@ -62,6 +62,20 @@ public:
 	void set_reason(const std::string &r) { m_reason = r; }
 };
 
+inline std::ostream &
+operator<<(std::ostream &os, const response &resp)
+{
+	// status line
+	os << resp.get_version() << " "
+		<< resp.get_status() << " "
+		<< resp.get_reason() << "\r\n";
+
+	// response headers
+	os << resp.get_headers() << "\r\n";
+
+	return os;
+}
+
 class response_builder
 {
 private:

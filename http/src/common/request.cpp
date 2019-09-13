@@ -24,8 +24,12 @@ request_builder::request_line(const std::string &istr)
 	size_t len = istr.size();
 	std::ostringstream oss;
 
-	if ((istr[len - 1] == '\n') || (istr[len - 2] == '\r'))
-		len -= 2;
+	while (len >= 2) {
+		if ((istr[len - 1] == '\n') || (istr[len - 2] == '\r'))
+			len -= 2;
+		else
+			break;
+	}
 
 	for (i = 0; i < len; ++i) {
 		if (istr[i] == ' ')

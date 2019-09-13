@@ -143,19 +143,7 @@ transmitter::send_request(const request &req)
 {
 	std::ostringstream oss;
 
-	oss << method(req.get_method())
-		<< " "
-		<< req.get_uri().get_path();
-
-	if (req.get_uri().get_query().is_present())
-		oss << "?" << req.get_uri().get_query();
-
-	if (req.get_uri().get_fragment().is_present())
-		oss << "#" << req.get_uri().get_fragment();
-
-	oss << " " << req.get_version() << "\r\n";
-	oss << req.get_headers();
-	oss << "\r\n";
+	oss << req;
 
 	std::string s = std::move(oss.str());
 	int retval = send_data(s.data(), s.size(), "failed to send request and headers");
@@ -224,10 +212,7 @@ transmitter::send_response(const response &resp)
 {
 	std::ostringstream oss;
 
-	oss << resp.get_version() << " "
-		<< resp.get_status() << " "
-		<< resp.get_reason() << " "
-		<< resp.get_headers() << "\r\n";
+	oss << resp;
 
 	std::string s = std::move(oss.str());
 	int retval = send_data(s.data(), s.size(), "failed to send response and headers");

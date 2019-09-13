@@ -63,7 +63,7 @@ headers::find(const std::string &name) const
 void
 headers::validate(const std::string &name, const std::string &value)
 {
-	if (name == CONTENT_LENGTH) {
+	if (snf::streq(name, CONTENT_LENGTH)) {
 		for (size_t i = 0; i < value.length(); ++i) {
 			if (!isdigit(value[i])) {
 				std::ostringstream oss;
@@ -71,11 +71,11 @@ headers::validate(const std::string &name, const std::string &value)
 				throw bad_message(oss.str());
 			}
 		}
-	} else if (name == TRANSFER_ENCODING) {
+	} else if (snf::streq(name, TRANSFER_ENCODING)) {
 		if (!snf::streq(value, TRANSFER_ENCODING_CHUNKED, true)) {
 			throw not_implemented("only chunked transfer encoding is supported");
 		}
-	} else if (name == CONNECTION) {
+	} else if (snf::streq(name, CONNECTION)) {
 		if (!snf::streq(value, CONNECTION_CLOSE, true) &&
 			!snf::streq(value, CONNECTION_KEEP_ALIVE, true) &&
 			!snf::streq(value, CONNECTION_UPGRADE, true)) {
@@ -84,7 +84,7 @@ headers::validate(const std::string &name, const std::string &value)
 			oss << "connection option " << value << " is not supported";
 			throw not_implemented(oss.str());
 		}
-	} else if (name == CONTENT_ENCODING) {
+	} else if (snf::streq(name, CONTENT_ENCODING)) {
 		if (!snf::streq(value, CONTENT_ENCODING_GZIP, true)) {
 			throw not_implemented("only gzip content encoding is supported");
 		}

@@ -62,6 +62,7 @@ public:
 
 	friend std::ostream &operator<<(std::ostream &, const headers &);
 
+	bool empty() const { return m_headers.empty(); }
 	void add(const std::string &);
 	void add(const std::string &, const std::string &);
 	void update(const std::string &, const std::string &);
