@@ -111,8 +111,15 @@ headers::add(const std::string &istr)
 	std::string value;
 	std::ostringstream oss;
 
-	if ((istr[len - 1] == '\n') || (istr[len - 2] == '\r'))
-		len -= 2;
+	while (len > 2) {
+		if ((istr[len - 1] == '\n') || (istr[len - 2] == '\r'))
+			len -= 2;
+		else
+			break;
+	}
+
+	while (is_whitespace(istr[len - 1]))
+		len--;
 
 	for (i = 0; i < len; ++i) {
 		if (!is_tchar(istr[i]))
@@ -143,39 +150,51 @@ headers::add(const std::string &istr)
 
 	for (; i < len; ++i) {
 		if (escaped) {
-			if (is_escaped(istr[i]))
+			if (is_escaped(istr[i])) {
 				escaped = false;
-			else
+				value.push_back(istr[i]);
+			} else {
 				break;
+			}
 		} else if (dquoted) {
-			if (istr[i] == '"')
+			if (istr[i] == '"') {
 				dquoted = false;
-			else if (!is_quoted(istr[i]))
+			} else if (is_quoted(istr[i])) {
+				value.push_back(istr[i]);
+			} else {
 				break;
+			}
 		} else if (commented) {
-			if (istr[i] == ')')
+			if (istr[i] == ')') {
 				commented = false;
-			else if (!is_commented(istr[i]))
+				value.push_back(istr[i]);
+			} else if (is_commented(istr[i])) {
+				value.push_back(istr[i]);
+			} else {
 				break;
+			}
 		} else if (istr[i] == '\\') {
-			if (dquoted || commented)
+			if (dquoted || commented) {
 				escaped = true;
-			else
+			} else {
 				break;
+			}
 		} else if (istr[i] == '"') {
 			dquoted = true;
 		} else if (istr[i] == '(') {
 			commented = true;
-		} else if (!is_tchar(istr[i])) {
+			value.push_back(istr[i]);
+		} else if (is_tchar(istr[i])) {
+			value.push_back(istr[i]);
+		} else {
 			break;
 		}
-
-		if (!escaped)
-			value.push_back(istr[i]);
 	}
 
 	if (i != len) {
-		oss << "invalid header field value for (" << name << ")";
+		oss << "invalid header field value for " << name;
+		if (!value.empty())
+			oss << " (" << value << ")";
 		throw bad_message(oss.str());
 	}
 

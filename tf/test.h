@@ -337,6 +337,7 @@ public:
 
 #define TEST_PASS(MSG)  do { std::cerr << MSG << " ... OK" << std::endl; } while (0)
 #define TEST_FAIL(MSG)  throw snf::tf::assertion_failure(MSG, __FILE__, __LINE__)
+#define TEST_LOG(MSG)   do { std::cerr << MSG << std::endl; } while (0)
 
 } // namespace tf
 } // namespace snf

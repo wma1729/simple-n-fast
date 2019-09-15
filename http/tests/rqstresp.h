@@ -10,7 +10,7 @@ private:
 
 	bool test_rqst()
 	{
-		std::cout << "HTTP Request Line Test" << std::endl;
+		TEST_LOG("HTTP Request Line Test");
 
 		try {
 			std::ostringstream oss;
@@ -26,7 +26,7 @@ private:
 					.build());
 			oss << rqst1;
 
-			std::cout << oss.str() << std::endl;
+			TEST_LOG(oss.str());
 
 			snf::http::request rqst2 = std::move(reqbldr2.request_line(oss.str()).build());
 
@@ -49,7 +49,7 @@ private:
 
 	bool test_resp()
 	{
-		std::cout << "HTTP Response Line Test" << std::endl;
+		TEST_LOG("HTTP Response Line Test");
 
 		try {
 			std::ostringstream oss;
@@ -65,7 +65,7 @@ private:
 
 			oss << resp1;
 
-			std::cout << oss.str() << std::endl;
+			TEST_LOG(oss.str());
 
 			snf::http::response resp2 = std::move(respbldr2.response_line(oss.str()).build());
 			ASSERT_EQ(int, 1, resp2.get_version().m_major, "major HTTP version matches");
@@ -88,18 +88,22 @@ private:
 
 	bool test_hdrs()
 	{
-		std::cout << "Headers Test" << std::endl;
+		TEST_LOG("Headers Test");
 
 		try {
+			TEST_LOG("Valid content length");
+
 			snf::http::headers hdrs1;
-			hdrs1.add("Content-Length: 30\r\n");
+			hdrs1.add("content-Length: 30\r\n");
 			ASSERT_EQ(size_t, 30, hdrs1.content_length(), "content length matches");
+			ASSERT_EQ(bool, false, hdrs1.is_message_chunked(), "message not chunked");
 
 			snf::http::headers hdrs2;
 			std::ostringstream oss;
-			oss << "Content-Length: " << ULLONG_MAX;
+			oss << "Content-length: " << ULLONG_MAX;
 			hdrs2.add(oss.str());
 			ASSERT_EQ(size_t, ULLONG_MAX , hdrs2.content_length(), "content length matches");
+			ASSERT_EQ(bool, false, hdrs2.is_message_chunked(), "message not chunked");
 
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << ex.what() << std::endl;
@@ -110,12 +114,69 @@ private:
 		}
 
 		try {
+			TEST_LOG("Invalid content length");
+
 			snf::http::headers hdrs3;
-			hdrs3.add("Content-Length: dummy-string");
+			hdrs3.add("coNTEnt-Length: dummy-string");
 			TEST_FAIL("No exception thrown");
+
 		} catch (const snf::http::bad_message &ex) {
 			TEST_PASS(ex.what());
-			return true;
+		}
+
+		try {
+			TEST_LOG("Negative content length");
+
+			snf::http::headers hdrs4;
+			hdrs4.add("content-length: -256\r\n");
+			TEST_FAIL("No exception thrown");
+
+		} catch (const snf::http::bad_message &ex) {
+			TEST_PASS(ex.what());
+		}
+
+		try {
+			TEST_LOG("Supported transfer encoding");
+
+			snf::http::headers hdrs5;
+			hdrs5.add("transfer-encoding:     chunked\r\n\r\n");
+			ASSERT_EQ(const std::string &, "chunked", hdrs5.transfer_encoding(), "transfer encoding matches");
+			ASSERT_EQ(bool, true, hdrs5.is_message_chunked(), "message is chunked");
+
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
+		}
+
+		try {
+			TEST_LOG("Unsupported transfer encoding");
+
+			snf::http::headers hdrs6;
+			hdrs6.add("Transfer-encoding: compressed\r\n");
+			TEST_FAIL("No exception thrown");
+
+		} catch (const snf::http::not_implemented &ex) {
+			TEST_PASS(ex.what());
+		}
+
+		try {
+			TEST_LOG("Host names");
+
+			snf::http::headers hdrs7;
+			in_port_t port = 0;
+
+			hdrs7.add("host: www.example.com \r\n");
+			ASSERT_EQ(const std::string &, "www.example.com", hdrs7.host(&port), "host matches");
+			ASSERT_EQ(in_port_t, 0, port, "port matches");
+
+			snf::http::headers hdrs8;
+			hdrs8.add("host: \"bharat:8080\"  	\r\n");
+			ASSERT_EQ(const std::string &, "bharat", hdrs8.host(&port), "host matches");
+			ASSERT_EQ(in_port_t, 8080, port, "port matches");
+
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
 		}
 
 		return true;
