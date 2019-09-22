@@ -32,7 +32,7 @@ public:
 		m_end = m_begin + m_buflen;
 	}
 
-	~body_from_buffer()
+	virtual ~body_from_buffer()
 	{
 		delete [] m_buf;
 	}
@@ -81,7 +81,7 @@ public:
 		m_end = m_str.size();
 	}
 
-	~body_from_string() {}
+	virtual ~body_from_string() {}
 
 	size_t length() const { return m_str.size(); }
 	bool has_next() { return (m_begin < m_end); }
@@ -114,7 +114,7 @@ private:
 	std::string         m_filename;
 	size_t              m_filesize;
 	size_t              m_read;
-	char                m_buf[body::BUFSIZE];
+	char                m_buf[CHUNKSIZE];
 
 public:
 	body_from_file(const std::string &filename)
@@ -138,7 +138,7 @@ public:
 		m_filesize = m_file->size();
 	}
 
-	~body_from_file()
+	virtual ~body_from_file()
 	{
 		delete m_file;
 	}
@@ -152,7 +152,7 @@ public:
 		int syserr = 0;
 		const void *ptr = nullptr;
 
-		if (m_file->read(m_buf, body::BUFSIZE, &bread, &syserr) != E_ok) {
+		if (m_file->read(m_buf, CHUNKSIZE, &bread, &syserr) != E_ok) {
 			std::ostringstream oss;
 			oss << "failed to read from file (" << m_filename << ") at index " << m_read;
 			throw std::system_error(
@@ -184,7 +184,7 @@ class body_from_functor : public body
 private:
 	body_functor_t      m_functor;
 	size_t              m_read;
-	char                m_buf[body::BUFSIZE];
+	char                m_buf[CHUNKSIZE];
 
 public:
 	body_from_functor(body_functor_t &f)
@@ -199,6 +199,8 @@ public:
 	{
 	}
 
+	virtual ~body_from_functor() {}
+
 	bool chunked() const { return true; }
 
 	bool has_next()
@@ -206,7 +208,7 @@ public:
 		if (m_read != 0)
 			return true;
 
-		if (m_functor(m_buf, body::BUFSIZE, &m_read) != E_ok)
+		if (m_functor(m_buf, CHUNKSIZE, &m_read) != E_ok)
 			throw std::runtime_error("call to the functor failed");
 
 		return (m_read != 0);
@@ -239,7 +241,7 @@ private:
 	snf::net::nio       *m_io;
 	size_t              m_size;
 	size_t              m_read;
-	char                m_buf[body::BUFSIZE];
+	char                m_buf[CHUNKSIZE];
 
 public:
 	body_from_socket(snf::net::nio *io, size_t len)
@@ -249,7 +251,7 @@ public:
 	{
 	}
 
-	~body_from_socket() {}
+	virtual ~body_from_socket() {}
 
 	size_t length() { return m_size; }
 	bool has_next() { return m_read < m_size; }
@@ -257,7 +259,8 @@ public:
 	const void *next(size_t &buflen)
 	{
 		int to_read = static_cast<int>(m_size - m_read);
-		to_read = std::min(body::BUFSIZE, to_read);
+		if (to_read > CHUNKSIZE)
+			to_read = CHUNKSIZE;
 		int bread = 0;
 		int syserr = 0;
 		const void *ptr = nullptr;
@@ -291,7 +294,7 @@ private:
 	snf::net::nio       *m_io;
 	size_t              m_chunk_size;
 	size_t              m_chunk_offset;
-	char                m_buf[body::BUFSIZE];
+	char                m_buf[CHUNKSIZE];
 
 	int getc()
 	{
@@ -315,7 +318,7 @@ public:
 	{
 	}
 
-	~body_from_socket_chunked() {}
+	virtual ~body_from_socket_chunked() {}
 
 	bool chunked() const { return true; }
 
@@ -354,8 +357,8 @@ public:
 	const void *next(size_t &buflen)
 	{
 		int to_read = static_cast<int>(m_chunk_size - m_chunk_offset);
-		if (to_read > body::BUFSIZE)
-			to_read = body::BUFSIZE;
+		if (to_read > CHUNKSIZE)
+			to_read = CHUNKSIZE;
 
 		int bread = 0;
 		int syserr = 0;

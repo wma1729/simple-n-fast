@@ -26,7 +26,9 @@ namespace http {
 class body
 {
 public:
-	static const int BUFSIZE = 8192;
+	static const int CHUNKSIZE = 8192;
+
+	virtual ~body() {}
 
 	virtual bool chunked() { return false; }
 	virtual size_t length() { return 0; }
@@ -63,7 +65,6 @@ public:
 	body_factory(body_factory &&) = delete;
 	body_factory & operator=(const body_factory &) = delete;
 	body_factory & operator=(body_factory &&) = delete;
-	~body_factory();
 
 	static body_factory & instance()
 	{
