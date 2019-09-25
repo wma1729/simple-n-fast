@@ -179,6 +179,35 @@ private:
 			return false;
 		}
 
+		try {
+			TEST_LOG("Valid connection");
+
+			snf::http::headers hdrs8;
+			hdrs8.add("Connection: close");
+			ASSERT_EQ(const std::string &, "close", hdrs8.connection(), "connection matches");
+
+			snf::http::headers hdrs9;
+			hdrs9.add("Connection: keep-alive");
+			ASSERT_EQ(const std::string &, "keep-alive", hdrs9.connection(), "connection matches");
+
+			snf::http::headers hdrs10;
+			hdrs10.add("Connection: upgrade");
+			ASSERT_EQ(const std::string &, "upgrade", hdrs10.connection(), "connection matches");
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
+		}
+
+		try {
+			TEST_LOG("Invalid connection");
+
+			snf::http::headers hdrs11;
+			hdrs11.add("Connection: weird");
+			TEST_FAIL("No exception thrown");
+		} catch (const snf::http::not_implemented &ex) {
+			TEST_PASS(ex.what());
+		} 
+
 		return true;
 	}
 

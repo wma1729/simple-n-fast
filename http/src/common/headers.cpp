@@ -92,6 +92,25 @@ headers::validate(const std::string &name, const std::string &value)
 }
 
 /*
+ * Determines if the header field allows comma-separated values.
+ *
+ * @param [in] name - header field name.
+ *
+ * @return true if comma-separated values are allowed, false otherwise.
+ */
+bool
+headers::allow_comma_separated_values(const std::string &name)
+{
+	if (snf::streq(name, TRANSFER_ENCODING))
+		return true;
+	else if (snf::streq(name, TE))
+		return true;
+	else if (snf::streq(name, TRAILERS))
+		return true;
+	return false;
+}
+
+/*
  * Parse the header line and add the name/value pair to the
  * headers list.
  *
@@ -227,9 +246,13 @@ headers::add(const std::string &name, const std::string &value)
 	hdr_vec_t::iterator I = find(name);
 	if (I == m_headers.end()) {
 		m_headers.push_back(std::make_pair(name, value));
-	} else {
+	} else if (allow_comma_separated_values(name)) {
 		I->second.append(", ");
 		I->second.append(value);
+	} else {
+		std::ostringstream oss;
+		oss << "header field (" << name << ") occurs multiple times";
+		throw bad_message(oss.str());
 	}
 }
 

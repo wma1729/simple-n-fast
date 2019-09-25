@@ -40,6 +40,7 @@ private:
 	hdr_vec_t::iterator find(const std::string &);
 	hdr_vec_t::const_iterator find(const std::string &) const;
 	void validate(const std::string &, const std::string &);
+	bool allow_comma_separated_values(const std::string &);
 
 public:
 	headers() {}
