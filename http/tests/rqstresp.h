@@ -208,6 +208,39 @@ private:
 			TEST_PASS(ex.what());
 		} 
 
+		try {
+			TEST_LOG("Content Type");
+			std::ostringstream oss;
+
+			snf::http::headers hdrs12;
+			hdrs12.add("content-type: text/plain;charset=utf-8\r\n");
+			oss.str("");
+			oss << hdrs12.content_type();
+			ASSERT_EQ(const std::string &, "text/plain;charset=utf-8", oss.str(), "content type matches");
+
+			snf::http::headers hdrs13;
+			hdrs13.add("content-type: text/plain;charset=UTF-8\r\n");
+			oss.str("");
+			oss << hdrs13.content_type();
+			ASSERT_EQ(const std::string &, "text/plain;charset=UTF-8", oss.str(), "content type matches");
+
+			snf::http::headers hdrs14;
+			hdrs14.add("content-type: Text/PLAIN;charset=\"utf-8\"\r\n");
+			oss.str("");
+			oss << hdrs14.content_type();
+			ASSERT_EQ(const std::string &, "text/plain;charset=utf-8", oss.str(), "content type matches");
+
+			snf::http::headers hdrs15;
+			hdrs15.add("content-type: text/plain; charset=\"UTF-8\"\r\n");
+			oss.str("");
+			oss << hdrs15.content_type();
+			ASSERT_EQ(const std::string &, "text/plain;charset=UTF-8", oss.str(), "content type matches");
+
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
+		}
+
 		return true;
 	}
 

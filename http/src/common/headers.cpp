@@ -84,6 +84,9 @@ headers::validate(const std::string &name, const std::string &value)
 			oss << "connection option " << value << " is not supported";
 			throw not_implemented(oss.str());
 		}
+	} else if (snf::streq(name, CONTENT_TYPE)) {
+		// If the value is incorrect, an exception will be thrown
+		media_type mt(value);
 	} else if (snf::streq(name, CONTENT_ENCODING)) {
 		if (!snf::streq(value, CONTENT_ENCODING_GZIP, true)) {
 			throw not_implemented("only gzip content encoding is supported");
@@ -192,7 +195,7 @@ headers::add(const std::string &istr)
 			dquoted++;
 		} else if (istr[i] == '(') {
 			commented++;
-		} else if (!is_tchar(istr[i])) {
+		} else if (!is_vchar(istr[i]) && !is_whitespace(istr[i])) {
 			break;
 		}
 

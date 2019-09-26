@@ -1,3 +1,4 @@
+#include "common.h"
 #include "mediatype.h"
 #include "charset.h"
 #include "status.h"
@@ -21,13 +22,13 @@ media_type::validate()
 {
 	std::ostringstream oss;
 
-	if (m_type == T_TEXT) {
-		if (m_subtype != ST_PLAIN) {
+	if (snf::streq(m_type, T_TEXT)) {
+		if (!snf::streq(m_subtype, ST_PLAIN)) {
 			oss << "subtype " << m_subtype << " is not supported for type " << T_TEXT;
 			throw not_implemented(oss.str());
 		}
-	} else if (m_type == T_APPLICATION) {
-		if (m_subtype != ST_JSON) {
+	} else if (snf::streq(m_type, T_APPLICATION)) {
+		if (!snf::streq(m_subtype, ST_JSON)) {
 			oss << "subtype " << m_subtype << " is not supported for type " << T_APPLICATION;
 			throw not_implemented(oss.str());
 		}
@@ -116,14 +117,9 @@ media_type::parse(const std::string &istr)
 				else
 					value.push_back(istr[i]);
 			} else if (istr[i] == '=') {
-				i++;
 				processing_name = false;
 			} else if ((istr[i] == '"') && !processing_name) {
 				quoted = !quoted;
-				if (!quoted) {
-					i++;
-					break;
-				}
 			} else {
 				oss << "invalid character in parameter "
 					<< (processing_name ? "name" : "value");
@@ -132,7 +128,7 @@ media_type::parse(const std::string &istr)
 		}
 
 		if (quoted) {
-			oss << "parameter value does not terminate with \" for " << name;
+			oss << "parameter value (" << value << ") does not terminate with \" for " << name;
 			throw bad_message(oss.str());
 		}
 
@@ -158,15 +154,8 @@ std::ostream &
 operator<< (std::ostream &os, const media_type &mt)
 {
 	os << mt.type() << "/" << mt.subtype();
-
-	bool first = true;
-	for (auto elem : mt.param()) {
-		if (!first)
-			os << ";";
-		os << elem.first << "=" << elem.second;
-		first = false;
-	}
-
+	for (auto elem : mt.param())
+		os << ";" << elem.first << "=" << elem.second;
 	return os;
 }
 
