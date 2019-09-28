@@ -1,10 +1,8 @@
 #ifndef _SNF_HTTP_MEDIA_TYPE_H_
 #define _SNF_HTTP_MEDIA_TYPE_H_
 
-#include <string>
+#include "parseutil.h"
 #include <ostream>
-#include <utility>
-#include <vector>
 
 namespace snf {
 namespace http {

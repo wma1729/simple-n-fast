@@ -6,7 +6,7 @@ endif
 
 OBJS = ${P}/uri.o ${P}/method.o ${P}/status.o ${P}/version.o ${P}/headers.o \
 	${P}/message.o ${P}/request.o ${P}/response.o ${P}/mediatype.o \
-	${P}/body.o ${P}/transmit.o
+	${P}/body.o ${P}/transmit.o ${P}/parseutil.o
 
 INCL = ${INCLHTTPCMN} ${INCLNET} ${INCLLOG} ${INCLCOM}
 

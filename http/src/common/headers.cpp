@@ -166,61 +166,12 @@ headers::add(const std::string &istr)
 		if (!is_whitespace(istr[i]))
 			break;
 
-	int dquoted = 0;
-	int commented = 0;
-	bool escaped = false;
-
-	for (; i < len; ++i) {
-		if (escaped) {
-			if (is_escaped(istr[i]))
-				escaped = false;
-			else
-				break;
-		} else if (dquoted) {
-			if (istr[i] == '"')
-				dquoted--;
-			else if (!is_quoted(istr[i]))
-				break;
-		} else if (commented) {
-			if (istr[i] == ')')
-				commented--;
-			else if (!is_commented(istr[i]))
-				break;
-		} else if (istr[i] == '\\') {
-			if (dquoted || commented)
-				escaped = true;
-			else
-				break;
-		} else if (istr[i] == '"') {
-			dquoted++;
-		} else if (istr[i] == '(') {
-			commented++;
-		} else if (!is_vchar(istr[i]) && !is_whitespace(istr[i])) {
-			break;
-		}
-
-		if (!escaped)
-			value.push_back(istr[i]);
-	}
-
-	if (dquoted) {
-		oss << "header field value for " << name;
-		if (!value.empty())
-			oss << " (" << value << ")";
-		oss << " not quoted properly";
+	try {
+		value = std::move(parse_generic(istr, i , len));
+	} catch (const bad_message &ex) {
+		std::ostringstream oss;
+		oss << "bad header field value for (" << name << "): " << ex.what();
 		throw bad_message(oss.str());
-	}
-
-	if (commented) {
-		oss << "header field value for " << name;
-		if (!value.empty())
-			oss << " (" << value << ")";
-		oss << " not commented properly";
-		throw bad_message(oss.str());
-	}
-
-	if ((value.front() == '"') && (value.back() == '"')) {
-		value = value.substr(1, value.length() - 2);
 	}
 
 	if (i != len) {

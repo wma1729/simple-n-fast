@@ -104,6 +104,16 @@ streq(const std::string &s1, const std::string &s2, bool ic = true)
 		);
 }
 
+inline bool
+is_decimal_number(const std::string &str)
+{
+	for (size_t i = 0; i < str.size(); ++i) {
+		if (!std::isdigit(str[i]))
+			return false;
+	}
+	return true;
+}
+
 inline int
 system_error(void)
 {

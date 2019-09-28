@@ -6,7 +6,7 @@ include ..\..\..\Makefile.constants
 
 OBJS = $(P)\uri.obj $(P)\method.obj $(P)\status.obj $(P)\version.obj $(P)\headers.obj \
 	$(P)\message.o $(P)\request.obj $(P)\response.obj $(P)\mediatype.obj \
-	$(P)\body.obj $(P)\transmit.obj
+	$(P)\body.obj $(P)\transmit.obj $(P)\parseutil.obj
 
 INCL = $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 

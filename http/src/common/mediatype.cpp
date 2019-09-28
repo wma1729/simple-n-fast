@@ -51,19 +51,10 @@ media_type::validate()
 void
 media_type::parse(const std::string &istr)
 {
-	size_t i;
+	size_t i = 0;
 	size_t len = istr.size();
-	std::string type;
-	std::string subtype;
 
-	for (i = 0; i < len; ++i) {
-		if (is_tchar(istr[i]))
-			type.push_back(std::tolower(istr[i]));
-		else if (istr[i] == '/')
-			break;
-		else
-			throw bad_message("invalid character in type");
-	}
+	std::string type = parse_token(istr, i, len);
 
 	if (type.empty())
 		throw bad_message("no type found");
@@ -72,81 +63,18 @@ media_type::parse(const std::string &istr)
 	else
 		i++;
 
-	for (; i < len; ++i) {
-		if (is_tchar(istr[i]))
-			subtype.push_back(std::tolower(istr[i]));
-		else if ((istr[i] == ';') || is_whitespace(istr[i]))
-			break;
-		else
-			throw bad_message("invalid character in subtype");
-	}
+	std::string subtype = parse_token(istr, i, len);
 
 	if (subtype.empty())
 		throw bad_message("no subtype found");
+	else if ((i < len) && ((istr[i] == ';') || is_whitespace(istr[i])))
+		m_parameters = std::move(parse_parameter(istr, i, len));
+	else
+		throw bad_message("invalid character after subtype");
 
 	m_type = std::move(type);
 	m_subtype = std::move(subtype);
-
-	std::string name;
-	std::string value;
-	std::ostringstream oss;
-
-	while (i < len) {
-		while ((i < len) && is_whitespace(istr[i]))
-			i++;
-
-		if (i >= len)
-			break;
-
-		if (istr[i] == ';')
-			i++;
-
-		while ((i < len) && is_whitespace(istr[i]))
-			i++;
-
-		if (i >= len)
-			break;
-
-		bool processing_name = true;
-		bool quoted = false;
-
-		for (; i < len; ++i) {
-			if (is_tchar(istr[i])) {
-				if (processing_name)
-					name.push_back(std::tolower(istr[i]));
-				else
-					value.push_back(istr[i]);
-			} else if (istr[i] == '=') {
-				processing_name = false;
-			} else if ((istr[i] == '"') && !processing_name) {
-				quoted = !quoted;
-			} else {
-				oss << "invalid character in parameter "
-					<< (processing_name ? "name" : "value");
-				throw bad_message(oss.str());
-			}
-		}
-
-		if (quoted) {
-			oss << "parameter value (" << value << ") does not terminate with \" for " << name;
-			throw bad_message(oss.str());
-		}
-
-		if (!name.empty()) {
-			if (value.empty()) {
-				oss << "parameter value is not specified for " << name;
-				throw bad_message(oss.str());
-			} else {
-				param(name, value);
-			}
-		} else {
-			throw bad_message("parameter name is empty");
-		}
-
-		name.clear();
-		value.clear();
-	}
-
+	
 	validate();
 }
 
