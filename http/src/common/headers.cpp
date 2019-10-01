@@ -127,7 +127,7 @@ headers::allow_comma_separated_values(const std::string &name)
 void
 headers::add(const std::string &istr)
 {
-	size_t i;
+	size_t i = 0;
 	size_t len = istr.size();
 	std::string name;
 	std::string value;
@@ -143,28 +143,24 @@ headers::add(const std::string &istr)
 	while (is_whitespace(istr[len - 1]))
 		len--;
 
-	for (i = 0; i < len; ++i) {
-		if (!is_tchar(istr[i]))
-			break;
-		name.push_back(istr[i]);
-	}
-
+	name = std::move(parse_token(istr, i, len));
 	if (name.empty())
 		throw bad_message("no header field name");
+
+	while ((i < len) && is_whitespace(istr[i]))
+		i++;
+
+	if (istr[i] != ':') {
+		oss << "header field name (" << name << ") does not terminate with :";
+		throw bad_message(oss.str());
+	} else {
+		i++;
+	}
 
 	if (i >= len) {
 		oss << "no header field value for field name (" << name << ")";
 		throw bad_message(oss.str());
 	}
-
-	if (istr[i] != ':') {
-		oss << "header field name (" << name << ") does not terminate with :";
-		throw bad_message(oss.str());
-	}
-
-	for (i = i + 1; i < len; ++i)
-		if (!is_whitespace(istr[i]))
-			break;
 
 	try {
 		value = std::move(parse_generic(istr, i , len));

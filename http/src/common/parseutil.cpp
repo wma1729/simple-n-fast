@@ -3,6 +3,7 @@
 #include "status.h"
 #include <ostream>
 #include <sstream>
+#include <iostream>
 
 namespace snf {
 namespace http {
@@ -99,6 +100,9 @@ parse_generic(const std::string &istr, size_t &i, size_t len)
 	int dquoted = 0;
 	int commented = 0;
 	bool escaped = false;
+
+	while ((i < len) && is_whitespace(istr[i]))
+		i++;
 
 	for (; i < len; ++i) {
 		if (escaped) {

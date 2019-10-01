@@ -11,21 +11,21 @@
 namespace snf {
 namespace http {
 
-static const std::string CONTENT_LENGTH("Content-Length");
-static const std::string TRANSFER_ENCODING("Transfer-Encoding");
+static const std::string CONTENT_LENGTH("content-length");
+static const std::string TRANSFER_ENCODING("transfer-encoding");
 static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
-static const std::string TE("TE");
-static const std::string TRAILERS("Trailers");
-static const std::string HOST("Host");
-static const std::string VIA("Via");
-static const std::string CONNECTION("Connection");
+static const std::string TE("te");
+static const std::string TRAILERS("trailers");
+static const std::string HOST("host");
+static const std::string VIA("via");
+static const std::string CONNECTION("connection");
 static const std::string CONNECTION_CLOSE("close");
 static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
 static const std::string CONNECTION_UPGRADE("upgrade");
-static const std::string CONTENT_TYPE("Content-Type");
-static const std::string CONTENT_ENCODING("Content-Encoding");
+static const std::string CONTENT_TYPE("content-type");
+static const std::string CONTENT_ENCODING("content-encoding");
 static const std::string CONTENT_ENCODING_GZIP("gzip");
-static const std::string CONTENT_LANGUAGE("Content-Language");
+static const std::string CONTENT_LANGUAGE("content-language");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
 
