@@ -78,8 +78,13 @@ transmitter::send_body(body *body)
 		if (retval != E_ok)
 			break;
 
-		if (!body_chunked)
+		if (body_chunked) {
+			retval = send_data("\r\n", 2, "failed to send chunk terminator");
+			if (retval != E_ok)
+				break;
+		} else {
 			body_length -= chunklen;
+		}
 	}
 
 	if (retval == E_ok) {
