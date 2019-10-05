@@ -10,7 +10,7 @@ namespace tf {
 test *test_list[] = {
 	DBG_NEW uritest(),
 	DBG_NEW rqstresp(),
-	// DBG_NEW bodytest(),
+	DBG_NEW bodytest(),
 	0
 };
 

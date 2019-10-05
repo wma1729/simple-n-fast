@@ -54,19 +54,36 @@ parse_parameter(const std::string &istr, size_t &i, size_t len)
 		bool quoted = false;
 
 		for (; i < len; ++i) {
+			bool error = false;
 			if (istr[i] == '=') {
 				processing_name = false;
 			} else if ((istr[i] == '"') && !processing_name) {
 				quoted = !quoted;
-			} else if (processing_name && is_tchar(istr[i])) {
-				name.push_back(std::tolower(istr[i]));
-			} else if (is_vchar(istr[i])) {
-				value.push_back(istr[i]);
 			} else {
-				
-				oss << "invalid character in parameter "
-					<< (processing_name ? "name" : "value");
-				throw bad_message(oss.str());
+				if (processing_name) {
+					if (is_tchar(istr[i]))
+						name.push_back(std::tolower(istr[i]));
+					else
+						error = true;
+				} else {
+					if (quoted) {
+						if (is_quoted(istr[i]))
+							value.push_back(istr[i]);
+						else
+							error = true;
+					} else {
+						if (is_tchar(istr[i]))
+							value.push_back(istr[i]);
+						else
+							error = true;
+					}
+				}
+
+				if (error) {
+					oss << "invalid character in parameter "
+						<< (processing_name ? "name" : "value");
+					throw bad_message(oss.str());
+				}
 			}
 		}
 

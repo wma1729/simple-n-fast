@@ -40,9 +40,12 @@ public:
 	size_t length() const { return m_buflen; }
 	bool has_next() { return (m_begin < m_end); }
 
-	const void *next(size_t &buflen)
+	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
 	{
 		const void *ptr = nullptr;
+
+		if (ext)
+			ext->clear();
 
 		if (m_begin < m_end) {
 			buflen = m_buflen;
@@ -86,9 +89,12 @@ public:
 	size_t length() const { return m_str.size(); }
 	bool has_next() { return (m_begin < m_end); }
 
-	const void *next(size_t &buflen)
+	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
 	{
 		const void *ptr = nullptr;
+
+		if (ext)
+			ext->clear();
 
 		if (m_begin < m_end) {
 			buflen = m_str.size();
@@ -146,11 +152,14 @@ public:
 	size_t length() const { return m_filesize; }
 	bool has_next() { return (m_read < m_filesize); }
 
-	const void *next(size_t &buflen)
+	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
 	{
 		int bread = 0;
 		int syserr = 0;
 		const void *ptr = nullptr;
+
+		if (ext)
+			ext->clear();
 
 		if (m_file->read(m_buf, CHUNKSIZE, &bread, &syserr) != E_ok) {
 			std::ostringstream oss;
@@ -185,6 +194,7 @@ private:
 	body_functor_t      m_functor;
 	size_t              m_read;
 	char                m_buf[CHUNKSIZE];
+	chunk_ext_t         m_extensions;
 
 public:
 	body_from_functor(body_functor_t &f)
@@ -208,15 +218,22 @@ public:
 		if (m_read != 0)
 			return true;
 
-		if (m_functor(m_buf, CHUNKSIZE, &m_read) != E_ok)
+		m_extensions.clear();
+		if (m_functor(m_buf, CHUNKSIZE, &m_read, &m_extensions) != E_ok)
 			throw std::runtime_error("call to the functor failed");
 
 		return (m_read != 0);
 	}
 
-	const void *next(size_t &buflen)
+	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
 	{
 		const void *ptr = nullptr;
+
+		if (ext) {
+			ext->clear();
+			for (auto e : m_extensions)
+				ext->push_back(e);
+		}
 
 		if (m_read) {
 			buflen = m_read;
@@ -256,7 +273,7 @@ public:
 	size_t length() { return m_size; }
 	bool has_next() { return m_read < m_size; }
 
-	const void *next(size_t &buflen)
+	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
 	{
 		int to_read = static_cast<int>(m_size - m_read);
 		if (to_read > CHUNKSIZE)
@@ -264,6 +281,9 @@ public:
 		int bread = 0;
 		int syserr = 0;
 		const void *ptr = nullptr;
+
+		if (ext)
+			ext->clear();
 
 		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok)
 			throw std::system_error(
@@ -295,6 +315,7 @@ private:
 	size_t              m_chunk_size;
 	size_t              m_chunk_offset;
 	char                m_buf[CHUNKSIZE];
+	chunk_ext_t         m_extensions;
 
 	int getc()
 	{
@@ -308,6 +329,14 @@ private:
 				"failed to read from socket");
 
 		return c;
+	}
+
+	void add_and_clr_extension(std::string &ext)
+	{
+		if (!ext.empty()) {
+			m_extensions.push_back(ext);
+			ext.clear();
+		}
 	}
 
 public:
@@ -340,6 +369,20 @@ public:
 		if (hex.empty())
 			throw bad_message("no chunk size");
 
+		if (';' == c) {
+			std::string ext;
+			while ((c = getc()) != '\r') {
+				if (';' == c)
+					add_and_clr_extension(ext);
+				else
+					ext.push_back(c);
+			}
+
+			if ('\r' == c)
+				add_and_clr_extension(ext);
+				
+		}
+
 		if (('\r' != c) || ('\n' != getc()))
 			throw bad_message("chunk size line not terminated properly");
 
@@ -354,7 +397,7 @@ public:
 		return (m_chunk_offset < m_chunk_size);
 	}
 
-	const void *next(size_t &buflen)
+	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
 	{
 		int to_read = static_cast<int>(m_chunk_size - m_chunk_offset);
 		if (to_read > CHUNKSIZE)
@@ -363,6 +406,11 @@ public:
 		int bread = 0;
 		int syserr = 0;
 		const void *ptr = nullptr;
+
+		if (ext) {
+			ext->clear();
+			std::copy(m_extensions.begin(), m_extensions.end(), std::back_inserter(*ext));
+		}
 
 		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok)
 			throw std::system_error(

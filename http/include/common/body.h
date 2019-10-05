@@ -2,10 +2,22 @@
 #define _SNF_HTTP_CMN_BODY_H_
 
 #include <functional>
+#include <sstream>
+#include <ostream>
 #include "nio.h"
 
 namespace snf {
 namespace http {
+
+using chunk_ext_t = std::vector<std::string>;
+
+inline std::ostream &
+operator<< (std::ostream &os, const chunk_ext_t &extensions)
+{
+	for (auto ext : extensions)
+		os << "," << ext;
+	return os;
+}
 
 /*
  * HTTP message, either request or response, body.
@@ -26,17 +38,17 @@ namespace http {
 class body
 {
 public:
-	static const int CHUNKSIZE = 8192;
+	static const int CHUNKSIZE = 65536;
 
 	virtual ~body() {}
 
 	virtual bool chunked() { return false; }
 	virtual size_t length() { return 0; }
 	virtual bool has_next() = 0;
-	virtual const void *next(size_t &) = 0;
+	virtual const void *next(size_t &, chunk_ext_t *ext = 0) = 0;
 };
 
-using body_functor_t = std::function<int(void *, size_t, size_t *)>;
+using body_functor_t = std::function<int(void *, size_t, size_t *, chunk_ext_t *)>;
 
 /*
  * HTTP body factory.

@@ -55,11 +55,12 @@ transmitter::send_body(body *body)
 
 	while (body->has_next()) {
 		chunklen = 0;
-		const void *buf = body->next(chunklen);
+		chunk_ext_t cext;
+		const void *buf = body->next(chunklen, &cext);
 	
 		if (body_chunked) {
 			std::ostringstream oss;
-			oss << std::hex << chunklen << "\r\n";
+			oss << std::hex << chunklen << cext << "\r\n";
 			std::string s = std::move(oss.str());
 
 			retval = send_data(
