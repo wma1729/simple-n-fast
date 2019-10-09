@@ -69,7 +69,7 @@ public:
 	void update(const std::string &, const std::string &);
 	void remove(const std::string &);
 	bool is_set(const std::string &) const;
-	std::string get(const std::string &) const;
+	const std::string &get(const std::string &) const;
 
 	/*
 	 * Content-Length: <size>
@@ -80,7 +80,8 @@ public:
 	/*
 	 * Transfer-Encoding: chunked
 	 */
-	std::string transfer_encoding() const;
+	std::vector<std::string> transfer_encoding() const;
+	void transfer_encoding(const std::vector<std::string> &);
 	void transfer_encoding(const std::string &);
 	bool is_message_chunked() const;
 

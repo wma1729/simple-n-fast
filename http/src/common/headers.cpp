@@ -71,10 +71,6 @@ headers::validate(const std::string &name, const std::string &value)
 				throw bad_message(oss.str());
 			}
 		}
-	} else if (snf::streq(name, TRANSFER_ENCODING)) {
-		if (!snf::streq(value, TRANSFER_ENCODING_CHUNKED, true)) {
-			throw not_implemented("only chunked transfer encoding is supported");
-		}
 	} else if (snf::streq(name, CONNECTION)) {
 		if (!snf::streq(value, CONNECTION_CLOSE, true) &&
 			!snf::streq(value, CONNECTION_KEEP_ALIVE, true) &&
@@ -157,17 +153,14 @@ headers::add(const std::string &istr)
 		i++;
 	}
 
-	if (i >= len) {
-		oss << "no header field value for field name (" << name << ")";
-		throw bad_message(oss.str());
-	}
-
-	try {
-		value = std::move(parse_generic(istr, i , len));
-	} catch (const bad_message &ex) {
-		std::ostringstream oss;
-		oss << "bad header field value for (" << name << "): " << ex.what();
-		throw bad_message(oss.str());
+	if (i < len) {
+		try {
+			value = std::move(parse_generic(istr, i , len));
+		} catch (const bad_message &ex) {
+			std::ostringstream oss;
+			oss << "bad header field value for (" << name << "): " << ex.what();
+			throw bad_message(oss.str());
+		}
 	}
 
 	if (i != len) {
@@ -268,7 +261,7 @@ headers::is_set(const std::string &name) const
  * @throws std::out_of_range if the name is not
  *         present in the headers list.
  */
-std::string
+const std::string &
 headers::get(const std::string &name) const
 {
 	hdr_vec_t::const_iterator it = find(name);
@@ -294,10 +287,26 @@ headers::content_length(size_t length)
 	update(CONTENT_LENGTH, std::to_string(length));
 }
 
-std::string
+std::vector<std::string>
 headers::transfer_encoding() const
 {
-	return get(TRANSFER_ENCODING);
+	std::string value(get(TRANSFER_ENCODING));
+	return parse_list(value);
+}
+
+void
+headers::transfer_encoding(const std::vector<std::string> &codings)
+{
+	std::ostringstream oss;
+
+	std::vector<std::string>::const_iterator it;
+	for (it = codings.begin(); it != codings.end(); ++it) {
+		if (it != codings.begin())
+			oss << ", ";
+		oss << *it;
+	}
+
+	update(TRANSFER_ENCODING, oss.str());
 }
 
 void
@@ -310,9 +319,11 @@ bool
 headers::is_message_chunked() const
 {
 	hdr_vec_t::const_iterator it = find(TRANSFER_ENCODING);
-	if (it != m_headers.end())
-		if (snf::streq(it->second, TRANSFER_ENCODING_CHUNKED, true))
-			return true;
+	if (it != m_headers.end()) {
+		std::vector<std::string> codings(std::move(parse_list(it->second)));
+		return codings.end() !=
+			std::find(codings.begin(), codings.end(), TRANSFER_ENCODING_CHUNKED);
+	}
 	return false;
 }
 

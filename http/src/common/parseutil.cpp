@@ -1,3 +1,4 @@
+#include "common.h"
 #include "parseutil.h"
 #include "charset.h"
 #include "status.h"
@@ -117,10 +118,14 @@ parse_list(const std::string &istr)
 	std::stringstream ss(istr);
 
 	while (ss.good()) {
-		std::string val;
+		std::string val, tval;
 		std::getline(ss, val, ',');
+
 		if (!val.empty())
-			values.push_back(val);
+			tval = std::move(snf::trim(val));
+
+		if (!tval.empty())
+			values.push_back(tval);
 	}
 
 	return values;

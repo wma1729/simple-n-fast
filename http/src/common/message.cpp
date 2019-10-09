@@ -39,7 +39,7 @@ message::validate_length_chunkiness()
 	// make sure everything is fine
 
 	if (m_headers.is_set(TRANSFER_ENCODING)) {
-		if (TRANSFER_ENCODING_CHUNKED != m_headers.transfer_encoding()) {
+		if (!m_headers.is_message_chunked()) {
 			std::ostringstream oss;
 			oss << TRANSFER_ENCODING << " header is not set to " << TRANSFER_ENCODING_CHUNKED;
 			throw bad_message(oss.str());

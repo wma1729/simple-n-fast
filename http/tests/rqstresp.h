@@ -140,7 +140,8 @@ private:
 
 			snf::http::headers hdrs5;
 			hdrs5.add("transfer-encoding:     chunked\r\n\r\n");
-			ASSERT_EQ(const std::string &, "chunked", hdrs5.transfer_encoding(), "transfer encoding matches");
+			std::vector<std::string> xfer_codings(std::move(hdrs5.transfer_encoding()));
+			ASSERT_EQ(const std::string &, "chunked", xfer_codings[0], "transfer encoding matches");
 			ASSERT_EQ(bool, true, hdrs5.is_message_chunked(), "message is chunked");
 
 		} catch (const snf::http::bad_message &ex) {
@@ -152,11 +153,15 @@ private:
 			TEST_LOG("Unsupported transfer encoding");
 
 			snf::http::headers hdrs6;
-			hdrs6.add("Transfer-encoding: compressed\r\n");
-			TEST_FAIL("No exception thrown");
+			hdrs6.add("Transfer-encoding: gzip, compress\r\n");
+			std::vector<std::string> xfer_codings(std::move(hdrs6.transfer_encoding()));
+			ASSERT_EQ(size_t, 2, xfer_codings.size(), "coding count matches");
+			ASSERT_EQ(const std::string &, "gzip", xfer_codings[0], "transfer encoding matches");
+			ASSERT_EQ(const std::string &, "compress", xfer_codings[1], "transfer encoding matches");
 
 		} catch (const snf::http::not_implemented &ex) {
-			TEST_PASS(ex.what());
+			std::cerr << ex.what() << std::endl;
+			return false;
 		}
 
 		try {
