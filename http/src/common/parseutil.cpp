@@ -110,6 +110,22 @@ parse_parameter(const std::string &istr, size_t &i, size_t len)
 	return parameters;
 }
 
+std::vector<std::string>
+parse_list(const std::string &istr)
+{
+	std::vector<std::string> values;
+	std::stringstream ss(istr);
+
+	while (ss.good()) {
+		std::string val;
+		std::getline(ss, val, ',');
+		if (!val.empty())
+			values.push_back(val);
+	}
+
+	return values;
+}
+
 std::string
 parse_generic(const std::string &istr, size_t &i, size_t len)
 {

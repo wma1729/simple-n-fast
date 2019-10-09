@@ -40,12 +40,9 @@ public:
 	size_t length() const { return m_buflen; }
 	bool has_next() { return (m_begin < m_end); }
 
-	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
+	const void *next(size_t &buflen)
 	{
 		const void *ptr = nullptr;
-
-		if (ext)
-			ext->clear();
 
 		if (m_begin < m_end) {
 			buflen = m_buflen;
@@ -89,12 +86,9 @@ public:
 	size_t length() const { return m_str.size(); }
 	bool has_next() { return (m_begin < m_end); }
 
-	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
+	const void *next(size_t &buflen)
 	{
 		const void *ptr = nullptr;
-
-		if (ext)
-			ext->clear();
 
 		if (m_begin < m_end) {
 			buflen = m_str.size();
@@ -152,14 +146,11 @@ public:
 	size_t length() const { return m_filesize; }
 	bool has_next() { return (m_read < m_filesize); }
 
-	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
+	const void *next(size_t &buflen)
 	{
 		int bread = 0;
 		int syserr = 0;
 		const void *ptr = nullptr;
-
-		if (ext)
-			ext->clear();
 
 		if (m_file->read(m_buf, CHUNKSIZE, &bread, &syserr) != E_ok) {
 			std::ostringstream oss;
@@ -192,20 +183,20 @@ class body_from_functor : public body
 {
 private:
 	body_functor_t      m_functor;
-	size_t              m_read;
+	size_t              m_chunk_size;
 	char                m_buf[CHUNKSIZE];
 	chunk_ext_t         m_extensions;
 
 public:
 	body_from_functor(body_functor_t &f)
 		: m_functor(f)
-		, m_read(0)
+		, m_chunk_size(0)
 	{
 	}
 
 	body_from_functor(body_functor_t &&f)
 		: m_functor(std::move(f))
-		, m_read(0)
+		, m_chunk_size(0)
 	{
 	}
 
@@ -213,31 +204,29 @@ public:
 
 	bool chunked() const { return true; }
 
+	size_t chunk_size() const { return m_chunk_size; }
+
+	chunk_ext_t chunk_extensions() { return m_extensions; }
+
 	bool has_next()
 	{
-		if (m_read != 0)
+		if (m_chunk_size != 0)
 			return true;
 
 		m_extensions.clear();
-		if (m_functor(m_buf, CHUNKSIZE, &m_read, &m_extensions) != E_ok)
+		if (m_functor(m_buf, CHUNKSIZE, &m_chunk_size, &m_extensions) != E_ok)
 			throw std::runtime_error("call to the functor failed");
 
-		return (m_read != 0);
+		return (m_chunk_size != 0);
 	}
 
-	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
+	const void *next(size_t &buflen)
 	{
 		const void *ptr = nullptr;
 
-		if (ext) {
-			ext->clear();
-			for (auto e : m_extensions)
-				ext->push_back(e);
-		}
-
-		if (m_read) {
-			buflen = m_read;
-			m_read = 0;
+		if (m_chunk_size) {
+			buflen = m_chunk_size;
+			m_chunk_size = 0;
 			ptr = m_buf;
 		} else {
 			buflen = 0;
@@ -273,7 +262,7 @@ public:
 	size_t length() { return m_size; }
 	bool has_next() { return m_read < m_size; }
 
-	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
+	const void *next(size_t &buflen)
 	{
 		int to_read = static_cast<int>(m_size - m_read);
 		if (to_read > CHUNKSIZE)
@@ -281,9 +270,6 @@ public:
 		int bread = 0;
 		int syserr = 0;
 		const void *ptr = nullptr;
-
-		if (ext)
-			ext->clear();
 
 		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok)
 			throw std::system_error(
@@ -351,6 +337,10 @@ public:
 
 	bool chunked() const { return true; }
 
+	size_t chunk_size() const { return m_chunk_size; }
+
+	chunk_ext_t chunk_extensions() { return m_extensions; }
+
 	bool has_next()
 	{
 		int c;
@@ -397,7 +387,7 @@ public:
 		return (m_chunk_offset < m_chunk_size);
 	}
 
-	const void *next(size_t &buflen, chunk_ext_t *ext = 0)
+	const void *next(size_t &buflen)
 	{
 		int to_read = static_cast<int>(m_chunk_size - m_chunk_offset);
 		if (to_read > CHUNKSIZE)
@@ -406,11 +396,6 @@ public:
 		int bread = 0;
 		int syserr = 0;
 		const void *ptr = nullptr;
-
-		if (ext) {
-			ext->clear();
-			std::copy(m_extensions.begin(), m_extensions.end(), std::back_inserter(*ext));
-		}
 
 		if (m_io->read(m_buf, to_read, &bread, 1000, &syserr) != E_ok)
 			throw std::system_error(

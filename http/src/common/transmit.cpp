@@ -55,8 +55,8 @@ transmitter::send_body(body *body)
 
 	while (body->has_next()) {
 		chunklen = 0;
-		chunk_ext_t cext;
-		const void *buf = body->next(chunklen, &cext);
+		chunk_ext_t cext = std::move(body->chunk_extensions());
+		const void *buf = body->next(chunklen);
 	
 		if (body_chunked) {
 			std::ostringstream oss;

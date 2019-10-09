@@ -42,10 +42,12 @@ public:
 
 	virtual ~body() {}
 
-	virtual bool chunked() { return false; }
-	virtual size_t length() { return 0; }
+	virtual size_t length() const { return 0; }
+	virtual bool chunked() const { return false; }
+	virtual size_t chunk_size() const { return 0; }
+	virtual chunk_ext_t chunk_extensions() { return chunk_ext_t(); }
 	virtual bool has_next() = 0;
-	virtual const void *next(size_t &, chunk_ext_t *ext = 0) = 0;
+	virtual const void *next(size_t &) = 0;
 };
 
 using body_functor_t = std::function<int(void *, size_t, size_t *, chunk_ext_t *)>;
