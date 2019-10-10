@@ -246,6 +246,23 @@ private:
 			return false;
 		}
 
+		try {
+			TEST_LOG("TE");
+
+			snf::http::headers hdrs16;
+			hdrs16.te("trailers, deflate;q=0.5");
+			hdrs16.add("TE: ");
+			std::vector<std::string> codings(std::move(hdrs16.te()));
+			ASSERT_EQ(size_t, 2, codings.size(), "TE coding size matches");
+			ASSERT_EQ(const std::string &, "trailers", codings[0], "TE coding matches");
+			ASSERT_EQ(const std::string &, "deflate;q=0.5", codings[1], "TE coding matches");
+			ASSERT_EQ(bool, true, hdrs16.has_trailers(), "message has trailers");
+
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
+		}
+
 		return true;
 	}
 

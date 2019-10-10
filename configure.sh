@@ -68,10 +68,10 @@ if [ "$PLAT" = "Linux" ]; then
 		P = $BLDPLAT
 		M = $HARDWARE
 		INSTDIR = $INSTPATH
-		CC = $CC -m64
+		CC = $CC
 		CFLAGS = -c -Wall -std=c++11
-		DEFINES = -D_POSIX_PTHREAD_SEMANTICS -D_REENTRANT -D_FILE_OFFSET_BITS=64
-		LD = $CC -shared -m64
+		DEFINES = -D_FILE_OFFSET_BITS=64
+		LD = $CC -shared
 		LDFLAGS =
 		AR = ar
 		ARFLAGS = -r

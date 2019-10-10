@@ -86,6 +86,14 @@ public:
 	bool is_message_chunked() const;
 
 	/*
+	 * TE: trailers
+	 */
+	std::vector<std::string> te() const;
+	void te(const std::vector<std::string> &);
+	void te(const std::string &);
+	bool has_trailers() const;
+
+	/*
 	 * Host: <host>[:<port>]
 	 */
 	std::string host(in_port_t *) const;

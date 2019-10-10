@@ -184,6 +184,9 @@ headers::add(const std::string &istr)
 void
 headers::add(const std::string &name, const std::string &value)
 {
+	if (name.empty() || value.empty())
+		return;
+
 	validate(name, value);
 
 	hdr_vec_t::iterator I = find(name);
@@ -323,6 +326,46 @@ headers::is_message_chunked() const
 		std::vector<std::string> codings(std::move(parse_list(it->second)));
 		return codings.end() !=
 			std::find(codings.begin(), codings.end(), TRANSFER_ENCODING_CHUNKED);
+	}
+	return false;
+}
+
+std::vector<std::string>
+headers::te() const
+{
+	std::string value(get(TE));
+	return parse_list(value);
+}
+
+void
+headers::te(const std::vector<std::string> &codings)
+{
+	std::ostringstream oss;
+
+	std::vector<std::string>::const_iterator it;
+	for (it = codings.begin(); it != codings.end(); ++it) {
+		if (it != codings.begin())
+			oss << ", ";
+		oss << *it;
+	}
+
+	update(TE, oss.str());
+}
+
+void
+headers::te(const std::string &coding)
+{
+	update(TE, coding);
+}
+
+bool
+headers::has_trailers() const
+{
+	hdr_vec_t::const_iterator it = find(TE);
+	if (it != m_headers.end()) {
+		std::vector<std::string> codings(std::move(parse_list(it->second)));
+		return codings.end() !=
+			std::find(codings.begin(), codings.end(), TRAILERS);
 	}
 	return false;
 }

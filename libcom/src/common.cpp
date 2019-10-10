@@ -122,7 +122,7 @@ trim(const std::string &str)
 {
 	size_t b = str.find_first_not_of(" \f\n\r\t\v");
 	if (b == std::string::npos)
-		b = 0;
+		return std::string();
 
 	size_t e = str.find_last_not_of(" \f\n\r\t\v");
 	if (e == std::string::npos)
