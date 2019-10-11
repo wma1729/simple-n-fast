@@ -94,6 +94,13 @@ public:
 	bool has_trailers() const;
 
 	/*
+	 * Trailers: <list_of_header_fields>
+	 */
+	std::vector<std::string> trailers() const;
+	void trailers(const std::vector<std::string> &);
+	void trailers(const std::string &);
+
+	/*
 	 * Host: <host>[:<port>]
 	 */
 	std::string host(in_port_t *) const;

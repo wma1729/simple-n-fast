@@ -280,8 +280,7 @@ headers::get(const std::string &name) const
 size_t
 headers::content_length() const
 {
-	std::string s = std::move(get(CONTENT_LENGTH));
-	return std::stoull(s);
+	return std::stoull(get(CONTENT_LENGTH));
 }
 
 void
@@ -293,8 +292,7 @@ headers::content_length(size_t length)
 std::vector<std::string>
 headers::transfer_encoding() const
 {
-	std::string value(get(TRANSFER_ENCODING));
-	return parse_list(value);
+	return parse_list(get(TRANSFER_ENCODING));
 }
 
 void
@@ -333,8 +331,7 @@ headers::is_message_chunked() const
 std::vector<std::string>
 headers::te() const
 {
-	std::string value(get(TE));
-	return parse_list(value);
+	return parse_list(get(TE));
 }
 
 void
@@ -368,6 +365,33 @@ headers::has_trailers() const
 			std::find(codings.begin(), codings.end(), TRAILERS);
 	}
 	return false;
+}
+
+std::vector<std::string>
+headers::trailers() const
+{
+	return parse_list(get(TRAILERS));
+}
+
+void
+headers::trailers(const std::vector<std::string> &fields)
+{
+	std::ostringstream oss;
+
+	std::vector<std::string>::const_iterator it;
+	for (it = fields.begin(); it != fields.end(); ++it) {
+		if (it != fields.begin())
+			oss << ", ";
+		oss << *it;
+	}
+
+	update(TRAILERS, oss.str());
+}
+
+void
+headers::trailers(const std::string &fields)
+{
+	update(TRAILERS, fields);
 }
 
 /*
