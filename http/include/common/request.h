@@ -21,6 +21,7 @@ class request : public message
 private:
 	method_type m_type = method_type::M_GET;
 	uri         m_uri;
+	headers     m_trailers;
 
 	request() : message() {}
 
@@ -64,6 +65,10 @@ public:
 
 	const uri & get_uri() const { return m_uri; }
 	void set_uri(const uri &u) { m_uri = u; }
+
+	const headers & get_trailers() const { return m_trailers; }
+	void set_trailers(const headers & trailers) { m_trailers = trailers; }
+	void set_trailers(headers && trailers) { m_trailers = std::move(trailers); }
 };
 
 inline std::ostream &

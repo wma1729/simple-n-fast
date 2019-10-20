@@ -5,29 +5,33 @@
 #include <utility>
 #include <vector>
 #include <ostream>
-#include "net.h"
-#include "mediatype.h"
+#include <memory>
+#include "hfval.h"
 
 namespace snf {
 namespace http {
 
 static const std::string CONTENT_LENGTH("content-length");
 static const std::string TRANSFER_ENCODING("transfer-encoding");
-static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 static const std::string TE("te");
 static const std::string TRAILERS("trailers");
 static const std::string HOST("host");
 static const std::string VIA("via");
 static const std::string CONNECTION("connection");
+static const std::string CONTENT_TYPE("content-type");
+static const std::string CONTENT_ENCODING("content-encoding");
+static const std::string CONTENT_LANGUAGE("content-language");
+
+static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 static const std::string CONNECTION_CLOSE("close");
 static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
 static const std::string CONNECTION_UPGRADE("upgrade");
-static const std::string CONTENT_TYPE("content-type");
-static const std::string CONTENT_ENCODING("content-encoding");
-static const std::string CONTENT_ENCODING_GZIP("gzip");
-static const std::string CONTENT_LANGUAGE("content-language");
+static const std::string CONTENT_TYPE_T_TEXT("text");
+static const std::string CONTENT_TYPE_T_APPLICATION("application");
+static const std::string CONTENT_TYPE_ST_PLAIN("plain");
+static const std::string CONTENT_TYPE_ST_JSON("json");
 
-using hdr_vec_t = std::vector<std::pair<std::string, std::string>>;
+using hdr_vec_t = std::vector<std::pair<std::string, std::shared_ptr<header_field_value>>>;
 
 /*
  * HTTP headers. Maintained as a vector of key/value pair.
@@ -39,10 +43,12 @@ private:
 
 	hdr_vec_t::iterator find(const std::string &);
 	hdr_vec_t::const_iterator find(const std::string &) const;
-	void validate(const std::string &, const std::string &);
+	header_field_value *validate(const std::string &, const std::string &);
 	bool allow_comma_separated_values(const std::string &);
 
 public:
+	static std::string canonicalize_name(const std::string &);
+
 	headers() {}
 	headers(const headers &hdrs) { m_headers = hdrs.m_headers; }
 	headers(headers &&hdrs) { m_headers = std::move(hdrs.m_headers); }
@@ -67,9 +73,10 @@ public:
 	void add(const std::string &);
 	void add(const std::string &, const std::string &);
 	void update(const std::string &, const std::string &);
+	void update(const std::string &, header_field_value *);
 	void remove(const std::string &);
 	bool is_set(const std::string &) const;
-	const std::string &get(const std::string &) const;
+	const header_field_value *get(const std::string &) const;
 
 	/*
 	 * Content-Length: <size>
@@ -80,47 +87,51 @@ public:
 	/*
 	 * Transfer-Encoding: chunked
 	 */
-	std::vector<std::string> transfer_encoding() const;
-	void transfer_encoding(const std::vector<std::string> &);
+	const std::vector<token> &transfer_encoding() const;
+	void transfer_encoding(const token &);
+	void transfer_encoding(const std::vector<token> &);
 	void transfer_encoding(const std::string &);
 	bool is_message_chunked() const;
 
 	/*
 	 * TE: trailers
 	 */
-	std::vector<std::string> te() const;
-	void te(const std::vector<std::string> &);
+	const std::vector<token> &te() const;
+	void te(const token &);
+	void te(const std::vector<token> &);
 	void te(const std::string &);
 	bool has_trailers() const;
 
 	/*
 	 * Trailers: <list_of_header_fields>
 	 */
-	std::vector<std::string> trailers() const;
+	const std::vector<std::string> &trailers() const;
 	void trailers(const std::vector<std::string> &);
 	void trailers(const std::string &);
 
 	/*
 	 * Host: <host>[:<port>]
 	 */
-	std::string host(in_port_t *) const;
-	void host(const std::string &, in_port_t port = 0);
+	const std::string &host(in_port_t *) const;
+	void host(const std::string &, in_port_t port);
 
 	/*
 	 * Connection: close
 	 * Connection: keep-alive
 	 * Connection: upgrade
 	 */
-	std::string connection() const;
+	const std::vector<std::string> &connection() const;
 	void connection(const std::string &);
 
 	/*
 	 * Content-Type: text/plain;charset=utf-8
 	 * Content-Type: application/json;charset=iso-8859-1
 	 */
-	media_type content_type() const;
+	const media_type &content_type() const;
 	void content_type(const media_type &);
+	void content_type(const std::string &, const std::string &);
 
+#if 0
 	/*
 	 * Content-Encoding: gzip
 	 */
@@ -133,6 +144,7 @@ public:
 	std::vector<std::string> content_language() const;
 	void content_language(const std::string &);
 	void content_language(const std::vector<std::string> &);
+#endif
 };
 
 } // namespace http

@@ -9,13 +9,19 @@
 namespace snf {
 namespace http {
 
+void
+skip_spaces(const std::string &istr, size_t &i, size_t len)
+{
+	while ((i < len) && is_whitespace(istr[i]))
+		i++;
+}
+
 std::string
 parse_token(const std::string &istr, size_t &i, size_t len)
 {
 	std::string token;
 
-	while ((i < len) && is_whitespace(istr[i]))
-		i++;
+	skip_spaces(istr, i, len);
 
 	while (i < len) {
 		if (is_tchar(istr[i]))
@@ -36,8 +42,7 @@ parse_parameter(const std::string &istr, size_t &i, size_t len)
 	std::ostringstream oss;
 
 	while (i < len) {
-		while ((i < len) && is_whitespace(istr[i]))
-			i++;
+		skip_spaces(istr, i, len);
 
 		if (i >= len)
 			break;
@@ -45,8 +50,7 @@ parse_parameter(const std::string &istr, size_t &i, size_t len)
 		if (istr[i] == ';')
 			i++;
 
-		while ((i < len) && is_whitespace(istr[i]))
-			i++;
+		skip_spaces(istr, i, len);
 
 		if (i >= len)
 			break;

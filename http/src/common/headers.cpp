@@ -2,9 +2,9 @@
 #include "headers.h"
 #include "status.h"
 #include "charset.h"
-#include "uri.h"
-#include <iostream>
+#include "parseutil.h"
 #include <sstream>
+#include <algorithm>
 
 namespace snf {
 namespace http {
@@ -13,7 +13,7 @@ std::ostream &
 operator<<(std::ostream &os, const headers &hdrs)
 {
 	for (auto &hdr : hdrs.m_headers)
-		os << hdr.first << ": " << hdr.second << "\r\n";
+		os << headers::canonicalize_name(hdr.first) << ": " << hdr.second->str() << "\r\n";
 	return os;
 }
 
@@ -28,7 +28,7 @@ hdr_vec_t::iterator
 headers::find(const std::string &name)
 {
 	for (hdr_vec_t::iterator I = m_headers.begin(); I != m_headers.end(); ++I)
-		if (snf::streq(name, I->first, true))
+		if (name == I->first)
 			return I;
 	return m_headers.end();
 }
@@ -44,9 +44,28 @@ hdr_vec_t::const_iterator
 headers::find(const std::string &name) const
 {
 	for (hdr_vec_t::const_iterator I = m_headers.begin(); I != m_headers.end(); ++I)
-		if (snf::streq(name, I->first, true))
+		if (name == I->first)
 			return I;
 	return m_headers.end();
+}
+
+/*
+ * Canonicalize header field name.
+ * content-length -> Content-Length
+ * host -> Host
+ */
+std::string
+headers::canonicalize_name(const std::string &name)
+{
+	std::string n;
+	bool capitalize = true;
+
+	for (size_t i = 0; i < name.length(); ++i) {
+		n[i] = (capitalize) ? std::toupper(name[i]) : name[i];
+		capitalize = (name[i] == '-');
+	}
+
+	return n;
 }
 
 /*
@@ -60,33 +79,59 @@ headers::find(const std::string &name) const
  * @throws snf::http::bad_message if the header field
  *         value is not set correctly.
  */
-void
+header_field_value *
 headers::validate(const std::string &name, const std::string &value)
 {
-	if (snf::streq(name, CONTENT_LENGTH)) {
-		for (size_t i = 0; i < value.length(); ++i) {
-			if (!isdigit(value[i])) {
+	if (name == CONTENT_LENGTH) {
+		return new number_value(value);
+	} else if (name == TRANSFER_ENCODING) {
+		return new token_list_value(value);
+	} else if (name == TE) {
+		return new token_list_value(value);
+	} else if (name == TRAILERS) {
+		return new string_list_value(value);
+	} else if (name == HOST) {
+		return new host_value(value);
+	} else if (name == CONNECTION) {
+		std::unique_ptr<string_list_value> slist(new string_list_value(value));
+		const std::vector<std::string> &values = slist->get();
+		for (auto v : values) {
+			if ((v != CONNECTION_CLOSE) &&
+				(v != CONNECTION_KEEP_ALIVE) &&
+				(v != CONNECTION_UPGRADE)) {
 				std::ostringstream oss;
-				oss << "incorrect " << CONTENT_LENGTH << " (" << value << ") specified";
-				throw bad_message(oss.str());
+				oss << "connection option " << v << " is not supported";
+				throw not_implemented(oss.str());
 			}
 		}
-	} else if (snf::streq(name, CONNECTION)) {
-		if (!snf::streq(value, CONNECTION_CLOSE, true) &&
-			!snf::streq(value, CONNECTION_KEEP_ALIVE, true) &&
-			!snf::streq(value, CONNECTION_UPGRADE, true)) {
-
-			std::ostringstream oss;
-			oss << "connection option " << value << " is not supported";
+		return slist.release();
+	} else if (name == CONTENT_TYPE) {
+		media_type_value *mtv = new media_type_value(value);
+		const media_type &mt = mtv->get();
+		std::ostringstream oss;
+		
+		if (mt.type == CONTENT_TYPE_T_TEXT) {
+			if (mt.subtype != CONTENT_TYPE_ST_PLAIN) {
+				oss << "subtype " << mt.subtype
+					<< " is not supported for type "
+					<< CONTENT_TYPE_T_TEXT;
+				throw not_implemented(oss.str());
+			}
+		} else if (mt.type == CONTENT_TYPE_T_APPLICATION) {
+			if (mt.subtype != CONTENT_TYPE_ST_JSON) {
+				oss << "subtype " << mt.subtype
+					<< " is not supported for type "
+					<< CONTENT_TYPE_T_APPLICATION;
+				throw not_implemented(oss.str());
+			}
+		} else {
+			oss << "type " << mt.type << " is not supported";
 			throw not_implemented(oss.str());
 		}
-	} else if (snf::streq(name, CONTENT_TYPE)) {
-		// If the value is incorrect, an exception will be thrown
-		media_type mt(value);
-	} else if (snf::streq(name, CONTENT_ENCODING)) {
-		if (!snf::streq(value, CONTENT_ENCODING_GZIP, true)) {
-			throw not_implemented("only gzip content encoding is supported");
-		}
+
+		return mtv;
+	} else {
+		return new string_list_value(value);
 	}
 }
 
@@ -100,11 +145,11 @@ headers::validate(const std::string &name, const std::string &value)
 bool
 headers::allow_comma_separated_values(const std::string &name)
 {
-	if (snf::streq(name, TRANSFER_ENCODING))
+	if (name == TRANSFER_ENCODING)
 		return true;
-	else if (snf::streq(name, TE))
+	else if (name == TE)
 		return true;
-	else if (snf::streq(name, TRAILERS))
+	else if (name == TRAILERS)
 		return true;
 	return false;
 }
@@ -136,15 +181,14 @@ headers::add(const std::string &istr)
 			break;
 	}
 
-	while (is_whitespace(istr[len - 1]))
+	while (len && is_whitespace(istr[len - 1]))
 		len--;
 
 	name = std::move(parse_token(istr, i, len));
 	if (name.empty())
 		throw bad_message("no header field name");
 
-	while ((i < len) && is_whitespace(istr[i]))
-		i++;
+	skip_spaces(istr, i, len);
 
 	if (istr[i] != ':') {
 		oss << "header field name (" << name << ") does not terminate with :";
@@ -184,21 +228,40 @@ headers::add(const std::string &istr)
 void
 headers::add(const std::string &name, const std::string &value)
 {
-	if (name.empty() || value.empty())
+	if (name.empty())
 		return;
 
-	validate(name, value);
+	std::string n;
+	std::transform(name.begin(), name.end(), std::back_inserter(n),
+		[] (char c) { return std::tolower(c); });
 
-	hdr_vec_t::iterator I = find(name);
-	if (I == m_headers.end()) {
-		m_headers.push_back(std::make_pair(name, value));
-	} else if (allow_comma_separated_values(name)) {
-		I->second.append(", ");
-		I->second.append(value);
-	} else {
-		std::ostringstream oss;
-		oss << "header field (" << name << ") occurs multiple times";
-		throw bad_message(oss.str());
+	std::unique_ptr<header_field_value> v(validate(n, value));
+	if (v.get()) {
+		hdr_vec_t::iterator I = find(n);
+		if (I == m_headers.end()) {
+			m_headers.push_back(std::make_pair(n, std::shared_ptr<header_field_value>(v.release())));
+		} else if (allow_comma_separated_values(n)) {
+			string_list_value *slist = 0;
+			token_list_value *tlist = 0;
+
+			if ((slist = dynamic_cast<string_list_value *>(I->second.get())) != 0) {
+				string_list_value *sval = dynamic_cast<string_list_value *>(v.get());
+				if (sval)
+					*slist += *sval;
+			} else if ((tlist = dynamic_cast<token_list_value *>(I->second.get())) != 0) {
+				token_list_value *tval = dynamic_cast<token_list_value *>(v.get());
+				if (tval)
+					*tlist += *tval;
+			} else {
+				std::ostringstream oss;
+				oss << "header field (" << n << ") occurs multiple times";
+				throw bad_message(oss.str());
+			}
+		} else {
+			std::ostringstream oss;
+			oss << "header field (" << n << ") occurs multiple times";
+			throw bad_message(oss.str());
+		}
 	}
 }
 
@@ -215,13 +278,47 @@ headers::add(const std::string &name, const std::string &value)
 void
 headers::update(const std::string &name, const std::string &value)
 {
-	validate(name, value);
+	if (name.empty())
+		return;
 
-	hdr_vec_t::iterator I = find(name);
-	if (I == m_headers.end()) {
-		m_headers.push_back(std::make_pair(name, value));
-	} else {
-		I->second = value;
+	std::string n;
+	std::transform(name.begin(), name.end(), std::back_inserter(n),
+		[] (char c) { return std::tolower(c); });
+
+	header_field_value *v = validate(n, value);
+	if (v) {
+		hdr_vec_t::iterator I = find(n);
+		if (I == m_headers.end()) {
+			m_headers.push_back(std::make_pair(n, std::shared_ptr<header_field_value>(v)));
+		} else {
+			I->second.reset(v);
+		}
+	}
+}
+
+/*
+ * Updates the HTTP header name/value in the headers list.
+ * If the header name already exists, the value passed is
+ * overrides the existing header value. If the header name
+ * does not already exist, header name/value are added to
+ * the headers list.
+ *
+ * @param [in] name  - HTTP header name.
+ * @param [in] value - HTTP header value.
+ */
+void
+headers::update(const std::string &name, header_field_value *value)
+{
+	if (name.empty())
+		return;
+
+	if (value) {
+		hdr_vec_t::iterator I = find(name);
+		if (I == m_headers.end()) {
+			m_headers.push_back(std::make_pair(name, std::shared_ptr<header_field_value>(value)));
+		} else {
+			I->second.reset(value);
+		}
 	}
 }
 
@@ -264,12 +361,12 @@ headers::is_set(const std::string &name) const
  * @throws std::out_of_range if the name is not
  *         present in the headers list.
  */
-const std::string &
+const header_field_value *
 headers::get(const std::string &name) const
 {
 	hdr_vec_t::const_iterator it = find(name);
 	if (it != m_headers.end()) {
-		return it->second;
+		return it->second.get();
 	} else {
 		std::ostringstream oss;
 		oss << "header field name (" << name << ") not found";
@@ -280,40 +377,39 @@ headers::get(const std::string &name) const
 size_t
 headers::content_length() const
 {
-	return std::stoull(get(CONTENT_LENGTH));
+	const number_value *numval = dynamic_cast<const number_value *>(get(CONTENT_LENGTH));
+	return numval->get();
 }
 
 void
 headers::content_length(size_t length)
 {
-	update(CONTENT_LENGTH, std::to_string(length));
+	update(CONTENT_LENGTH, new number_value(length));
 }
 
-std::vector<std::string>
+const std::vector<token> &
 headers::transfer_encoding() const
 {
-	return parse_list(get(TRANSFER_ENCODING));
+	const token_list_value *tlist = dynamic_cast<const token_list_value *>(get(TRANSFER_ENCODING));
+	return tlist->get();
 }
 
 void
-headers::transfer_encoding(const std::vector<std::string> &codings)
+headers::transfer_encoding(const token &token)
 {
-	std::ostringstream oss;
+	update(TRANSFER_ENCODING, new token_list_value(token));
+}
 
-	std::vector<std::string>::const_iterator it;
-	for (it = codings.begin(); it != codings.end(); ++it) {
-		if (it != codings.begin())
-			oss << ", ";
-		oss << *it;
-	}
-
-	update(TRANSFER_ENCODING, oss.str());
+void
+headers::transfer_encoding(const std::vector<token> &tokens)
+{
+	update(TRANSFER_ENCODING, new token_list_value(tokens));
 }
 
 void
 headers::transfer_encoding(const std::string &coding)
 {
-	update(TRANSFER_ENCODING, coding);
+	update(TRANSFER_ENCODING, new token_list_value(coding));
 }
 
 bool
@@ -321,38 +417,41 @@ headers::is_message_chunked() const
 {
 	hdr_vec_t::const_iterator it = find(TRANSFER_ENCODING);
 	if (it != m_headers.end()) {
-		std::vector<std::string> codings(std::move(parse_list(it->second)));
-		return codings.end() !=
-			std::find(codings.begin(), codings.end(), TRANSFER_ENCODING_CHUNKED);
+		const token_list_value *tlist = dynamic_cast<const token_list_value *>(it->second.get());
+		if (tlist) {
+			const std::vector<token> &tokens = tlist->get();
+			for (auto t : tokens) {
+				if (t.name == TRANSFER_ENCODING_CHUNKED)
+					return true;
+			}
+		}
 	}
 	return false;
 }
 
-std::vector<std::string>
+const std::vector<token> &
 headers::te() const
 {
-	return parse_list(get(TE));
+	const token_list_value *tlist = dynamic_cast<const token_list_value *>(get(TE));
+	return tlist->get();
 }
 
 void
-headers::te(const std::vector<std::string> &codings)
+headers::te(const token &token)
 {
-	std::ostringstream oss;
+	update(TE, new token_list_value(token));
+}
 
-	std::vector<std::string>::const_iterator it;
-	for (it = codings.begin(); it != codings.end(); ++it) {
-		if (it != codings.begin())
-			oss << ", ";
-		oss << *it;
-	}
-
-	update(TE, oss.str());
+void
+headers::te(const std::vector<token> &tokens)
+{
+	update(TE, new token_list_value(tokens));
 }
 
 void
 headers::te(const std::string &coding)
 {
-	update(TE, coding);
+	update(TE, new token_list_value(coding));
 }
 
 bool
@@ -360,38 +459,35 @@ headers::has_trailers() const
 {
 	hdr_vec_t::const_iterator it = find(TE);
 	if (it != m_headers.end()) {
-		std::vector<std::string> codings(std::move(parse_list(it->second)));
-		return codings.end() !=
-			std::find(codings.begin(), codings.end(), TRAILERS);
+		const token_list_value *tlist = dynamic_cast<const token_list_value *>(it->second.get());
+		if (tlist) {
+			const std::vector<token> &tokens = tlist->get();
+			for (auto t : tokens) {
+				if (t.name == TRAILERS)
+					return true;
+			}
+		}
 	}
 	return false;
 }
 
-std::vector<std::string>
+const std::vector<std::string> &
 headers::trailers() const
 {
-	return parse_list(get(TRAILERS));
+	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(TRAILERS));
+	return slist->get();
 }
 
 void
 headers::trailers(const std::vector<std::string> &fields)
 {
-	std::ostringstream oss;
-
-	std::vector<std::string>::const_iterator it;
-	for (it = fields.begin(); it != fields.end(); ++it) {
-		if (it != fields.begin())
-			oss << ", ";
-		oss << *it;
-	}
-
-	update(TRAILERS, oss.str());
+	update(TRAILERS, new string_list_value(fields));
 }
 
 void
 headers::trailers(const std::string &fields)
 {
-	update(TRAILERS, fields);
+	update(TRAILERS, new string_list_value(fields));
 }
 
 /*
@@ -406,28 +502,13 @@ headers::trailers(const std::string &fields)
  * @throws snf::http::bad_message if the host name cannot
  *         be parsed.
  */
-std::string
+const std::string &
 headers::host(in_port_t *port) const
 {
-	hdr_vec_t::const_iterator it = find(HOST);
-	if (it == m_headers.end())
-		return std::string();
-
-	std::string value(it->second);
-
-	// make it a URI so that the URI parsing code can be used
-	value.insert(0, "http://");
-
-	try {
-		snf::http::uri the_uri(value);
-
-		if (port && the_uri.get_port().is_present())
-			*port = the_uri.get_port().numeric_port();
-
-		return the_uri.get_host().get();
-	} catch (snf::http::bad_uri &ex) {
-		throw snf::http::bad_message(ex.what());
-	}
+	const host_value *h = dynamic_cast<const host_value *>(get(HOST));
+	if (port)
+		*port = h->port();
+	return h->host();
 }
 
 /*
@@ -446,59 +527,42 @@ headers::host(in_port_t *port) const
 void
 headers::host(const std::string &uristr, in_port_t port)
 {
-	try {
-		std::string value;
-		snf::http::uri the_uri(uristr);
-
-		if (the_uri.get_host().is_present()) {
-			value = the_uri.get_host().get();
-		} else {
-			std::ostringstream oss;
-			oss << "invalid URI string specified: " << uristr;
-			throw std::invalid_argument(oss.str());
-		}
-
-		if (port != 0) {
-			value += ":";
-			value += std::to_string(port);
-		} else if (the_uri.get_port().is_present()) {
-			value += the_uri.get_port().get();
-			value += ":";
-		}
-
-		update(HOST, value);
-	} catch (snf::http::bad_uri &ex) {
-		throw snf::http::bad_message(ex.what());
-	}
+	update(HOST, new host_value(uristr, port));
 }
 
-std::string
+const std::vector<std::string> &
 headers::connection() const
 {
-	return get(CONNECTION);
+	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(CONNECTION));
+	return slist->get();
 }
 
 void
 headers::connection(const std::string &cnxn)
 {
-	update(CONNECTION, cnxn);
+	update(CONNECTION, new string_list_value(cnxn));
 }
 
-media_type
+const media_type &
 headers::content_type() const
 {
-	std::string str = std::move(get(CONTENT_TYPE));
-	return media_type(str);
+	const media_type_value *mt = dynamic_cast<const media_type_value *>(get(CONTENT_TYPE));
+	return mt->get();
 }
 
 void
 headers::content_type(const media_type &mt)
 {
-	std::ostringstream oss;
-	oss << mt;
-	update(CONTENT_TYPE, oss.str());
+	update(CONTENT_TYPE, new media_type_value(mt));
 }
 
+void
+headers::content_type(const std::string &type, const std::string &subtype)
+{
+	update(CONTENT_TYPE, new media_type_value(type, subtype));
+}
+
+#if 0
 std::string
 headers::content_encoding() const
 {
@@ -549,6 +613,7 @@ headers::content_language(const std::vector<std::string> &languages)
 
 	update(CONTENT_LANGUAGE, oss.str());
 }
+#endif
 
 } // namespace http
 } // namespace snf

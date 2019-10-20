@@ -1,3 +1,4 @@
+#include "headers.h"
 #include "request.h"
 #include "response.h"
 #include "status.h"
@@ -140,8 +141,8 @@ private:
 
 			snf::http::headers hdrs5;
 			hdrs5.add("transfer-encoding:     chunked\r\n\r\n");
-			std::vector<std::string> xfer_codings(std::move(hdrs5.transfer_encoding()));
-			ASSERT_EQ(const std::string &, "chunked", xfer_codings[0], "transfer encoding matches");
+			const std::vector<snf::http::token> &xfer_codings = hdrs5.transfer_encoding();
+			ASSERT_EQ(const std::string &, "chunked", xfer_codings[0].name, "transfer encoding matches");
 			ASSERT_EQ(bool, true, hdrs5.is_message_chunked(), "message is chunked");
 
 		} catch (const snf::http::bad_message &ex) {
@@ -154,10 +155,10 @@ private:
 
 			snf::http::headers hdrs6;
 			hdrs6.add("Transfer-encoding: gzip, compress\r\n");
-			std::vector<std::string> xfer_codings(std::move(hdrs6.transfer_encoding()));
+			const std::vector<snf::http::token> &xfer_codings = hdrs6.transfer_encoding();
 			ASSERT_EQ(size_t, 2, xfer_codings.size(), "coding count matches");
-			ASSERT_EQ(const std::string &, "gzip", xfer_codings[0], "transfer encoding matches");
-			ASSERT_EQ(const std::string &, "compress", xfer_codings[1], "transfer encoding matches");
+			ASSERT_EQ(const std::string &, "gzip", xfer_codings[0].name, "transfer encoding matches");
+			ASSERT_EQ(const std::string &, "compress", xfer_codings[1].name, "transfer encoding matches");
 
 		} catch (const snf::http::not_implemented &ex) {
 			std::cerr << ex.what() << std::endl;
@@ -189,15 +190,18 @@ private:
 
 			snf::http::headers hdrs8;
 			hdrs8.add("Connection: close");
-			ASSERT_EQ(const std::string &, "close", hdrs8.connection(), "connection matches");
+			const std::vector<std::string> &conval1 = hdrs8.connection();
+			ASSERT_EQ(const std::string &, "close", conval1[0], "connection matches");
 
 			snf::http::headers hdrs9;
 			hdrs9.add("Connection: keep-alive");
-			ASSERT_EQ(const std::string &, "keep-alive", hdrs9.connection(), "connection matches");
+			const std::vector<std::string> &conval2 = hdrs9.connection();
+			ASSERT_EQ(const std::string &, "keep-alive", conval2[0], "connection matches");
 
 			snf::http::headers hdrs10;
 			hdrs10.add("Connection: upgrade");
-			ASSERT_EQ(const std::string &, "upgrade", hdrs10.connection(), "connection matches");
+			const std::vector<std::string> &conval3 = hdrs10.connection();
+			ASSERT_EQ(const std::string &, "upgrade", conval3[0], "connection matches");
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << ex.what() << std::endl;
 			return false;
@@ -215,31 +219,38 @@ private:
 
 		try {
 			TEST_LOG("Content Type");
-			std::ostringstream oss;
 
 			snf::http::headers hdrs12;
 			hdrs12.add("content-type: text/plain;charset=utf-8\r\n");
-			oss.str("");
-			oss << hdrs12.content_type();
-			ASSERT_EQ(const std::string &, "text/plain;charset=utf-8", oss.str(), "content type matches");
+			const snf::http::media_type &mt1 = hdrs12.content_type();
+			ASSERT_EQ(const std::string &, "text", mt1.type, "type matches");
+			ASSERT_EQ(const std::string &, "plain", mt1.subtype, "subtype matches");
+			ASSERT_EQ(const std::string &, "charset", mt1.parameters[0].first, "param name matches");
+			ASSERT_EQ(const std::string &, "utf-8", mt1.parameters[0].second, "param value matches");
 
 			snf::http::headers hdrs13;
 			hdrs13.add("content-type: text/plain;charset=UTF-8\r\n");
-			oss.str("");
-			oss << hdrs13.content_type();
-			ASSERT_EQ(const std::string &, "text/plain;charset=UTF-8", oss.str(), "content type matches");
+			const snf::http::media_type &mt2 = hdrs13.content_type();
+			ASSERT_EQ(const std::string &, "text", mt2.type, "type matches");
+			ASSERT_EQ(const std::string &, "plain", mt2.subtype, "subtype matches");
+			ASSERT_EQ(const std::string &, "charset", mt2.parameters[0].first, "param name matches");
+			ASSERT_EQ(const std::string &, "UTF-8", mt2.parameters[0].second, "param value matches");
 
 			snf::http::headers hdrs14;
 			hdrs14.add("content-type: Text/PLAIN;charset=\"utf-8\"\r\n");
-			oss.str("");
-			oss << hdrs14.content_type();
-			ASSERT_EQ(const std::string &, "text/plain;charset=utf-8", oss.str(), "content type matches");
+			const snf::http::media_type &mt3 = hdrs14.content_type();
+			ASSERT_EQ(const std::string &, "text", mt3.type, "type matches");
+			ASSERT_EQ(const std::string &, "plain", mt3.subtype, "subtype matches");
+			ASSERT_EQ(const std::string &, "charset", mt3.parameters[0].first, "param name matches");
+			ASSERT_EQ(const std::string &, "utf-8", mt3.parameters[0].second, "param value matches");
 
 			snf::http::headers hdrs15;
 			hdrs15.add("content-type: text/plain; charset=\"UTF-8\"\r\n");
-			oss.str("");
-			oss << hdrs15.content_type();
-			ASSERT_EQ(const std::string &, "text/plain;charset=UTF-8", oss.str(), "content type matches");
+			const snf::http::media_type &mt4 = hdrs15.content_type();
+			ASSERT_EQ(const std::string &, "text", mt4.type, "type matches");
+			ASSERT_EQ(const std::string &, "plain", mt4.subtype, "subtype matches");
+			ASSERT_EQ(const std::string &, "charset", mt4.parameters[0].first, "param name matches");
+			ASSERT_EQ(const std::string &, "UTF-8", mt4.parameters[0].second, "param value matches");
 
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << ex.what() << std::endl;
@@ -252,10 +263,12 @@ private:
 			snf::http::headers hdrs16;
 			hdrs16.te("trailers, deflate;q=0.5");
 			hdrs16.add("TE: ");
-			std::vector<std::string> codings(std::move(hdrs16.te()));
+			std::vector<snf::http::token> codings(std::move(hdrs16.te()));
 			ASSERT_EQ(size_t, 2, codings.size(), "TE coding size matches");
-			ASSERT_EQ(const std::string &, "trailers", codings[0], "TE coding matches");
-			ASSERT_EQ(const std::string &, "deflate;q=0.5", codings[1], "TE coding matches");
+			ASSERT_EQ(const std::string &, "trailers", codings[0].name, "TE coding matches");
+			ASSERT_EQ(const std::string &, "deflate", codings[1].name, "TE coding matches");
+			ASSERT_EQ(const std::string &, "q", codings[1].parameters[0].first, "TE coding matches");
+			ASSERT_EQ(const std::string &, "0.5", codings[1].parameters[0].second, "TE coding matches");
 			ASSERT_EQ(bool, true, hdrs16.has_trailers(), "message has trailers");
 
 		} catch (const snf::http::bad_message &ex) {
