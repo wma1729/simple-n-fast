@@ -116,6 +116,14 @@ public:
 	void host(const std::string &, in_port_t port);
 
 	/*
+	 * Via: [<protocol-name>/]<protocol-version> <received-by> <comment>
+	 */
+	const std::vector<via> &intermediary() const;
+	void intermediary(const via &);
+	void intermediary(const std::vector<via> &);
+	void intermediary(const std::string &);
+
+	/*
 	 * Connection: close
 	 * Connection: keep-alive
 	 * Connection: upgrade

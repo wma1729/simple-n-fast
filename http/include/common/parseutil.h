@@ -11,6 +11,7 @@ namespace http {
 using param_vec_t = std::vector<std::pair<std::string, std::string>>;
 
 void skip_spaces(const std::string &, size_t &, size_t);
+void skip_comments(const std::string &, size_t &, size_t);
 std::string parse_token(const std::string &, size_t &, size_t);
 param_vec_t parse_parameter(const std::string &, size_t &, size_t);
 std::vector<std::string> parse_list(const std::string &);

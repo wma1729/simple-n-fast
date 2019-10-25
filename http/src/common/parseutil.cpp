@@ -16,6 +16,35 @@ skip_spaces(const std::string &istr, size_t &i, size_t len)
 		i++;
 }
 
+void
+skip_comments(const std::string &istr, size_t &i, size_t len)
+{
+	skip_spaces(istr, i, len);
+
+	if (i >= len)
+		return;
+
+	if (istr[i] != '(')
+		return;
+
+	++i;
+
+	while (i < len) {
+		if (is_commented(istr[i]))
+			i++;
+		else
+			break;
+	}
+
+	if ((i >= len) || (istr[i] != ')')) {
+		std::ostringstream oss;
+		oss << "comment not terminated properly (" << istr << ")";
+		throw bad_message(oss.str());
+	} else {
+		++i;
+	}
+}
+
 std::string
 parse_token(const std::string &istr, size_t &i, size_t len)
 {
@@ -60,6 +89,15 @@ parse_parameter(const std::string &istr, size_t &i, size_t len)
 
 		for (; i < len; ++i) {
 			bool error = false;
+
+			if (!quoted) {
+				if (istr[i] == ';')
+					break;
+
+				if (is_whitespace(istr[i]))
+					break;
+			}
+
 			if (istr[i] == '=') {
 				processing_name = false;
 			} else if ((istr[i] == '"') && !processing_name) {
@@ -97,16 +135,10 @@ parse_parameter(const std::string &istr, size_t &i, size_t len)
 			throw bad_message(oss.str());
 		}
 
-		if (!name.empty()) {
-			if (value.empty()) {
-				oss << "parameter value is not specified for " << name;
-				throw bad_message(oss.str());
-			} else {
-				parameters.push_back(std::make_pair(name, value));
-			}
-		} else {
+		if (!name.empty())
+			parameters.push_back(std::make_pair(name, value));
+		else
 			throw bad_message("parameter name is empty");
-		}
 
 		name.clear();
 		value.clear();

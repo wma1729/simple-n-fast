@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ostream>
+#include <sstream>
 
 namespace snf {
 namespace http {
@@ -27,13 +28,26 @@ struct version
 	{
 	}
 
-	version(const std::string &);
+	version(const version &v)
+		: m_major(v.m_major)
+		, m_minor(v.m_minor)
+	{
+	}
+
+	version(const std::string &, bool allow_abbr = false);
+
+	std::string str() const
+	{
+		std::ostringstream oss;
+		oss << m_major << "." << m_minor;
+		return oss.str();
+	}
 };
 
 inline std::ostream &
 operator<<(std::ostream &os, const version &v)
 {
-	os << "HTTP/" << v.m_major << "." << v.m_minor;
+	os << "HTTP/" << v.str();
 	return os;
 }
 

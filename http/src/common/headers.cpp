@@ -61,7 +61,8 @@ headers::canonicalize_name(const std::string &name)
 	bool capitalize = true;
 
 	for (size_t i = 0; i < name.length(); ++i) {
-		n[i] = (capitalize) ? std::toupper(name[i]) : name[i];
+		int c = (capitalize) ? std::toupper(name[i]) : name[i];
+		n.push_back(c);
 		capitalize = (name[i] == '-');
 	}
 
@@ -92,6 +93,8 @@ headers::validate(const std::string &name, const std::string &value)
 		return new string_list_value(value);
 	} else if (name == HOST) {
 		return new host_value(value);
+	} else if (name == VIA) {
+		return new via_list_value(value);
 	} else if (name == CONNECTION) {
 		std::unique_ptr<string_list_value> slist(new string_list_value(value));
 		const std::vector<std::string> &values = slist->get();
@@ -110,22 +113,22 @@ headers::validate(const std::string &name, const std::string &value)
 		const media_type &mt = mtv->get();
 		std::ostringstream oss;
 		
-		if (mt.type == CONTENT_TYPE_T_TEXT) {
-			if (mt.subtype != CONTENT_TYPE_ST_PLAIN) {
-				oss << "subtype " << mt.subtype
+		if (mt.m_type == CONTENT_TYPE_T_TEXT) {
+			if (mt.m_subtype != CONTENT_TYPE_ST_PLAIN) {
+				oss << "subtype " << mt.m_subtype
 					<< " is not supported for type "
 					<< CONTENT_TYPE_T_TEXT;
 				throw not_implemented(oss.str());
 			}
-		} else if (mt.type == CONTENT_TYPE_T_APPLICATION) {
-			if (mt.subtype != CONTENT_TYPE_ST_JSON) {
-				oss << "subtype " << mt.subtype
+		} else if (mt.m_type == CONTENT_TYPE_T_APPLICATION) {
+			if (mt.m_subtype != CONTENT_TYPE_ST_JSON) {
+				oss << "subtype " << mt.m_subtype
 					<< " is not supported for type "
 					<< CONTENT_TYPE_T_APPLICATION;
 				throw not_implemented(oss.str());
 			}
 		} else {
-			oss << "type " << mt.type << " is not supported";
+			oss << "type " << mt.m_type << " is not supported";
 			throw not_implemented(oss.str());
 		}
 
@@ -150,6 +153,8 @@ headers::allow_comma_separated_values(const std::string &name)
 	else if (name == TE)
 		return true;
 	else if (name == TRAILERS)
+		return true;
+	else if (name == VIA)
 		return true;
 	return false;
 }
@@ -243,6 +248,7 @@ headers::add(const std::string &name, const std::string &value)
 		} else if (allow_comma_separated_values(n)) {
 			string_list_value *slist = 0;
 			token_list_value *tlist = 0;
+			via_list_value *vlist = 0;
 
 			if ((slist = dynamic_cast<string_list_value *>(I->second.get())) != 0) {
 				string_list_value *sval = dynamic_cast<string_list_value *>(v.get());
@@ -252,6 +258,10 @@ headers::add(const std::string &name, const std::string &value)
 				token_list_value *tval = dynamic_cast<token_list_value *>(v.get());
 				if (tval)
 					*tlist += *tval;
+			} else if ((vlist = dynamic_cast<via_list_value *>(I->second.get())) != 0) {
+				via_list_value *vval = dynamic_cast<via_list_value *>(v.get());
+				if (vval)
+					*vlist += *vval;
 			} else {
 				std::ostringstream oss;
 				oss << "header field (" << n << ") occurs multiple times";
@@ -312,13 +322,15 @@ headers::update(const std::string &name, header_field_value *value)
 	if (name.empty())
 		return;
 
-	if (value) {
-		hdr_vec_t::iterator I = find(name);
-		if (I == m_headers.end()) {
-			m_headers.push_back(std::make_pair(name, std::shared_ptr<header_field_value>(value)));
-		} else {
-			I->second.reset(value);
-		}
+	std::string n;
+	std::transform(name.begin(), name.end(), std::back_inserter(n),
+		[] (char c) { return std::tolower(c); });
+
+	hdr_vec_t::iterator I = find(n);
+	if (I == m_headers.end()) {
+		m_headers.push_back(std::make_pair(name, std::shared_ptr<header_field_value>(value)));
+	} else {
+		I->second.reset(value);
 	}
 }
 
@@ -330,7 +342,14 @@ headers::update(const std::string &name, header_field_value *value)
 void
 headers::remove(const std::string &name)
 {
-	hdr_vec_t::iterator I = find(name);
+	if (name.empty())
+		return;
+
+	std::string n;
+	std::transform(name.begin(), name.end(), std::back_inserter(n),
+		[] (char c) { return std::tolower(c); });
+
+	hdr_vec_t::iterator I = find(n);
 	if (I != m_headers.end())
 		m_headers.erase(I);
 }
@@ -347,7 +366,14 @@ headers::remove(const std::string &name)
 bool
 headers::is_set(const std::string &name) const
 {
-	return (m_headers.end() != find(name));
+	if (name.empty())
+		return false;
+
+	std::string n;
+	std::transform(name.begin(), name.end(), std::back_inserter(n),
+		[] (char c) { return std::tolower(c); });
+
+	return (m_headers.end() != find(n));
 }
 
 /*
@@ -364,7 +390,14 @@ headers::is_set(const std::string &name) const
 const header_field_value *
 headers::get(const std::string &name) const
 {
-	hdr_vec_t::const_iterator it = find(name);
+	if (name.empty())
+		throw std::out_of_range("header field name not specified");
+
+	std::string n;
+	std::transform(name.begin(), name.end(), std::back_inserter(n),
+		[] (char c) { return std::tolower(c); });
+
+	hdr_vec_t::const_iterator it = find(n);
 	if (it != m_headers.end()) {
 		return it->second.get();
 	} else {
@@ -421,7 +454,7 @@ headers::is_message_chunked() const
 		if (tlist) {
 			const std::vector<token> &tokens = tlist->get();
 			for (auto t : tokens) {
-				if (t.name == TRANSFER_ENCODING_CHUNKED)
+				if (t.m_name == TRANSFER_ENCODING_CHUNKED)
 					return true;
 			}
 		}
@@ -463,7 +496,7 @@ headers::has_trailers() const
 		if (tlist) {
 			const std::vector<token> &tokens = tlist->get();
 			for (auto t : tokens) {
-				if (t.name == TRAILERS)
+				if (t.m_name == TRAILERS)
 					return true;
 			}
 		}
@@ -528,6 +561,31 @@ void
 headers::host(const std::string &uristr, in_port_t port)
 {
 	update(HOST, new host_value(uristr, port));
+}
+
+const std::vector<via> &
+headers::intermediary() const
+{
+	const via_list_value *vlist = dynamic_cast<const via_list_value *>(get(VIA));
+	return vlist->get();
+}
+
+void
+headers::intermediary(const via &v)
+{
+	update(VIA, new via_list_value(v));
+}
+
+void
+headers::intermediary(const std::vector<via> &vvec)
+{
+	update(VIA, new via_list_value(vvec));
+}
+
+void
+headers::intermediary(const std::string &viastr)
+{
+	update(VIA, new via_list_value(viastr));
 }
 
 const std::vector<std::string> &

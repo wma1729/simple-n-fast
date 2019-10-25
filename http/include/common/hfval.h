@@ -5,6 +5,8 @@
 #include <vector>
 #include <utility>
 #include "net.h"
+#include "version.h"
+#include "uri.h"
 
 namespace snf {
 namespace http {
@@ -69,8 +71,8 @@ public:
 	string_list_value(const std::vector<std::string> &);
 	virtual ~string_list_value() {}
 	const std::vector<std::string> &get() const { return m_strings; }
-	std::string str() const;
 	string_list_value &operator+=(const string_list_value &);
+	std::string str() const;
 };
 
 using param_vec_t = std::vector<std::pair<std::string, std::string>>;
@@ -80,8 +82,35 @@ using param_vec_t = std::vector<std::pair<std::string, std::string>>;
  */
 struct token
 {
-	std::string     name;           // name
-	param_vec_t     parameters;     // optional parameters
+	std::string     m_name;         // name
+	param_vec_t     m_parameters;   // optional parameters
+
+	token() {}
+	token(const std::string &name) : m_name(name) {}
+	token(const std::string &name, const param_vec_t &parameters)
+		: m_name(name), m_parameters(parameters) {}
+	token(const token &t)
+		: m_name(t.m_name), m_parameters(t.m_parameters) {}
+	token(token &&t)
+		: m_name(std::move(t.m_name)), m_parameters(std::move(t.m_parameters)) {}
+
+	const token &operator=(const token &t)
+	{
+		if (this != &t) {
+			m_name = t.m_name;
+			m_parameters = t.m_parameters;
+		}
+		return *this;
+	}
+
+	token &operator=(token &&t)
+	{
+		if (this != &t) {
+			m_name = std::move(t.m_name);
+			m_parameters = std::move(t.m_parameters);
+		}
+		return *this;
+	}
 };
 
 /*
@@ -99,8 +128,43 @@ public:
 	token_list_value(const std::vector<token> &);
 	virtual ~token_list_value() {}
 	const std::vector<token> &get() const { return m_tokens; }
-	std::string str() const;
 	token_list_value & operator+=(const token_list_value &);
+	std::string str() const;
+};
+
+/*
+ * Host name and port combination.
+ */
+struct host_port
+{
+	std::string     m_host;    // host name
+	in_port_t       m_port;    // optional port number
+
+	host_port() : m_port(0) {}
+	host_port(const std::string &h, in_port_t p = 0)
+		: m_host(h), m_port(0) {}
+	host_port(const host_port &hp)
+		: m_host(hp.m_host), m_port(hp.m_port) {}
+	host_port(host_port &&hp)
+		: m_host(std::move(hp.m_host)), m_port(hp.m_port) {}
+
+	const host_port &operator=(const host_port &hp)
+	{
+		if (this != &hp) {
+			m_host = hp.m_host;
+			m_port = hp.m_port;
+		}
+		return *this;
+	}
+
+	host_port &operator=(host_port &&hp)
+	{
+		if (this != &hp) {
+			m_host = std::move(hp.m_host);
+			m_port = hp.m_port;
+		}
+		return *this;
+	}
 };
 
 /*
@@ -109,26 +173,57 @@ public:
 class host_value : public header_field_value
 {
 private:
-	std::string     m_host;
-	in_port_t       m_port;
+	host_port       m_hp;
 	void            parse(const std::string &);
 
 public:
 	host_value(const std::string &);
 	host_value(const std::string &, in_port_t);
 	virtual ~host_value() {}
-	const std::string &host() const { return m_host; }
-	in_port_t port() const { return m_port; }
+	const std::string &host() const { return m_hp.m_host; }
+	in_port_t port() const { return m_hp.m_port; }
+	const host_port &get() const { return m_hp; }
 	std::string str() const;
 };
 
 /*
  * Media type (for Content-Type) header field.
  */
-struct media_type {
-	std::string type;       // type
-	std::string subtype;    // sub type
-	param_vec_t parameters; // optional parameters
+struct media_type
+{
+	std::string m_type;        // type
+	std::string m_subtype;     // sub type
+	param_vec_t m_parameters;  // optional parameters
+
+	media_type() {}
+	media_type(const std::string &type, const std::string &subtype)
+		: m_type(type), m_subtype(subtype) {}
+	media_type(const media_type &mt)
+		: m_type(mt.m_type), m_subtype(mt.m_subtype)
+		, m_parameters(mt.m_parameters) {}
+	media_type(media_type &&mt)
+		: m_type(std::move(mt.m_type)), m_subtype(std::move(mt.m_subtype))
+		, m_parameters(std::move(mt.m_parameters)) {}
+
+	const media_type &operator=(const media_type &mt)
+	{
+		if (this != &mt) {
+			m_type = mt.m_type;
+			m_subtype = mt.m_subtype;
+			m_parameters = mt.m_parameters;
+		}
+		return *this;
+	}
+
+	media_type &operator=(media_type &&mt)
+	{
+		if (this != &mt) {
+			m_type = std::move(mt.m_type);
+			m_subtype = std::move(mt.m_subtype);
+			m_parameters = std::move(mt.m_parameters);
+		}
+		return *this;
+	}
 };
 
 /*
@@ -147,9 +242,61 @@ public:
 	media_type_value(media_type &&);
 	virtual ~media_type_value() {}
 	const media_type &get() const { return m_mt; }
-	const std::string &type() const { return m_mt.type; }
-	const std::string &subtype() const { return m_mt.subtype; }
-	const param_vec_t &parameters() const { return m_mt.parameters; }
+	const std::string &type() const { return m_mt.m_type; }
+	const std::string &subtype() const { return m_mt.m_subtype; }
+	const param_vec_t &parameters() const { return m_mt.m_parameters; }
+	std::string str() const;
+};
+
+/*
+ * Via (version/uri).
+ */
+struct via
+{
+	version m_ver;
+	uri	m_uri;
+
+	via() {}
+	via(const version &v, const uri &u) : m_ver(v), m_uri(u) {}
+	via(version &&v, uri &&u) : m_ver(v), m_uri(std::move(u)) {}
+	via(const via &v) : m_ver(v.m_ver), m_uri(v.m_uri) {}
+	via(via &&v) : m_ver(v.m_ver), m_uri(std::move(v.m_uri)) {}
+
+	const via &operator=(const via &v)
+	{
+		if (this != &v) {
+			m_ver = v.m_ver;
+			m_uri = v.m_uri;
+		}
+		return *this;
+	}
+
+	via &operator=(via &&v)
+	{
+		if (this != &v) {
+			m_ver = v.m_ver;
+			m_uri = std::move(v.m_uri);
+		}
+		return *this;
+	}
+};
+
+/*
+ * Via header field value.
+ */
+class via_list_value : public header_field_value
+{
+private:
+	std::vector<via>    m_via_list;
+	void                parse(const std::string &);
+
+public:
+	via_list_value(const std::string &);
+	via_list_value(const via &);
+	via_list_value(const std::vector<via> &);
+	virtual ~via_list_value() {}
+	const std::vector<via> &get() const { return m_via_list; }
+	via_list_value & operator+=(const via_list_value &);
 	std::string str() const;
 };
 
