@@ -109,7 +109,7 @@ headers::validate(const std::string &name, const std::string &value)
 		}
 		return slist.release();
 	} else if (name == CONTENT_TYPE) {
-		media_type_value *mtv = new media_type_value(value);
+		std::unique_ptr<media_type_value> mtv(new media_type_value(value));
 		const media_type &mt = mtv->get();
 		std::ostringstream oss;
 		
@@ -132,7 +132,22 @@ headers::validate(const std::string &name, const std::string &value)
 			throw not_implemented(oss.str());
 		}
 
-		return mtv;
+		return mtv.release();
+	} else if (name == CONTENT_ENCODING) {
+		std::unique_ptr<string_list_value> slist(new string_list_value(value));
+		const std::vector<std::string> &values = slist->get();
+		for (auto v : values) {
+			if ((v != CONTENT_ENCODING_COMPRESS) &&
+				(v != CONTENT_ENCODING_X_COMPRESS) &&
+				(v != CONTENT_ENCODING_GZIP) &&
+				(v != CONTENT_ENCODING_X_GZIP) &&
+				(v != CONTENT_ENCODING_DEFLATE)) {
+				std::ostringstream oss;
+				oss << "content-encoding " << v << " is not supported";
+				throw not_implemented(oss.str());
+			}
+		}
+		return slist.release();
 	} else {
 		return new string_list_value(value);
 	}
@@ -155,6 +170,8 @@ headers::allow_comma_separated_values(const std::string &name)
 	else if (name == TRAILERS)
 		return true;
 	else if (name == VIA)
+		return true;
+	else if (name == CONTENT_ENCODING)
 		return true;
 	return false;
 }
@@ -512,15 +529,9 @@ headers::trailers() const
 }
 
 void
-headers::trailers(const std::vector<std::string> &fields)
-{
-	update(TRAILERS, new string_list_value(fields));
-}
-
-void
 headers::trailers(const std::string &fields)
 {
-	update(TRAILERS, new string_list_value(fields));
+	update(TRAILERS, fields);
 }
 
 /*
@@ -598,7 +609,7 @@ headers::connection() const
 void
 headers::connection(const std::string &cnxn)
 {
-	update(CONNECTION, new string_list_value(cnxn));
+	update(CONNECTION, cnxn);
 }
 
 const media_type &
@@ -620,11 +631,11 @@ headers::content_type(const std::string &type, const std::string &subtype)
 	update(CONTENT_TYPE, new media_type_value(type, subtype));
 }
 
-#if 0
-std::string
+const std::vector<std::string> &
 headers::content_encoding() const
 {
-	return get(CONTENT_ENCODING);
+	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(CONTENT_ENCODING));
+	return slist->get();
 }
 
 void
@@ -632,6 +643,8 @@ headers::content_encoding(const std::string &coding)
 {
 	update(CONTENT_ENCODING, coding);
 }
+
+#if 0
 
 std::vector<std::string>
 headers::content_language() const

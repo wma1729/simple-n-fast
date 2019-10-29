@@ -284,11 +284,41 @@ private:
 			hdrs17.add("via: 1.0 www.simplenfast.org (a comment), 1.1 pseudonym");
 			const std::vector<snf::http::via> &intermediaries = hdrs17.intermediary();
 			ASSERT_EQ(size_t, 3, intermediaries.size(), "Via size matches");
-			std::cout << hdrs17 << std::endl;
+
+			std::ostringstream oss;
+			oss << hdrs17;
+			ASSERT_EQ(const std::string &, snf::trim(oss.str()), "Via: 1.1 www.example.com:8080, 1.0 www.simplenfast.org, 1.1 pseudonym", "Via matches");
 
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << ex.what() << std::endl;
 			return false;
+		}
+
+		try {
+			TEST_LOG("Content-Encoding");
+
+			snf::http::headers hdrs18;
+			hdrs18.content_encoding("gzip, x-gzip, deflate, compress, x-compress");
+			const std::vector<std::string> &codings = hdrs18.content_encoding();
+			ASSERT_EQ(size_t, 5, codings.size(), "Coding size matches");
+
+			std::ostringstream oss;
+			oss << hdrs18;
+			ASSERT_EQ(const std::string &, snf::trim(oss.str()), "Content-Encoding: gzip, x-gzip, deflate, compress, x-compress", "Content-Encoding matches");
+
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
+		}
+
+		try {
+			TEST_LOG("Invalid Content-Encoding");
+
+			snf::http::headers hdrs19;
+			hdrs19.content_encoding("abracadabra");
+			TEST_FAIL("No exception thrown");
+		} catch (const snf::http::not_implemented &ex) {
+			TEST_PASS(ex.what());
 		}
 
 		return true;

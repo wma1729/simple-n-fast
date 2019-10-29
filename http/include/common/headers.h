@@ -23,13 +23,21 @@ static const std::string CONTENT_ENCODING("content-encoding");
 static const std::string CONTENT_LANGUAGE("content-language");
 
 static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
+
 static const std::string CONNECTION_CLOSE("close");
 static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
 static const std::string CONNECTION_UPGRADE("upgrade");
+
 static const std::string CONTENT_TYPE_T_TEXT("text");
 static const std::string CONTENT_TYPE_T_APPLICATION("application");
 static const std::string CONTENT_TYPE_ST_PLAIN("plain");
 static const std::string CONTENT_TYPE_ST_JSON("json");
+
+static const std::string CONTENT_ENCODING_COMPRESS("compress");
+static const std::string CONTENT_ENCODING_X_COMPRESS("x-compress");
+static const std::string CONTENT_ENCODING_GZIP("gzip");
+static const std::string CONTENT_ENCODING_X_GZIP("x-gzip");
+static const std::string CONTENT_ENCODING_DEFLATE("deflate");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::shared_ptr<header_field_value>>>;
 
@@ -106,7 +114,6 @@ public:
 	 * Trailers: <list_of_header_fields>
 	 */
 	const std::vector<std::string> &trailers() const;
-	void trailers(const std::vector<std::string> &);
 	void trailers(const std::string &);
 
 	/*
@@ -139,13 +146,13 @@ public:
 	void content_type(const media_type &);
 	void content_type(const std::string &, const std::string &);
 
-#if 0
 	/*
 	 * Content-Encoding: gzip
 	 */
-	std::string content_encoding() const;
+	const std::vector<std::string> &content_encoding() const;
 	void content_encoding(const std::string &);
 
+#if 0
 	/*
 	 * Content-Lanaguage: en-US [, en-UK]
 	 */
