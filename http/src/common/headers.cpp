@@ -99,9 +99,7 @@ headers::validate(const std::string &name, const std::string &value)
 		std::unique_ptr<string_list_value> slist(new string_list_value(value));
 		const std::vector<std::string> &values = slist->get();
 		for (auto v : values) {
-			if ((v != CONNECTION_CLOSE) &&
-				(v != CONNECTION_KEEP_ALIVE) &&
-				(v != CONNECTION_UPGRADE)) {
+			if (!valid_connection(v)) {
 				std::ostringstream oss;
 				oss << "connection option " << v << " is not supported";
 				throw not_implemented(oss.str());
@@ -137,17 +135,17 @@ headers::validate(const std::string &name, const std::string &value)
 		std::unique_ptr<string_list_value> slist(new string_list_value(value));
 		const std::vector<std::string> &values = slist->get();
 		for (auto v : values) {
-			if ((v != CONTENT_ENCODING_COMPRESS) &&
-				(v != CONTENT_ENCODING_X_COMPRESS) &&
-				(v != CONTENT_ENCODING_GZIP) &&
-				(v != CONTENT_ENCODING_X_GZIP) &&
-				(v != CONTENT_ENCODING_DEFLATE)) {
+			if (!valid_encoding(v)) {
 				std::ostringstream oss;
 				oss << "content-encoding " << v << " is not supported";
 				throw not_implemented(oss.str());
 			}
 		}
 		return slist.release();
+	} else if (name == CONTENT_LOCATION) {
+		uri the_uri(value);
+		// If the value is invalid, the above will throw an exception
+		return new string_value(value);
 	} else {
 		return new string_list_value(value);
 	}
@@ -174,6 +172,30 @@ headers::allow_comma_separated_values(const std::string &name)
 	else if (name == CONTENT_ENCODING)
 		return true;
 	return false;
+}
+
+/*
+ * Is valid connection value?
+ */
+bool
+headers::valid_connection(const std::string &cnxn)
+{
+	return ((cnxn == CONNECTION_CLOSE) ||
+		(cnxn == CONNECTION_KEEP_ALIVE) ||
+		(cnxn == CONNECTION_UPGRADE));
+}
+
+/*
+ * Is encoding valid?
+ */
+bool
+headers::valid_encoding(const std::string &coding)
+{
+	return ((coding == CONTENT_ENCODING_COMPRESS) ||
+		(coding == CONTENT_ENCODING_X_COMPRESS) ||
+		(coding == CONTENT_ENCODING_GZIP) ||
+		(coding == CONTENT_ENCODING_X_GZIP) ||
+		(coding == CONTENT_ENCODING_DEFLATE));
 }
 
 /*
@@ -644,24 +666,11 @@ headers::content_encoding(const std::string &coding)
 	update(CONTENT_ENCODING, coding);
 }
 
-#if 0
-
-std::vector<std::string>
+const std::vector<std::string> &
 headers::content_language() const
 {
-	std::vector<std::string> languages;
-
-	std::string lang = get(CONTENT_LANGUAGE);
-	if (!lang.empty()) {
-		std::istringstream iss(lang);
-		std::string language;
-
-		while (std::getline(iss, language, ','))
-			languages.push_back(language);
-
-	}
-
-	return std::move(languages);
+	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(CONTENT_LANGUAGE));
+	return slist->get();
 }
 
 void
@@ -670,21 +679,26 @@ headers::content_language(const std::string &language)
 	update(CONTENT_LANGUAGE, language);
 }
 
+uri
+headers::content_location() const
+{
+	const string_value *sval = dynamic_cast<const string_value *>(get(CONTENT_LOCATION));
+	return uri(sval->get());
+}
+
 void
-headers::content_language(const std::vector<std::string> &languages)
+headers::content_location(const uri &u)
 {
 	std::ostringstream oss;
-
-	std::vector<std::string>::const_iterator it;
-	for (it = languages.begin(); it != languages.end(); ++it) {
-		if (it != languages.begin())
-			oss << ", ";
-		oss << *it;
-	}
-
-	update(CONTENT_LANGUAGE, oss.str());
+	oss << u;
+	update(CONTENT_LOCATION, oss.str());
 }
-#endif
+
+void
+headers::content_location(const std::string &uristr)
+{
+	update(CONTENT_LOCATION, uristr);
+}
 
 } // namespace http
 } // namespace snf

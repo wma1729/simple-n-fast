@@ -21,6 +21,7 @@ static const std::string CONNECTION("connection");
 static const std::string CONTENT_TYPE("content-type");
 static const std::string CONTENT_ENCODING("content-encoding");
 static const std::string CONTENT_LANGUAGE("content-language");
+static const std::string CONTENT_LOCATION("content-location");
 
 static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 
@@ -53,6 +54,8 @@ private:
 	hdr_vec_t::const_iterator find(const std::string &) const;
 	header_field_value *validate(const std::string &, const std::string &);
 	bool allow_comma_separated_values(const std::string &);
+	bool valid_connection(const std::string &);
+	bool valid_encoding(const std::string &);
 
 public:
 	static std::string canonicalize_name(const std::string &);
@@ -152,14 +155,19 @@ public:
 	const std::vector<std::string> &content_encoding() const;
 	void content_encoding(const std::string &);
 
-#if 0
 	/*
 	 * Content-Lanaguage: en-US [, en-UK]
 	 */
-	std::vector<std::string> content_language() const;
+	const std::vector<std::string> &content_language() const;
 	void content_language(const std::string &);
-	void content_language(const std::vector<std::string> &);
-#endif
+
+	/*
+	 * Content-Location: <uri>
+	 */
+	uri content_location() const;
+	void content_location(const uri &);
+	void content_location(const std::string &);
+	
 };
 
 } // namespace http

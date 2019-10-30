@@ -321,6 +321,21 @@ private:
 			TEST_PASS(ex.what());
 		}
 
+		try {
+			TEST_LOG("Content-Location");
+
+			snf::http::headers hdrs20;
+			hdrs20.content_location("http://www.example.com:8080/index.html");
+
+			std::ostringstream oss;
+			oss << hdrs20;
+			ASSERT_EQ(const std::string &, snf::trim(oss.str()), "Content-Location: http://www.example.com:8080/index.html", "Content-Location matches");
+
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
+		}
+
 		return true;
 	}
 
