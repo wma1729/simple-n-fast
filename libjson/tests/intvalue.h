@@ -31,9 +31,9 @@ public:
 		ASSERT_EQ(const std::string &, iv_5.str(false), "2147483647", "check for integer value");
 		snf::json::value iv_6(INT_MIN);
 		ASSERT_EQ(const std::string &, iv_6.str(false), "-2147483648", "check for integer value");
-		snf::json::value iv_7(LONG_MAX);
+		snf::json::value iv_7(LLONG_MAX);
 		ASSERT_EQ(const std::string &, iv_7.str(false), "9223372036854775807", "check for integer value");
-		snf::json::value iv_8(LONG_MIN);
+		snf::json::value iv_8(LLONG_MIN);
 		ASSERT_EQ(const std::string &, iv_8.str(false), "-9223372036854775808", "check for integer value");
 
 		iv_8 = SCHAR_MAX;
@@ -48,9 +48,9 @@ public:
 		ASSERT_EQ(const std::string &, iv_4.str(false), "2147483647", "check for integer value assignment");
 		iv_3 = INT_MIN;
 		ASSERT_EQ(const std::string &, iv_3.str(false), "-2147483648", "check for integer value assignment");
-		iv_2 = LONG_MAX;
+		iv_2 = LLONG_MAX;
 		ASSERT_EQ(const std::string &, iv_2.str(false), "9223372036854775807", "check for integer value assignment");
-		iv_1 = LONG_MIN;
+		iv_1 = LLONG_MIN;
 		ASSERT_EQ(const std::string &, iv_1.str(false), "-9223372036854775808", "check for integer value assignment");
 
 		snf::json::object object_1 { std::make_pair("iv", iv_4) };
@@ -123,8 +123,8 @@ public:
 		ASSERT_EQ(int64_t,  iv_5.get_integer(), SHRT_MIN, "integer value preserved");
 		ASSERT_EQ(int64_t,  iv_4.get_integer(), INT_MAX, "integer value preserved");
 		ASSERT_EQ(int64_t,  iv_3.get_integer(), INT_MIN, "integer value preserved");
-		ASSERT_EQ(int64_t,  iv_2.get_integer(), LONG_MAX, "integer value preserved");
-		ASSERT_EQ(int64_t,  iv_1.get_integer(), LONG_MIN, "integer value preserved");
+		ASSERT_EQ(int64_t,  iv_2.get_integer(), LLONG_MAX, "integer value preserved");
+		ASSERT_EQ(int64_t,  iv_1.get_integer(), LLONG_MIN, "integer value preserved");
 
 		return true;
 	}

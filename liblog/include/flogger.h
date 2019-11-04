@@ -153,12 +153,12 @@ private:
 	std::string regex_pattern(bool capture = false,
 		int *date_index = nullptr, int *seq_index = nullptr);
 	void parse_name(const std::string &, std::string &, std::string &);
-	std::string name(const snf::local_time &);
-	std::string name(const snf::file_attr &, const snf::local_time &);
+	std::string name(const snf::datetime &);
+	std::string name(const snf::file_attr &, const snf::datetime &);
 	int open();
 	void close();
-	void open(const snf::local_time &);
-	void rotate(const snf::local_time &);
+	void open(const snf::datetime &);
+	void rotate(const snf::datetime &);
 
 	bool rotate_daily(int day)
 	{

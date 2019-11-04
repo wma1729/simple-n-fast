@@ -51,7 +51,7 @@ public:
 class test
 {
 protected:
-	local_time *m_st;
+	datetime *m_st;
 	time_point<high_resolution_clock> m_begin;
 	time_point<high_resolution_clock> m_end;
 	bool m_failure;
@@ -68,7 +68,7 @@ public:
 
 	virtual bool run(const snf::config *config)
 	{
-		m_st = DBG_NEW local_time;
+		m_st = DBG_NEW datetime;
 		m_begin = high_resolution_clock::now();
 
 		bool passed = false;
@@ -108,7 +108,7 @@ class test_suite : public test
 private:
 	std::string         m_name;
 	std::string         m_desc;
-	local_time          *m_et;
+	datetime            *m_et;
 	int                 m_failcnt;
 	std::vector<test *> m_tests;
 
@@ -155,7 +155,7 @@ public:
 			}
 		}
 
-		m_et = DBG_NEW local_time;
+		m_et = DBG_NEW datetime;
 		m_failure = (m_failcnt != 0);
 		return (m_failcnt == 0);
 	}

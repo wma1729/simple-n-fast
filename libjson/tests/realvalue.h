@@ -86,7 +86,7 @@ R"({
 
 		try {
 			obj = snf::json::from_string(expr_1);
-		} catch (snf::json::parsing_error ex) {
+		} catch (snf::json::parsing_error &ex) {
 			std::cerr << ex.what() << " at " << ex.row() << "." << ex.col() << std::endl;
 			return false;
 		}
@@ -133,7 +133,7 @@ R"([
 
 		try {
 			arr = snf::json::from_string(expr_1);
-		} catch (snf::json::parsing_error ex) {
+		} catch (snf::json::parsing_error &ex) {
 			std::cerr << ex.what() << " at " << ex.row() << "." << ex.col() << std::endl;
 			return false;
 		}

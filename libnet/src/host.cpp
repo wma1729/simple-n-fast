@@ -116,13 +116,13 @@ hosteq(const std::string &h1, const std::string &h2)
 	try {
 		internet_address ia1 { h1 };
 		flags1 |= AI_NUMERICHOST;
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &) {
 	}
 
 	try {
 		internet_address ia2 { h2 };
 		flags2 |= AI_NUMERICHOST;
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &) {
 	}
 
 	host host1 { h1, flags1 };

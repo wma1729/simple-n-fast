@@ -218,7 +218,7 @@ file_logger::parse_name(const std::string &file_name, std::string &date, std::st
  * @return the log file name.
  */
 std::string
-file_logger::name(const snf::local_time &lt)
+file_logger::name(const snf::datetime &lt)
 {
 	std::ostringstream oss;
 
@@ -234,9 +234,9 @@ file_logger::name(const snf::local_time &lt)
 
 				case 'D':
 					oss << std::setfill('0')
-						<< std::setw(4) << lt.year()
-						<< std::setw(2) << lt.month()
-						<< std::setw(2) << lt.day();
+						<< std::setw(4) << lt.get_year()
+						<< std::setw(2) << static_cast<int>(lt.get_month())
+						<< std::setw(2) << lt.get_day();
 					break;
 
 				case 'N':
@@ -263,7 +263,7 @@ file_logger::name(const snf::local_time &lt)
  * @return the log file name
  */
 std::string
-file_logger::name(const snf::file_attr &fa, const snf::local_time &lt)
+file_logger::name(const snf::file_attr &fa, const snf::datetime &lt)
 {
 	if (fa.f_name.empty())
 		return name(lt);
@@ -273,16 +273,12 @@ file_logger::name(const snf::file_attr &fa, const snf::local_time &lt)
 	std::string date_str, seq_str;
 	parse_name(fa.f_name, date_str, seq_str);
 
-	int year  = -1;
-	int month = -1;
-	int day   = -1;
-
 	if (!date_str.empty()) {
-		year  = std::stoi(date_str.substr(0, 4));
-		month = std::stoi(date_str.substr(4, 2));
-		day   = std::stoi(date_str.substr(6, 2));
+		int year  = std::stoi(date_str.substr(0, 4));
+		month mon = static_cast<month>(std::stoi(date_str.substr(4, 2)));
+		int day   = std::stoi(date_str.substr(6, 2));
 
-		if ((day != lt.day()) || (month != lt.month()) || (year != lt.year())) {
+		if ((day != lt.get_day()) || (mon != lt.get_month()) || (year != lt.get_year())) {
 			m_seqno = 0;
 			return name(lt);
 		}
@@ -345,7 +341,7 @@ file_logger::close()
  * @param lt [in] - the local time.
  */
 void
-file_logger::open(const snf::local_time &lt)
+file_logger::open(const snf::datetime &lt)
 {
 	snf::file_attr fa;
 	std::string pattern = std::move(regex_pattern());
@@ -362,7 +358,7 @@ file_logger::open(const snf::local_time &lt)
 	}
 
 	if (E_ok == open())
-		m_last_day = lt.day();
+		m_last_day = lt.get_day();
 }
 
 /*
@@ -372,11 +368,11 @@ file_logger::open(const snf::local_time &lt)
  * @param lt [in] - the local time.
  */
 void
-file_logger::rotate(const snf::local_time &lt)
+file_logger::rotate(const snf::datetime &lt)
 {
 	bool rotate = false;
 
-	if (rotate_daily(lt.day())) {
+	if (rotate_daily(lt.get_day())) {
 		// rotate
 		rotate = true;
 		m_seqno = 0;
@@ -394,7 +390,7 @@ file_logger::rotate(const snf::local_time &lt)
 			m_retention->purge();
 
 		if (E_ok == open())
-			m_last_day = lt.day();
+			m_last_day = lt.get_day();
 	}
 }
 

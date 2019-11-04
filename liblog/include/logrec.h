@@ -22,7 +22,7 @@ private:
 	std::string         m_function;     // function name, __func__
 	int                 m_lineno;       // line number, __LINE__
 	int                 m_error;        // system error (user specified)
-	snf::local_time     m_timestamp;    // local time stamp
+	snf::datetime       m_timestamp;    // local time stamp
 	pid_t               m_pid;          // process ID
 	tid_t               m_tid;          // thread ID
 	severity            m_severity;     // severity (user specified)
@@ -60,7 +60,7 @@ public:
 	~record() {}
 
 	severity get_severity() const { return m_severity; }
-	snf::local_time get_timestamp() const { return m_timestamp; }
+	snf::datetime get_timestamp() const { return m_timestamp; }
 
 	record & operator<< (record_terminator terminator) { return terminator(*this); }
 	template<typename T> record & operator<< (const T &t) { m_text << t; return *this; }

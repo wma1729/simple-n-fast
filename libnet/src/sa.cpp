@@ -380,7 +380,7 @@ socket_address::get_client(int family, socket_type type,
 	try {
 		internet_address ia { host };
 		hints.ai_flags |= AI_NUMERICHOST;
-	} catch (std::runtime_error) {
+	} catch (std::runtime_error &) {
 	}
 
 	std::string::const_iterator I;

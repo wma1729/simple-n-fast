@@ -6,8 +6,10 @@ all:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
 
 cscope:
-	/bin/rm cscope.out
-	cscope -b -R -u -Iinclude -slibcom -sjdaemon -slibrdb
+	/bin/rm -f cscope.out
+	/bin/rm -f cscope.files
+	find . -name "*.h" -o -name "*.cpp" > cscope.files
+	cscope -b -u -v -icscope.files
 
 install:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done

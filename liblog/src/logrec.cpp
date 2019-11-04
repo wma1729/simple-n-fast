@@ -99,17 +99,17 @@ record::format(const std::string &fmt) const
 
 				case 'D':
 					oss << std::setfill('0')
-						<< std::setw(4) << m_timestamp.year() << "/"
-						<< std::setw(2) << m_timestamp.month() << "/"
-						<< std::setw(2) << m_timestamp.day();
+						<< std::setw(4) << m_timestamp.get_year() << "/"
+						<< std::setw(2) << static_cast<int>(m_timestamp.get_month()) << "/"
+						<< std::setw(2) << m_timestamp.get_day();
 					break;
 
 				case 'T':
 					oss << std::setfill('0')
-						<< std::setw(2) << m_timestamp.hour() << ":"
-						<< std::setw(2) << m_timestamp.minute() << ":"
-						<< std::setw(2) << m_timestamp.second() << "."
-						<< std::setw(3) << m_timestamp.millisecond();
+						<< std::setw(2) << m_timestamp.get_hour() << ":"
+						<< std::setw(2) << m_timestamp.get_minute() << ":"
+						<< std::setw(2) << m_timestamp.get_second() << "."
+						<< std::setw(3) << m_timestamp.get_millisecond();
 					break;
 
 				case 'p':

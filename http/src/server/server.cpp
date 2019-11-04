@@ -49,7 +49,7 @@ server::setup_context()
 		m_ctx.limit_certificate_chain_depth(m_config->certificate_chain_depth());
 
 		return E_ok;
-	} catch (snf::net::ssl::exception ex) {
+	} catch (snf::net::ssl::exception &ex) {
 		ERROR_STRM("server")
 			<< ex.what()
 			<< snf::log::record::endl;
