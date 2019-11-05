@@ -62,6 +62,8 @@ datetime::datetime(int64_t epoch, unit u, bool utc)
 		m_msec = 0;
 	}
 
+	memset(&m_tm, 0, sizeof(m_tm));
+
 #if defined(_WIN32)
 
 	SYSTEMTIME      st;
@@ -92,6 +94,101 @@ datetime::datetime(int64_t epoch, unit u, bool utc)
 		localtime_r(&m_epoch, &m_tm);
 
 #endif
+}
+
+datetime::datetime(const std::string &str, time_format fmt, bool utc)
+	: m_utc(utc)
+	, m_recalc(true)
+{
+	memset(&m_tm, 0, sizeof(m_tm));
+
+	if (fmt == time_format::imf) {
+		bool found = false;
+
+		std::string s(std::move(str.substr(0, 3)));
+		for (int i = 0; i < 7; ++i) {
+			if (days[i] == s) {
+				m_tm.tm_wday = i;
+				found = true;
+				break;
+			}
+		}
+
+		if (!found || (str[3] != ',') || (str[4] != ' '))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_mday = std::stoi(str.substr(5, 2));
+		if ((m_tm.tm_mday < 1) || (m_tm.tm_mday > 31) || (str[7] != ' '))
+			throw std::invalid_argument("invalid date/time");
+
+		found = false;
+
+		s = std::move(str.substr(8, 3));
+		for (int i = 0; i < 12; ++i) {
+			if (months[i] == s) {
+				m_tm.tm_mon = i;
+				found = true;
+				break;
+			}
+		}
+
+		if (!found || (str[11] != ' '))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_year = std::stoi(str.substr(12, 4)) - 1900;
+		if ((m_tm.tm_year < 0) || (str[16] != ' '))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_hour = std::stoi(str.substr(17, 2));
+		if ((m_tm.tm_hour < 0) || (m_tm.tm_hour > 23) || (str[19] != ':'))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_min = std::stoi(str.substr(20, 2));
+		if ((m_tm.tm_min < 0) || (m_tm.tm_min > 59) || (str[22] != ':'))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_sec = std::stoi(str.substr(23, 2));
+		if ((m_tm.tm_sec < 0) || (m_tm.tm_sec > 59) || (str[25] != ' '))
+			throw std::invalid_argument("invalid date/time");
+
+		m_msec = 0;
+
+		s = std::move(str.substr(26, 3));
+		if (s != "GMT")
+			throw std::invalid_argument("invalid date/time");
+	} else {
+		m_tm.tm_year = std::stoi(str.substr(0, 4)) - 1900;
+		if ((m_tm.tm_year < 0) || (str[4] != '/'))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_mon = std::stoi(str.substr(5, 2)) - 1;
+		if ((m_tm.tm_mon < 0) || (m_tm.tm_mon > 11) || (str[7] != '/'))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_mday = std::stoi(str.substr(8, 2));
+		if ((m_tm.tm_mday < 1) || (m_tm.tm_mday > 31) || (str[10] != ' '))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_hour = std::stoi(str.substr(11, 2));
+		if ((m_tm.tm_hour < 0) || (m_tm.tm_hour > 23) || (str[13] != ':'))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_min = std::stoi(str.substr(14, 2));
+		if ((m_tm.tm_min < 0) || (m_tm.tm_min > 59) || (str[16] != ':'))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_sec = std::stoi(str.substr(17, 2));
+		if ((m_tm.tm_sec < 0) || (m_tm.tm_sec > 59) || (str[19] != '.'))
+			throw std::invalid_argument("invalid date/time");
+
+		m_tm.tm_wday = 0;
+
+		m_msec = std::stoi(str.substr(20, 3));
+		if ((m_msec < 0) || (m_msec > 999))
+			throw std::invalid_argument("invalid date/time");
+	}
+
+	recalculate();
 }
 
 void
@@ -150,6 +247,37 @@ datetime::recalculate()
 #endif
 		m_recalc = false;
 	}
+}
+
+std::string
+datetime::str(time_format fmt) const
+{
+	std::ostringstream oss;
+
+	if (fmt == time_format::imf) {
+		int d = static_cast<int>(get_day_of_week());
+		int m = static_cast<int>(get_month()) - 1;
+
+		oss << std::setfill('0')
+			<< days[d] << ", "
+			<< std::setw(2) << get_day() << " "
+			<< months[m] << " "
+			<< std::setw(4) << get_year() << " "
+			<< std::setw(2) << get_hour() << ":"
+			<< std::setw(2) << get_minute() << ":"
+			<< std::setw(2) << get_second() << " GMT";
+	} else {
+		oss << std::setfill('0')
+			<< std::setw(4) << get_year() << "/"
+			<< std::setw(2) << static_cast<int>(get_month()) << "/"
+			<< std::setw(2) << get_day() << " "
+			<< std::setw(2) << get_hour() << ":"
+			<< std::setw(2) << get_minute() << ":"
+			<< std::setw(2) << get_second() << "."
+			<< std::setw(3) << get_millisecond();
+	}
+
+	return oss.str();
 }
 
 int64_t

@@ -23,6 +23,16 @@ enum class day {
 	saturday
 };
 
+const std::string days[] = {
+	"Sun",
+	"Mon",
+	"Tue",
+	"Wed",
+	"Thu",
+	"Fri",
+	"Sat"
+};
+
 enum class month {
 	january = 1,
 	february,
@@ -36,6 +46,21 @@ enum class month {
 	october,
 	november,
 	december
+};
+
+const std::string months[] = {
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec"
 };
 	
 constexpr int seconds_in_minute = 60;
@@ -74,6 +99,12 @@ constexpr int64_t seconds_in_year(bool leap_year)
 	return (leap_year ? 366 : 365) * seconds_in_day;
 }
 
+enum time_format
+{
+	common, // YYYY/MM/DD hh:mm:ss.mse
+	imf	// Internet Message format
+};
+
 int64_t epoch(unit u = unit::second);
 
 /**
@@ -91,6 +122,7 @@ private:
 public:
 	datetime(bool utc = false);
 	datetime(int64_t, unit u = unit::second, bool utc = true);
+	datetime(const std::string &, time_format fmt = time_format::common, bool utc = false);
 	datetime(const datetime &dt)
 		: m_tm(dt.m_tm)
 		, m_msec(dt.m_msec)
@@ -128,19 +160,7 @@ public:
 
 	void recalculate();
 
-	std::string str() const
-	{
-		std::ostringstream oss;
-		oss << std::setfill('0')
-			<< std::setw(4) << get_year() << "/"
-			<< std::setw(2) << static_cast<int>(get_month()) << "/"
-			<< std::setw(2) << get_day() << " "
-			<< std::setw(2) << get_hour() << ":"
-			<< std::setw(2) << get_minute() << ":"
-			<< std::setw(2) << get_second() << "."
-			<< std::setw(3) << get_millisecond();
-		return oss.str();
-	}
+	std::string str(time_format fmt = time_format::common) const;
 };
 
 #if defined(_WIN32)

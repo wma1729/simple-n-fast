@@ -91,6 +91,14 @@ public:
 
 		ASSERT_EQ(int64_t, utc3.epoch(), utc4.epoch(), "time matches");
 
+		snf::datetime utc5 { now, snf::unit::second, true };
+		oss << utc5.str(snf::time_format::imf);
+		std::string datestr(oss.str()); oss.str("");
+		TEST_LOG(datestr);
+
+		snf::datetime utc6 { datestr, snf::time_format::imf, true };
+		ASSERT_EQ(int64_t, utc5.epoch(), utc6.epoch(), "time matches");
+
 		return true;
 	}
 };
