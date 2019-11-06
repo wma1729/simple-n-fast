@@ -336,6 +336,27 @@ private:
 			return false;
 		}
 
+		try {
+			TEST_LOG("Date");
+
+			snf::http::headers hdrs21;
+			hdrs21.date(time(0));
+
+			std::string dtstr(std::move(hdrs21.date().str(snf::time_format::imf)));
+
+			snf::http::headers hdrs22;
+			hdrs22.date(dtstr);
+
+			std::cout << hdrs21;
+			std::cout << hdrs22;
+
+			ASSERT_EQ(int64_t, hdrs21.date().epoch(), hdrs22.date().epoch(), "time matches");
+
+		} catch (const snf::http::bad_message &ex) {
+			std::cerr << ex.what() << std::endl;
+			return false;
+		}
+
 		return true;
 	}
 

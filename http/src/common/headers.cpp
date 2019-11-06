@@ -146,6 +146,8 @@ headers::validate(const std::string &name, const std::string &value)
 		uri the_uri(value);
 		// If the value is invalid, the above will throw an exception
 		return new string_value(value);
+	} else if (name == DATE) {
+		return new date_value(value);
 	} else {
 		return new string_list_value(value);
 	}
@@ -698,6 +700,31 @@ void
 headers::content_location(const std::string &uristr)
 {
 	update(CONTENT_LOCATION, uristr);
+}
+
+const snf::datetime &
+headers::date() const
+{
+	const date_value *dval = dynamic_cast<const date_value *>(get(DATE));
+	return dval->get();
+}
+
+void
+headers::date(time_t t)
+{
+	update(DATE, new date_value(t));
+}
+
+void
+headers::date(const snf::datetime &dt)
+{
+	update(DATE, new date_value(dt));
+}
+
+void
+headers::date(const std::string &dtstr)
+{
+	update(DATE, new date_value(dtstr));
 }
 
 } // namespace http

@@ -7,6 +7,7 @@
 #include "net.h"
 #include "version.h"
 #include "uri.h"
+#include "timeutil.h"
 
 namespace snf {
 namespace http {
@@ -297,6 +298,23 @@ public:
 	virtual ~via_list_value() {}
 	const std::vector<via> &get() const { return m_via_list; }
 	via_list_value & operator+=(const via_list_value &);
+	std::string str() const;
+};
+
+/*
+ * Date header field value.
+ */
+class date_value : public header_field_value
+{
+private:
+	snf::datetime   *m_dt;
+
+public:
+	date_value(const std::string &);
+	date_value(time_t);
+	date_value(const snf::datetime &);
+	virtual ~date_value() { delete m_dt; }
+	const snf::datetime &get() const { return *m_dt; }
 	std::string str() const;
 };
 

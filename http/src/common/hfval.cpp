@@ -434,5 +434,31 @@ via_list_value::str() const
 	return oss.str();
 }
 
+date_value::date_value(const std::string &istr)
+	: header_field_value(istr)
+{
+	try {
+		m_dt = new snf::datetime(istr, snf::time_format::imf, true);
+	} catch (const std::invalid_argument &ex) {
+		throw bad_message(ex.what());
+	}
+}
+
+date_value::date_value(time_t t)
+{
+	m_dt = new snf::datetime(t, snf::unit::second, true);
+}
+
+date_value::date_value(const snf::datetime &dt)
+{
+	m_dt = new snf::datetime(dt);
+}
+
+std::string
+date_value::str() const
+{
+	return m_dt->str(snf::time_format::imf);
+}
+
 } // namespace http
 } // namespace snf

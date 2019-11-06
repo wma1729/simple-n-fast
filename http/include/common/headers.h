@@ -22,6 +22,7 @@ static const std::string CONTENT_TYPE("content-type");
 static const std::string CONTENT_ENCODING("content-encoding");
 static const std::string CONTENT_LANGUAGE("content-language");
 static const std::string CONTENT_LOCATION("content-location");
+static const std::string DATE("date");
 
 static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 
@@ -167,7 +168,14 @@ public:
 	uri content_location() const;
 	void content_location(const uri &);
 	void content_location(const std::string &);
-	
+
+	/*
+	 * Date: <imf-date>
+	 */
+	const snf::datetime &date() const;
+	void date(time_t);
+	void date(const snf::datetime &);
+	void date(const std::string &);
 };
 
 } // namespace http
