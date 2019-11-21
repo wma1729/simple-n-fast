@@ -4,6 +4,7 @@
 #include "nio.h"
 #include "request.h"
 #include "response.h"
+#include "status.h"
 
 namespace snf {
 namespace http {
@@ -47,6 +48,8 @@ public:
 	int send_response(const response &);
 	response recv_response();
 };
+
+response generate_response(const request &, status_code, const char *msg = nullptr);
 
 } // namespace http
 } // namespace snf

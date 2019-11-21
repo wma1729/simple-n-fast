@@ -1,5 +1,9 @@
 #include "transmit.h"
+#include "body.h"
+#include "status.h"
 #include "error.h"
+#include "timeutil.h"
+#include "json.h"
 
 namespace snf {
 namespace http {
@@ -271,6 +275,64 @@ transmitter::recv_response()
 		resp.set_body(b);
 
 	return resp;
+}
+
+response
+generate_response(const request &req, status_code code, const char *msg)
+{
+	snf::datetime now(true);
+
+	headers hdrs;
+	hdrs.date(now);
+	hdrs.connection(CONNECTION_CLOSE);
+	hdrs.content_type(CONTENT_TYPE_T_APPLICATION, CONTENT_TYPE_ST_JSON);
+
+	std::ostringstream oss;
+
+	if (!msg) {
+		std::string resource_path = req.get_uri().get_path().get();
+
+		switch (code) {
+			case status_code::NOT_FOUND:
+				oss << "resource (" << resource_path << ") is not found";
+				break;
+
+			case status_code::NOT_IMPLEMENTED:
+				oss << "method (" << method(req.get_method())
+					<< ") is not implemented for resource ("
+					<< resource_path << ")";
+				break;
+
+			default:
+				oss << method(req.get_method()) << " request to  resource ("
+					<< resource_path << ") failed with HTTP status " << code;
+				break;	
+		}
+
+		msg = oss.str().c_str();
+	}
+
+	snf::json::value json_body = OBJECT {
+		KVPAIR("errors",
+				ARRAY {
+					OBJECT {
+						KVPAIR("title", reason_phrase(code)),
+						KVPAIR("detail", msg)
+					}
+				}
+		)
+	};
+
+	body *resp_body = body_factory::instance().from_string(json_body.str(true));
+
+	response_builder resp_bldr;
+
+	return resp_bldr
+		.with_version(1, 1)
+		.with_status(code)
+		.with_headers(std::move(hdrs))
+		.with_body(resp_body)
+		.build();
 }
 
 } // namespace http

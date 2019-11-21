@@ -44,7 +44,7 @@ public:
 	{
 	}
 
-	read_handler(snf::net::nio *io, snf::net::socket*s, snf::net::event e)
+	read_handler(snf::net::nio *io, snf::net::socket *s, snf::net::event e)
 		: m_io(io)
 		, m_sock(s)
 		, m_event(e)

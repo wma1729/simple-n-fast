@@ -5,10 +5,10 @@ include ..\..\..\Makefile.constants
 !ENDIF
 
 OBJS = $(P)\uri.obj $(P)\method.obj $(P)\status.obj $(P)\version.obj $(P)\headers.obj \
-	$(P)\message.o $(P)\request.obj $(P)\response.obj $(P)\hfval.obj \
+	$(P)\message.obj $(P)\request.obj $(P)\response.obj $(P)\hfval.obj \
 	$(P)\body.obj $(P)\transmit.obj $(P)\parseutil.obj
 
-INCL = $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
+INCL = $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLJSON) $(INCLSSL)
 
 LIBPDB = $(P)\libhttpcmn.pdb
 

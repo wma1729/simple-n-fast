@@ -5,11 +5,14 @@
 #include "uri.h"
 #include "message.h"
 #include <string>
+#include <map>
 
 namespace snf {
 namespace http {
 
 class request_builder;
+
+using param_map_t = std::map<std::string, std::string>;
 
 /*
  * HTTP request.
@@ -22,6 +25,7 @@ private:
 	method_type m_type = method_type::M_GET;
 	uri         m_uri;
 	headers     m_trailers;
+	param_map_t m_parameters;
 
 	request() : message() {}
 
@@ -69,6 +73,10 @@ public:
 	const headers & get_trailers() const { return m_trailers; }
 	void set_trailers(const headers & trailers) { m_trailers = trailers; }
 	void set_trailers(headers && trailers) { m_trailers = std::move(trailers); }
+
+	const param_map_t & get_parameters() const { return m_parameters; }
+	void set_parameter(const std::string &key, const std::string &val)
+		{ m_parameters.insert(std::make_pair(key, val)); }
 };
 
 inline std::ostream &

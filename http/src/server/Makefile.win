@@ -4,7 +4,7 @@ include ..\..\..\Makefile.constants
 !ERROR P is not set
 !ENDIF
 
-OBJS = $(P)\server.obj $(P)\handler.obj
+OBJS = $(P)\server.obj $(P)\handler.obj $(P)\router.obj
 
 INCL = $(INCLHTTPSRVR) $(INCLHTTPCMN) $(INCLNET) $(INCLLOG) $(INCLCOM) $(INCLSSL)
 

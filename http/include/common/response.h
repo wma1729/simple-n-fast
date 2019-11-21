@@ -48,7 +48,7 @@ public:
 	response & operator=(response &&resp)
 	{
 		if (this != &resp) {
-			 message::operator=(std::move(resp));
+			message::operator=(std::move(resp));
 			m_status = resp.m_status;
 			m_reason = std::move(resp.m_reason);
 		}

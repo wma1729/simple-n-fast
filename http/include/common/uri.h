@@ -293,6 +293,8 @@ public:
 	virtual std::string decode(const std::string &) const;
 	virtual void set(const std::string &);
 
+	const std::deque<std::string> &get_segments() const { return m_segments; }
+
 	uri_path merge(const uri_path &) const;
 };
 
