@@ -101,6 +101,19 @@ R"([
 		ASSERT_EQ(const std::string &, v_4.str(false), expr_1, "object matches");
 		ASSERT_EQ(const std::string &, v_4.str(true), expr_2, "pretty object matches");
 
+		snf::json::value v_5 = OBJECT {
+			KVPAIR("errors",
+					ARRAY {
+						OBJECT {
+							KVPAIR("title", "Not Found"),
+							KVPAIR("detail", "Path x/y/z not found")
+						}
+					}
+			)
+		};
+
+		std::cout << v_5.str(true) << std::endl;
+
 		return true;
 	}
 };

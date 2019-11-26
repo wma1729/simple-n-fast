@@ -278,7 +278,7 @@ transmitter::recv_response()
 }
 
 response
-generate_response(const request &req, status_code code, const char *msg)
+gen_error_resp(status_code code, const std::string &msg)
 {
 	snf::datetime now(true);
 
@@ -286,31 +286,6 @@ generate_response(const request &req, status_code code, const char *msg)
 	hdrs.date(now);
 	hdrs.connection(CONNECTION_CLOSE);
 	hdrs.content_type(CONTENT_TYPE_T_APPLICATION, CONTENT_TYPE_ST_JSON);
-
-	std::ostringstream oss;
-
-	if (!msg) {
-		std::string resource_path = req.get_uri().get_path().get();
-
-		switch (code) {
-			case status_code::NOT_FOUND:
-				oss << "resource (" << resource_path << ") is not found";
-				break;
-
-			case status_code::NOT_IMPLEMENTED:
-				oss << "method (" << method(req.get_method())
-					<< ") is not implemented for resource ("
-					<< resource_path << ")";
-				break;
-
-			default:
-				oss << method(req.get_method()) << " request to  resource ("
-					<< resource_path << ") failed with HTTP status " << code;
-				break;	
-		}
-
-		msg = oss.str().c_str();
-	}
 
 	snf::json::value json_body = OBJECT {
 		KVPAIR("errors",

@@ -151,6 +151,7 @@ router::add(const std::string &path, request_handler handler)
 response
 router::handle(request &req)
 {
+	std::ostringstream oss;
 	std::string path = std::move(req.get_uri().get_path().get());
 	std::vector<std::string> segments = std::move(split(path));
 
@@ -161,7 +162,8 @@ router::handle(request &req)
 	for (it = segments.begin(); it != segments.end(); ++it) {
 		seg = find(psegments, *it, true);
 		if (seg == nullptr) {
-			return generate_response(req, status_code::NOT_FOUND);
+			oss << "resource (" << req.get_uri() << ") is not found";
+			throw not_found(oss.str());
 		} else {
 			if (seg->is_param())
 				req.set_parameter(seg->m_name, *it);
@@ -173,11 +175,15 @@ router::handle(request &req)
 		try {
 			return (seg->m_handler)(req);
 		} catch (std::bad_function_call &) {
-			return generate_response(req, status_code::NOT_IMPLEMENTED);
+			oss << method(req.get_method())
+				<< " is not implemented for resource ("
+				<< req.get_uri() << ")";
+			throw not_implemented(oss.str());
 		}
 	}
 
-	return generate_response(req, status_code::NOT_FOUND);
+	oss << "resource (" << req.get_uri() << ") is not found";
+	throw not_found(oss.str());
 }
 
 } // namespace http

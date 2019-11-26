@@ -65,6 +65,12 @@ operator<< (std::ostream &os, status_code s)
 	return os;
 }
 
+inline bool
+is_http_error(status_code s) noexcept
+{
+	return (static_cast<int>(s) >= 400);
+}
+
 /*
  * Bad HTTP message: request or response.
  */
@@ -85,6 +91,17 @@ public:
 	not_implemented(const std::string &msg) : std::runtime_error(msg) { }
 	not_implemented(const char *msg) : std::runtime_error(msg) { }
 	virtual ~not_implemented() { }
+};
+
+/*
+ * HTTP resource not found.
+ */
+class not_found : public std::runtime_error
+{
+public:
+	not_found(const std::string &msg) : std::runtime_error(msg) { }
+	not_found(const char *msg) : std::runtime_error(msg) { }
+	virtual ~not_found() { }
 };
 
 /*

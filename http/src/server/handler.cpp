@@ -4,6 +4,7 @@
 #include "uri.h"
 #include "transmit.h"
 #include "status.h"
+#include "router.h"
 #include <ostream>
 #include <sstream>
 #include <thread>
@@ -98,17 +99,90 @@ void
 process_request(snf::net::nio *io, snf::net::socket *s)
 {
 	std::unique_ptr<snf::net::nio> ioptr(io);
-	std::unique_ptr<snf::net::socket> sockptr(s);
+	std::unique_ptr<snf::net::socket> sptr(s);
+	bool close_connection = false;
 
 	transmitter xfer(ioptr.get());
 
+	int retval = E_ok;
+	status_code status = status_code::OK;
+	std::string errmsg;
+
 	try {
-		request req = std::move(xfer.recv_request());
-	} catch (bad_message &) {
-	} catch (bad_uri &) {
-	} catch (not_implemented &) {
-	} catch (std::system_error &) {
-	} catch (std::runtime_error &) {
+		request req(std::move(xfer.recv_request()));
+		DEBUG_STRM(nullptr)
+			<< "client request: "
+			<< method(req.get_method())
+			<< " " << req.get_uri()
+			<< snf::log::record::endl;
+
+		response resp(std::move(router::instance().handle(req)));		
+
+		status = resp.get_status();
+
+		retval = xfer.send_response(resp);
+
+		const std::vector<std::string> &req_conn = req.get_headers().connection();
+		for (auto s : req_conn) {
+			if (s == CONNECTION_CLOSE) {
+				close_connection = true;
+				break;
+			}
+		}
+
+		if (!close_connection) {
+			const std::vector<std::string> &resp_conn = resp.get_headers().connection();
+			for (auto s : resp_conn) {
+				if (s == CONNECTION_CLOSE) {
+					close_connection = true;
+					break;
+				}
+			}
+		}
+	} catch (const bad_message &ex) {
+		status = status_code::BAD_REQUEST;
+		errmsg = ex.what();
+	} catch (const bad_uri &ex) {
+		status = status_code::BAD_REQUEST;
+		errmsg = ex.what();
+	} catch (const not_found &ex) {
+		status = status_code::NOT_FOUND;
+		errmsg = ex.what();
+	} catch (const not_implemented &ex) {
+		status = status_code::NOT_IMPLEMENTED;
+		errmsg = ex.what();
+	} catch (const snf::http::exception &ex) {
+		status = ex.get_status_code();
+		errmsg = ex.what();
+	} catch (const std::system_error &ex) {
+		status = status_code::INTERNAL_SERVER_ERROR;
+		errmsg = ex.what();
+	} catch (const std::runtime_error &ex) {
+		status = status_code::INTERNAL_SERVER_ERROR;
+		errmsg = ex.what();
+	}
+
+	if (is_http_error(status)) {
+		response resp(gen_error_resp(status, errmsg.c_str()));
+		retval = xfer.send_response(resp);
+	}
+
+	DEBUG_STRM(nullptr)
+		<< "server response: "
+		<< status
+		<< snf::log::record::endl;
+
+	if (is_http_error(status) || (E_ok != retval) || close_connection) {
+		if (sptr) {
+			snf::net::ssl::connection *cnxn = dynamic_cast<snf::net::ssl::connection *>(ioptr.get());
+			if (cnxn)
+				cnxn->shutdown();
+		}
+	} else {
+		server::instance().reactor().add_handler(
+			*s,
+			snf::net::event::read,
+			DBG_NEW read_handler(ioptr.release(), sptr.get(), snf::net::event::read));
 	}
 }
 

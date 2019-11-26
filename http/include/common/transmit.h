@@ -49,7 +49,7 @@ public:
 	response recv_response();
 };
 
-response generate_response(const request &, status_code, const char *msg = nullptr);
+response gen_error_resp(status_code, const std::string &);
 
 } // namespace http
 } // namespace snf
