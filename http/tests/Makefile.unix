@@ -5,16 +5,20 @@ $(error P is not set)
 endif
 
 OBJS = ${P}/httpts.o
+HTTPSRVR_OBJS = ${P}/httpsrvr.o
 
-INCL = ${INCLHTTPCMN} ${INCLCOM} ${INCLNET} ${INCLSSL} ${INCLLOG} ${INCLTF}
+INCL = ${INCLHTTPCMN} ${INCLHTTPSRVR} ${INCLCOM} ${INCLNET} ${INCLSSL} ${INCLLOG} ${INCLJSON} ${INCLTF}
 LIBS = -ldl -lpthread
 
-all: platform ${P}/httpts
+all: platform ${P}/httpts ${P}/httpsrvr
 
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/httpts: ${OBJS} ${LIBHTTPCMN} ${LIBLOG} ${LIBNET} ${LIBCOM}
+${P}/httpts: ${OBJS} ${LIBHTTPSRVR} ${LIBHTTPCMN} ${LIBNET} ${LIBLOG} ${LIBJSON} ${LIBCOM}
+	${CC} ${DBG} $^ ${LIBS} -o $@
+
+${P}/httpsrvr: ${HTTPSRVR_OBJS} ${LIBHTTPSRVR} ${LIBHTTPCMN} ${LIBNET} ${LIBLOG} ${LIBJSON} ${LIBCOM} 
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp

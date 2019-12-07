@@ -1,5 +1,6 @@
 #include "net.h"
 #include "reactor.h"
+#include "logger.h"
 
 namespace snf {
 namespace net {
@@ -15,6 +16,11 @@ private:
 public:
 	sockpair_handler(socket &reader) : m_reader(reader) { }
 	virtual ~sockpair_handler() {}
+
+	virtual const char *name() const
+	{
+		return "socket-pair-handler";
+	}
 
 	virtual bool operator()(sock_t s, event e) override
 	{
@@ -110,14 +116,26 @@ reactor::process_poll_vector(std::vector<pollfd> &poll_vec)
 				}
 
 				if (!ok) {
-					E = H->second.erase(E);			
+					E = H->second.erase(E);
+
+					DEBUG_STRM("reactor")
+						<< "removed " << eventstr(uptr->e)
+						<< " handler " << uptr->h->name()
+						<< " for socket " << fdelem.fd
+						<< snf::log::record::endl;
 				} else {
 					++E;
 				}
 			}
 
-			if (H->second.empty()) 
+			if (H->second.empty()) {
 				m_handlers.erase(fdelem.fd);
+
+				DEBUG_STRM("reactor")
+					<< "all handlers for socket " << fdelem.fd
+					<< " are removed"
+					<< snf::log::record::endl;
+			}
 		}
 	}
 }
@@ -199,6 +217,9 @@ reactor::add_handler(sock_t s, event e, handler *h, int to)
 	if (h == nullptr)
 		throw std::invalid_argument("invalid handler");
 
+	if (m_stopped)
+		return;
+
 	std::lock_guard<std::mutex> guard(m_lock);
 
 	ev_handler_type::iterator H;
@@ -207,21 +228,42 @@ reactor::add_handler(sock_t s, event e, handler *h, int to)
 		bool found = false;
 		for (auto &ei : H->second) {
 			if (ei->e == e) {
+				std::string old_handler = ei->h->name();
 				ei->h.reset(h);
 				found = true;
+
+				DEBUG_STRM("reactor")
+					<< "replaced " << eventstr(e)
+					<< " handler " << old_handler
+					<< " with handler " << ei->h->name()
+					<< " for socket " << s
+					<< snf::log::record::endl;
+
 				break;
 			}
 		}
 
 		if (!found) {
 			std::unique_ptr<ev_info> ei(new ev_info(e, to, h));
-			H->second.emplace_back(std::move(ei));
+			H->second.push_back(std::move(ei));
+
+			DEBUG_STRM("reactor")
+				<< "added " << eventstr(e)
+				<< " handler " << h->name()
+				<< " for socket " << s
+				<< snf::log::record::endl;
 		}
 	} else {
 		ev_info_type eivec;
 		std::unique_ptr<ev_info> ei(new ev_info(e, to, h));
-		eivec.emplace_back(std::move(ei));
+		eivec.push_back(std::move(ei));
 		m_handlers[s] = std::move(eivec);
+
+		DEBUG_STRM("reactor")
+			<< "added " << eventstr(e)
+			<< " handler " << h->name()
+			<< " for socket " << s
+			<< snf::log::record::endl;
 	}
 
 	m_sockpair[1].write_integral(1);
@@ -238,6 +280,11 @@ reactor::remove_handler(sock_t s)
 	std::lock_guard<std::mutex> guard(m_lock);
 
 	m_handlers.erase(s);
+
+	DEBUG_STRM("reactor")
+		<< "all handlers for socket " << s
+		<< " are removed"
+		<< snf::log::record::endl;
 
 	m_sockpair[1].write_integral(1);
 }
@@ -259,14 +306,26 @@ reactor::remove_handler(sock_t s, event e)
 		ev_info_type::iterator E = H->second.begin();
 		while (E != H->second.end()) {
 			if ((*E)->e == e) {
+				DEBUG_STRM("reactor")
+					<< "removing " << eventstr(e)
+					<< " handler " << (*E)->h->name()
+					<< " for socket " << s
+					<< snf::log::record::endl;
+
 				H->second.erase(E);
 				break;
 			}
 			++E;
 		}
 
-		if (H->second.empty())
+		if (H->second.empty()) {
 			m_handlers.erase(s);
+
+			DEBUG_STRM("reactor")
+				<< "all handlers for socket " << s
+				<< " are removed"
+				<< snf::log::record::endl;
+		}
 	}
 
 	m_sockpair[1].write_integral(1);

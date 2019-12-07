@@ -31,21 +31,20 @@ path_segment::path_segment(const std::string &seg)
 		skip_spaces(seg, i, len);
 
 		m_name = std::move(seg.substr(i, len - i));
-		if (m_name.empty()) {
+		if (m_name.empty())
 			m_name = R"([^/]+)";
-		} else {
-			try {
-				m_regexpr = new std::regex(
-						m_name,
-						std::regex::ECMAScript |
-						std::regex::icase |
-						std::regex::optimize);
 
-			} catch (const std::regex_error &ex) {
-				std::ostringstream oss;
-				oss << "invalid regular expression: " << ex.what();
-				throw std::invalid_argument(oss.str());
-			}
+		try {
+			m_regexpr = new std::regex(
+					m_name,
+					std::regex::ECMAScript |
+					std::regex::icase |
+					std::regex::optimize);
+
+		} catch (const std::regex_error &ex) {
+			std::ostringstream oss;
+			oss << "invalid regular expression: " << ex.what();
+			throw std::invalid_argument(oss.str());
 		}
 	}
 }
@@ -57,7 +56,6 @@ path_segment::~path_segment()
 		path_segment *seg = *it;
 		delete seg;
 	}
-
 	m_children.clear();
 
 	if (m_regexpr) {
@@ -67,43 +65,45 @@ path_segment::~path_segment()
 }
 
 bool
-path_segment::matches(const std::string &seg) const
+path_segment::matches(const std::string &elem) const
 {
 	if (m_regexpr)
-		return std::regex_match(seg, *m_regexpr);
-	return (seg == m_name);
+		return std::regex_match(elem, *m_regexpr);
+	return (elem == m_name);
 }
 
-std::vector<std::string>
+path_elements
 router::split(const std::string &path)
 {
 	size_t i = 0;
 	size_t len = path.length();
-	std::string seg;
-	std::vector<std::string> segments;
+	std::string elem;
+	path_elements elements;
 
 	while (i < len) {
 		while ((i < len) && (path[i] == '/'))
 			++i;
 
 		while ((i < len) && (path[i] != '/')) {
-			seg.push_back(path[i]);
+			elem.push_back(path[i]);
 			++i;
 		}
 
-		if (!seg.empty()) {
-			segments.push_back(seg);
-			seg.clear();
+		if (!elem.empty()) {
+			elements.push_back(elem);
+			elem.clear();
 		}
 	}
 
-	return segments;
+	return elements;
 }
 
 path_segment *
-router::find(path_segments &segments, const std::string &name, bool lookup)
+router::find(path_segments *segments, const std::string &name, bool lookup)
 {
-	for (auto seg : segments) {
+	path_segments::const_iterator it;
+	for (it = segments->begin(); it != segments->end(); ++it) {
+		path_segment *seg = *it;
 		if (lookup) {
 			if (seg->matches(name))
 				return seg;
@@ -119,28 +119,32 @@ void
 router::add(const std::string &path, request_handler handler)
 {
 	path_segment *seg = nullptr;
-	path_segments &psegments = m_toplevel;
+	path_segments *segments = &m_toplevel;
+	path_elements elements = std::move(split(path));
 
-	std::vector<std::string> segments = std::move(split(path));
+	std::lock_guard<std::mutex> guard(m_lock);
 
-	std::vector<std::string>::const_iterator it;
-	for (it = segments.begin(); it != segments.end(); ++it) {
-		seg = find(psegments, *it);
+	path_elements::const_iterator it = elements.begin();
+	while (it != elements.end()) {
+		seg = find(segments, *it);
 		if (seg == nullptr) {
 			break;
 		} else {
-			psegments = seg->m_children;
+			segments = &(seg->m_children);
+			++it;
 		}
 	}
 
-	while (it != segments.end()) {
+	while (it != elements.end()) {
 		seg = new path_segment(*it);
-		if (seg->m_regexpr)
-			psegments.push_back(seg);
-		else
-			psegments.push_front(seg);
 
-		psegments = seg->m_children;
+		if (seg->m_regexpr) {
+			segments->push_back(seg);
+		} else {
+			segments->push_front(seg);
+		}
+
+		segments = &(seg->m_children);
 		++it;
 	}
 
@@ -153,21 +157,24 @@ router::handle(request &req)
 {
 	std::ostringstream oss;
 	std::string path = std::move(req.get_uri().get_path().get());
-	std::vector<std::string> segments = std::move(split(path));
-
+	path_elements elements = std::move(split(path));
 	path_segment *seg = nullptr;
-	path_segments &psegments = m_toplevel;
+	path_segments *segments = &m_toplevel;
 
-	std::vector<std::string>::const_iterator it;
-	for (it = segments.begin(); it != segments.end(); ++it) {
-		seg = find(psegments, *it, true);
-		if (seg == nullptr) {
-			oss << "resource (" << req.get_uri() << ") is not found";
-			throw not_found(oss.str());
-		} else {
-			if (seg->is_param())
-				req.set_parameter(seg->m_name, *it);
-			psegments = seg->m_children;
+	{
+		std::lock_guard<std::mutex> guard(m_lock);
+
+		path_elements::const_iterator it;
+		for (it = elements.begin(); it != elements.end(); ++it) {
+			seg = find(segments, *it, true);
+			if (seg == nullptr) {
+				oss << "resource (" << req.get_uri() << ") is not found";
+				throw not_found(oss.str());
+			} else {
+				if (seg->is_param())
+					req.set_parameter(seg->m_name, *it);
+				segments = &(seg->m_children);
+			}
 		}
 	}
 

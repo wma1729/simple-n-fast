@@ -26,6 +26,13 @@ public:
 
 	virtual ~accept_handler() {};
 
+	virtual const char *name() const
+	{
+		if (m_secured)
+			return "secured-accept-handler";
+		return "accept-handler";
+	}
+
 	virtual bool operator()(sock_t, snf::net::event) override;
 };
 
@@ -52,6 +59,13 @@ public:
 	}
 
 	virtual ~read_handler() {}
+
+	virtual const char *name() const
+	{
+		if (*m_sock)
+			return "secured-read-handler";
+		return "read-handler";
+	}
 
 	virtual bool operator()(sock_t, snf::net::event) override;
 };

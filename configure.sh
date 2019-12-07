@@ -92,8 +92,8 @@ if [ "$PLAT" = "Linux" ]; then
 		LIBLOG = `pwd`/liblog/src/$BLDPLAT/liblog.a
 		LIBNET = `pwd`/libnet/src/$BLDPLAT/libnet.a
 		LIBHTTPCMN = `pwd`/http/src/common/$BLDPLAT/libhttpcmn.a
-		LIBHTTPSRVR = `pwd`/http/src/common/$BLDPLAT/libhttpsrvr.a
-		LIBHTTPCLNT = `pwd`/http/src/common/$BLDPLAT/libhttpclnt.a
+		LIBHTTPSRVR = `pwd`/http/src/server/$BLDPLAT/libhttpsrvr.a
+		LIBHTTPCLNT = `pwd`/http/src/client/$BLDPLAT/libhttpclnt.a
 LINUX_CONFIG
 
 else

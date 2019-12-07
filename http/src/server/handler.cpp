@@ -30,8 +30,10 @@ process_ssl_handshake(snf::net::socket *s)
 				<< "SSL handshake successful for socket "
 				<< *sock
 				<< snf::log::record::endl;
+
+			sock_t thesock = *sock;
 			server::instance().reactor().add_handler(
-				*sock,
+				thesock,
 				snf::net::event::read,
 				DBG_NEW read_handler(cnxn.release(), sock.release(), snf::net::event::read));
 		} else {
@@ -179,8 +181,9 @@ process_request(snf::net::nio *io, snf::net::socket *s)
 				cnxn->shutdown();
 		}
 	} else {
+		sock_t thesock = *s;
 		server::instance().reactor().add_handler(
-			*s,
+			thesock,
 			snf::net::event::read,
 			DBG_NEW read_handler(ioptr.release(), sptr.get(), snf::net::event::read));
 	}

@@ -10,6 +10,10 @@ int
 server::setup_context()
 {
 	try {
+		DEBUG_STRM("server")
+			<< "setting SSL context"
+			<< snf::log::record::endl;
+
 		if (m_config->keyfile().empty()) {
 			ERROR_STRM("server")
 				<< "private key file not specified"
@@ -48,6 +52,10 @@ server::setup_context()
 		m_ctx.verify_peer(false);
 		m_ctx.limit_certificate_chain_depth(m_config->certificate_chain_depth());
 
+		DEBUG_STRM("server")
+			<< "SSL context is set successfully"
+			<< snf::log::record::endl;
+
 		return E_ok;
 	} catch (snf::net::ssl::exception &ex) {
 		ERROR_STRM("server")
@@ -72,6 +80,12 @@ server::setup_socket(in_port_t port)
 		s->reuseaddr(true);
 		s->blocking(false);
 		s->bind(AF_INET, port);
+
+		DEBUG_STRM("server")
+			<< "socket " << *s
+			<< " bound to port "
+			<< port
+			<< snf::log::record::endl;
 		s->listen(20);
 
 		return s.release();
@@ -122,11 +136,12 @@ server::start(const server_config *cfg)
 		INFO_STRM("server")
 			<< "created http socket "
 			<< *sock
-			<< ", " << sock->dump_options()
+			<< sock->dump_options()
 			<< snf::log::record::endl;
 
+		sock_t s = *sock;
 		m_reactor.add_handler(
-				*sock, 
+				s, 
 				snf::net::event::read,
 				DBG_NEW accept_handler(sock.release(), snf::net::event::read));
 	}
@@ -142,11 +157,12 @@ server::start(const server_config *cfg)
 		INFO_STRM("server")
 			<< "created https socket "
 			<< *sec_sock
-			<< ", " << sec_sock->dump_options()
+			<< sec_sock->dump_options()
 			<< snf::log::record::endl;
 
+		sock_t s = *sec_sock;
 		m_reactor.add_handler(
-				*sec_sock,
+				s,
 				snf::net::event::read,
 				DBG_NEW accept_handler(sec_sock.release(), snf::net::event::read, true));
 	}

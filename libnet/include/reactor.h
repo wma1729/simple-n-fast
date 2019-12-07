@@ -77,6 +77,11 @@ public:
 	virtual ~handler() {}
 
 	/*
+	 * Returns a readable handler name.
+	 */
+	virtual const char *name() const = 0;
+
+	/*
 	 * Called when the event is triggered.
 	 *
 	 * @param [in] s - socket ID that received the event.

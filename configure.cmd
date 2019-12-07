@@ -96,7 +96,7 @@ ECHO LIBJSON = "%BLDDIR%libjson\src\%BLDPLAT%\json.lib" >> Makefile.constants
 ECHO LIBLOG = "%BLDDIR%liblog\src\%BLDPLAT%\log.lib" >> Makefile.constants
 ECHO LIBNET = "%BLDDIR%libnet\src\%BLDPLAT%\net.lib" >> Makefile.constants
 ECHO LIBHTTPCMN = "%BLDDIR%http\src\common\%BLDPLAT%\httpcmn.lib" >> Makefile.constants
-ECHO LIBHTTPSRVR = "%BLDDIR%http\src\common\%BLDPLAT%\httpsrvr.lib" >> Makefile.constants
+ECHO LIBHTTPSRVR = "%BLDDIR%http\src\server\%BLDPLAT%\httpsrvr.lib" >> Makefile.constants
 ECHO LIBHTTPCLNT = "%BLDDIR%http\src\common\%BLDPLAT%\httpclnt.lib" >> Makefile.constants
 
 ECHO Makefile.constants generated successfully

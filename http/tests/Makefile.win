@@ -6,14 +6,14 @@ include ../../Makefile.constants
 
 OBJS = $(P)\httpts.obj
 
-INCL = $(INCLHTTPCMN) $(INCLCOM) $(INCLLOG) $(INCLNET) $(INCLSSL) $(INCLTF)
+INCL = $(INCLHTTPSRVR) $(INCLHTTPCMN) $(INCLCOM) $(INCLLOG) $(INCLJSON) $(INCLNET) $(INCLSSL) $(INCLTF)
 
 all: platform $(P)\httpts.exe
 
 platform:
 	@if not exist $(P) mkdir $(P)
 
-$(P)\httpts.exe: $(OBJS) $(LIBHTTPCMN) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+$(P)\httpts.exe: $(OBJS) $(LIBHTTPSRVR) $(LIBHTTPCMN) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
 {.}.cpp{$(P)}.obj:
