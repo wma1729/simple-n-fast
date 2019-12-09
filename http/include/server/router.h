@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <deque>
+#include <stack>
 #include <regex>
 #include <mutex>
 #include <functional>
@@ -18,7 +19,7 @@ struct path_segment;
 
 using path_segments = std::deque<path_segment *>;
 using path_elements = std::vector<std::string>;
-using request_parameters = std::map<std::string, std::string>;
+using rqst_param    = std::pair<std::string, std::string>;
 
 struct path_segment
 {
@@ -44,6 +45,8 @@ private:
 
 	path_elements split(const std::string &);
 	path_segment *find(path_segments *, const std::string &, bool lookup = false);
+	int handle(const path_segment *&, const path_segments *, path_elements::const_iterator,
+		path_elements::const_iterator, std::stack<rqst_param> &param_stk);
 
 public:
 	~router()

@@ -152,45 +152,83 @@ router::add(const std::string &path, request_handler handler)
 		seg->m_handler = std::move(handler);
 }
 
+int
+router::handle(
+	const path_segment *& seg,
+	const path_segments *segments,
+	path_elements::const_iterator curr,
+	path_elements::const_iterator last,
+	std::stack<rqst_param> &param_stk)
+{
+	int retval = E_not_found;
+
+	if (curr == last)
+		return E_ok;
+
+	path_segments::const_iterator it;
+	for (it = segments->begin(); it != segments->end(); ++it) {
+		seg = *it;
+
+		if (seg->matches(*curr)) {
+			if (seg->is_param())
+				param_stk.push(std::make_pair(seg->m_name, *curr));
+
+			retval = handle(seg, &(seg->m_children), curr + 1, last, param_stk);
+			if (E_ok == retval)
+				break;
+
+			if (seg->is_param())
+				param_stk.pop();
+		}
+	}
+
+	return retval;
+}
+
 response
 router::handle(request &req)
 {
-	std::ostringstream oss;
+	int retval = E_ok;
 	std::string path = std::move(req.get_uri().get_path().get());
 	path_elements elements = std::move(split(path));
-	path_segment *seg = nullptr;
-	path_segments *segments = &m_toplevel;
+	const path_segment *seg = nullptr;
+	const path_segments *segments = &m_toplevel;
+	request_handler handler;
 
 	{
+		std::stack<rqst_param> param_stk;
+
 		std::lock_guard<std::mutex> guard(m_lock);
 
-		path_elements::const_iterator it;
-		for (it = elements.begin(); it != elements.end(); ++it) {
-			seg = find(segments, *it, true);
-			if (seg == nullptr) {
-				oss << "resource (" << req.get_uri() << ") is not found";
-				throw not_found(oss.str());
-			} else {
-				if (seg->is_param())
-					req.set_parameter(seg->m_name, *it);
-				segments = &(seg->m_children);
+		retval = handle(seg, segments, elements.begin(), elements.end(), param_stk);
+		if (E_ok == retval) {
+			if (seg) {
+				handler = seg->m_handler;
+			}
+
+			while (!param_stk.empty()) {
+				rqst_param &param = param_stk.top();
+				req.set_parameter(param.first, param.second);
+				param_stk.pop();
 			}
 		}
 	}
 
-	if (seg) {
+	std::ostringstream oss;
+
+	if (E_ok == retval) {
 		try {
-			return (seg->m_handler)(req);
+			return (handler)(req);
 		} catch (std::bad_function_call &) {
 			oss << method(req.get_method())
 				<< " is not implemented for resource ("
 				<< req.get_uri() << ")";
 			throw not_implemented(oss.str());
 		}
+	} else {
+		oss << "resource (" << req.get_uri() << ") is not found";
+		throw not_found(oss.str());
 	}
-
-	oss << "resource (" << req.get_uri() << ") is not found";
-	throw not_found(oss.str());
 }
 
 } // namespace http
