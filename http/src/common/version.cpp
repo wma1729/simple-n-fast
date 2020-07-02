@@ -7,41 +7,43 @@
 namespace snf {
 namespace http {
 
-constexpr size_t HTTP_VERSION_LENGTH = 8;
-constexpr size_t HTTP_ABBR_VERSION_LENGTH = 3;
+constexpr size_t VERSION_LONG_LEN = 8;
+constexpr size_t VERSION_SHORT_LEN = 3;
+
+const std::string version::prefix { "HTTP/" };
 
 /*
- * Initialize HTTP version with the version
- * string of format: HTTP/<major>.<minor>.
- * Abbreviated version format skips the
- * protocol. It is simply <major>.<minor>.
+ * Initialize HTTP version with the version string of format:
+ * - HTTP/<major>.<minor>
+ * - <major>.<minor>
  *
- * @param [in] vstr       - version string.
- * @param [in] allow_abbr - allow abbreviated
- *                          version string.
+ * @param [in] vstr - version string.
  *
  * @throws snf::http::bad_message exception if the
  * version string is not rightly formatted.
  */
-version::version(const std::string &vstr, bool allow_abbr)
+version::version(const std::string &vstr)
 {
 	std::ostringstream oss;
 	oss << "invalid HTTP version (" << vstr << ")";
 
-	if (allow_abbr) {
-		if (vstr.size() < HTTP_ABBR_VERSION_LENGTH)
-			throw bad_message(oss.str());
-	} else {
-		if (vstr.size() < HTTP_VERSION_LENGTH)
-			throw bad_message(oss.str());
-	}
-
 	size_t idx = 0;
 
-	if (vstr.compare(idx, 5, "HTTP/") == 0)
-		idx += 5;
-	else if (!allow_abbr)
-		throw bad_message(oss.str());
+	switch (vstr.size()) {
+		case VERSION_LONG_LEN:
+			if (vstr.compare(idx, prefix.size(), prefix) == 0)
+				idx += prefix.size();
+			else
+				throw bad_message(oss.str());
+			break;
+
+		case VERSION_SHORT_LEN:
+			break;
+
+		default:
+			throw bad_message(oss.str());
+			break;
+	}
 
 	if (!std::isdigit(vstr[idx]))
 		throw bad_message(oss.str());

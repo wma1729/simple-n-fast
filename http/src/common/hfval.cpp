@@ -2,7 +2,7 @@
 #include "uri.h"
 #include "status.h"
 #include "charset.h"
-#include "parseutil.h"
+#include "scanner.h"
 
 namespace snf {
 namespace http {
@@ -30,35 +30,27 @@ number_value::str() const
 std::vector<std::string>
 string_list_value::parse(const std::string &istr)
 {
-	size_t i = 0;
-	size_t len = istr.size();
+	bool next = !istr.empty();
 	std::vector<std::string> strvec;
+	std::ostringstream oss;
+	scanner scn{istr};
 
-	while (i < len) {
+	while (next) {
 		std::string s;
 
-		s = std::move(parse_token(istr, i, len));
-
-		if (s.empty()) {
-			std::ostringstream oss;
-			oss << "no string found in (" << istr << ")";
+		if (!scn.read_token(s)) {
+			oss << "no token found in (" << istr << ")";
 			throw bad_message(oss.str());
 		}
 
 		strvec.push_back(std::move(s));
 
-		skip_spaces(istr, i, len);
+		scn.read_opt_space();
 
-		if (i >= len)
-			break;
-
-		if (istr[i] == ',') {
-			i++;
-		} else {
-			std::ostringstream oss;
-			oss << "strings not delimited properly in (" << istr << ")";
-			throw bad_message(oss.str());
-		}
+		if (scn.read_special(','))
+			scn.read_opt_space();
+		else
+			next = false;
 	}
 
 	return strvec;
@@ -94,13 +86,11 @@ std::string
 string_list_value::str() const
 {
 	std::ostringstream oss;
-	bool first = true;
 
-	for (auto s : m_strings) {
-		if (!first)
+	for (auto it = m_strings.begin(); it != m_strings.end(); ++it) {
+		if (it != m_strings.begin())
 			oss << ", ";
-		oss << s;
-		first = false;
+		oss << *it;
 	}
 
 	return oss.str();
@@ -109,40 +99,32 @@ string_list_value::str() const
 std::vector<token>
 token_list_value::parse(const std::string &istr)
 {
-	size_t i = 0;
-	size_t len = istr.size();
+	bool next = !istr.empty();
 	std::vector<token> tokens;
+	std::ostringstream oss;
+	scanner scn{istr};
 
-	while (i < len) {
+	while (next) {
 		token t;
 
-		t.m_name = std::move(parse_token(istr, i, len));
-
-		if (t.m_name.empty()) {
-			std::ostringstream oss;
+		if (!scn.read_token(t.m_name)) {
 			oss << "no token found in (" << istr << ")";
 			throw bad_message(oss.str());
 		}
 
-		skip_spaces(istr, i, len);
+		scn.read_opt_space();
 
-		if ((i < len) && (istr[i] == ';'))
-			t.m_parameters = std::move(parse_parameter(istr, i, len));
+		if (scn.read_special(';')) {
+			if (!scn.read_parameters(t.m_parameters))
+				throw bad_message("no parameters found");
+		}
 
 		tokens.push_back(std::move(t));
 
-		skip_spaces(istr, i, len);
-
-		if (i >= len)
-			break;
-
-		if (istr[i] == ',') {
-			i++;
-		} else {
-			std::ostringstream oss;
-			oss << "tokens not delimited properly in (" << istr << ")";
-			throw bad_message(oss.str());
-		}
+		if (scn.read_special(','))
+			scn.read_opt_space();
+		else
+			next = false;
 	}
 
 	return tokens;
@@ -183,20 +165,17 @@ std::string
 token_list_value::str() const
 {
 	std::ostringstream oss;
-	bool first = true;
 
-	for (auto t : m_tokens) {
-		if (!first)
+	for (auto it = m_tokens.begin(); it != m_tokens.end(); ++it) {
+		if (it != m_tokens.begin())
 			oss << ", ";
 
-		oss << t.m_name;
-		for (auto p : t.m_parameters) {
+		oss << it->m_name;
+		for (auto p : it->m_parameters) {
 			oss << ";" << p.first;
 			if (!p.second.empty())
 				oss << "=" << p.second;
 		}
-
-		first = false;
 	}
 
 	return oss.str();
@@ -259,26 +238,26 @@ host_value::str() const
 void
 media_type_value::parse(const std::string &istr)
 {
-	size_t i = 0;
-	size_t len = istr.size();
+	std::ostringstream oss;
+	scanner scn{istr};
 
-	m_mt.m_type = std::move(parse_token(istr, i, len));
+	if (!scn.read_token(m_mt.m_type))
+		throw bad_message("no media type found");
 
-	if (m_mt.m_type.empty())
-		throw bad_message("no type found");
-	else if (istr[i] != '/')
-		throw bad_message("type is not followed by /");
-	else
-		i++;
+	if (!scn.read_special('/'))
+		throw bad_message("media type is not followed by \'/\'");
 
-	m_mt.m_subtype = std::move(parse_token(istr, i, len));
+	if (!scn.read_token(m_mt.m_subtype))
+		throw bad_message("no media subtype found");
 
-	if (m_mt.m_subtype.empty())
-		throw bad_message("no subtype found");
-	else if ((i < len) && ((istr[i] == ';') || is_whitespace(istr[i])))
-		m_mt.m_parameters = std::move(parse_parameter(istr, i, len));
-	else
-		throw bad_message("invalid character after subtype");
+	scn.read_opt_space();
+
+	if (scn.read_special(';')) {
+		scn.read_opt_space();
+
+		if (!scn.read_parameters(m_mt.m_parameters))
+			throw bad_message("no parameters found");
+	}
 }
 
 media_type_value::media_type_value(const std::string &istr)
@@ -320,63 +299,60 @@ media_type_value::str() const
 void
 via_list_value::parse(const std::string &istr)
 {
-	size_t i = 0;
-	size_t len = istr.size();
+	bool next = !istr.empty();
 	std::ostringstream oss;
+	scanner scn{istr};
 
-	while (i < len) {
-		via elem;
+	while (next) {
+		via v;
+		std::string proto, ver, u;
 
-		skip_spaces(istr, i, len);
+		scn.read_opt_space();
 
-		if (i >= len)
-			break;
+		if (!scn.read_token(proto))
+			throw bad_message("no protocol/version found");
 
-		if (istr[i] == ',')
-			++i;
-
-		skip_spaces(istr, i, len);
-
-		if (i >= len)
-			break;
-
-		size_t n = istr.find_first_of(' ', i);
-		if (std::string::npos == n) {
-			oss << "invalid via field value (" << istr << ")";
-			throw bad_message(oss.str());
+		if (scn.read_special('/')) {
+			if (!scn.read_token(ver))
+				throw bad_message("no version found");
 		} else {
-			version v(istr.substr(i, (n - i)), true);
-			elem.m_ver = v;
-			i = n;
+			ver = proto;
+			proto.clear();
 		}
 
-		skip_spaces(istr, i, len);
-
-		std::string hoststr;
-		while (i < len) {
-			if ((istr[i] == ',') || is_whitespace(istr[i]))
-				break;
+		if (!scn.read_space()) {
+			oss << "no space after (";
+			if (proto.empty())
+				oss << ver;
 			else
-				hoststr.push_back(istr[i++]);
-		}
-
-		if (hoststr.empty()) {
-			oss << "missing received-by host (" << istr << ")";
+				oss << proto << "/" << ver;
+			oss << ")";
 			throw bad_message(oss.str());
 		}
 
-		std::ostringstream host_oss;
-		host_oss << "http://" << hoststr;
-		uri the_uri(host_oss.str());
-		elem.m_uri = std::move(the_uri);
+		if (!scn.read_uri(u))
+			throw bad_message("no URI found");
+	
+		oss.str("");
+		oss << "http://" << u;
+		uri the_uri{oss.str()};
 
-		m_via_list.push_back(std::move(elem));
+		scn.read_space();
 
-		if (i >= len)
-			break;
+		v.m_proto = proto;
+		v.m_ver = version{ver};
+		v.m_uri = std::move(the_uri);
 
-		if (istr[i] != ',')
-			skip_comments(istr, i, len);
+		scn.read_comments(v.m_comments);
+
+		m_via_list.push_back(v);
+
+		scn.read_opt_space();
+
+		if (scn.read_special(','))
+			scn.read_opt_space();
+		else
+			next = false;
 	}
 }
 
@@ -415,20 +391,24 @@ std::string
 via_list_value::str() const
 {
 	std::ostringstream oss;
-	bool first = true;
 
-	for (auto v : m_via_list) {
-		if (!first)
+	for (auto it = m_via_list.begin(); it != m_via_list.end(); ++it) {
+		if (it != m_via_list.begin())
 			oss << ", ";
 
-		oss << v.m_ver.str() << " ";
-		if (v.m_uri.get_host().is_present()) {
-			oss << v.m_uri.get_host().get();
-			if (v.m_uri.get_port().is_present())
-				oss << ":" << v.m_uri.get_port().numeric_port();
+		if (!it->m_proto.empty())
+			oss << it->m_proto << "/";
+
+		oss << it->m_ver.str() << " ";
+
+		if (it->m_uri.get_host().is_present()) {
+			oss << it->m_uri.get_host().get();
+			if (it->m_uri.get_port().is_present())
+				oss << ":" << it->m_uri.get_port().numeric_port();
 		}
 
-		first = false;
+		if (!it->m_comments.empty())
+			oss << " " << it->m_comments;
 	}
 
 	return oss.str();

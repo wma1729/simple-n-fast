@@ -42,7 +42,7 @@ public:
 	number_value(const std::string &);
 	virtual ~number_value() {}
 	size_t get() const { return m_number; }
-	std::string str() const;
+	std::string str() const override;
 };
 
 /*
@@ -55,7 +55,7 @@ public:
 	string_value(std::string &&str): header_field_value(std::move(str)) {}
 	virtual ~string_value() {}
 	const std::string &get() const { return m_raw; }
-	std::string str() const { return std::string(m_raw); }
+	std::string str() const override { return std::string(m_raw); }
 };
 
 /*
@@ -254,32 +254,10 @@ public:
  */
 struct via
 {
-	version m_ver;
-	uri	m_uri;
-
-	via() {}
-	via(const version &v, const uri &u) : m_ver(v), m_uri(u) {}
-	via(version &&v, uri &&u) : m_ver(v), m_uri(std::move(u)) {}
-	via(const via &v) : m_ver(v.m_ver), m_uri(v.m_uri) {}
-	via(via &&v) : m_ver(v.m_ver), m_uri(std::move(v.m_uri)) {}
-
-	const via &operator=(const via &v)
-	{
-		if (this != &v) {
-			m_ver = v.m_ver;
-			m_uri = v.m_uri;
-		}
-		return *this;
-	}
-
-	via &operator=(via &&v)
-	{
-		if (this != &v) {
-			m_ver = v.m_ver;
-			m_uri = std::move(v.m_uri);
-		}
-		return *this;
-	}
+	std::string     m_proto;
+	version         m_ver;
+	uri	        m_uri;
+	std::string     m_comments;
 };
 
 /*
@@ -315,7 +293,7 @@ public:
 	date_value(const snf::datetime &);
 	virtual ~date_value() { delete m_dt; }
 	const snf::datetime &get() const { return *m_dt; }
-	std::string str() const;
+	std::string str() const override;
 };
 
 } // namespace http

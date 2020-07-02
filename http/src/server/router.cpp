@@ -2,7 +2,7 @@
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
-#include "parseutil.h"
+#include "charset.h"
 
 namespace snf {
 namespace http {
@@ -15,7 +15,8 @@ path_segment::path_segment(const std::string &seg)
 		size_t i = 1;
 		size_t len = seg.length() - 1;
 
-		skip_spaces(seg, i, len);
+		while ((i < len) && is_whitespace(seg[i]))
+			i++;
 
 		while ((i < len) && (seg[i] != ':')) {
 			m_param.push_back(seg[i]);
@@ -28,7 +29,8 @@ path_segment::path_segment(const std::string &seg)
 			throw std::invalid_argument(oss.str());
 		}
 
-		skip_spaces(seg, i, len);
+		while ((i < len) && is_whitespace(seg[i]))
+			i++;
 
 		m_name = std::move(seg.substr(i, len - i));
 		if (m_name.empty())

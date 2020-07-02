@@ -176,7 +176,7 @@ private:
 			ASSERT_EQ(in_port_t, 0, port, "port matches");
 
 			snf::http::headers hdrs8;
-			hdrs8.add("host: \"bharat:8080\"  	\r\n");
+			hdrs8.add("host: bharat:8080  	\r\n");
 			ASSERT_EQ(const std::string &, "bharat", hdrs8.host(&port), "host matches");
 			ASSERT_EQ(in_port_t, 8080, port, "port matches");
 
@@ -242,7 +242,7 @@ private:
 			ASSERT_EQ(const std::string &, "text", mt3.m_type, "type matches");
 			ASSERT_EQ(const std::string &, "plain", mt3.m_subtype, "subtype matches");
 			ASSERT_EQ(const std::string &, "charset", mt3.m_parameters[0].first, "param name matches");
-			ASSERT_EQ(const std::string &, "utf-8", mt3.m_parameters[0].second, "param value matches");
+			ASSERT_EQ(const std::string &, "\"utf-8\"", mt3.m_parameters[0].second, "param value matches");
 
 			snf::http::headers hdrs15;
 			hdrs15.add("content-type: text/plain; charset=\"UTF-8\"\r\n");
@@ -250,7 +250,7 @@ private:
 			ASSERT_EQ(const std::string &, "text", mt4.m_type, "type matches");
 			ASSERT_EQ(const std::string &, "plain", mt4.m_subtype, "subtype matches");
 			ASSERT_EQ(const std::string &, "charset", mt4.m_parameters[0].first, "param name matches");
-			ASSERT_EQ(const std::string &, "UTF-8", mt4.m_parameters[0].second, "param value matches");
+			ASSERT_EQ(const std::string &, "\"UTF-8\"", mt4.m_parameters[0].second, "param value matches");
 
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << ex.what() << std::endl;
@@ -287,7 +287,7 @@ private:
 
 			std::ostringstream oss;
 			oss << hdrs17;
-			ASSERT_EQ(const std::string &, snf::trim(oss.str()), "Via: 1.1 www.example.com:8080, 1.0 www.simplenfast.org, 1.1 pseudonym", "Via matches");
+			ASSERT_EQ(const std::string &, snf::trim(oss.str()), "Via: http/1.1 www.example.com:8080, 1.0 www.simplenfast.org (a comment), 1.1 pseudonym", "Via matches");
 
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << ex.what() << std::endl;

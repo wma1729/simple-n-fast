@@ -1,5 +1,5 @@
 #include "request.h"
-#include "charset.h"
+#include "scanner.h"
 #include "status.h"
 
 namespace snf {
@@ -17,72 +17,38 @@ namespace http {
 request_builder &
 request_builder::request_line(const std::string &istr)
 {
-	size_t i;
 	std::string mstr;
 	std::string ustr;
 	std::string vstr;
-	size_t len = istr.size();
 	std::ostringstream oss;
+	scanner scn{istr};
 
-	while (len >= 2) {
-		if ((istr[len - 1] == '\n') || (istr[len - 2] == '\r'))
-			len -= 2;
-		else
-			break;
+	if (!scn.read_token(mstr, false)) {
+		throw bad_message("HTTP method not found");
 	}
 
-	for (i = 0; i < len; ++i) {
-		if (istr[i] == ' ')
-			break;
-		mstr.push_back(istr[i]);
-	}
-
-	if (mstr.empty())
-		throw bad_message("empty method");
-
-	if (i >= len) {
-		oss << "no uri after method (" << mstr << ")";
+	if (!scn.read_space()) {
+		oss << "no space after (" << mstr << ")";
 		throw bad_message(oss.str());
 	}
 
-	if (istr[i] != ' ') {
-		oss << "no space after method (" << mstr << ")";
+	if (!scn.read_uri(ustr)) {
+		throw bad_message("URI not found");
+	}
+
+	if (!scn.read_space()) {
+		oss << "no space after (" << mstr << " " << ustr << ")";
 		throw bad_message(oss.str());
 	}
 
-	for (i = i + 1; i < len; ++i) {
-		if (istr[i] == ' ')
-			break;
-		ustr.push_back(istr[i]);
+	if (!scn.read_version(vstr)) {
+		throw bad_message("HTTP version not found");
 	}
 
-	if (ustr.empty())
-		throw bad_message("empty URI");
+	scn.read_opt_space();
 
-	if (i >= len) {
-		oss << "no version after method/URI ("
-			<< mstr << " " << ustr << ")";
-		throw bad_message(oss.str());
-	}
-
-	if (istr[i] != ' ') {
-		oss << "no space after method/URI ("
-			<< mstr << " " << ustr << ")";
-		throw bad_message(oss.str());
-	}
-
-	for (i = i + 1; i < len; ++i) {
-		if (is_whitespace(istr[i]))
-			break;
-		vstr.push_back(istr[i]);
-	}
-
-	if (vstr.empty())
-		throw bad_message("empty version");
-
-	if (is_whitespace(istr[i])) {
-		oss << "unexpected space found after method/URI/version ("
-			<< mstr << " " << ustr << " " << vstr << ")";
+	if (!scn.read_crlf()) {
+		oss << "HTTP message (" << mstr << " " << ustr << " " << vstr << ") not terminated with CRLF";
 		throw bad_message(oss.str());
 	}
 

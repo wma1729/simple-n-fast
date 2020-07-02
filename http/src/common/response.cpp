@@ -1,5 +1,5 @@
-#include "common.h"
 #include "response.h"
+#include "scanner.h"
 #include "charset.h"
 
 namespace snf {
@@ -17,86 +17,44 @@ namespace http {
 response_builder &
 response_builder::response_line(const std::string &istr)
 {
-	size_t i;
 	std::string vstr;
 	std::string sstr;
 	std::string rstr;
-	size_t len = istr.size();
 	std::ostringstream oss;
+	scanner scn{istr};
 
-	while (len >= 2) {
-		if ((istr[len - 1] == '\n') || (istr[len - 2] == '\r'))
-			len -= 2;
-		else
-			break;
+	if (!scn.read_version(vstr)) {
+		throw bad_message("HTTP version not found");
 	}
 
-	for (i = 0; i < len; ++i) {
-		if (istr[i] == ' ')
-			break;
-		vstr.push_back(istr[i]);
-	}
-
-	if (vstr.empty())
-		throw bad_message("empty version");
-
-	if (i >= len) {
-		oss << "no status code after version (" << vstr << ")";
+	if (!scn.read_space()) {
+		oss << "no space after (" << vstr << ")";
 		throw bad_message(oss.str());
 	}
 
-	if (istr[i] != ' ') {
-		oss << "no space after version (" << vstr << ")";
+	if (!scn.read_status(sstr)) {
+		throw bad_message("HTTP status not found");
+	}
+
+	if (!scn.read_space()) {
+		oss << "no space after (" << vstr << " " << sstr << ")";
 		throw bad_message(oss.str());
 	}
 
-	for (i = i + 1; i < len; ++i) {
-		if (istr[i] == ' ')
-			break;
-		if (!std::isdigit(istr[i])) {
-			oss << "unexpected character (" << istr[i] << ") in status code";
-			throw bad_message("empty status code");
-		}
-
-		sstr.push_back(istr[i]);
+	if (!scn.read_reason(rstr)) {
+		throw bad_message("HTTP reason phrase not found");
 	}
 
-	if (sstr.empty())
-		throw bad_message("empty status code");
+	scn.read_opt_space();
 
-	if (i >= len) {
-		oss << "no reason phrase after version/status ("
-			<< vstr << " " << sstr << ")";
+	if (!scn.read_crlf()) {
+		oss << "HTTP message (" << vstr << " " << sstr << " " << rstr << ") not terminated with CRLF";
 		throw bad_message(oss.str());
 	}
-
-	if (istr[i] != ' ') {
-		oss << "no space after version/status ("
-			<< vstr << " " << sstr << ")";
-		throw bad_message(oss.str());
-	}
-
-	if (sstr.size() != 3) {
-		oss << "invalid status code (" << sstr << ")";
-		throw bad_message(oss.str());
-	}
-
-	for (i = i + 1; i < len; ++i) {
-		if (is_whitespace(istr[i]) || is_vchar(istr[i]) || is_opaque(istr[i]))
-			rstr.push_back(istr[i]);
-		else
-			break;
-	}
-
-	if (rstr.empty())
-		throw bad_message("empty reason phrase");
-
-	if (i != len)
-		throw bad_message("unexpected character found in reason phrase");
 
 	m_response.m_version = snf::http::version(vstr);
 	m_response.m_status = static_cast<status_code>(std::stoi(sstr));
-	m_response.m_reason = std::move(snf::trim(rstr));
+	m_response.m_reason = rstr;
 
 	return *this;
 }

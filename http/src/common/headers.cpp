@@ -2,7 +2,7 @@
 #include "headers.h"
 #include "status.h"
 #include "charset.h"
-#include "parseutil.h"
+#include "scanner.h"
 #include <sstream>
 #include <algorithm>
 
@@ -144,7 +144,7 @@ headers::validate(const std::string &name, const std::string &value)
 		return slist.release();
 	} else if (name == CONTENT_LOCATION) {
 		uri the_uri(value);
-		// If the value is invalid, the above will throw an exception
+		// If the URI is not formatted correctly, snf::http::bad_uri exception is thrown
 		return new string_value(value);
 	} else if (name == DATE) {
 		return new date_value(value);
@@ -214,53 +214,37 @@ headers::valid_encoding(const std::string &coding)
 void
 headers::add(const std::string &istr)
 {
-	size_t i = 0;
-	size_t len = istr.size();
 	std::string name;
 	std::string value;
 	std::ostringstream oss;
+	scanner scn{istr};
 
-	while (len > 2) {
-		if ((istr[len - 1] == '\n') || (istr[len - 2] == '\r'))
-			len -= 2;
-		else
-			break;
+	if (!scn.read_token(name)) {
+		throw bad_message("HTTP header name not found");
 	}
 
-	while (len && is_whitespace(istr[len - 1]))
-		len--;
+	scn.read_opt_space();
 
-	name = std::move(parse_token(istr, i, len));
-	if (name.empty())
-		throw bad_message("no header field name");
-
-	skip_spaces(istr, i, len);
-
-	if (istr[i] != ':') {
-		oss << "header field name (" << name << ") does not terminate with :";
-		throw bad_message(oss.str());
-	} else {
-		i++;
-	}
-
-	if (i < len) {
-		try {
-			value = std::move(parse_generic(istr, i , len));
-		} catch (const bad_message &ex) {
-			std::ostringstream oss;
-			oss << "bad header field value for (" << name << "): " << ex.what();
-			throw bad_message(oss.str());
-		}
-	}
-
-	if (i != len) {
-		oss << "invalid header field value for " << name;
-		if (!value.empty())
-			oss << " (" << value << ")";
+	if (!scn.read_special(':')) {
+		oss << "no \':\' after HTTP header (" << name << ")";
 		throw bad_message(oss.str());
 	}
 
-	add(name, snf::trim(value));
+	scn.read_opt_space();
+
+	if (!scn.read_all(value)) {
+		oss << "no HTTP header value for " << name;
+		throw bad_message(oss.str());
+	}
+
+	scn.read_opt_space();
+
+	if (!scn.read_crlf()) {
+		oss << "HTTP header (" << name << " : " << name << ") not terminated with CRLF";
+		throw bad_message(oss.str());
+	}
+
+	add(name, value);
 }
 
 /*
