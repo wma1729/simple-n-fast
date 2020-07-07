@@ -96,19 +96,19 @@ datetime::datetime(int64_t epoch, unit u, bool utc)
 #endif
 }
 
-datetime::datetime(const std::string &str, time_format fmt, bool utc)
-	: m_utc(utc)
-	, m_recalc(true)
+datetime
+datetime::get(const std::string &str, time_format fmt, bool utc)
 {
-	memset(&m_tm, 0, sizeof(m_tm));
+	int  i;
+	datetime t((fmt == time_format::imf) ? true : utc);
 
 	if (fmt == time_format::imf) {
 		bool found = false;
 
 		std::string s(std::move(str.substr(0, 3)));
-		for (int i = 0; i < 7; ++i) {
+		for (i = 0; i < 7; ++i) {
 			if (days[i] == s) {
-				m_tm.tm_wday = i;
+				t.set_day_of_week(static_cast<day>(i));
 				found = true;
 				break;
 			}
@@ -117,16 +117,17 @@ datetime::datetime(const std::string &str, time_format fmt, bool utc)
 		if (!found || (str[3] != ',') || (str[4] != ' '))
 			throw std::invalid_argument("invalid date/time");
 
-		m_tm.tm_mday = std::stoi(str.substr(5, 2));
-		if ((m_tm.tm_mday < 1) || (m_tm.tm_mday > 31) || (str[7] != ' '))
+		i = std::stoi(str.substr(5, 2));
+		if ((i < 1) || (i > 31) || (str[7] != ' '))
 			throw std::invalid_argument("invalid date/time");
+		t.set_day(i);
 
 		found = false;
 
 		s = std::move(str.substr(8, 3));
 		for (int i = 0; i < 12; ++i) {
 			if (months[i] == s) {
-				m_tm.tm_mon = i;
+				t.set_month(static_cast<month>(i + 1));
 				found = true;
 				break;
 			}
@@ -135,60 +136,69 @@ datetime::datetime(const std::string &str, time_format fmt, bool utc)
 		if (!found || (str[11] != ' '))
 			throw std::invalid_argument("invalid date/time");
 
-		m_tm.tm_year = std::stoi(str.substr(12, 4)) - 1900;
-		if ((m_tm.tm_year < 0) || (str[16] != ' '))
+		i = std::stoi(str.substr(12, 4));
+		if ((i < 0) || (str[16] != ' '))
 			throw std::invalid_argument("invalid date/time");
+		t.set_year(i);
 
-		m_tm.tm_hour = std::stoi(str.substr(17, 2));
-		if ((m_tm.tm_hour < 0) || (m_tm.tm_hour > 23) || (str[19] != ':'))
+		i = std::stoi(str.substr(17, 2));
+		if ((i < 0) || (i > 23) || (str[19] != ':'))
 			throw std::invalid_argument("invalid date/time");
+		t.set_hour(i);
 
-		m_tm.tm_min = std::stoi(str.substr(20, 2));
-		if ((m_tm.tm_min < 0) || (m_tm.tm_min > 59) || (str[22] != ':'))
+		i = std::stoi(str.substr(20, 2));
+		if ((i < 0) || (i > 59) || (str[22] != ':'))
 			throw std::invalid_argument("invalid date/time");
+		t.set_minute(i);
 
-		m_tm.tm_sec = std::stoi(str.substr(23, 2));
-		if ((m_tm.tm_sec < 0) || (m_tm.tm_sec > 59) || (str[25] != ' '))
+		i = std::stoi(str.substr(23, 2));
+		if ((i < 0) || (i > 59) || (str[25] != ' '))
 			throw std::invalid_argument("invalid date/time");
-
-		m_msec = 0;
+		t.set_second(i);
 
 		s = std::move(str.substr(26, 3));
 		if (s != "GMT")
 			throw std::invalid_argument("invalid date/time");
 	} else {
-		m_tm.tm_year = std::stoi(str.substr(0, 4)) - 1900;
-		if ((m_tm.tm_year < 0) || (str[4] != '/'))
+		i = std::stoi(str.substr(0, 4));
+		if ((i < 0) || (str[4] != '/'))
 			throw std::invalid_argument("invalid date/time");
+		t.set_year(i);
 
-		m_tm.tm_mon = std::stoi(str.substr(5, 2)) - 1;
-		if ((m_tm.tm_mon < 0) || (m_tm.tm_mon > 11) || (str[7] != '/'))
+		i = std::stoi(str.substr(5, 2)) - 1;
+		if ((i < 0) || (i > 11) || (str[7] != '/'))
 			throw std::invalid_argument("invalid date/time");
+		t.set_month(static_cast<month>(i + 1));
 
-		m_tm.tm_mday = std::stoi(str.substr(8, 2));
-		if ((m_tm.tm_mday < 1) || (m_tm.tm_mday > 31) || (str[10] != ' '))
+		i = std::stoi(str.substr(8, 2));
+		if ((i < 1) || (i > 31) || (str[10] != ' '))
 			throw std::invalid_argument("invalid date/time");
+		t.set_day(i);
 
-		m_tm.tm_hour = std::stoi(str.substr(11, 2));
-		if ((m_tm.tm_hour < 0) || (m_tm.tm_hour > 23) || (str[13] != ':'))
+		i = std::stoi(str.substr(11, 2));
+		if ((i < 0) || (i > 23) || (str[13] != ':'))
 			throw std::invalid_argument("invalid date/time");
+		t.set_hour(i);
 
-		m_tm.tm_min = std::stoi(str.substr(14, 2));
-		if ((m_tm.tm_min < 0) || (m_tm.tm_min > 59) || (str[16] != ':'))
+		i = std::stoi(str.substr(14, 2));
+		if ((i < 0) || (i > 59) || (str[16] != ':'))
 			throw std::invalid_argument("invalid date/time");
+		t.set_minute(i);
 
-		m_tm.tm_sec = std::stoi(str.substr(17, 2));
-		if ((m_tm.tm_sec < 0) || (m_tm.tm_sec > 59) || (str[19] != '.'))
+		i = std::stoi(str.substr(17, 2));
+		if ((i < 0) || (i > 59) || (str[19] != '.'))
 			throw std::invalid_argument("invalid date/time");
+		t.set_second(i);
 
-		m_tm.tm_wday = 0;
-
-		m_msec = std::stoi(str.substr(20, 3));
-		if ((m_msec < 0) || (m_msec > 999))
+		i = std::stoi(str.substr(20, 3));
+		if ((i < 0) || (i > 999))
 			throw std::invalid_argument("invalid date/time");
+		t.set_millisecond(i);
 	}
 
-	recalculate();
+	t. recalculate();
+
+	return t;
 }
 
 void

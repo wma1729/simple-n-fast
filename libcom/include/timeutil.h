@@ -122,7 +122,6 @@ private:
 public:
 	datetime(bool utc = false);
 	datetime(int64_t, unit u = unit::second, bool utc = true);
-	datetime(const std::string &, time_format fmt = time_format::common, bool utc = false);
 	datetime(const datetime &dt)
 		: m_tm(dt.m_tm)
 		, m_msec(dt.m_msec)
@@ -132,7 +131,7 @@ public:
 	{
 	}
 
-	datetime(datetime &&) = delete;
+	static datetime get(const std::string &, time_format fmt = time_format::common, bool utc = false);
 
 	int   get_year() const          { return m_tm.tm_year + 1900; }
 	void  set_year(int y)           { m_tm.tm_year = y - 1900; m_recalc = true; }

@@ -96,7 +96,7 @@ public:
 		std::string datestr(oss.str()); oss.str("");
 		TEST_LOG(datestr);
 
-		snf::datetime utc6 { datestr, snf::time_format::imf, true };
+		snf::datetime utc6 = snf::datetime::get(datestr, snf::time_format::imf, true);
 		ASSERT_EQ(int64_t, utc5.epoch(), utc6.epoch(), "time matches");
 
 		return true;

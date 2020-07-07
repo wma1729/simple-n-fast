@@ -6,7 +6,7 @@
 #include <vector>
 #include <ostream>
 #include <memory>
-#include "hfval.h"
+#include "hval.h"
 
 namespace snf {
 namespace http {
@@ -26,22 +26,7 @@ static const std::string DATE("date");
 
 static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 
-static const std::string CONNECTION_CLOSE("close");
-static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
-static const std::string CONNECTION_UPGRADE("upgrade");
-
-static const std::string CONTENT_TYPE_T_TEXT("text");
-static const std::string CONTENT_TYPE_T_APPLICATION("application");
-static const std::string CONTENT_TYPE_ST_PLAIN("plain");
-static const std::string CONTENT_TYPE_ST_JSON("json");
-
-static const std::string CONTENT_ENCODING_COMPRESS("compress");
-static const std::string CONTENT_ENCODING_X_COMPRESS("x-compress");
-static const std::string CONTENT_ENCODING_GZIP("gzip");
-static const std::string CONTENT_ENCODING_X_GZIP("x-gzip");
-static const std::string CONTENT_ENCODING_DEFLATE("deflate");
-
-using hdr_vec_t = std::vector<std::pair<std::string, std::shared_ptr<header_field_value>>>;
+using hdr_vec_t = std::vector<std::pair<std::string, std::shared_ptr<base_value>>>;
 
 /*
  * HTTP headers. Maintained as a vector of key/value pair.
@@ -53,10 +38,7 @@ private:
 
 	hdr_vec_t::iterator find(const std::string &);
 	hdr_vec_t::const_iterator find(const std::string &) const;
-	header_field_value *validate(const std::string &, const std::string &);
-	bool allow_comma_separated_values(const std::string &);
-	bool valid_connection(const std::string &);
-	bool valid_encoding(const std::string &);
+	base_value *validate(const std::string &, const std::string &);
 
 public:
 	static std::string canonicalize_name(const std::string &);
@@ -85,10 +67,10 @@ public:
 	void add(const std::string &);
 	void add(const std::string &, const std::string &);
 	void update(const std::string &, const std::string &);
-	void update(const std::string &, header_field_value *);
+	void update(const std::string &, base_value *);
 	void remove(const std::string &);
 	bool is_set(const std::string &) const;
-	const header_field_value *get(const std::string &) const;
+	const base_value *get(const std::string &) const;
 
 	/*
 	 * Content-Length: <size>

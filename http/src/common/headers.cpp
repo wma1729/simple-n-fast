@@ -1,7 +1,7 @@
 #include "common.h"
 #include "headers.h"
-#include "status.h"
 #include "charset.h"
+#include "status.h"
 #include "scanner.h"
 #include <sstream>
 #include <algorithm>
@@ -80,124 +80,34 @@ headers::canonicalize_name(const std::string &name)
  * @throws snf::http::bad_message if the header field
  *         value is not set correctly.
  */
-header_field_value *
+base_value *
 headers::validate(const std::string &name, const std::string &value)
 {
 	if (name == CONTENT_LENGTH) {
-		return new number_value(value);
+		return new num_single_val_t(value);
 	} else if (name == TRANSFER_ENCODING) {
-		return new token_list_value(value);
+		return new tok_seq_val_t(value);
 	} else if (name == TE) {
-		return new token_list_value(value);
+		return new tok_seq_val_t(value);
 	} else if (name == TRAILERS) {
-		return new string_list_value(value);
+		return new str_seq_val_t(value);
 	} else if (name == HOST) {
-		return new host_value(value);
+		return new hp_single_val_t(value);
 	} else if (name == VIA) {
-		return new via_list_value(value);
+		return new vai_seq_val_t(value);
 	} else if (name == CONNECTION) {
-		std::unique_ptr<string_list_value> slist(new string_list_value(value));
-		const std::vector<std::string> &values = slist->get();
-		for (auto v : values) {
-			if (!valid_connection(v)) {
-				std::ostringstream oss;
-				oss << "connection option " << v << " is not supported";
-				throw not_implemented(oss.str());
-			}
-		}
-		return slist.release();
+		return new cnxn_seq_val_t(value);
 	} else if (name == CONTENT_TYPE) {
-		std::unique_ptr<media_type_value> mtv(new media_type_value(value));
-		const media_type &mt = mtv->get();
-		std::ostringstream oss;
-		
-		if (mt.m_type == CONTENT_TYPE_T_TEXT) {
-			if (mt.m_subtype != CONTENT_TYPE_ST_PLAIN) {
-				oss << "subtype " << mt.m_subtype
-					<< " is not supported for type "
-					<< CONTENT_TYPE_T_TEXT;
-				throw not_implemented(oss.str());
-			}
-		} else if (mt.m_type == CONTENT_TYPE_T_APPLICATION) {
-			if (mt.m_subtype != CONTENT_TYPE_ST_JSON) {
-				oss << "subtype " << mt.m_subtype
-					<< " is not supported for type "
-					<< CONTENT_TYPE_T_APPLICATION;
-				throw not_implemented(oss.str());
-			}
-		} else {
-			oss << "type " << mt.m_type << " is not supported";
-			throw not_implemented(oss.str());
-		}
-
-		return mtv.release();
+		return new mt_single_val_t(value);
 	} else if (name == CONTENT_ENCODING) {
-		std::unique_ptr<string_list_value> slist(new string_list_value(value));
-		const std::vector<std::string> &values = slist->get();
-		for (auto v : values) {
-			if (!valid_encoding(v)) {
-				std::ostringstream oss;
-				oss << "content-encoding " << v << " is not supported";
-				throw not_implemented(oss.str());
-			}
-		}
-		return slist.release();
+		return new ce_seq_val_t(value);
 	} else if (name == CONTENT_LOCATION) {
-		uri the_uri(value);
-		// If the URI is not formatted correctly, snf::http::bad_uri exception is thrown
-		return new string_value(value);
+		return new uri_single_val_t(value);
 	} else if (name == DATE) {
-		return new date_value(value);
+		return new dt_single_val_t(value);
 	} else {
-		return new string_list_value(value);
+		return new str_seq_val_t(value);
 	}
-}
-
-/*
- * Determines if the header field allows comma-separated values.
- *
- * @param [in] name - header field name.
- *
- * @return true if comma-separated values are allowed, false otherwise.
- */
-bool
-headers::allow_comma_separated_values(const std::string &name)
-{
-	if (name == TRANSFER_ENCODING)
-		return true;
-	else if (name == TE)
-		return true;
-	else if (name == TRAILERS)
-		return true;
-	else if (name == VIA)
-		return true;
-	else if (name == CONTENT_ENCODING)
-		return true;
-	return false;
-}
-
-/*
- * Is valid connection value?
- */
-bool
-headers::valid_connection(const std::string &cnxn)
-{
-	return ((cnxn == CONNECTION_CLOSE) ||
-		(cnxn == CONNECTION_KEEP_ALIVE) ||
-		(cnxn == CONNECTION_UPGRADE));
-}
-
-/*
- * Is encoding valid?
- */
-bool
-headers::valid_encoding(const std::string &coding)
-{
-	return ((coding == CONTENT_ENCODING_COMPRESS) ||
-		(coding == CONTENT_ENCODING_X_COMPRESS) ||
-		(coding == CONTENT_ENCODING_GZIP) ||
-		(coding == CONTENT_ENCODING_X_GZIP) ||
-		(coding == CONTENT_ENCODING_DEFLATE));
 }
 
 /*
@@ -265,28 +175,28 @@ headers::add(const std::string &name, const std::string &value)
 	std::transform(name.begin(), name.end(), std::back_inserter(n),
 		[] (char c) { return std::tolower(c); });
 
-	std::unique_ptr<header_field_value> v(validate(n, value));
+	std::unique_ptr<base_value> v(validate(n, value));
 	if (v.get()) {
 		hdr_vec_t::iterator I = find(n);
 		if (I == m_headers.end()) {
-			m_headers.push_back(std::make_pair(n, std::shared_ptr<header_field_value>(v.release())));
-		} else if (allow_comma_separated_values(n)) {
-			string_list_value *slist = 0;
-			token_list_value *tlist = 0;
-			via_list_value *vlist = 0;
+			m_headers.push_back(std::make_pair(n, std::shared_ptr<base_value>(v.release())));
+		} else if (v->is_seq()) {
+			ce_seq_val_t    *ceseq = 0;
+			str_seq_val_t   *strseq = 0;
+			tok_seq_val_t   *tokseq = 0;
+			vai_seq_val_t   *viaseq = 0;
+			cnxn_seq_val_t  *cnxnseq = 0;
 
-			if ((slist = dynamic_cast<string_list_value *>(I->second.get())) != 0) {
-				string_list_value *sval = dynamic_cast<string_list_value *>(v.get());
-				if (sval)
-					*slist += *sval;
-			} else if ((tlist = dynamic_cast<token_list_value *>(I->second.get())) != 0) {
-				token_list_value *tval = dynamic_cast<token_list_value *>(v.get());
-				if (tval)
-					*tlist += *tval;
-			} else if ((vlist = dynamic_cast<via_list_value *>(I->second.get())) != 0) {
-				via_list_value *vval = dynamic_cast<via_list_value *>(v.get());
-				if (vval)
-					*vlist += *vval;
+			if ((ceseq = dynamic_cast<ce_seq_val_t *>(I->second.get())) != 0) {
+				*ceseq += *(dynamic_cast<ce_seq_val_t *>(v.get()));
+			} else if ((strseq = dynamic_cast<str_seq_val_t *>(I->second.get())) != 0) {
+				*strseq += *(dynamic_cast<str_seq_val_t *>(v.get()));
+			} else if ((tokseq = dynamic_cast<tok_seq_val_t *>(I->second.get())) != 0) {
+				*tokseq += *(dynamic_cast<tok_seq_val_t *>(v.get()));
+			} else if ((viaseq = dynamic_cast<vai_seq_val_t *>(I->second.get())) != 0) {
+				*viaseq += *(dynamic_cast<vai_seq_val_t *>(v.get()));
+			} else if ((cnxnseq = dynamic_cast<cnxn_seq_val_t *>(I->second.get())) != 0) {
+				*cnxnseq += *(dynamic_cast<cnxn_seq_val_t *>(v.get()));
 			} else {
 				std::ostringstream oss;
 				oss << "header field (" << n << ") occurs multiple times";
@@ -320,11 +230,11 @@ headers::update(const std::string &name, const std::string &value)
 	std::transform(name.begin(), name.end(), std::back_inserter(n),
 		[] (char c) { return std::tolower(c); });
 
-	header_field_value *v = validate(n, value);
+	base_value *v = validate(n, value);
 	if (v) {
 		hdr_vec_t::iterator I = find(n);
 		if (I == m_headers.end()) {
-			m_headers.push_back(std::make_pair(n, std::shared_ptr<header_field_value>(v)));
+			m_headers.push_back(std::make_pair(n, std::shared_ptr<base_value>(v)));
 		} else {
 			I->second.reset(v);
 		}
@@ -342,7 +252,7 @@ headers::update(const std::string &name, const std::string &value)
  * @param [in] value - HTTP header value.
  */
 void
-headers::update(const std::string &name, header_field_value *value)
+headers::update(const std::string &name, base_value *value)
 {
 	if (name.empty())
 		return;
@@ -353,7 +263,7 @@ headers::update(const std::string &name, header_field_value *value)
 
 	hdr_vec_t::iterator I = find(n);
 	if (I == m_headers.end()) {
-		m_headers.push_back(std::make_pair(name, std::shared_ptr<header_field_value>(value)));
+		m_headers.push_back(std::make_pair(name, std::shared_ptr<base_value>(value)));
 	} else {
 		I->second.reset(value);
 	}
@@ -412,7 +322,7 @@ headers::is_set(const std::string &name) const
  * @throws std::out_of_range if the name is not
  *         present in the headers list.
  */
-const header_field_value *
+const base_value *
 headers::get(const std::string &name) const
 {
 	if (name.empty())
@@ -435,39 +345,39 @@ headers::get(const std::string &name) const
 size_t
 headers::content_length() const
 {
-	const number_value *numval = dynamic_cast<const number_value *>(get(CONTENT_LENGTH));
+	const num_single_val_t *numval = dynamic_cast<const num_single_val_t *>(get(CONTENT_LENGTH));
 	return numval->get();
 }
 
 void
 headers::content_length(size_t length)
 {
-	update(CONTENT_LENGTH, new number_value(length));
+	update(CONTENT_LENGTH, new num_single_val_t(length));
 }
 
 const std::vector<token> &
 headers::transfer_encoding() const
 {
-	const token_list_value *tlist = dynamic_cast<const token_list_value *>(get(TRANSFER_ENCODING));
-	return tlist->get();
+	const tok_seq_val_t *tseq = dynamic_cast<const tok_seq_val_t *>(get(TRANSFER_ENCODING));
+	return tseq->get();
 }
 
 void
 headers::transfer_encoding(const token &token)
 {
-	update(TRANSFER_ENCODING, new token_list_value(token));
+	update(TRANSFER_ENCODING, new tok_seq_val_t(token));
 }
 
 void
 headers::transfer_encoding(const std::vector<token> &tokens)
 {
-	update(TRANSFER_ENCODING, new token_list_value(tokens));
+	update(TRANSFER_ENCODING, new tok_seq_val_t(tokens));
 }
 
 void
 headers::transfer_encoding(const std::string &coding)
 {
-	update(TRANSFER_ENCODING, new token_list_value(coding));
+	update(TRANSFER_ENCODING, new tok_seq_val_t(coding));
 }
 
 bool
@@ -475,11 +385,10 @@ headers::is_message_chunked() const
 {
 	hdr_vec_t::const_iterator it = find(TRANSFER_ENCODING);
 	if (it != m_headers.end()) {
-		const token_list_value *tlist = dynamic_cast<const token_list_value *>(it->second.get());
-		if (tlist) {
-			const std::vector<token> &tokens = tlist->get();
-			for (auto t : tokens) {
-				if (t.m_name == TRANSFER_ENCODING_CHUNKED)
+		const tok_seq_val_t *tokseq = dynamic_cast<const tok_seq_val_t *>(it->second.get());
+		if (tokseq) {
+			for (auto it = tokseq->cbegin(); it != tokseq->cend(); ++it) {
+				if (it->name == TRANSFER_ENCODING_CHUNKED)
 					return true;
 			}
 		}
@@ -490,26 +399,26 @@ headers::is_message_chunked() const
 const std::vector<token> &
 headers::te() const
 {
-	const token_list_value *tlist = dynamic_cast<const token_list_value *>(get(TE));
-	return tlist->get();
+	const tok_seq_val_t *tokseq = dynamic_cast<const tok_seq_val_t *>(get(TE));
+	return tokseq->get();
 }
 
 void
 headers::te(const token &token)
 {
-	update(TE, new token_list_value(token));
+	update(TE, new tok_seq_val_t(token));
 }
 
 void
 headers::te(const std::vector<token> &tokens)
 {
-	update(TE, new token_list_value(tokens));
+	update(TE, new tok_seq_val_t(tokens));
 }
 
 void
 headers::te(const std::string &coding)
 {
-	update(TE, new token_list_value(coding));
+	update(TE, new tok_seq_val_t(coding));
 }
 
 bool
@@ -517,11 +426,10 @@ headers::has_trailers() const
 {
 	hdr_vec_t::const_iterator it = find(TE);
 	if (it != m_headers.end()) {
-		const token_list_value *tlist = dynamic_cast<const token_list_value *>(it->second.get());
-		if (tlist) {
-			const std::vector<token> &tokens = tlist->get();
-			for (auto t : tokens) {
-				if (t.m_name == TRAILERS)
+		const tok_seq_val_t *tokseq = dynamic_cast<const tok_seq_val_t *>(it->second.get());
+		if (tokseq) {
+			for (auto it = tokseq->cbegin(); it != tokseq->cend(); ++it) {
+				if (it->name == TRAILERS)
 					return true;
 			}
 		}
@@ -532,8 +440,8 @@ headers::has_trailers() const
 const std::vector<std::string> &
 headers::trailers() const
 {
-	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(TRAILERS));
-	return slist->get();
+	const str_seq_val_t *strseq = dynamic_cast<const str_seq_val_t *>(get(TRAILERS));
+	return strseq->get();
 }
 
 void
@@ -557,10 +465,10 @@ headers::trailers(const std::string &fields)
 const std::string &
 headers::host(in_port_t *port) const
 {
-	const host_value *h = dynamic_cast<const host_value *>(get(HOST));
+	const hp_single_val_t *hpval = dynamic_cast<const hp_single_val_t *>(get(HOST));
 	if (port)
-		*port = h->port();
-	return h->host();
+		*port = hpval->get().port;
+	return hpval->get().host;
 }
 
 /*
@@ -579,39 +487,46 @@ headers::host(in_port_t *port) const
 void
 headers::host(const std::string &uristr, in_port_t port)
 {
-	update(HOST, new host_value(uristr, port));
+	host_port hp;
+
+	parse(hp, uristr);
+	if (port)
+		hp.port = port;
+
+	hp_single_val_t *hpval = new hp_single_val_t(hp);
+	update(HOST, hpval);
 }
 
 const std::vector<via> &
 headers::intermediary() const
 {
-	const via_list_value *vlist = dynamic_cast<const via_list_value *>(get(VIA));
+	const vai_seq_val_t *vlist = dynamic_cast<const vai_seq_val_t *>(get(VIA));
 	return vlist->get();
 }
 
 void
 headers::intermediary(const via &v)
 {
-	update(VIA, new via_list_value(v));
+	update(VIA, new vai_seq_val_t(v));
 }
 
 void
 headers::intermediary(const std::vector<via> &vvec)
 {
-	update(VIA, new via_list_value(vvec));
+	update(VIA, new vai_seq_val_t(vvec));
 }
 
 void
 headers::intermediary(const std::string &viastr)
 {
-	update(VIA, new via_list_value(viastr));
+	update(VIA, new vai_seq_val_t(viastr));
 }
 
 const std::vector<std::string> &
 headers::connection() const
 {
-	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(CONNECTION));
-	return slist->get();
+	const cnxn_seq_val_t *cnxnseq = dynamic_cast<const cnxn_seq_val_t *>(get(CONNECTION));
+	return cnxnseq->get();
 }
 
 void
@@ -623,27 +538,27 @@ headers::connection(const std::string &cnxn)
 const media_type &
 headers::content_type() const
 {
-	const media_type_value *mt = dynamic_cast<const media_type_value *>(get(CONTENT_TYPE));
+	const mt_single_val_t *mt = dynamic_cast<const mt_single_val_t *>(get(CONTENT_TYPE));
 	return mt->get();
 }
 
 void
 headers::content_type(const media_type &mt)
 {
-	update(CONTENT_TYPE, new media_type_value(mt));
+	update(CONTENT_TYPE, new mt_single_val_t(mt));
 }
 
 void
 headers::content_type(const std::string &type, const std::string &subtype)
 {
-	update(CONTENT_TYPE, new media_type_value(type, subtype));
+	update(CONTENT_TYPE, new mt_single_val_t(media_type(type, subtype)));
 }
 
 const std::vector<std::string> &
 headers::content_encoding() const
 {
-	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(CONTENT_ENCODING));
-	return slist->get();
+	const ce_seq_val_t *ceseq = dynamic_cast<const ce_seq_val_t *>(get(CONTENT_ENCODING));
+	return ceseq->get();
 }
 
 void
@@ -655,8 +570,8 @@ headers::content_encoding(const std::string &coding)
 const std::vector<std::string> &
 headers::content_language() const
 {
-	const string_list_value *slist = dynamic_cast<const string_list_value *>(get(CONTENT_LANGUAGE));
-	return slist->get();
+	const str_seq_val_t *strseq = dynamic_cast<const str_seq_val_t *>(get(CONTENT_LANGUAGE));
+	return strseq->get();
 }
 
 void
@@ -668,47 +583,46 @@ headers::content_language(const std::string &language)
 uri
 headers::content_location() const
 {
-	const string_value *sval = dynamic_cast<const string_value *>(get(CONTENT_LOCATION));
-	return uri(sval->get());
+	const uri_single_val_t *urival = dynamic_cast<const uri_single_val_t *>(get(CONTENT_LOCATION));
+	return urival->get();
 }
 
 void
 headers::content_location(const uri &u)
 {
-	std::ostringstream oss;
-	oss << u;
-	update(CONTENT_LOCATION, oss.str());
+	update(CONTENT_LOCATION, new uri_single_val_t(u));
 }
 
 void
 headers::content_location(const std::string &uristr)
 {
-	update(CONTENT_LOCATION, uristr);
+	update(CONTENT_LOCATION, new uri_single_val_t(uri(uristr)));
 }
 
 const snf::datetime &
 headers::date() const
 {
-	const date_value *dval = dynamic_cast<const date_value *>(get(DATE));
-	return dval->get();
+	const dt_single_val_t *dtval = dynamic_cast<const dt_single_val_t *>(get(DATE));
+	return dtval->get();
 }
 
 void
 headers::date(time_t t)
 {
-	update(DATE, new date_value(t));
+	snf::datetime dt(t);
+	update(DATE, new dt_single_val_t(dt));
 }
 
 void
 headers::date(const snf::datetime &dt)
 {
-	update(DATE, new date_value(dt));
+	update(DATE, new dt_single_val_t(dt));
 }
 
 void
 headers::date(const std::string &dtstr)
 {
-	update(DATE, new date_value(dtstr));
+	update(DATE, new dt_single_val_t(dtstr));
 }
 
 } // namespace http
