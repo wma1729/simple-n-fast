@@ -77,6 +77,7 @@ public:
 	 */
 	size_t content_length() const;
 	void content_length(size_t);
+	void content_length(const std::string &);
 
 	/*
 	 * Transfer-Encoding: chunked
@@ -101,6 +102,7 @@ public:
 	 */
 	const std::vector<std::string> &trailers() const;
 	void trailers(const std::string &);
+	void trailers(const std::vector<std::string> &);
 
 	/*
 	 * Host: <host>[:<port>]
@@ -123,6 +125,7 @@ public:
 	 */
 	const std::vector<std::string> &connection() const;
 	void connection(const std::string &);
+	void connection(const std::vector<std::string> &);
 
 	/*
 	 * Content-Type: text/plain;charset=utf-8
@@ -143,6 +146,7 @@ public:
 	 */
 	const std::vector<std::string> &content_language() const;
 	void content_language(const std::string &);
+	void content_language(const std::vector<std::string> &);
 
 	/*
 	 * Content-Location: <uri>

@@ -43,10 +43,10 @@ headers::find(const std::string &name)
 hdr_vec_t::const_iterator
 headers::find(const std::string &name) const
 {
-	for (hdr_vec_t::const_iterator I = m_headers.begin(); I != m_headers.end(); ++I)
+	for (hdr_vec_t::const_iterator I = m_headers.cbegin(); I != m_headers.cend(); ++I)
 		if (name == I->first)
 			return I;
-	return m_headers.end();
+	return m_headers.cend();
 }
 
 /*
@@ -181,22 +181,35 @@ headers::add(const std::string &name, const std::string &value)
 		if (I == m_headers.end()) {
 			m_headers.push_back(std::make_pair(n, std::shared_ptr<base_value>(v.release())));
 		} else if (v->is_seq()) {
-			ce_seq_val_t    *ceseq = 0;
-			str_seq_val_t   *strseq = 0;
-			tok_seq_val_t   *tokseq = 0;
-			vai_seq_val_t   *viaseq = 0;
-			cnxn_seq_val_t  *cnxnseq = 0;
+			ce_seq_val_t    *tgt_ceseq = 0,   *src_ceseq = 0;
+			str_seq_val_t   *tgt_strseq = 0,  *src_strseq = 0;
+			tok_seq_val_t   *tgt_tokseq = 0,  *src_tokseq = 0;
+			vai_seq_val_t   *tgt_viaseq = 0,  *src_viaseq = 0;
+			cnxn_seq_val_t  *tgt_cnxnseq = 0, *src_cnxnseq = 0;
 
-			if ((ceseq = dynamic_cast<ce_seq_val_t *>(I->second.get())) != 0) {
-				*ceseq += *(dynamic_cast<ce_seq_val_t *>(v.get()));
-			} else if ((strseq = dynamic_cast<str_seq_val_t *>(I->second.get())) != 0) {
-				*strseq += *(dynamic_cast<str_seq_val_t *>(v.get()));
-			} else if ((tokseq = dynamic_cast<tok_seq_val_t *>(I->second.get())) != 0) {
-				*tokseq += *(dynamic_cast<tok_seq_val_t *>(v.get()));
-			} else if ((viaseq = dynamic_cast<vai_seq_val_t *>(I->second.get())) != 0) {
-				*viaseq += *(dynamic_cast<vai_seq_val_t *>(v.get()));
-			} else if ((cnxnseq = dynamic_cast<cnxn_seq_val_t *>(I->second.get())) != 0) {
-				*cnxnseq += *(dynamic_cast<cnxn_seq_val_t *>(v.get()));
+			base_value *tgt_bv = I->second.get();
+			base_value *src_bv = v.get();
+
+			if ((tgt_ceseq = dynamic_cast<ce_seq_val_t *>(tgt_bv)) != 0) {
+				src_ceseq = dynamic_cast<ce_seq_val_t *>(src_bv);
+				if (src_ceseq)
+					*tgt_ceseq += *src_ceseq;
+			} else if ((tgt_strseq = dynamic_cast<str_seq_val_t *>(tgt_bv)) != 0) {
+				src_strseq = dynamic_cast<str_seq_val_t *>(src_bv);
+				if (src_strseq)
+					*tgt_strseq += *src_strseq;
+			} else if ((tgt_tokseq = dynamic_cast<tok_seq_val_t *>(tgt_bv)) != 0) {
+				src_tokseq = dynamic_cast<tok_seq_val_t *>(src_bv);
+				if (src_tokseq)
+					*tgt_tokseq += *src_tokseq;
+			} else if ((tgt_viaseq = dynamic_cast<vai_seq_val_t *>(tgt_bv)) != 0) {
+				src_viaseq = dynamic_cast<vai_seq_val_t *>(src_bv);
+				if (src_viaseq)
+					*tgt_viaseq += *src_viaseq;
+			} else if ((tgt_cnxnseq = dynamic_cast<cnxn_seq_val_t *>(tgt_bv)) != 0) {
+				src_cnxnseq = dynamic_cast<cnxn_seq_val_t *>(src_bv);
+				if (src_cnxnseq)
+					*tgt_cnxnseq += *src_cnxnseq;
 			} else {
 				std::ostringstream oss;
 				oss << "header field (" << n << ") occurs multiple times";
@@ -355,6 +368,12 @@ headers::content_length(size_t length)
 	update(CONTENT_LENGTH, new num_single_val_t(length));
 }
 
+void
+headers::content_length(const std::string &str)
+{
+	update(CONTENT_LENGTH, new num_single_val_t(str));
+}
+
 const std::vector<token> &
 headers::transfer_encoding() const
 {
@@ -445,9 +464,15 @@ headers::trailers() const
 }
 
 void
-headers::trailers(const std::string &fields)
+headers::trailers(const std::string &field)
 {
-	update(TRAILERS, fields);
+	update(TRAILERS, new str_seq_val_t(field));
+}
+
+void
+headers::trailers(const std::vector<std::string> &fields)
+{
+	update(TRAILERS, new str_seq_val_t(fields));
 }
 
 /*
@@ -493,8 +518,7 @@ headers::host(const std::string &uristr, in_port_t port)
 	if (port)
 		hp.port = port;
 
-	hp_single_val_t *hpval = new hp_single_val_t(hp);
-	update(HOST, hpval);
+	update(HOST, new hp_single_val_t(hp));
 }
 
 const std::vector<via> &
@@ -532,7 +556,13 @@ headers::connection() const
 void
 headers::connection(const std::string &cnxn)
 {
-	update(CONNECTION, cnxn);
+	update(CONNECTION, new cnxn_seq_val_t(cnxn));
+}
+
+void
+headers::connection(const std::vector<std::string> &cnxns)
+{
+	update(CONNECTION, new cnxn_seq_val_t(cnxns));
 }
 
 const media_type &
@@ -577,7 +607,13 @@ headers::content_language() const
 void
 headers::content_language(const std::string &language)
 {
-	update(CONTENT_LANGUAGE, language);
+	update(CONTENT_LANGUAGE, new str_seq_val_t(language));
+}
+
+void
+headers::content_language(const std::vector<std::string> &languages)
+{
+	update(CONTENT_LANGUAGE, new str_seq_val_t(languages));
 }
 
 uri

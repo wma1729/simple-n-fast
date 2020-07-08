@@ -204,18 +204,19 @@ public:
 		m_value = std::move(v);
 	}
 
+	std::string str() const override
+	{
+		std::ostringstream oss;
+		oss << *this;
+		return oss.str();
+	}
+
 	friend std::ostream & operator << (std::ostream &os, const single_value & v)
 	{
 		os << v.get();
 		return os;
 	}
 
-	std::string str() const
-	{
-		std::ostringstream oss;
-		oss << *this;
-		return oss.str();
-	}
 };
 
 /*
@@ -276,6 +277,22 @@ public:
 	auto cbegin() const -> decltype(m_value.cbegin())   { return m_value.cbegin(); }
 	auto cend() const   -> decltype(m_value.cend())     { return m_value.cend(); }
 
+	auto operator += (const sequence_value & v) -> decltype(*this)
+	{
+		if (!m_raw.empty())
+			m_raw += ", ";
+		m_raw += v.raw();
+		m_value.insert(end(), v.cbegin(), v.cend());
+		return *this;
+	}
+
+	std::string str() const override
+	{
+		std::ostringstream oss;
+		oss << *this;
+		return oss.str();
+	}
+
 	friend std::ostream & operator << (std::ostream &os, const sequence_value & v)
 	{
 		for (auto it = v.cbegin(); it != v.cend(); ++it) {
@@ -286,21 +303,6 @@ public:
 		return os;
 	}
 
-	auto operator += (const sequence_value & v) -> decltype(*this)
-	{
-		if (!m_raw.empty())
-			m_raw += ", ";
-		m_raw += v.raw();
-		m_value.insert(end(), v.cbegin(), v.cend());
-		return *this;
-	}
-
-	std::string str() const
-	{
-		std::ostringstream oss;
-		oss << *this;
-		return oss.str();
-	}
 };
 
 static const std::string CONNECTION_CLOSE("close");
