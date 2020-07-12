@@ -235,6 +235,108 @@ public:
 };
 
 /*
+ * Get the HTTP body from the specified istream.
+ * Some of the operations can throw std::runtime_error
+ * or snf::http::exception exception.
+ */
+class body_source_istream : public body
+{
+private:
+	std::istream    &m_is;
+	size_t          m_size;
+	size_t          m_read;
+	bool            m_chunked;
+	char            m_buf[CHUNKSIZE];
+	param_vec_t     m_extensions;
+
+public:
+	body_source_istream(std::istream &is)
+		: m_is(is)
+		, m_size(0)
+		, m_read(0)
+		, m_chunked(true)
+	{
+	}
+
+	body_source_istream(std::istream &is, size_t size)
+		: m_is(is)
+		, m_size(size)
+		, m_read(0)
+		, m_chunked(false)
+	{
+	}
+
+	virtual ~body_source_istream() {}
+
+	bool chunked() const { return m_chunked; }
+	size_t length() { return m_chunked ? 0 : m_size; }
+	size_t chunk_size() const { return m_chunked ? m_size : 0; }
+	param_vec_t chunk_extensions() { return m_extensions; }
+
+	bool has_next()
+	{
+		if (m_read < m_size)
+			return true;
+
+		if (m_chunked) {
+			std::string line;
+
+			if (!readline(m_is, line))
+				throw std::runtime_error(
+					"failed to read line from input stream");
+
+			scanner scn{line};
+
+			if (!scn.read_chunk_size(&m_size))
+				throw bad_message("no chunk size");
+
+			if (scn.read_special(';')) {
+				m_extensions.clear();
+				if (!scn.read_parameters(m_extensions))
+					throw bad_message("failed to read chunk extension(s)");
+			}
+
+			if (!scn.read_crlf())
+				throw bad_message("chunk size line not terminated properly");
+
+			if (m_size == 0)
+				if (('\r' != m_is.get()) || ('\n' != m_is.get()))
+					throw bad_message("message body not terminated properly");
+		}
+
+		return (m_read < m_size);
+	}
+
+	const void *next(size_t &buflen)
+	{
+		int to_read = static_cast<int>(m_size - m_read);
+		if (to_read > CHUNKSIZE)
+			to_read = CHUNKSIZE;
+
+		int bread = 0;
+		const void *ptr = nullptr;
+
+		if (!read(m_is, m_buf, to_read, &bread))
+			throw std::runtime_error(
+				"failed to read data from input stream");
+
+		if (bread) {
+			m_read += bread;
+			buflen = bread;
+			ptr = m_buf;
+		} else {
+			buflen = 0;
+		}
+
+		if (m_chunked && (m_read >= m_size))
+			if (('\r' != m_is.get()) || ('\n' != m_is.get()))
+				throw bad_message("chunk data not terminated properly");
+
+		return ptr;
+	}
+};
+
+/*
  * Get the HTTP body from the specified socket.
  * Some of the operations can throw std::system_error
  * or snf::http::exception exception.
@@ -338,7 +440,7 @@ public:
 			throw std::system_error(
 				syserr,
 				std::system_category(),
-				"failed to read from socket");
+				"failed to read data from socket");
 
 		if (bread) {
 			m_read += bread;
@@ -384,6 +486,18 @@ body *
 body_factory::from_functor(body_functor_t &&f)
 {
 	return DBG_NEW body_source_functor(f);
+}
+
+body *
+body_factory::from_istream(std::istream &is, size_t length)
+{
+	return DBG_NEW body_source_istream(is, length);
+}
+
+body *
+body_factory::from_istream(std::istream &is)
+{
+	return DBG_NEW body_source_istream(is);
 }
 
 body *

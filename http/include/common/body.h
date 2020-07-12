@@ -45,20 +45,20 @@ using body_functor_t = std::function<int(void *, size_t, size_t *, param_vec_t *
 
 /*
  * HTTP body factory.
- * A few common body creation methods are supplied:
+ *
+ * A few common body creation methods are supplied.
+ *
+ * For unchunked body:
  * - from_buffer:         body constructed from a buffer.
  * - from string:         body constructed from string.
  * - from_file:           body constructed from file content.
+ *
+ * For chunked body:
  * - from_functor:        body constructed from a callable.
- * - from socket:         body constructed from data read
- *                        from socket. The size of the data
- *                        to be read in known in advance,
- *                        most likely from Content-Length
- *                        header.
- * - from socket_chunked: body constructed from data read
- *                        from socket. The body is assumed
- *                        to be chunked probably determined
- *                        from Transfer-Encoding header.
+ *
+ * For chunked/unchunked body:
+ * - from_istream:        body constructed from input stream.
+ * - from_socket:         body constructed from socket.
  */
 class body_factory
 {
@@ -81,8 +81,9 @@ public:
 	body *from_string(const std::string &);
 	body *from_string(std::string &&);
 	body *from_file(const std::string &);
-	body *from_istream(std::istream &);
 	body *from_functor(body_functor_t &&);
+	body *from_istream(std::istream &, size_t);
+	body *from_istream(std::istream &);
 	body *from_socket(snf::net::nio *, size_t);
 	body *from_socket(snf::net::nio *);
 };

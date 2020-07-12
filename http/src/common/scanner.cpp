@@ -332,5 +332,38 @@ scanner::read_all(std::string &line)
 	return true;
 }
 
+bool
+readline(std::istream &is, std::string &line)
+{
+	char c;
+
+	line.clear();
+
+	while (is.get(c)) {
+		line.push_back(c);
+		if (c == '\n')
+			break;
+	}
+
+	return !is.fail();
+}
+
+bool
+read(std::istream &is, char *buf, int to_read, int *bread)
+{
+	char    c;
+	int     n = 0;
+
+	*bread = 0;
+
+	while (is.get(c) && (n < to_read))
+		buf[n++] = c;
+
+	if (n)
+		*bread = n;
+
+	return !is.fail();
+}
+
 } // namespace http
 } // namespace snf

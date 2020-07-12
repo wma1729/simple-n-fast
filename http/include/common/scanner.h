@@ -2,6 +2,7 @@
 #define _SNF_HTTP_CMN_SCANNER_H_
 
 #include <string>
+#include <istream>
 #include <vector>
 #include <utility>
 
@@ -50,6 +51,9 @@ public:
 	bool read_chunk_size(size_t *);
 	bool read_all(std::string &);
 };
+
+bool readline(std::istream &, std::string &);
+bool read(std::istream &, char *, int, int *);
 
 } // namespace http
 } // namespace snf
