@@ -291,6 +291,24 @@ scanner::read_parameters(param_vec_t &pvec)
 }
 
 bool
+scanner::read_chunk_size(size_t *size)
+{
+	int c;
+	std::string hex;
+
+	while (std::isxdigit(c = get()))
+		hex.push_back(c);
+	unget();
+
+	if (hex.empty())
+		return false;
+
+
+	*size = std::stoll(hex, 0, 16);
+	return true;
+}
+
+bool
 scanner::read_all(std::string &line)
 {
 	int         c;

@@ -59,12 +59,18 @@ transmitter::send_body(body *body)
 
 	while (body->has_next()) {
 		chunklen = 0;
-		chunk_ext_t cext = std::move(body->chunk_extensions());
+		param_vec_t cext = std::move(body->chunk_extensions());
 		const void *buf = body->next(chunklen);
 	
 		if (body_chunked) {
 			std::ostringstream oss;
-			oss << std::hex << chunklen << cext << "\r\n";
+
+			oss << std::hex << chunklen;
+			if (!cext.empty()) {
+				for (auto e : cext)
+					oss << ";" << e.first << "=" << e.second;
+			}
+
 			std::string s = std::move(oss.str());
 
 			retval = send_data(
@@ -198,7 +204,7 @@ transmitter::recv_request()
 	body *b = nullptr;
 
 	if (req.get_headers().is_message_chunked())
-		b = body_factory::instance().from_socket_chunked(m_io);
+		b = body_factory::instance().from_socket(m_io);
 	else if (req.get_headers().content_length() != 0)
 		b = body_factory::instance().from_socket(m_io, req.get_headers().content_length());
 
@@ -267,7 +273,7 @@ transmitter::recv_response()
 	body *b = nullptr;
 
 	if (resp.get_headers().is_message_chunked())
-		b = body_factory::instance().from_socket_chunked(m_io);
+		b = body_factory::instance().from_socket(m_io);
 	else if (resp.get_headers().content_length() != 0)
 		b = body_factory::instance().from_socket(m_io, resp.get_headers().content_length());
 

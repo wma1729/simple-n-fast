@@ -47,6 +47,7 @@ public:
 	bool read_qstring(std::string &);
 	bool read_comments(std::string &);
 	bool read_parameters(param_vec_t &);
+	bool read_chunk_size(size_t *);
 	bool read_all(std::string &);
 };
 

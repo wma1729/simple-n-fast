@@ -30,6 +30,10 @@ struct token
 
 	token() = default;
 	token(const std::string &n) : name(n) {}
+	token(const token &) = default;
+	token(token &&) = default;
+	token & operator = (const token &) = default;
+	token & operator = (token &&) = default;
 };
 
 inline std::ostream &
@@ -77,6 +81,10 @@ struct media_type
 
 	media_type() = default;
 	media_type(const std::string &t, const std::string &st) : type(t), subtype(st) {}
+	media_type(const media_type &) = default;
+	media_type(media_type &&) = default;
+	media_type & operator = (const media_type &) = default;
+	media_type & operator = (media_type &&) = default;
 };
 
 inline std::ostream &
@@ -148,6 +156,10 @@ protected:
 public:
 	base_value() {}
 	base_value(const std::string &str) : m_raw(str) {}
+	base_value(const base_value &) = default;
+	base_value(base_value &&) = default;
+	base_value & operator = (const base_value &) = default;
+	base_value & operator = (base_value &&) = default;
 	virtual ~base_value() {}
 	const std::string &raw() const { return m_raw; }
 	virtual bool is_seq() const = 0;
@@ -155,7 +167,7 @@ public:
 };
 
 template<typename V>
-using Validator = void(const V &);
+using Validator = void(*)(const V &);
 
 template<typename T1, typename T2 = void>
 using EnableIfNotString = typename std::enable_if<
@@ -185,6 +197,11 @@ public:
 
 	template<typename NS>
 	single_value(NS &&v, EnableIfNotString<NS> * = nullptr) : base_value() { set(std::move(v)); }
+
+	single_value(const single_value &) = default;
+	single_value(single_value &&) = default;
+	single_value & operator = (const single_value &) = default;
+	single_value & operator = (single_value &&) = default;
 
 	virtual ~single_value() {}
 
@@ -216,7 +233,6 @@ public:
 		os << v.get();
 		return os;
 	}
-
 };
 
 /*
@@ -245,6 +261,11 @@ public:
 	sequence_value(NS &&v, EnableIfNotString<NS> * = nullptr) : base_value() { append(std::move(v)); }
 
 	sequence_value(const std::vector<T> &vseq) : base_value() { append(vseq); }
+
+	sequence_value(const sequence_value &) = default;
+	sequence_value(sequence_value &&) = default;
+	sequence_value & operator = (const sequence_value &) = default;
+	sequence_value & operator = (sequence_value &&) = default;
 
 	virtual ~sequence_value() {}
 

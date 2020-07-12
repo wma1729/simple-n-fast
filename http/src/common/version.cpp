@@ -17,12 +17,13 @@ const std::string version::prefix { "HTTP/" };
  * - HTTP/<major>.<minor>
  * - <major>.<minor>
  *
- * @param [in] vstr - version string.
+ * @param [in] vstr       - version string.
+ * @param [in] allow_abbr - allow abbreviated version.
  *
  * @throws snf::http::bad_message exception if the
  * version string is not rightly formatted.
  */
-version::version(const std::string &vstr)
+version::version(const std::string &vstr, bool allow_abbr)
 {
 	std::ostringstream oss;
 	oss << "invalid HTTP version (" << vstr << ")";
@@ -38,6 +39,8 @@ version::version(const std::string &vstr)
 			break;
 
 		case VERSION_SHORT_LEN:
+			if (!allow_abbr)
+				throw bad_message(oss.str());
 			break;
 
 		default:

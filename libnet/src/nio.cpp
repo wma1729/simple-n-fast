@@ -222,7 +222,7 @@ nio::write_string(const std::string &str, int to, int *oserr)
 
 /*
  * Reads a line terminated by newline ('\n'). This will continue
- * readline until a new line is encountered.
+ * reading until a new line is encountered.
  *
  * @param [out] line  - line read.
  * @param [in]  to    - timeout in milliseconds.

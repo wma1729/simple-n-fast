@@ -5,19 +5,10 @@
 #include <sstream>
 #include <ostream>
 #include "nio.h"
+#include "scanner.h"
 
 namespace snf {
 namespace http {
-
-using chunk_ext_t = std::vector<std::string>;
-
-inline std::ostream &
-operator<< (std::ostream &os, const chunk_ext_t &extensions)
-{
-	for (auto ext : extensions)
-		os << "," << ext;
-	return os;
-}
 
 /*
  * HTTP message, either request or response, body.
@@ -45,12 +36,12 @@ public:
 	virtual size_t length() const { return 0; }
 	virtual bool chunked() const { return false; }
 	virtual size_t chunk_size() const { return 0; }
-	virtual chunk_ext_t chunk_extensions() { return chunk_ext_t(); }
+	virtual param_vec_t chunk_extensions() { return param_vec_t(); }
 	virtual bool has_next() = 0;
 	virtual const void *next(size_t &) = 0;
 };
 
-using body_functor_t = std::function<int(void *, size_t, size_t *, chunk_ext_t *)>;
+using body_functor_t = std::function<int(void *, size_t, size_t *, param_vec_t *)>;
 
 /*
  * HTTP body factory.
@@ -90,9 +81,10 @@ public:
 	body *from_string(const std::string &);
 	body *from_string(std::string &&);
 	body *from_file(const std::string &);
+	body *from_istream(std::istream &);
 	body *from_functor(body_functor_t &&);
 	body *from_socket(snf::net::nio *, size_t);
-	body *from_socket_chunked(snf::net::nio *);
+	body *from_socket(snf::net::nio *);
 };
 
 } // namespace http

@@ -23,7 +23,7 @@ struct version
 
 	version() : m_major(MAJOR_VERSION), m_minor(MINOR_VERSION) {}
 	version(int major, int minor) : m_major(major), m_minor(minor) {}
-	version(const std::string &);
+	version(const std::string &, bool allow_abbr = false);
 
 	std::string str() const noexcept
 	{

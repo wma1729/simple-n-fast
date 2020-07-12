@@ -6,7 +6,7 @@ static std::string ctable("abcdefghijklmnopqrstuvwxyz0123456789");
 static size_t cindex = 0;
 
 int
-generate_body(void *buf, size_t buflen, size_t *datalen, snf::http::chunk_ext_t *)
+generate_body(void *buf, size_t buflen, size_t *datalen, snf::http::param_vec_t *)
 {
 	char *cbuf = static_cast<char *>(buf);
 	int n = std::rand();

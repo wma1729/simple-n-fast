@@ -168,7 +168,7 @@ parse(std::vector<via> &viavec, const std::string &istr)
 			v.proto.clear();
 		}
 
-		v.ver = version{s};
+		v.ver = version{s, true};
 
 		s.clear();
 
