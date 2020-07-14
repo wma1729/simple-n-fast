@@ -5,6 +5,93 @@
 namespace snf {
 namespace http {
 
+response_builder::response_builder(std::istream &is, bool ignore_body)
+{
+	std::string line;
+	headers     hdrs;
+
+	if (!readline(is, line))
+		throw std::runtime_error("unable to read response line");
+
+	response_line(line);
+
+	while (true) {
+		line.clear();
+
+		if (!readline(is, line))
+			throw std::runtime_error("unable to read response header");
+
+		if (line.empty() || (line == "\r\n"))
+			break;
+
+		hdrs.add(line);
+	}
+
+	with_headers(std::move(hdrs));
+
+	if (!ignore_body) {
+		body *b = nullptr;
+
+		if (m_response.get_headers().is_message_chunked()) {
+			b = body_factory::instance().from_istream(is);
+		} else {
+			size_t len = m_response.get_headers().content_length();
+			if (len != 0)
+				b = body_factory::instance().from_istream(is, len);
+		}
+
+		if (b != nullptr)
+			m_response.set_body(b);
+	}
+}
+
+response_builder::response_builder(snf::net::nio *io, bool ignore_body)
+{
+	int         syserr = 0;
+	std::string line;
+	headers     hdrs;
+
+	if (io->readline(line, 1000, &syserr) != E_ok)
+		throw std::system_error(
+			syserr,
+			std::system_category(),
+			"unable to read response line");
+
+	response_line(line);
+
+	while (true) {
+		line.clear();
+
+		if (io->readline(line, 1000, &syserr) != E_ok)
+			throw std::system_error(
+				syserr,
+				std::system_category(),
+				"unable to read response header");
+
+		if (line.empty() || (line == "\r\n"))
+			break;
+
+		hdrs.add(line);
+	}
+
+	with_headers(std::move(hdrs));
+
+	if (!ignore_body) {
+		body *b = nullptr;
+
+		if (m_response.get_headers().is_message_chunked()) {
+			b = body_factory::instance().from_socket(io);
+		} else {
+			size_t len = m_response.get_headers().content_length();
+			if (len != 0)
+				b = body_factory::instance().from_socket(io, len);
+		}
+
+		if (b != nullptr)
+			m_response.set_body(b);
+	}
+}
+
 /*
  * Builds the response from the response/status line. The
  * response line has the following format: <version> <status> <reason>

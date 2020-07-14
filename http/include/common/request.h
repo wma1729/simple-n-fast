@@ -1,11 +1,13 @@
 #ifndef _SNF_HTTP_CMN_REQUEST_H_
 #define _SNF_HTTP_CMN_REQUEST_H_
 
+#include <string>
+#include <istream>
+#include <map>
 #include "method.h"
 #include "uri.h"
 #include "message.h"
-#include <string>
-#include <map>
+#include "nio.h"
 
 namespace snf {
 namespace http {
@@ -25,7 +27,7 @@ private:
 	method_type m_type = method_type::M_GET;
 	uri         m_uri;
 	headers     m_trailers;
-	param_map_t m_parameters;
+	param_map_t m_parameters; // parameters extracted from path match
 
 	request() : message() {}
 
@@ -107,6 +109,8 @@ private:
 
 public:
 	request_builder() {}
+	request_builder(std::istream &, bool ignore_body = false);
+	request_builder(snf::net::nio *, bool ignore_body = false);
 
 	request_builder & method(method_type type)
 	{

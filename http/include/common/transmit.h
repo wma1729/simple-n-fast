@@ -19,7 +19,6 @@ private:
 
 	int send_data(const void *, size_t, const std::string &);
 	int send_body(body *);
-	int recv_line(std::string &, const std::string &);
 
 public:
 	transmitter(snf::net::nio *io)

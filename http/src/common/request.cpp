@@ -5,6 +5,93 @@
 namespace snf {
 namespace http {
 
+request_builder::request_builder(std::istream &is, bool ignore_body)
+{
+	std::string line;
+	headers     hdrs;
+
+	if (!readline(is, line))
+		throw std::runtime_error("unable to read request line");
+
+	request_line(line);
+
+	while (true) {
+		line.clear();
+
+		if (!readline(is, line))
+			throw std::runtime_error("unable to read request header");
+
+		if (line.empty() || (line == "\r\n"))
+			break;
+
+		hdrs.add(line);
+	}
+
+	with_headers(std::move(hdrs));
+
+	if (!ignore_body) {
+		body *b = nullptr;
+
+		if (m_request.get_headers().is_message_chunked()) {
+			b = body_factory::instance().from_istream(is);
+		} else {
+			size_t len = m_request.get_headers().content_length();
+			if (len != 0)
+				b = body_factory::instance().from_istream(is, len);
+		}
+
+		if (b != nullptr)
+			m_request.set_body(b);
+	}
+}
+
+request_builder::request_builder(snf::net::nio *io, bool ignore_body)
+{
+	int         syserr = 0;
+	std::string line;
+	headers     hdrs;
+
+	if (io->readline(line, 1000, &syserr) != E_ok)
+		throw std::system_error(
+			syserr,
+			std::system_category(),
+			"unable to read request line");
+
+	request_line(line);
+
+	while (true) {
+		line.clear();
+
+		if (io->readline(line, 1000, &syserr) != E_ok)
+				throw std::system_error(
+					syserr,
+					std::system_category(),
+					"unable to read request header");
+
+		if (line.empty() || (line == "\r\n"))
+			break;
+
+		hdrs.add(line);
+	}
+
+	with_headers(std::move(hdrs));
+
+	if (!ignore_body) {
+		body *b = nullptr;
+
+		if (m_request.get_headers().is_message_chunked()) {
+			b = body_factory::instance().from_socket(io);
+		} else {
+			size_t len = m_request.get_headers().content_length();
+			if (len != 0)
+				b = body_factory::instance().from_socket(io, len);
+		}
+
+		if (b != nullptr)
+			m_request.set_body(b);
+	}
+}
+
 /*
  * Builds the request from the request line. The request
  * line has the following format: <method> <uri> <version>

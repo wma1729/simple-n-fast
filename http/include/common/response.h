@@ -83,6 +83,8 @@ private:
 
 public:
 	response_builder() {}
+	response_builder(std::istream &, bool ignore_body = false);
+	response_builder(snf::net::nio *, bool ignore_body = false);
 
 	response_builder & with_version(const version &v)
 	{

@@ -112,40 +112,6 @@ transmitter::send_body(body *body)
 }
 
 /*
- * Receives a line of HTTP message.
- *
- * @param [out] line      - message line.
- * @param [in]  exceptstr - exception message in case of error.
- *
- * @throws std::system_error in case of read error.
- *         snf::http::exception in case of invalid message line.
- *
- * @return E_ok on success, -ve error code in case of failure.
- */
-int
-transmitter::recv_line(std::string &line, const std::string &exceptstr)
-{
-	int retval = E_ok;
-	int syserr = 0;
-
-	retval = m_io->readline(line, 1000, &syserr);
-	if (retval != E_ok)
-		throw std::system_error(
-			syserr,
-			std::system_category(),
-			exceptstr);
-
-	size_t len = line.size();
-	if ((len < 2) || (line[len - 1] != '\n') || (line[len - 2] != '\r'))
-		throw bad_message("invalid request line/header");
-
-	line.pop_back();
-	line.pop_back();
-
-	return retval;
-}
-
-/*
  * Sends HTTP request.
  *
  * @param [in] req - HTTP request.
@@ -183,35 +149,8 @@ transmitter::send_request(const request &req)
 request
 transmitter::recv_request()
 {
-	std::string req_line;
-	headers     hdrs;
-
-	recv_line(req_line, "unable to get request line");
-
-	while (true) {
-		std::string hdr_line;
-		recv_line(hdr_line, "unable to get request header");
-
-		if (hdr_line.empty())
-			break;
-
-		hdrs.add(hdr_line);
-	}
-
-	request_builder req_bldr;
-	request req = std::move(req_bldr.request_line(req_line).with_headers(hdrs).build());
-
-	body *b = nullptr;
-
-	if (req.get_headers().is_message_chunked())
-		b = body_factory::instance().from_socket(m_io);
-	else if (req.get_headers().content_length() != 0)
-		b = body_factory::instance().from_socket(m_io, req.get_headers().content_length());
-
-	if (b != nullptr)
-		req.set_body(b);
-
-	return req;
+	request_builder req_bldr(m_io);
+	return req_bldr.build();
 }
 
 /*
@@ -252,35 +191,8 @@ transmitter::send_response(const response &resp)
 response
 transmitter::recv_response()
 {
-	std::string resp_line;
-	headers     hdrs;
-
-	recv_line(resp_line, "unable to get response line");
-
-	while (true) {
-		std::string hdr_line;
-		recv_line(hdr_line, "unable to get response header");
-
-		if (hdr_line.empty())
-			break;
-
-		hdrs.add(hdr_line);
-	}
-
-	response_builder resp_bldr;
-	response resp = std::move(resp_bldr.response_line(resp_line).with_headers(hdrs).build());
-
-	body *b = nullptr;
-
-	if (resp.get_headers().is_message_chunked())
-		b = body_factory::instance().from_socket(m_io);
-	else if (resp.get_headers().content_length() != 0)
-		b = body_factory::instance().from_socket(m_io, resp.get_headers().content_length());
-
-	if (b != nullptr)
-		resp.set_body(b);
-
-	return resp;
+	response_builder resp_bldr(m_io);
+	return resp_bldr.build();
 }
 
 response
