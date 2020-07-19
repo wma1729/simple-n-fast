@@ -309,6 +309,34 @@ scanner::read_chunk_size(size_t *size)
 }
 
 bool
+scanner::read_path_parameter(std::string &name, std::string &value)
+{
+	int         c;
+	std::string l;
+
+	read_opt_space();
+
+	if (!read_token(name))
+		return false;
+
+	read_opt_space();
+
+	if (read_special('=')) {
+		read_opt_space();
+
+		while ((c = get()) != -1)
+			l.push_back(c);
+	}
+
+	value = std::move(snf::trim(l));
+
+	if (value.empty())
+		value = R"([^/]+)";
+
+	return true;
+}
+
+bool
 scanner::read_all(std::string &line)
 {
 	int         c;

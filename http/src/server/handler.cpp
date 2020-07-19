@@ -124,23 +124,10 @@ process_request(snf::net::nio *io, snf::net::socket *s)
 
 		retval = xfer.send_response(resp);
 
-		const std::vector<std::string> &req_conn = req.get_headers().connection();
-		for (auto s : req_conn) {
-			if (s == CONNECTION_CLOSE) {
-				close_connection = true;
-				break;
-			}
-		}
+		close_connection = req.get_headers().close_connection();
+		if (!close_connection)
+			close_connection = resp.get_headers().close_connection();
 
-		if (!close_connection) {
-			const std::vector<std::string> &resp_conn = resp.get_headers().connection();
-			for (auto s : resp_conn) {
-				if (s == CONNECTION_CLOSE) {
-					close_connection = true;
-					break;
-				}
-			}
-		}
 	} catch (const bad_message &ex) {
 		status = status_code::BAD_REQUEST;
 		errmsg = ex.what();

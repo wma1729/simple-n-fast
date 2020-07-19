@@ -19,7 +19,6 @@ struct path_segment;
 
 using path_segments = std::deque<path_segment *>;
 using path_elements = std::vector<std::string>;
-using rqst_param    = std::pair<std::string, std::string>;
 
 struct path_segment
 {
@@ -38,7 +37,7 @@ struct path_segment
 class router
 {
 private:
-	path_segments   m_toplevel;
+	path_segments   m_root;
 	std::mutex      m_lock;
 
 	router() {}
@@ -46,7 +45,7 @@ private:
 	path_elements split(const std::string &);
 	path_segment *find(path_segments *, const std::string &, bool lookup = false);
 	int handle(const path_segment *&, const path_segments *, path_elements::const_iterator,
-		path_elements::const_iterator, std::stack<rqst_param> &param_stk);
+		path_elements::const_iterator, std::stack<path_param_t> &param_stk);
 
 public:
 	~router()
@@ -54,11 +53,11 @@ public:
 		std::lock_guard<std::mutex> guard(m_lock);
 
 		path_segments::iterator it;
-		for (it = m_toplevel.begin(); it != m_toplevel.end(); ++it) {
+		for (it = m_root.begin(); it != m_root.end(); ++it) {
 			path_segment *seg = *it;
 			delete seg;
 		}
-		m_toplevel.clear();
+		m_root.clear();
 	}
 
 	router(const router &) = delete;

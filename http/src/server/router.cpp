@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 #include "charset.h"
+#include "scanner.h"
 
 namespace snf {
 namespace http {
@@ -12,29 +13,12 @@ path_segment::path_segment(const std::string &seg)
 	, m_regexpr(nullptr)
 {
 	if ((seg.front() == '{') && (seg.back() == '}')) {
-		size_t i = 1;
-		size_t len = seg.length() - 1;
-
-		while ((i < len) && is_whitespace(seg[i]))
-			i++;
-
-		while ((i < len) && (seg[i] != ':')) {
-			m_param.push_back(seg[i]);
-			++i;
-		}
-
-		if (m_param.empty()) {
+		scanner scn{seg, 1, seg.length() - 1};
+		if (!scn.read_path_parameter(m_param, m_name)) {
 			std::ostringstream oss;
-			oss << "no parameter name specified in " << seg;
+			oss << "invalid request paramter specified in " << seg;
 			throw std::invalid_argument(oss.str());
 		}
-
-		while ((i < len) && is_whitespace(seg[i]))
-			i++;
-
-		m_name = std::move(seg.substr(i, len - i));
-		if (m_name.empty())
-			m_name = R"([^/]+)";
 
 		try {
 			m_regexpr = new std::regex(
@@ -47,6 +31,18 @@ path_segment::path_segment(const std::string &seg)
 			std::ostringstream oss;
 			oss << "invalid regular expression: " << ex.what();
 			throw std::invalid_argument(oss.str());
+		}
+	} else {
+		for (size_t i = 0; i < m_name.length(); ++i) {
+			if (!uri_unreserved_character(m_name[i]) &&
+				!uri_subcomponent_delimiter(m_name[i]) &&
+				(m_name[i] != '@') &&
+				(m_name[i] != ':')) {
+				std::ostringstream oss;
+				oss << "invalid character \'" << m_name[i]
+					<< "\' in path segment " << m_name;
+				throw std::invalid_argument(oss.str());
+			}
 		}
 	}
 }
@@ -121,7 +117,7 @@ void
 router::add(const std::string &path, request_handler handler)
 {
 	path_segment *seg = nullptr;
-	path_segments *segments = &m_toplevel;
+	path_segments *segments = &m_root;
 	path_elements elements = std::move(split(path));
 
 	std::lock_guard<std::mutex> guard(m_lock);
@@ -160,7 +156,7 @@ router::handle(
 	const path_segments *segments,
 	path_elements::const_iterator curr,
 	path_elements::const_iterator last,
-	std::stack<rqst_param> &param_stk)
+	std::stack<path_param_t> &param_stk)
 {
 	int retval = E_not_found;
 
@@ -194,11 +190,11 @@ router::handle(request &req)
 	std::string path = std::move(req.get_uri().get_path().get());
 	path_elements elements = std::move(split(path));
 	const path_segment *seg = nullptr;
-	const path_segments *segments = &m_toplevel;
+	const path_segments *segments = &m_root;
 	request_handler handler;
 
 	{
-		std::stack<rqst_param> param_stk;
+		std::stack<path_param_t> param_stk;
 
 		std::lock_guard<std::mutex> guard(m_lock);
 
@@ -209,8 +205,7 @@ router::handle(request &req)
 			}
 
 			while (!param_stk.empty()) {
-				rqst_param &param = param_stk.top();
-				req.set_parameter(param.first, param.second);
+				req.set_path_parameter(param_stk.top());
 				param_stk.pop();
 			}
 		}

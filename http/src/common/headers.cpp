@@ -553,6 +553,16 @@ headers::connection() const
 	return cnxnseq->get();
 }
 
+bool
+headers::close_connection() const
+{
+	for (auto c : connection())
+		if (c == CONNECTION_CLOSE)
+			return true;
+
+	return false;
+}
+
 void
 headers::connection(const std::string &cnxn)
 {

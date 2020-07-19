@@ -124,6 +124,7 @@ public:
 	 * Connection: upgrade
 	 */
 	const std::vector<std::string> &connection() const;
+	bool close_connection() const;
 	void connection(const std::string &);
 	void connection(const std::vector<std::string> &);
 

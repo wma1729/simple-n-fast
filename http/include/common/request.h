@@ -14,7 +14,8 @@ namespace http {
 
 class request_builder;
 
-using param_map_t = std::map<std::string, std::string>;
+using path_param_t      = std::pair<std::string, std::string>;
+using path_param_map_t  = std::map<std::string, std::string>;
 
 /*
  * HTTP request.
@@ -24,10 +25,10 @@ class request : public message
 	friend class request_builder;
 
 private:
-	method_type m_type = method_type::M_GET;
-	uri         m_uri;
-	headers     m_trailers;
-	param_map_t m_parameters; // parameters extracted from path match
+	method_type         m_type = method_type::M_GET;
+	uri                 m_uri;
+	headers             m_trailers;
+	path_param_map_t    m_parameters;
 
 	request() : message() {}
 
@@ -76,9 +77,11 @@ public:
 	void set_trailers(const headers & trailers) { m_trailers = trailers; }
 	void set_trailers(headers && trailers) { m_trailers = std::move(trailers); }
 
-	const param_map_t & get_parameters() const { return m_parameters; }
-	void set_parameter(const std::string &key, const std::string &val)
+	const path_param_map_t & get_path_parameters() const { return m_parameters; }
+	void set_path_parameter(const std::string &key, const std::string &val)
 		{ m_parameters.insert(std::make_pair(key, val)); }
+	void set_path_parameter(const path_param_t &kv)
+		{ m_parameters.insert(kv); }
 };
 
 inline std::ostream &

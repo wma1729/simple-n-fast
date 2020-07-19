@@ -42,18 +42,25 @@ public:
 
 	const std::string &keyfile() const { return m_keyfile; }
 	void keyfile(const std::string &keyfile) { m_keyfile = keyfile; }
+	void keyfile(std::string &&keyfile) { m_keyfile = std::move(keyfile); }
+
 	const std::string &keyfile_password() const { return m_kf_pwd; }
 	void keyfile_password(const std::string &kf_pwd) { m_kf_pwd = kf_pwd; }
+	void keyfile_password(std::string &&kf_pwd) { m_kf_pwd = std::move(kf_pwd); }
+
 	snf::net::ssl::data_fmt keyfile_format() const { return m_kf_fmt; }
 	void keyfile_format(snf::net::ssl::data_fmt kf_fmt) { m_kf_fmt = kf_fmt; }
 
 	const std::string &certfile() const { return m_certfile; }
 	void certfile(const std::string & certfile) { m_certfile = certfile; }
+	void certfile(std::string && certfile) { m_certfile = std::move(certfile); }
+
 	snf::net::ssl::data_fmt certfile_format() const { return m_cf_fmt; }
 	void certfile_format(snf::net::ssl::data_fmt cf_fmt) { m_cf_fmt = cf_fmt; }
 
 	const std::string &cafile() const { return m_cafile; }
 	void cafile(const std::string &cafile) { m_cafile = cafile; }
+	void cafile(std::string &&cafile) { m_cafile = std::move(cafile); }
 
 	int certificate_chain_depth() const { return m_cert_chain_depth; }
 	void certificate_chain_depth(int depth) { m_cert_chain_depth = depth; }

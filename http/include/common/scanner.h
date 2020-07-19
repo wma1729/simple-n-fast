@@ -32,7 +32,10 @@ public:
 	 * Initializes the scanner with the input string.
 	 * @param [in] is - reference to the input stream.
 	 */
-	scanner(const std::string &s) : m_cur{0}, m_len{s.size()}, m_str{s} {}
+	scanner(const std::string &s)
+		: m_cur{0}, m_len{s.size()}, m_str{s} {}
+	scanner(const std::string &s, size_t start, size_t len)
+		: m_cur{start}, m_len{len}, m_str{s} {}
 	~scanner() {}
 
 	bool read_space();
@@ -49,6 +52,7 @@ public:
 	bool read_comments(std::string &);
 	bool read_parameters(param_vec_t &);
 	bool read_chunk_size(size_t *);
+	bool read_path_parameter(std::string &, std::string &);
 	bool read_all(std::string &);
 };
 
