@@ -49,7 +49,7 @@ path_segment::path_segment(const std::string &seg)
 
 path_segment::~path_segment()
 {
-	path_segments::iterator it;
+	path_segments_t::iterator it;
 	for (it = m_children.begin(); it != m_children.end(); ++it) {
 		path_segment *seg = *it;
 		delete seg;
@@ -70,13 +70,13 @@ path_segment::matches(const std::string &elem) const
 	return (elem == m_name);
 }
 
-path_elements
+path_elements_t
 router::split(const std::string &path)
 {
 	size_t i = 0;
 	size_t len = path.length();
 	std::string elem;
-	path_elements elements;
+	path_elements_t elements;
 
 	while (i < len) {
 		while ((i < len) && (path[i] == '/'))
@@ -97,9 +97,9 @@ router::split(const std::string &path)
 }
 
 path_segment *
-router::find(path_segments *segments, const std::string &name, bool lookup)
+router::find(path_segments_t *segments, const std::string &name, bool lookup)
 {
-	path_segments::const_iterator it;
+	path_segments_t::const_iterator it;
 	for (it = segments->begin(); it != segments->end(); ++it) {
 		path_segment *seg = *it;
 		if (lookup) {
@@ -114,15 +114,15 @@ router::find(path_segments *segments, const std::string &name, bool lookup)
 }
 
 void
-router::add(const std::string &path, request_handler handler)
+router::add(const std::string &path, request_handler_t handler)
 {
 	path_segment *seg = nullptr;
-	path_segments *segments = &m_root;
-	path_elements elements = std::move(split(path));
+	path_segments_t *segments = &m_root;
+	path_elements_t elements = std::move(split(path));
 
 	std::lock_guard<std::mutex> guard(m_lock);
 
-	path_elements::const_iterator it = elements.begin();
+	path_elements_t::const_iterator it = elements.begin();
 	while (it != elements.end()) {
 		seg = find(segments, *it);
 		if (seg == nullptr) {
@@ -153,9 +153,9 @@ router::add(const std::string &path, request_handler handler)
 int
 router::handle(
 	const path_segment *& seg,
-	const path_segments *segments,
-	path_elements::const_iterator curr,
-	path_elements::const_iterator last,
+	const path_segments_t *segments,
+	path_elements_t::const_iterator curr,
+	path_elements_t::const_iterator last,
 	std::stack<path_param_t> &param_stk)
 {
 	int retval = E_not_found;
@@ -163,7 +163,7 @@ router::handle(
 	if (curr == last)
 		return E_ok;
 
-	path_segments::const_iterator it;
+	path_segments_t::const_iterator it;
 	for (it = segments->begin(); it != segments->end(); ++it) {
 		seg = *it;
 
@@ -188,10 +188,10 @@ router::handle(request &req)
 {
 	int retval = E_ok;
 	std::string path = std::move(req.get_uri().get_path().get());
-	path_elements elements = std::move(split(path));
+	path_elements_t elements = std::move(split(path));
 	const path_segment *seg = nullptr;
-	const path_segments *segments = &m_root;
-	request_handler handler;
+	const path_segments_t *segments = &m_root;
+	request_handler_t handler;
 
 	{
 		std::stack<path_param_t> param_stk;

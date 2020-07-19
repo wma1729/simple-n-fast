@@ -6,6 +6,7 @@
 #include "cnxn.h"
 #include "reactor.h"
 #include "thrdpool.h"
+#include "router.h"
 #include <memory>
 
 namespace snf {
@@ -43,6 +44,7 @@ public:
 
 	int start(const server_config *);
 	int stop();
+	void register_path(const std::string &, request_handler_t);
 	snf::net::ssl::context &ssl_context() { return m_ctx; }
 	snf::net::reactor &reactor() { return m_reactor; }
 	snf::thread_pool *thread_pool() { return m_thrdpool.get(); }

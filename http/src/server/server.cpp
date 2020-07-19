@@ -182,5 +182,11 @@ server::stop()
 	return 0;
 }
 
+void
+server::register_path(const std::string &path, request_handler_t h)
+{
+	router::instance().add(path, h);
+}
+
 } // namespace http
 } // namespace snf
