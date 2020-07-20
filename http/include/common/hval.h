@@ -106,8 +106,7 @@ void parse(media_type &mt, const std::string &);
  */
 struct via
 {
-	std::string     proto;          // protocol name; empty means HTTP
-	version         ver;            // protocol version
+	version         ver;            // [protocol/] version
 	uri	        url;            // message came via this URI
 	std::string     comments;       // comments if any
 };
@@ -115,10 +114,7 @@ struct via
 inline std::ostream &
 operator << (std::ostream &os, const via &v)
 {
-	if (!v.proto.empty())
-		os << v.proto << "/";
-
-	os << v.ver.str() << " ";
+	os << v.ver << " ";
 
 	if (v.url.get_host().is_present()) {
 		os << v.url.get_host().get();

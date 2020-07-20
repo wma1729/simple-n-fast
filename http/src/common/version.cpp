@@ -7,45 +7,29 @@
 namespace snf {
 namespace http {
 
-constexpr size_t VERSION_LONG_LEN = 8;
-constexpr size_t VERSION_SHORT_LEN = 3;
-
-const std::string version::prefix { "HTTP/" };
+const std::string http_protocol("HTTP");
 
 /*
  * Initialize HTTP version with the version string of format:
- * - HTTP/<major>.<minor>
+ * - protocol/<major>.<minor>
  * - <major>.<minor>
  *
  * @param [in] vstr       - version string.
- * @param [in] allow_abbr - allow abbreviated version.
  *
  * @throws snf::http::bad_message exception if the
  * version string is not rightly formatted.
  */
-version::version(const std::string &vstr, bool allow_abbr)
+version::version(const std::string &vstr)
 {
 	std::ostringstream oss;
 	oss << "invalid HTTP version (" << vstr << ")";
 
 	size_t idx = 0;
+	size_t idx_of_slash = vstr.find_first_of('/');
 
-	switch (vstr.size()) {
-		case VERSION_LONG_LEN:
-			if (vstr.compare(idx, prefix.size(), prefix) == 0)
-				idx += prefix.size();
-			else
-				throw bad_message(oss.str());
-			break;
-
-		case VERSION_SHORT_LEN:
-			if (!allow_abbr)
-				throw bad_message(oss.str());
-			break;
-
-		default:
-			throw bad_message(oss.str());
-			break;
+	if (idx_of_slash != std::string::npos) {
+		m_protocol = vstr.substr(0, idx_of_slash);
+		idx = idx_of_slash + 1;
 	}
 
 	if (!std::isdigit(vstr[idx]))

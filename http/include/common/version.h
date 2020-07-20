@@ -11,30 +11,39 @@ namespace http {
 constexpr int MAJOR_VERSION = 1;
 constexpr int MINOR_VERSION = 1;
 
+extern const std::string http_protocol;
+
 /*
  * HTTP version.
  */
 struct version
 {
-	static const std::string prefix;
+	std::string m_protocol;
+	int         m_major;
+	int         m_minor;
 
-	int m_major;
-	int m_minor;
+	version() : m_protocol(http_protocol), m_major(MAJOR_VERSION), m_minor(MINOR_VERSION) {}
+	version(int major, int minor) : m_protocol(http_protocol), m_major(major), m_minor(minor) {}
+	version(const std::string & proto, int major, int minor) : m_protocol(proto), m_major(major), m_minor(minor) {}
+	version(const std::string &);
 
-	version() : m_major(MAJOR_VERSION), m_minor(MINOR_VERSION) {}
-	version(int major, int minor) : m_major(major), m_minor(minor) {}
-	version(const std::string &, bool allow_abbr = false);
+	const std::string & protocol() const
+	{
+		return m_protocol.empty() ? http_protocol : m_protocol;
+	}
 
 	std::string str() const noexcept
 	{
 		std::ostringstream oss;
+		if (!m_protocol.empty())
+			oss << m_protocol << "/";
 		oss << m_major << "." << m_minor;
 		return oss.str();
 	}
 
 	friend std::ostream & operator<<(std::ostream &os, const version &v) noexcept
 	{
-		os << prefix << v.str();
+		os << v.str();
 		return os;
 	}
 };

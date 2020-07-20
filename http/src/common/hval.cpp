@@ -157,28 +157,15 @@ parse(std::vector<via> &viavec, const std::string &istr)
 
 		scn.read_opt_space();
 
-		if (!scn.read_token(v.proto, false))
+		if (!scn.read_version(s))
 			throw bad_message("no protocol/version found");
 
-		if (scn.read_special('/')) {
-			if (!scn.read_token(s))
-				throw bad_message("no version found");
-		} else {
-			s = v.proto;
-			v.proto.clear();
-		}
-
-		v.ver = version{s, true};
+		v.ver = version{s};
 
 		s.clear();
 
 		if (!scn.read_space()) {
-			oss << "no space after (";
-			if (v.proto.empty())
-				oss << v.ver;
-			else
-				oss << v.proto << "/" << v.ver;
-			oss << ")";
+			oss << "no space after (" << v.ver << ")";
 			throw bad_message(oss.str());
 		}
 
