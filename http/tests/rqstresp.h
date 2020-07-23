@@ -18,7 +18,6 @@ private:
 
 			snf::http::request_builder reqbldr1;
 			snf::http::request_builder reqbldr2;
-			snf::http::request_builder reqbldr3;
 
 			snf::http::request rqst1 = std::move(
 				reqbldr1.method("GET")
@@ -35,14 +34,23 @@ private:
 			ASSERT_EQ(int, 1, rqst2.get_version().m_major, "major HTTP version matches");
 			ASSERT_EQ(int, 1, rqst2.get_version().m_minor, "minor HTTP version matches");
 
-			snf::http::request rqst3 = std::move(reqbldr3.request_line("POST http://www.example.com/hello.txt HTTP/1.0").build());
-			ASSERT_EQ(snf::http::method_type, snf::http::method_type::M_POST, rqst3.get_method(), "method matches");
-			ASSERT_EQ(int, 1, rqst3.get_version().m_major, "major HTTP version matches");
-			ASSERT_EQ(int, 0, rqst3.get_version().m_minor, "minor HTTP version matches");
-
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << "bad request: " << ex.what() << std::endl;
 			return false;
+		}
+
+		try {
+			snf::http::request_builder reqbldr3;
+			snf::http::request rqst3 = std::move(reqbldr3.request_line("POST http://www.example.com/hello.txt HTTP/1.0").build());
+			return false;
+		} catch (const snf::http::exception &ex) {
+			if (ex.get_status_code() == snf::http::status_code::HTTP_VERSION_NOT_SUPPORTED) {
+				TEST_LOG("HTTP version 1.0 not supported");
+				return true;
+			} else {
+				std::cerr << ex.get_status_code() << ": " << ex.what() << std::endl;
+				return false;
+			}
 		}
 
 		return true;
@@ -57,7 +65,6 @@ private:
 
 			snf::http::response_builder respbldr1;
 			snf::http::response_builder respbldr2;
-			snf::http::response_builder respbldr3;
 
 			snf::http::response resp1 = std::move(
 				respbldr1.with_version("HTTP/1.1")
@@ -74,14 +81,22 @@ private:
 			ASSERT_EQ(snf::http::status_code, snf::http::status_code::OK, resp2.get_status(), "HTTP status matches");
 			ASSERT_EQ(const std::string &, "OK", resp2.get_reason(), "reason string matches");
 
-			snf::http::response resp3 = std::move(respbldr3.response_line("HTTP/2.0 200 NOT OK").build());
-			ASSERT_EQ(int, 2, resp3.get_version().m_major, "major HTTP version matches");
-			ASSERT_EQ(int, 0, resp3.get_version().m_minor, "minor HTTP version matches");
-			ASSERT_EQ(snf::http::status_code, snf::http::status_code::OK, resp3.get_status(), "HTTP status matches");
-			ASSERT_EQ(const std::string &, "NOT OK", resp3.get_reason(), "reason string matches");
 		} catch (const snf::http::bad_message &ex) {
 			std::cerr << "bad response: " << ex.what() << std::endl;
 			return false;
+		}
+
+		try {
+			snf::http::response_builder respbldr3;
+			snf::http::response resp3 = std::move(respbldr3.response_line("HTTP/2.0 200 NOT OK").build());
+		} catch (const snf::http::exception &ex) {
+			if (ex.get_status_code() == snf::http::status_code::HTTP_VERSION_NOT_SUPPORTED) {
+				TEST_LOG("HTTP version 2.0 not supported");
+				return true;
+			} else {
+				std::cerr << ex.get_status_code() << ": " << ex.what() << std::endl;
+				return false;
+			}
 		}
 
 		return true;

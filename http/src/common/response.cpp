@@ -27,6 +27,9 @@ response_builder::response_builder(std::istream &is, bool ignore_body)
 		hdrs.add(line);
 	}
 
+	if (hdrs.empty())
+		throw bad_message("a response with no header is invalid");
+
 	with_headers(std::move(hdrs));
 
 	if (!ignore_body) {
@@ -73,6 +76,9 @@ response_builder::response_builder(snf::net::nio *io, bool ignore_body)
 
 		hdrs.add(line);
 	}
+
+	if (hdrs.empty())
+		throw bad_message("a response with no header is invalid");
 
 	with_headers(std::move(hdrs));
 
@@ -140,6 +146,21 @@ response_builder::response_line(const std::string &istr)
 	}
 
 	m_response.m_version = snf::http::version(vstr);
+
+	if (m_response.m_version.m_protocol != http_protocol) {
+		if (m_response.m_version.m_protocol.empty())
+			oss << "HTTP protocol cannot be empty";
+		else
+			oss << "invalid protocol " << m_response.m_version.m_protocol;
+		throw bad_message(oss.str());
+	}
+
+	if ((m_response.m_version.m_major != MAJOR_VERSION) ||
+		(m_response.m_version.m_minor != MINOR_VERSION)) {
+		oss << "HTTP version " << m_response.m_version << " is not supported";
+		throw exception(oss.str(), status_code::HTTP_VERSION_NOT_SUPPORTED);
+	}
+
 	m_response.m_status = static_cast<status_code>(std::stoi(sstr));
 	m_response.m_reason = rstr;
 

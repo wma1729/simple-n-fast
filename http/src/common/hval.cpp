@@ -114,6 +114,8 @@ parse(host_port &hp, const std::string &hoststr)
 
 		if (the_uri.get_port().is_present()) {
 			hp.port = the_uri.get_port().numeric_port();
+		} else {
+			hp.port = 0;
 		}
 	} catch (snf::http::bad_uri &ex) {
 		throw bad_message(ex.what());
