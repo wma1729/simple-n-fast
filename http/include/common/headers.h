@@ -81,6 +81,32 @@ public:
 
 	/*
 	 * Transfer-Encoding: chunked
+	 *
+	 * From RFC 7231:
+	 *
+	 * Transfer-Encoding is primarily intended to accurately
+	 * delimit a dynamically generated payload and to distinguish payload
+	 * encodings that are only applied for transport efficiency or security
+	 * from those that are characteristics of the selected resource.
+	 *
+	 * A recipient MUST be able to parse the chunked transfer coding
+	 * because it plays a crucial role in framing messages
+	 * when the payload body size is not known in advance. A sender MUST
+	 * NOT apply chunked more than once to a message body (i.e., chunking an
+	 * already chunked message is not allowed). If any transfer coding
+	 * other than chunked is applied to a request payload body, the sender
+	 * MUST apply chunked as the final transfer coding to ensure that the
+	 * message is properly framed. If any transfer coding other than
+	 * chunked is applied to a response payload body, the sender MUST either
+	 * apply chunked as the final transfer coding or terminate the message
+	 * by closing the connection.
+	 *
+	 * For example,
+	 * Transfer-Encoding: gzip, chunked
+	 *
+	 * indicates that the payload body has been compressed using the gzip
+	 * coding and then chunked using the chunked coding while forming the
+	 * message body.
 	 */
 	const std::vector<token> &transfer_encoding() const;
 	void transfer_encoding(const token &);

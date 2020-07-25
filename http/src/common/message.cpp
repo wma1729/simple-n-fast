@@ -17,38 +17,40 @@ namespace http {
 void
 message::validate_length_chunkiness()
 {
-	// trust body info over message info
-
 	if (m_body) {
-		bool body_chunked = m_body->chunked();
-		bool mesg_chunked = m_headers.is_message_chunked();
-		if (body_chunked != mesg_chunked) {
-			if (body_chunked)
+		if (m_body->chunked()) {
+			// make sure there is no Content-Length
+			m_headers.remove(CONTENT_LENGTH);
+
+			// add chunked transfer encoding if not already set
+			if (m_headers.is_set(TRANSFER_ENCODING)) {
+				std::vector<token> encodings = m_headers.transfer_encoding();
+				std::vector<token>::const_iterator it =
+					std::find(encodings.begin(), encodings.end(), TRANSFER_ENCODING_CHUNKED);
+				if (it == encodings.end()) {
+					encodings.push_back(TRANSFER_ENCODING_CHUNKED);
+					m_headers.transfer_encoding(encodings);
+				}
+			} else {
 				m_headers.transfer_encoding(TRANSFER_ENCODING_CHUNKED);
-			else
-				m_headers.remove(TRANSFER_ENCODING);
-		}
-
-		size_t body_length = m_body->length();
-		size_t mesg_length = m_headers.is_set(CONTENT_LENGTH) ?
-					m_headers.content_length() : 0;
-		if (body_length != mesg_length)
-			m_headers.content_length(body_length);
-	}
-
-	// make sure everything is fine
-
-	if (m_headers.is_set(TRANSFER_ENCODING)) {
-		if (!m_headers.is_message_chunked()) {
-			std::ostringstream oss;
-			oss << TRANSFER_ENCODING << " header is not set to " << TRANSFER_ENCODING_CHUNKED;
-			throw bad_message(oss.str());
-		}
-
-		if (m_headers.is_set(CONTENT_LENGTH)) {
-			if (0 != m_headers.content_length()) {
-				m_headers.content_length(0);
 			}
+		} else {
+			// make sure chunked transfer encoding is not set
+			if (m_headers.is_set(TRANSFER_ENCODING)) {
+				std::vector<token> encodings = m_headers.transfer_encoding();
+				std::vector<token>::const_iterator it =
+					std::find(encodings.begin(), encodings.end(), TRANSFER_ENCODING_CHUNKED);
+				if (it != encodings.end()) {
+					encodings.erase(it);
+					if (encodings.empty())
+						m_headers.remove(TRANSFER_ENCODING);
+					else
+						m_headers.transfer_encoding(encodings);
+				}
+			}
+
+			// add Content-Length
+			m_headers.content_length(m_body->length());
 		}
 	}
 }

@@ -7,6 +7,25 @@
 #include "nio.h"
 #include "scanner.h"
 
+/*
+ * From RFC 7230:
+ *
+ * The presence of a message body in a request is signaled by a
+ * Content-Length or Transfer-Encoding header field.
+ *
+ * Responses to the HEAD request method never include a message body
+ * because the associated response header fields (e.g., Transfer-Encoding,
+ * Content-Length, etc.), if present, indicate only what their values
+ * would have been if the request method had been GET.
+ *
+ * 2xx (Successful) responses to a CONNECT request method switch to tunnel
+ * mode instead of having a message body.
+ *
+ * All 1xx (Informational), 204 (No Content), and 304 (Not Modified)
+ * responses do not include a message body. All other responses do
+ * include a message body, although the body might be of zero length.
+ */
+
 namespace snf {
 namespace http {
 

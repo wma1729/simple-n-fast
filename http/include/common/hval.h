@@ -34,6 +34,8 @@ struct token
 	token(token &&) = default;
 	token & operator = (const token &) = default;
 	token & operator = (token &&) = default;
+
+	bool operator == (const token &t) const { return name == t.name; }
 };
 
 inline std::ostream &

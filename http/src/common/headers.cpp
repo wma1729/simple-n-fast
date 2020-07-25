@@ -133,8 +133,6 @@ headers::add(const std::string &istr)
 		throw bad_message("HTTP header name not found");
 	}
 
-	scn.read_opt_space();
-
 	if (!scn.read_special(':')) {
 		oss << "no \':\' after HTTP header (" << name << ")";
 		throw bad_message(oss.str());
