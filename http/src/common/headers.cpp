@@ -519,6 +519,21 @@ headers::host(const std::string &uristr, in_port_t port)
 	update(HOST, new hp_single_val_t(hp));
 }
 
+/*
+ * Sets the value of host header.
+ *
+ * @param [in] hp - Host and port.
+ *
+ * @throws snf::http::bad_message if the host/URI name cannot
+ *         be parsed. std::invalid_argument if the host component
+ *         is missing in the URL.
+ */
+void
+headers::host(const host_port &hp)
+{
+	update(HOST, new hp_single_val_t(hp));
+}
+
 const std::vector<via> &
 headers::intermediary() const
 {

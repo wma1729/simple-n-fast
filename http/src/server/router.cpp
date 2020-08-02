@@ -215,7 +215,32 @@ router::handle(request &req)
 
 	if (E_ok == retval) {
 		try {
-			return (handler)(req);
+			response resp = std::move((handler)(req));
+			if (resp.has_body()) {
+				status_code s = resp.get_status();
+
+				if (req.get_method() == method_type::M_HEAD) {
+					oss << "no body allowed for method " << req.get_method();
+					throw exception(oss.str(), status_code::INTERNAL_SERVER_ERROR);
+				} else if (req.get_method() == method_type::M_CONNECT) {
+					if (is_success_status(s)) {
+						oss << "no body allowed with method "
+							<< req.get_method()
+							<< " when status code is "
+							<< s;
+						throw exception(oss.str(), s);
+					}
+				}
+
+				if (is_info_status(s) ||
+					(status_code::NO_CONTENT == s) ||
+					(status_code::NOT_MODIFIED == s)) {
+
+					oss << "no body allowed when status code is " << s;
+					throw exception(oss.str(), s);
+				}
+			}
+			return resp;
 		} catch (std::bad_function_call &) {
 			oss << method(req.get_method())
 				<< " is not implemented for resource ("

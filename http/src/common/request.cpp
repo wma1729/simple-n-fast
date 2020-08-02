@@ -5,6 +5,44 @@
 namespace snf {
 namespace http {
 
+void
+request::validate()
+{
+	std::ostringstream oss;
+
+	if (m_headers.is_set(HOST)) {
+		in_port_t user_spec_port = 0;
+		const std::string &user_spec_host = m_headers.host(&user_spec_port);
+
+		if (m_uri.get_host().is_present()) {
+			if (user_spec_host != m_uri.get_host().get()) {
+				oss << "host in headers " << user_spec_host
+					<< " does not match host in URI " << m_uri;
+				throw bad_message(oss.str());
+			}
+		}			
+
+		if (user_spec_port) {
+			if (m_uri.get_port().is_present()) {
+				if (user_spec_port != m_uri.get_port().numeric_port()) {
+					oss << "port in headers " << user_spec_port
+						<< " does not match port in URI " << m_uri;
+					throw bad_message(oss.str());
+				}
+			}
+		} else {
+			if (m_uri.get_port().is_present()) {
+				oss << "port not specified in headers but available in URI " << m_uri;
+				throw bad_message(oss.str());
+			}
+		}
+	} else {
+		throw bad_message("HTTP host field missing");
+	}
+
+	message::validate();
+}
+
 request_builder::request_builder(std::istream &is, bool ignore_body)
 {
 	std::string line;

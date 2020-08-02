@@ -59,6 +59,8 @@ struct host_port
 {
 	std::string     host;           // host name
 	in_port_t       port;           // optional port number
+
+	host_port() : port(0) {}
 };
 
 inline std::ostream &

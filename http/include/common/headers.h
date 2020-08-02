@@ -135,6 +135,7 @@ public:
 	 */
 	const std::string &host(in_port_t *) const;
 	void host(const std::string &, in_port_t port);
+	void host(const host_port &);
 
 	/*
 	 * Via: [<protocol-name>/]<protocol-version> <received-by> <comment>

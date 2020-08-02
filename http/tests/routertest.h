@@ -61,6 +61,9 @@ public:
 	{
 		TEST_LOG("status ok");
 
+		snf::http::headers hdrs;
+		hdrs.add("Host: h3:80");
+
 		try {
 			TEST_LOG("handling /a/b/c");
 			snf::http::request_builder reqbldr1;
@@ -68,6 +71,7 @@ public:
 				reqbldr1.method("GET")
 						.with_uri("/a/b/c")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp1 = std::move(snf::http::router::instance().handle(rqst1));
 
@@ -79,6 +83,7 @@ public:
 				reqbldr2.method("GET")
 						.with_uri("/a/b/c/d")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp2 = std::move(snf::http::router::instance().handle(rqst2));
 
@@ -90,6 +95,7 @@ public:
 				reqbldr3.method("GET")
 						.with_uri("/p/q/r")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp3 = std::move(snf::http::router::instance().handle(rqst3));
 
@@ -115,13 +121,16 @@ public:
 	{
 		TEST_LOG("status not found");
 
-		try {
+		snf::http::headers hdrs;
+		hdrs.add("Host: h2:80");
 
+		try {
 			snf::http::request_builder reqbldr1;
 			snf::http::request rqst1 = std::move(
 				reqbldr1.method("GET")
 						.with_uri("/a/b/c/d/e")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp1 = std::move(snf::http::router::instance().handle(rqst1));
 			return false;
@@ -135,6 +144,7 @@ public:
 				reqbldr2.method("GET")
 						.with_uri("/a/f/c/d")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp2 = std::move(snf::http::router::instance().handle(rqst2));
 			return false;
@@ -148,6 +158,7 @@ public:
 				reqbldr3.method("GET")
 						.with_uri("/p/q/r/s")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp3 = std::move(snf::http::router::instance().handle(rqst3));
 			return false;
@@ -162,6 +173,9 @@ public:
 	{
 		TEST_LOG("status not implemented");
 
+		snf::http::headers hdrs;
+		hdrs.add("Host: h3:80");
+
 		try {
 
 			snf::http::request_builder reqbldr1;
@@ -169,6 +183,7 @@ public:
 				reqbldr1.method("GET")
 						.with_uri("/a/b")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp1 = std::move(snf::http::router::instance().handle(rqst1));
 			return false;
@@ -182,6 +197,7 @@ public:
 				reqbldr2.method("GET")
 						.with_uri("/a/b/f")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp2 = std::move(snf::http::router::instance().handle(rqst2));
 			return false;
@@ -195,6 +211,7 @@ public:
 				reqbldr3.method("GET")
 						.with_uri("/p/q")
 						.with_version(1, 1)
+						.with_headers(hdrs)
 						.build());
 			snf::http::response resp3 = std::move(snf::http::router::instance().handle(rqst3));
 			return false;

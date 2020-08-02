@@ -101,8 +101,14 @@ void
 process_request(snf::net::nio *io, snf::net::socket *s)
 {
 	std::unique_ptr<snf::net::nio> ioptr(io);
-	std::unique_ptr<snf::net::socket> sptr(s);
+	std::unique_ptr<snf::net::socket> sptr;
 	bool close_connection = false;
+
+	if (!s)
+		s = dynamic_cast<snf::net::socket *>(io);
+
+	if (s)
+		sptr.reset(s);
 
 	transmitter xfer(ioptr.get());
 
@@ -151,7 +157,7 @@ process_request(snf::net::nio *io, snf::net::socket *s)
 		errmsg = ex.what();
 	}
 
-	if (is_http_error(status)) {
+	if (is_error_status(status)) {
 		response resp(gen_error_resp(status, errmsg.c_str()));
 		retval = xfer.send_response(resp);
 	}
@@ -161,19 +167,19 @@ process_request(snf::net::nio *io, snf::net::socket *s)
 		<< status
 		<< snf::log::record::endl;
 
-	if (is_http_error(status) || (E_ok != retval) || close_connection) {
-		if (sptr) {
-			snf::net::ssl::connection *cnxn = dynamic_cast<snf::net::ssl::connection *>(ioptr.get());
-			if (cnxn)
-				cnxn->shutdown();
-		}
-	} else {
-		sock_t thesock = *s;
-		server::instance().reactor().add_handler(
-			thesock,
-			snf::net::event::read,
-			DBG_NEW read_handler(ioptr.release(), sptr.get(), snf::net::event::read));
+	if (is_error_status(status) || (E_ok != retval) || close_connection) {
+		close_connection = true;
+		snf::net::ssl::connection *cnxn = dynamic_cast<snf::net::ssl::connection *>(ioptr.get());
+		if (cnxn)
+			cnxn->shutdown();
+		sptr->shutdown(SHUTDOWN_WRITE);
 	}
+
+	sock_t thesock = *(sptr.get());
+	server::instance().reactor().add_handler(
+		thesock,
+		snf::net::event::read,
+		DBG_NEW read_handler(ioptr.release(), sptr.get(), snf::net::event::read, close_connection));
 }
 
 bool
@@ -190,6 +196,14 @@ read_handler::operator()(sock_t s, snf::net::event e)
 		ERROR_STRM("read_handler")
 			<< "invalid socket"
 			<< snf::log::record::endl;
+		return false;
+	}
+
+	if (m_shutting_down) {
+		DEBUG_STRM("read_handler")
+			<< "shutting down the connection"
+			<< snf::log::record::endl;
+		sock->close();
 		return false;
 	}
 

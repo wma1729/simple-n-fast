@@ -32,6 +32,9 @@ private:
 
 	request() : message() {}
 
+protected:
+	virtual void validate() override;
+
 public:
 	request(const request &req)
 		: message(req.m_version, req.m_headers, req.m_body)
@@ -184,9 +187,10 @@ public:
 		return *this;
 	}
 
-	request build()
+	request build(bool validate = true)
 	{
-		m_request.validate();
+		if (validate)
+			m_request.validate();
 		return m_request;
 	}
 };

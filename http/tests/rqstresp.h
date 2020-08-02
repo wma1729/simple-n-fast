@@ -23,12 +23,12 @@ private:
 				reqbldr1.method("GET")
 					.with_uri("/hello.txt")
 					.with_version(1, 1)
-					.build());
+					.build(false));
 			oss << rqst1;
 
 			TEST_LOG(oss.str());
 
-			snf::http::request rqst2 = std::move(reqbldr2.request_line(oss.str()).build());
+			snf::http::request rqst2 = std::move(reqbldr2.request_line(oss.str()).build(false));
 
 			ASSERT_EQ(snf::http::method_type, snf::http::method_type::M_GET, rqst2.get_method(), "method matches");
 			ASSERT_EQ(int, 1, rqst2.get_version().m_major, "major HTTP version matches");
@@ -41,7 +41,7 @@ private:
 
 		try {
 			snf::http::request_builder reqbldr3;
-			snf::http::request rqst3 = std::move(reqbldr3.request_line("POST http://www.example.com/hello.txt HTTP/1.0").build());
+			snf::http::request rqst3 = std::move(reqbldr3.request_line("POST http://www.example.com/hello.txt HTTP/1.0").build(false));
 			return false;
 		} catch (const snf::http::exception &ex) {
 			if (ex.get_status_code() == snf::http::status_code::HTTP_VERSION_NOT_SUPPORTED) {

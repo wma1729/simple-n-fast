@@ -66,7 +66,21 @@ operator<< (std::ostream &os, status_code s)
 }
 
 inline bool
-is_http_error(status_code s) noexcept
+is_info_status(status_code s) noexcept
+{
+	int e = static_cast<int>(s);
+	return ((e >= 100) && (e < 200));
+}
+
+inline bool
+is_success_status(status_code s) noexcept
+{
+	int e = static_cast<int>(s);
+	return ((e >= 200) && (e < 300));
+}
+
+inline bool
+is_error_status(status_code s) noexcept
 {
 	return (static_cast<int>(s) >= 400);
 }

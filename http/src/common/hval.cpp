@@ -227,18 +227,18 @@ valid_media_type(const media_type &mt)
 	if (mt.type == CONTENT_TYPE_T_TEXT) {
 		if (mt.subtype != CONTENT_TYPE_ST_PLAIN) {
 			oss << "subtype " << mt.subtype
-				<< " is not implemented for type " << mt.type;
-			throw not_implemented(oss.str());
+				<< " is not supported for type " << mt.type;
+			throw exception(oss.str(), status_code::UNSUPPORTED_MEDIA_TYPE);
 		}
 	} else if (mt.type == CONTENT_TYPE_T_APPLICATION) {
 		if (mt.subtype != CONTENT_TYPE_ST_JSON) {
 			oss << "subtype " << mt.subtype
-				<< " is not implemented for type " << mt.type;
-			throw not_implemented(oss.str());
+				<< " is not supported for type " << mt.type;
+			throw exception(oss.str(), status_code::UNSUPPORTED_MEDIA_TYPE);
 		}
 	} else {
-		oss << "type " << mt.type << " is not implemented";
-		throw not_implemented(oss.str());
+		oss << "type " << mt.type << " is not supported";
+		throw exception(oss.str(), status_code::UNSUPPORTED_MEDIA_TYPE);
 	}
 }
 

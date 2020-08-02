@@ -42,12 +42,14 @@ protected:
 	std::unique_ptr<snf::net::nio>     m_io;
 	std::unique_ptr<snf::net::socket>  m_sock;
 	snf::net::event                    m_event;
+	bool                               m_shutting_down;
 
 public:
 	read_handler(snf::net::nio *io, snf::net::event e)
 		: m_io(io)
 		, m_sock(nullptr)
 		, m_event(e)
+		, m_shutting_down(false)
 	{
 	}
 
@@ -55,6 +57,15 @@ public:
 		: m_io(io)
 		, m_sock(s)
 		, m_event(e)
+		, m_shutting_down(false)
+	{
+	}
+
+	read_handler(snf::net::nio *io, snf::net::socket *s, snf::net::event e, bool shutting_down)
+		: m_io(io)
+		, m_sock(s)
+		, m_event(e)
+		, m_shutting_down(shutting_down)
 	{
 	}
 

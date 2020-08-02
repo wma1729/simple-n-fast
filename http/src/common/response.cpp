@@ -5,6 +5,15 @@
 namespace snf {
 namespace http {
 
+void
+response::validate()
+{
+	if (m_reason.empty())
+		m_reason = reason_phrase(m_status);
+
+	message::validate();
+}
+
 response_builder::response_builder(std::istream &is, bool ignore_body)
 {
 	std::string line;

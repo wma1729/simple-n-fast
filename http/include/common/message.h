@@ -21,7 +21,7 @@ protected:
 	std::shared_ptr<body>   m_body;
 
 	void validate_length_chunkiness();
-	void validate();
+	virtual void validate();
 
 public:
 	message() {}
@@ -86,6 +86,7 @@ public:
 	void update_header(const std::string &k, const std::string &v) { m_headers.update(k, v); }
 	void remove_header(const std::string &k) { m_headers.remove(k); }
 
+	bool has_body() const { return static_cast<bool>(m_body); }
 	body *get_body() const { return m_body.get(); }
 	void set_body(body *b) { m_body.reset(b); }
 };

@@ -20,6 +20,9 @@ private:
 
 	response() : message() {}
 
+protected:
+	void validate() override;
+
 public:
 	response(const response &resp)
 		: message(resp.m_version, resp.m_headers, resp.m_body)
@@ -137,11 +140,10 @@ public:
 		return *this;
 	}
 
-	response build()
+	response build(bool validate = true)
 	{
-		m_response.validate();
-		if (m_response.m_reason.empty())
-			m_response.m_reason = reason_phrase(m_response.m_status);
+		if (validate)
+			m_response.validate();
 		return m_response;
 	}
 };
