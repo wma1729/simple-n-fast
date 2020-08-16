@@ -326,24 +326,24 @@ public:
 
 };
 
-static const std::string CONNECTION_CLOSE("close");
-static const std::string CONNECTION_KEEP_ALIVE("keep-alive");
-static const std::string CONNECTION_UPGRADE("upgrade");
+const std::string CONNECTION_CLOSE("close");
+const std::string CONNECTION_KEEP_ALIVE("keep-alive");
+const std::string CONNECTION_UPGRADE("upgrade");
 
 void valid_connection(const std::string &);
 
-static const std::string CONTENT_TYPE_T_TEXT("text");
-static const std::string CONTENT_TYPE_T_APPLICATION("application");
-static const std::string CONTENT_TYPE_ST_PLAIN("plain");
-static const std::string CONTENT_TYPE_ST_JSON("json");
+const std::string CONTENT_TYPE_T_TEXT("text");
+const std::string CONTENT_TYPE_T_APPLICATION("application");
+const std::string CONTENT_TYPE_ST_PLAIN("plain");
+const std::string CONTENT_TYPE_ST_JSON("json");
 
 void valid_media_type(const media_type &);
 
-static const std::string CONTENT_ENCODING_COMPRESS("compress");
-static const std::string CONTENT_ENCODING_X_COMPRESS("x-compress");
-static const std::string CONTENT_ENCODING_GZIP("gzip");
-static const std::string CONTENT_ENCODING_X_GZIP("x-gzip");
-static const std::string CONTENT_ENCODING_DEFLATE("deflate");
+const std::string CONTENT_ENCODING_COMPRESS("compress");
+const std::string CONTENT_ENCODING_X_COMPRESS("x-compress");
+const std::string CONTENT_ENCODING_GZIP("gzip");
+const std::string CONTENT_ENCODING_X_GZIP("x-gzip");
+const std::string CONTENT_ENCODING_DEFLATE("deflate");
 
 void valid_encoding(const std::string &);
 

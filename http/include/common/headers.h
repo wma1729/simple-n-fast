@@ -11,20 +11,20 @@
 namespace snf {
 namespace http {
 
-static const std::string CONTENT_LENGTH("content-length");
-static const std::string TRANSFER_ENCODING("transfer-encoding");
-static const std::string TE("te");
-static const std::string TRAILERS("trailers");
-static const std::string HOST("host");
-static const std::string VIA("via");
-static const std::string CONNECTION("connection");
-static const std::string CONTENT_TYPE("content-type");
-static const std::string CONTENT_ENCODING("content-encoding");
-static const std::string CONTENT_LANGUAGE("content-language");
-static const std::string CONTENT_LOCATION("content-location");
-static const std::string DATE("date");
+const std::string CONTENT_LENGTH("content-length");
+const std::string TRANSFER_ENCODING("transfer-encoding");
+const std::string TE("te");
+const std::string TRAILERS("trailers");
+const std::string HOST("host");
+const std::string VIA("via");
+const std::string CONNECTION("connection");
+const std::string CONTENT_TYPE("content-type");
+const std::string CONTENT_ENCODING("content-encoding");
+const std::string CONTENT_LANGUAGE("content-language");
+const std::string CONTENT_LOCATION("content-location");
+const std::string DATE("date");
 
-static const std::string TRANSFER_ENCODING_CHUNKED("chunked");
+const std::string TRANSFER_ENCODING_CHUNKED("chunked");
 
 using hdr_vec_t = std::vector<std::pair<std::string, std::shared_ptr<base_value>>>;
 
