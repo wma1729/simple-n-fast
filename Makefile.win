@@ -1,6 +1,6 @@
 include Makefile.constants
 
-DIRS = libcom libjson liblog jdaemon librdb libnet http
+DIRS = libcom libjson liblog librdb libnet http
 
 all:
 	@for %I in ($(DIRS)) do @(pushd %I && nmake /nologo /f Makefile.win $@ && popd)

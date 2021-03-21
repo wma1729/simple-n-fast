@@ -117,8 +117,12 @@ context::get_options()
 	if (pgetopt != nullptr) {
 		return pgetopt(m_ctx);
 	} else {
+#if defined(SSL_CTRL_OPTIONS)
 		return ssl_library::instance().ssl_ctx_ctrl()
 			(m_ctx, SSL_CTRL_OPTIONS, 0, nullptr);
+#else
+		return -1;
+#endif
 	}
 }
 
@@ -136,8 +140,12 @@ context::clr_options(unsigned long opt)
 	if (pclropt != nullptr) {
 		return pclropt(m_ctx, opt);
 	} else {
+#if defined(SSL_CTRL_CLEAR_OPTIONS)
 		return ssl_library::instance().ssl_ctx_ctrl()
 			(m_ctx, SSL_CTRL_CLEAR_OPTIONS, opt, nullptr);
+#else
+		return -1;
+#endif
 	}
 }
 
@@ -155,8 +163,12 @@ context::set_options(unsigned long opt)
 	if (psetopt != nullptr) {
 		return psetopt(m_ctx, opt);
 	} else {
+#if defined(SSL_CTRL_OPTIONS)
 		return ssl_library::instance().ssl_ctx_ctrl()
 			(m_ctx, SSL_CTRL_OPTIONS, opt, nullptr);
+#else
+		return -1;
+#endif
 	}
 }
 

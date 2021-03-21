@@ -552,8 +552,12 @@ connection::is_session_reused()
 	if (session_reused)
 		return (session_reused(m_ssl) == 1);
 	else
+#if defined(SSL_CTRL_GET_SESSION_REUSED)
 		return (ssl_library::instance().ssl_ctrl()
 			(m_ssl, SSL_CTRL_GET_SESSION_REUSED, 0, NULL) == 1);
+#else
+		return false;
+#endif
 }
 
 /*

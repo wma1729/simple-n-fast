@@ -1,6 +1,7 @@
 #include "keymgr.h"
 #include "dbg.h"
 #include <time.h>
+#include <string.h>
 
 namespace snf {
 namespace net {
