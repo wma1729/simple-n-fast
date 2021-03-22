@@ -12,7 +12,8 @@ OBJS =  $(P)\common.obj \
 		$(P)\dir.obj \
 		$(P)\dll.obj \
 		$(P)\i18n.obj \
-		$(P)\timeutil.obj
+		$(P)\timeutil.obj \
+		$(P)\clap.obj
 
 INCL = $(INCLCOM)
 

@@ -12,7 +12,8 @@ OBJS =  ${P}/common.o \
 		${P}/dir.o \
 		${P}/dll.o \
 		${P}/i18n.o \
-		${P}/timeutil.o
+		${P}/timeutil.o \
+		${P}/clap.o
 
 INCL = ${INCLCOM}
 
