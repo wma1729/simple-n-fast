@@ -41,7 +41,7 @@ public:
 	 */
 	static keymgr *get_keymgr()
 	{
-		if (s_km == nullptr) s_km = new basic_keymgr();
+		if (s_km == nullptr) s_km = DBG_NEW basic_keymgr();
 		return s_km;
 	}
 

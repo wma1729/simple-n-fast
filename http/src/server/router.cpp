@@ -21,7 +21,7 @@ path_segment::path_segment(const std::string &seg)
 		}
 
 		try {
-			m_regexpr = new std::regex(
+			m_regexpr = DBG_NEW std::regex(
 					m_name,
 					std::regex::ECMAScript |
 					std::regex::icase |
@@ -134,7 +134,7 @@ router::add(const std::string &path, request_handler_t handler)
 	}
 
 	while (it != elements.end()) {
-		seg = new path_segment(*it);
+		seg = DBG_NEW path_segment(*it);
 
 		if (seg->m_regexpr) {
 			segments->push_back(seg);

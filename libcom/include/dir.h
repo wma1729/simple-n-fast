@@ -4,6 +4,7 @@
 #include "common.h"
 #include <iterator>
 #include <memory>
+#include <regex>
 #include "fattr.h"
 #if defined(_WIN32)
 	#include <direct.h>
@@ -50,12 +51,12 @@ public:
 	using reference         = const file_attr &;
 
 	directory()
-		: m_impl(new dir_impl())
+		: m_impl(DBG_NEW dir_impl())
 	{
 	}
 
 	directory(const std::string &path, const std::string &pattern = { R"(.*)" })
-		: m_impl(new dir_impl(path, pattern))
+		: m_impl(DBG_NEW dir_impl(path, pattern))
 	{
 	}
 

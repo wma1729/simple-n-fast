@@ -178,7 +178,7 @@ reactor::reactor(int to)
 	m_sockpair[0].blocking(false);
 	sock_t s = m_sockpair[0];
 
-	add_handler(s, event::read, new sockpair_handler(m_sockpair[0]));
+	add_handler(s, event::read, DBG_NEW sockpair_handler(m_sockpair[0]));
 
 	m_future = std::async(std::launch::async, &reactor::start, this);
 }
@@ -244,7 +244,7 @@ reactor::add_handler(sock_t s, event e, handler *h, int to)
 		}
 
 		if (!found) {
-			std::unique_ptr<ev_info> ei(new ev_info(e, to, h));
+			std::unique_ptr<ev_info> ei(DBG_NEW ev_info(e, to, h));
 			H->second.push_back(std::move(ei));
 
 			DEBUG_STRM("reactor")
@@ -255,7 +255,7 @@ reactor::add_handler(sock_t s, event e, handler *h, int to)
 		}
 	} else {
 		ev_info_type eivec;
-		std::unique_ptr<ev_info> ei(new ev_info(e, to, h));
+		std::unique_ptr<ev_info> ei(DBG_NEW ev_info(e, to, h));
 		eivec.push_back(std::move(ei));
 		m_handlers[s] = std::move(eivec);
 

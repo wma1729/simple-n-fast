@@ -319,7 +319,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 	snf::net::ssl::connection *cnxn = nullptr;
 
 	if (args.use_ssl) {
-		cnxn = new snf::net::ssl::connection { snf::net::connection_mode::client, *ctx };
+		cnxn = DBG_NEW snf::net::ssl::connection { snf::net::connection_mode::client, *ctx };
 		if (args.check_hosts)
 			cnxn->check_hosts({ args.host });
 		if (!args.snihost.empty())
@@ -414,7 +414,7 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 
 	try {
 		if (args.use_ssl) {
-			cnxn = new snf::net::ssl::connection
+			cnxn = DBG_NEW snf::net::ssl::connection
 				{ snf::net::connection_mode::server, ctx };
 
 			if (!args.altcertfile.empty()) {
@@ -526,7 +526,7 @@ try {
 
 		snf::net::ssl::context *ctx = nullptr;
 		if (args.use_ssl) {
-			ctx = new snf::net::ssl::context {};
+			ctx = DBG_NEW snf::net::ssl::context {};
 			prepare_context(args, false, ctx);
 		}
 

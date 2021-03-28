@@ -84,29 +84,29 @@ base_value *
 headers::validate(const std::string &name, const std::string &value)
 {
 	if (name == CONTENT_LENGTH) {
-		return new num_single_val_t(value);
+		return DBG_NEW num_single_val_t(value);
 	} else if (name == TRANSFER_ENCODING) {
-		return new tok_seq_val_t(value);
+		return DBG_NEW tok_seq_val_t(value);
 	} else if (name == TE) {
-		return new tok_seq_val_t(value);
+		return DBG_NEW tok_seq_val_t(value);
 	} else if (name == TRAILERS) {
-		return new str_seq_val_t(value);
+		return DBG_NEW str_seq_val_t(value);
 	} else if (name == HOST) {
-		return new hp_single_val_t(value);
+		return DBG_NEW hp_single_val_t(value);
 	} else if (name == VIA) {
-		return new vai_seq_val_t(value);
+		return DBG_NEW vai_seq_val_t(value);
 	} else if (name == CONNECTION) {
-		return new cnxn_seq_val_t(value);
+		return DBG_NEW cnxn_seq_val_t(value);
 	} else if (name == CONTENT_TYPE) {
-		return new mt_single_val_t(value);
+		return DBG_NEW mt_single_val_t(value);
 	} else if (name == CONTENT_ENCODING) {
-		return new ce_seq_val_t(value);
+		return DBG_NEW ce_seq_val_t(value);
 	} else if (name == CONTENT_LOCATION) {
-		return new uri_single_val_t(value);
+		return DBG_NEW uri_single_val_t(value);
 	} else if (name == DATE) {
-		return new dt_single_val_t(value);
+		return DBG_NEW dt_single_val_t(value);
 	} else {
-		return new str_seq_val_t(value);
+		return DBG_NEW str_seq_val_t(value);
 	}
 }
 
@@ -363,13 +363,13 @@ headers::content_length() const
 void
 headers::content_length(size_t length)
 {
-	update(CONTENT_LENGTH, new num_single_val_t(length));
+	update(CONTENT_LENGTH, DBG_NEW num_single_val_t(length));
 }
 
 void
 headers::content_length(const std::string &str)
 {
-	update(CONTENT_LENGTH, new num_single_val_t(str));
+	update(CONTENT_LENGTH, DBG_NEW num_single_val_t(str));
 }
 
 const std::vector<token> &
@@ -382,19 +382,19 @@ headers::transfer_encoding() const
 void
 headers::transfer_encoding(const token &token)
 {
-	update(TRANSFER_ENCODING, new tok_seq_val_t(token));
+	update(TRANSFER_ENCODING, DBG_NEW tok_seq_val_t(token));
 }
 
 void
 headers::transfer_encoding(const std::vector<token> &tokens)
 {
-	update(TRANSFER_ENCODING, new tok_seq_val_t(tokens));
+	update(TRANSFER_ENCODING, DBG_NEW tok_seq_val_t(tokens));
 }
 
 void
 headers::transfer_encoding(const std::string &coding)
 {
-	update(TRANSFER_ENCODING, new tok_seq_val_t(coding));
+	update(TRANSFER_ENCODING, DBG_NEW tok_seq_val_t(coding));
 }
 
 bool
@@ -423,19 +423,19 @@ headers::te() const
 void
 headers::te(const token &token)
 {
-	update(TE, new tok_seq_val_t(token));
+	update(TE, DBG_NEW tok_seq_val_t(token));
 }
 
 void
 headers::te(const std::vector<token> &tokens)
 {
-	update(TE, new tok_seq_val_t(tokens));
+	update(TE, DBG_NEW tok_seq_val_t(tokens));
 }
 
 void
 headers::te(const std::string &coding)
 {
-	update(TE, new tok_seq_val_t(coding));
+	update(TE, DBG_NEW tok_seq_val_t(coding));
 }
 
 bool
@@ -464,13 +464,13 @@ headers::trailers() const
 void
 headers::trailers(const std::string &field)
 {
-	update(TRAILERS, new str_seq_val_t(field));
+	update(TRAILERS, DBG_NEW str_seq_val_t(field));
 }
 
 void
 headers::trailers(const std::vector<std::string> &fields)
 {
-	update(TRAILERS, new str_seq_val_t(fields));
+	update(TRAILERS, DBG_NEW str_seq_val_t(fields));
 }
 
 /*
@@ -516,7 +516,7 @@ headers::host(const std::string &uristr, in_port_t port)
 	if (port)
 		hp.port = port;
 
-	update(HOST, new hp_single_val_t(hp));
+	update(HOST, DBG_NEW hp_single_val_t(hp));
 }
 
 /*
@@ -531,7 +531,7 @@ headers::host(const std::string &uristr, in_port_t port)
 void
 headers::host(const host_port &hp)
 {
-	update(HOST, new hp_single_val_t(hp));
+	update(HOST, DBG_NEW hp_single_val_t(hp));
 }
 
 const std::vector<via> &
@@ -544,19 +544,19 @@ headers::intermediary() const
 void
 headers::intermediary(const via &v)
 {
-	update(VIA, new vai_seq_val_t(v));
+	update(VIA, DBG_NEW vai_seq_val_t(v));
 }
 
 void
 headers::intermediary(const std::vector<via> &vvec)
 {
-	update(VIA, new vai_seq_val_t(vvec));
+	update(VIA, DBG_NEW vai_seq_val_t(vvec));
 }
 
 void
 headers::intermediary(const std::string &viastr)
 {
-	update(VIA, new vai_seq_val_t(viastr));
+	update(VIA, DBG_NEW vai_seq_val_t(viastr));
 }
 
 const std::vector<std::string> &
@@ -579,13 +579,13 @@ headers::close_connection() const
 void
 headers::connection(const std::string &cnxn)
 {
-	update(CONNECTION, new cnxn_seq_val_t(cnxn));
+	update(CONNECTION, DBG_NEW cnxn_seq_val_t(cnxn));
 }
 
 void
 headers::connection(const std::vector<std::string> &cnxns)
 {
-	update(CONNECTION, new cnxn_seq_val_t(cnxns));
+	update(CONNECTION, DBG_NEW cnxn_seq_val_t(cnxns));
 }
 
 const media_type &
@@ -598,13 +598,13 @@ headers::content_type() const
 void
 headers::content_type(const media_type &mt)
 {
-	update(CONTENT_TYPE, new mt_single_val_t(mt));
+	update(CONTENT_TYPE, DBG_NEW mt_single_val_t(mt));
 }
 
 void
 headers::content_type(const std::string &type, const std::string &subtype)
 {
-	update(CONTENT_TYPE, new mt_single_val_t(media_type(type, subtype)));
+	update(CONTENT_TYPE, DBG_NEW mt_single_val_t(media_type(type, subtype)));
 }
 
 const std::vector<std::string> &
@@ -630,13 +630,13 @@ headers::content_language() const
 void
 headers::content_language(const std::string &language)
 {
-	update(CONTENT_LANGUAGE, new str_seq_val_t(language));
+	update(CONTENT_LANGUAGE, DBG_NEW str_seq_val_t(language));
 }
 
 void
 headers::content_language(const std::vector<std::string> &languages)
 {
-	update(CONTENT_LANGUAGE, new str_seq_val_t(languages));
+	update(CONTENT_LANGUAGE, DBG_NEW str_seq_val_t(languages));
 }
 
 uri
@@ -649,13 +649,13 @@ headers::content_location() const
 void
 headers::content_location(const uri &u)
 {
-	update(CONTENT_LOCATION, new uri_single_val_t(u));
+	update(CONTENT_LOCATION, DBG_NEW uri_single_val_t(u));
 }
 
 void
 headers::content_location(const std::string &uristr)
 {
-	update(CONTENT_LOCATION, new uri_single_val_t(uri(uristr)));
+	update(CONTENT_LOCATION, DBG_NEW uri_single_val_t(uri(uristr)));
 }
 
 const snf::datetime &
@@ -669,19 +669,19 @@ void
 headers::date(time_t t)
 {
 	snf::datetime dt(t);
-	update(DATE, new dt_single_val_t(dt));
+	update(DATE, DBG_NEW dt_single_val_t(dt));
 }
 
 void
 headers::date(const snf::datetime &dt)
 {
-	update(DATE, new dt_single_val_t(dt));
+	update(DATE, DBG_NEW dt_single_val_t(dt));
 }
 
 void
 headers::date(const std::string &dtstr)
 {
-	update(DATE, new dt_single_val_t(dtstr));
+	update(DATE, DBG_NEW dt_single_val_t(dtstr));
 }
 
 } // namespace http

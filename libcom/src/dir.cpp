@@ -1,6 +1,5 @@
 #include "dir.h"
 #include "i18n.h"
-#include <regex>
 
 namespace snf {
 

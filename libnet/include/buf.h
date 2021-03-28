@@ -24,7 +24,7 @@ public:
 		: m_io(io)
 		, m_bufsize(bufsize)
 	{
-		m_buf = new char[m_bufsize];
+		m_buf = DBG_NEW char[m_bufsize];
 		setp(&m_buf[0], &m_buf[m_bufsize - 1]);
 	}
 
@@ -115,7 +115,7 @@ public:
 		if (putback_size > (bufsize / 2))
 			throw std::invalid_argument("putback area is greater than the get area");
 
-		m_buf = new char[bufsize];
+		m_buf = DBG_NEW char[bufsize];
 		setg(
 			&m_buf[m_putback_size],
 			&m_buf[m_putback_size],
