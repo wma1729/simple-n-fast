@@ -191,7 +191,44 @@ public:
 	}
 
 #endif
+
+	void clear()
+	{
+		f_name.clear();
+		f_type = file_type::unknown;
+		f_mode = 0;
+		f_nlinks = 0;
+		f_size = 0;
+		f_inode = 0;
+		f_ctime = 0;
+		f_atime = 0;
+		f_mtime = 0;
+		f_blksize = 0;
+		f_blkcnt = 0;
+		f_dev = 0;
+		f_rdev = 0;
+		f_uid = 0;
+		f_gid = 0;
+	}
+
+	friend bool operator== (const file_attr &, const file_attr &);
 };
+
+inline bool
+operator== (const file_attr &lhs, const file_attr &rhs)
+{
+	if (lhs.f_inode && rhs.f_inode) {
+		if (lhs.f_inode != rhs.f_inode)
+			return false;
+	}
+
+	if (lhs.f_dev && rhs.f_dev) {
+		if (lhs.f_dev != rhs.f_dev)
+			return false;
+	}
+
+	return ((lhs.f_type == rhs.f_type) && (lhs.f_name == rhs.f_name));
+}
 
 } // namespace snf
 

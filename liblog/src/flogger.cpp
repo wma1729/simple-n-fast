@@ -79,8 +79,8 @@ retention::purge()
 	std::vector<file_attr> fa_vec;
 
 	// read all the files matching the log file pattern
-	if (!read_directory(m_path, m_pattern, fa_vec))
-		return;
+	for (auto &fa : directory(m_path, m_pattern))
+		fa_vec.push_back(fa);
 
 	// sort the file list based on time
 	std::sort(fa_vec.begin(), fa_vec.end(),
@@ -344,11 +344,17 @@ void
 file_logger::open(const snf::datetime &lt)
 {
 	snf::file_attr fa;
+	int64_t mtime = -1;
 	std::string pattern = std::move(regex_pattern());
 
 	init_name_format();
 
-	read_newest(m_path, pattern, fa);
+	for (auto &ent : directory(m_path, pattern)) {
+		if (ent.f_mtime > mtime) {
+			fa = ent;
+			mtime = ent.f_mtime;
+		}
+	}
 	m_name = std::move(name(fa, lt));
 
 	if (m_retention) {
