@@ -142,7 +142,7 @@ private:
 		};
 
 		for (size_t i = 0; i < n; ++i) {
-			std::unique_ptr<std::thread> uniq_thrd{new std::thread{worker}};
+			std::unique_ptr<std::thread> uniq_thrd{DBG_NEW std::thread{worker}};
 			m_threads.emplace_back(std::move(uniq_thrd));
 		}
 	}

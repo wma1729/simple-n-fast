@@ -169,7 +169,7 @@ read_file(const std::string &name, T *&data, size_t *datalen)
 		size_t nelem = *datalen / sizeof(T);
 		int bread = 0;
 		
-		data = new T[nelem];
+		data = DBG_NEW T[nelem];
 
 		retval = f.read(data, static_cast<int>(*datalen), &bread, &oserr);
 		if (retval != 0) {
