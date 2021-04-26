@@ -24,15 +24,15 @@ public:
 		bool exception_caught = false;
 
 		try {
-			snf::net::initialize(true);
+			snf::net::initialize();
 
-			snf::net::ssl::x509_certificate cert1(
-				snf::net::ssl::data_fmt::der,
+			snf::ssl::x509_certificate cert1(
+				snf::ssl::data_fmt::der,
 				"unittest.simplenfast.org/unittest.simplenfast.org.cert.der");
 			ASSERT_EQ(bool, true, true, "certificate 1 creation passed");
 
-			snf::net::ssl::x509_certificate cert2(
-				snf::net::ssl::data_fmt::pem,
+			snf::ssl::x509_certificate cert2(
+				snf::ssl::data_fmt::pem,
 				"unittest.simplenfast.org/unittest.simplenfast.org.cert.pem");
 			ASSERT_EQ(bool, true, true, "certificate 2 creation passed");
 
@@ -43,8 +43,8 @@ public:
 				"unittest.simplenfast.org/unittest.simplenfast.org.cert.der",
 				data,
 				&dlen);
-			snf::net::ssl::x509_certificate cert3(
-				snf::net::ssl::data_fmt::der,
+			snf::ssl::x509_certificate cert3(
+				snf::ssl::data_fmt::der,
 				data,
 				dlen);
 			delete [] data;
@@ -57,8 +57,8 @@ public:
 				"unittest.simplenfast.org/unittest.simplenfast.org.cert.pem",
 				data,
 				&dlen);
-			snf::net::ssl::x509_certificate cert4(
-				snf::net::ssl::data_fmt::pem,
+			snf::ssl::x509_certificate cert4(
+				snf::ssl::data_fmt::pem,
 				data,
 				dlen);
 			delete [] data;
@@ -68,19 +68,19 @@ public:
 			ASSERT_EQ(bool, true, true, "certificate 4 creation passed");
 
 			X509 *internal_crt = cert1;
-			snf::net::ssl::x509_certificate cert5(internal_crt);
+			snf::ssl::x509_certificate cert5(internal_crt);
 			ASSERT_EQ(bool, true, true, "certificate 5 creation passed");
 
-			snf::net::ssl::x509_certificate cert6(cert2);
+			snf::ssl::x509_certificate cert6(cert2);
 			ASSERT_EQ(bool, true, true, "certificate 6 creation passed");
 
-			snf::net::ssl::x509_certificate cert7(std::move(cert3));
+			snf::ssl::x509_certificate cert7(std::move(cert3));
 			ASSERT_EQ(bool, true, true, "certificate 7 creation passed");
 
-			snf::net::ssl::x509_certificate cert8 = cert4;
+			snf::ssl::x509_certificate cert8 = cert4;
 			ASSERT_EQ(bool, true, true, "certificate 8 creation passed");
 
-			snf::net::ssl::x509_certificate cert9 = std::move(cert4);
+			snf::ssl::x509_certificate cert9 = std::move(cert4);
 			ASSERT_EQ(bool, true, true, "certificate 9 creation passed");
 
 			std::string cn = "unittest.simplenfast.org";
@@ -91,7 +91,7 @@ public:
 			std::string iss = "C = US, ST = Minnesota, O = www.simplenfast.org, OU = Department of Perennial Learning, CN = IntermediateCA";
 			ASSERT_EQ(const std::string &, iss, cert9.issuer(), "issuer matches");
 
-			const std::vector<snf::net::ssl::x509_certificate::altname> &altnames =
+			const std::vector<snf::ssl::x509_certificate::altname> &altnames =
 				cert9.alternate_names();
 			ASSERT_EQ(size_t, altnames.size(), 3, "alternate names size matched");
 
@@ -114,7 +114,7 @@ public:
 			const std::vector<std::string> &ocsp = cert9.ocsp_end_points();
 			ASSERT_EQ(size_t, ocsp.size(), 1, "number of ocsp matches");
 			ASSERT_EQ(const std::string &, ocsp[0], "http://localhost:2560/", "ocsp matches");
-		} catch (const snf::net::ssl::exception &ex) {
+		} catch (const snf::ssl::exception &ex) {
 			std::cerr << ex.what() << std::endl;
 			for (auto I = ex.begin(); I != ex.end(); ++I)
 				std::cerr << *I << std::endl;

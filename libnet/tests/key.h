@@ -24,17 +24,17 @@ public:
 		bool exception_caught = false;
 
 		try {
-			snf::net::initialize(true);
+			snf::net::initialize();
 
-			snf::net::ssl::pkey pkey1(
-				snf::net::ssl::data_fmt::der,
+			snf::ssl::pkey pkey1(
+				snf::ssl::data_fmt::der,
 				"unittest.simplenfast.org/unittest.simplenfast.org.key.der");
 			ASSERT_EQ(bool, true, true, "private key 1 creation passed");
 			pkey1.verify();
 			ASSERT_EQ(bool, true, true, "private key 1 verification passed");
 
-			snf::net::ssl::pkey pkey2(
-				snf::net::ssl::data_fmt::pem,
+			snf::ssl::pkey pkey2(
+				snf::ssl::data_fmt::pem,
 				"unittest.simplenfast.org/unittest.simplenfast.org.key.pem",
 				"Te5tP@55w0rd");
 			ASSERT_EQ(bool, true, true, "private key 2 creation passed");
@@ -48,8 +48,8 @@ public:
 				"unittest.simplenfast.org/unittest.simplenfast.org.key.der",
 				data,
 				&dlen);
-			snf::net::ssl::pkey pkey3(
-				snf::net::ssl::data_fmt::der,
+			snf::ssl::pkey pkey3(
+				snf::ssl::data_fmt::der,
 				data,
 				dlen);
 			delete [] data;
@@ -64,8 +64,8 @@ public:
 				"unittest.simplenfast.org/unittest.simplenfast.org.key.pem",
 				data,
 				&dlen);
-			snf::net::ssl::pkey pkey4(
-				snf::net::ssl::data_fmt::pem,
+			snf::ssl::pkey pkey4(
+				snf::ssl::data_fmt::pem,
 				data,
 				dlen,
 				"Te5tP@55w0rd");
@@ -78,27 +78,27 @@ public:
 			ASSERT_EQ(bool, true, true, "private key 4 verification passed");
 
 			EVP_PKEY *internal_key = pkey1;
-			snf::net::ssl::pkey pkey5(internal_key);
+			snf::ssl::pkey pkey5(internal_key);
 			pkey5.verify();
 			ASSERT_EQ(bool, true, true, "private key 5 verification passed");
 
-			snf::net::ssl::pkey pkey6(pkey2);
+			snf::ssl::pkey pkey6(pkey2);
 			pkey6.verify();
 			ASSERT_EQ(bool, true, true, "private key 6 verification passed");
 
-			snf::net::ssl::pkey pkey7(std::move(pkey3));
+			snf::ssl::pkey pkey7(std::move(pkey3));
 			pkey7.verify();
 			ASSERT_EQ(bool, true, true, "private key 7 verification passed");
 
-			snf::net::ssl::pkey pkey8 = pkey4;
+			snf::ssl::pkey pkey8 = pkey4;
 			pkey8.verify();
 			ASSERT_EQ(bool, true, true, "private key 8 verification passed");
 
-			snf::net::ssl::pkey pkey9 = std::move(pkey4);
+			snf::ssl::pkey pkey9 = std::move(pkey4);
 			pkey9.verify();
 			ASSERT_EQ(bool, true, true, "private key 9 verification passed");
 
-		} catch (const snf::net::ssl::exception &ex) {
+		} catch (const snf::ssl::exception &ex) {
 			std::cerr << ex.what() << std::endl;
 			for (auto I = ex.begin(); I != ex.end(); ++I)
 				std::cerr << *I << std::endl;

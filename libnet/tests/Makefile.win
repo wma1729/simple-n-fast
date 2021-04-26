@@ -18,10 +18,10 @@ platform:
 $(P)\host.exe: $(HOST_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
-$(P)\netts.exe: $(NETTS_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+$(P)\netts.exe: $(NETTS_OBJS) $(LIBNET) $(LIBSSLWRAPPER) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
-$(P)\echo.exe: $(ECHO_OBJS) $(LIBNET) $(LIBLOG) $(LIBJSON) $(LIBCOM)
+$(P)\echo.exe: $(ECHO_OBJS) $(LIBNET) $(LIBSSLWRAPPER) $(LIBLOG) $(LIBJSON) $(LIBCOM)
 	$(CC) $(DBG) /Fd$*.pdb $** Ws2_32.lib /Fe$@
 
 {.}.cpp{$(P)}.obj:

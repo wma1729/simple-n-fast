@@ -6,7 +6,7 @@
 #include <vector>
 #include <istream>
 #include <stdexcept>
-#include "dbg.h"
+#include "common.h"
 
 namespace snf {
 namespace json {
@@ -134,30 +134,6 @@ public:
 		return os;
 	}
 };
-
-/* Enable the template for boolean types. */
-template<typename T1, typename T2 = void>
-using EnableIfBoolean = typename std::enable_if<
-			std::is_same<T1, bool>::value, T2
-			>::type;
-
-/* Enable the template for integral types, excluding booleans. */
-template<typename T1, typename T2 = void>
-using EnableIfIntegral = typename std::enable_if<
-			std::is_integral<T1>::value && !std::is_same<T1, bool>::value, T2
-			>::type;
-
-/* Enable the template for real types. */
-template<typename T1, typename T2 = void>
-using EnableIfReal = typename std::enable_if<
-			std::is_floating_point<T1>::value, T2
-			>::type;
-
-/* Enable the template for string types. */
-template<typename T1, typename T2 = void>
-using EnableIfString = typename std::enable_if<
-			std::is_convertible<T1, std::string>::value, T2
-			>::type;
 
 /*
  * JSON value. It can hold

@@ -52,7 +52,7 @@ file_type_string(file_type ft)
 class file_attr
 {
 private:
-	void init(const std::string &);
+	void init(const std::string &, bool);
 	void init(fhandle_t);
 
 #if defined(_WIN32)
@@ -136,11 +136,11 @@ public:
 	 * @param [in] name the file name.
 	 * @throws std::system_error, std::runtime_error.
 	 */
-	file_attr(const std::string &path, const std::string &name)
+	file_attr(const std::string &path, const std::string &name, bool use_lstat = true)
 	{
 		std::ostringstream oss;
 		oss << path << snf::pathsep() << name;
-		init(oss.str());
+		init(oss.str(), use_lstat);
 	}
 
 	/*
@@ -149,9 +149,9 @@ public:
 	 * @param [in] path the full file path.
 	 * @throws std::system_error, std::runtime_error.
 	 */
-	file_attr(const std::string &path)
+	file_attr(const std::string &path, bool use_lstat = true)
 	{
-		init(path);
+		init(path, use_lstat);
 	}
 
 	/*

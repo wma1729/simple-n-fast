@@ -8,7 +8,6 @@
 #include "crl.h"
 
 namespace snf {
-namespace net {
 namespace ssl {
 
 /*
@@ -38,7 +37,6 @@ private:
 };
 
 } // namespace ssl
-} // namespace net
 } // namespace snf
 
 #endif // _SNF_TRUSTSTORE_H_

@@ -2,7 +2,6 @@
 #include <memory>
 
 namespace snf {
-namespace net {
 namespace ssl {
 
 /*
@@ -11,7 +10,7 @@ namespace ssl {
  * @param [in] crlfile - CRL file.
  * @param [in] passwd  - password to the CRL.
  *
- * @throws snf::net::ssl::exception if the CRL could not be read from the file or
+ * @throws snf::ssl::exception if the CRL could not be read from the file or
  *         the password specified is incorrect.
  */
 x509_crl::x509_crl(
@@ -21,7 +20,7 @@ x509_crl::x509_crl(
 	char *pwd = const_cast<char *>(passwd);
 	snf::file_ptr fp(crlfile, "rb");
 
-	m_crl = ssl_library::instance().pem_read_x509_crl()(fp, nullptr, nullptr, pwd);
+	m_crl = CRYPTO_FCN<p_pem_read_x509_crl>("PEM_read_X509_CRL")(fp, nullptr, nullptr, pwd);
 	if (m_crl == nullptr) {
 		std::ostringstream oss;
 		oss << "failed to read X509 CRL from file " << crlfile;
@@ -36,7 +35,7 @@ x509_crl::x509_crl(
  * @param [in] crllen - CRL length.
  * @param [in] passwd - password to the CRL.
  *
- * @throws snf::net::ssl::exception if the CRL could not loaded or
+ * @throws snf::ssl::exception if the CRL could not loaded or
  *         the password specified is incorrect.
  */
 x509_crl::x509_crl(
@@ -47,11 +46,11 @@ x509_crl::x509_crl(
 	char *pwd = const_cast<char *>(passwd);
 
 	std::unique_ptr<BIO, decltype(&bio_free)> crlbio {
-		ssl_library::instance().bio_new_mem_buf()(crl, static_cast<int>(crllen)),
+		CRYPTO_FCN<p_bio_new_mem_buf>("BIO_new_mem_buf")(crl, static_cast<int>(crllen)),
 		bio_free
 	};
 
-	m_crl = ssl_library::instance().pem_read_bio_x509_crl()
+	m_crl = CRYPTO_FCN<p_pem_read_bio_x509_crl>("PEM_read_X509_CRL")
 		(crlbio.get(), nullptr, nullptr, pwd);
 	if (m_crl == nullptr)
 		throw exception("failed to load X509 CRL");
@@ -63,11 +62,11 @@ x509_crl::x509_crl(
  *
  * @param [in] crl - raw CRL.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @throws snf::ssl::exception if the reference count could not be incremented.
  */
 x509_crl::x509_crl(X509_CRL *crl)
 {
-	if (ssl_library::instance().x509_crl_up_ref()(crl) != 1)
+	if (CRYPTO_FCN<p_x509_crl_up_ref>("X509_CRL_up_ref")(crl) != 1)
 		throw exception("failed to increment the X509 CRL reference count");
 	m_crl = crl;
 }
@@ -78,11 +77,11 @@ x509_crl::x509_crl(X509_CRL *crl)
  *
  * @param [in] crl - CRL.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @throws snf::ssl::exception if the reference count could not be incremented.
  */
 x509_crl::x509_crl(const x509_crl &crl)
 {
-	if (ssl_library::instance().x509_crl_up_ref()(crl.m_crl) != 1)
+	if (CRYPTO_FCN<p_x509_crl_up_ref>("X509_CRL_up_ref")(crl.m_crl) != 1)
 		throw exception("failed to increment the X509 CRL reference count");
 	m_crl = crl.m_crl;
 }
@@ -103,7 +102,7 @@ x509_crl::x509_crl(x509_crl &&crl)
 x509_crl::~x509_crl()
 {
 	if (m_crl) {
-		ssl_library::instance().x509_crl_free()(m_crl);
+		CRYPTO_FCN<p_x509_crl_free>("X509_CRL_free")(m_crl);
 		m_crl = nullptr;
 	}
 }
@@ -112,16 +111,16 @@ x509_crl::~x509_crl()
  * Copy operator. No copy is done, the class simply points to the same
  * raw CRL and the reference count in bumped up.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @throws snf::ssl::exception if the reference count could not be incremented.
  */
 const x509_crl &
 x509_crl::operator=(const x509_crl &crl)
 {
 	if (this != &crl) {
-		if (ssl_library::instance().x509_crl_up_ref()(crl.m_crl) != 1)
+		if (CRYPTO_FCN<p_x509_crl_up_ref>("X509_CRL_up_ref")(crl.m_crl) != 1)
 			throw exception("failed to increment the X509 CRL reference count");
 		if (m_crl)
-			ssl_library::instance().x509_crl_free()(m_crl);
+			CRYPTO_FCN<p_x509_crl_free>("X509_CRL_free")(m_crl);
 		m_crl = crl.m_crl;
 	}
 	return *this;
@@ -135,7 +134,7 @@ x509_crl::operator=(x509_crl &&crl)
 {
 	if (this != &crl) {
 		if (m_crl)
-			ssl_library::instance().x509_crl_free()(m_crl);
+			CRYPTO_FCN<p_x509_crl_free>("X509_CRL_free")(m_crl);
 		m_crl = crl.m_crl;
 		crl.m_crl = nullptr;
 	}
@@ -143,5 +142,4 @@ x509_crl::operator=(x509_crl &&crl)
 }
 
 } // namespace ssl
-} // namespace net
 } // namespace snf

@@ -14,11 +14,11 @@ struct arguments
 	in_port_t port;
 	bool use_ssl;
 	std::string keyfile;
-	snf::net::ssl::data_fmt kf_fmt;
+	snf::ssl::data_fmt kf_fmt;
 	std::string kf_password;
 	std::string certfile;
 	std::string altcertfile;
-	snf::net::ssl::data_fmt cf_fmt;
+	snf::ssl::data_fmt cf_fmt;
 	std::string cafile;
 	std::string crlfile;
 	std::string snihost;
@@ -44,8 +44,8 @@ struct arguments
 		, use_ticket(false)
 		, depth(2)
 	{
-		kf_fmt = snf::net::ssl::data_fmt::pem;
-		cf_fmt = snf::net::ssl::data_fmt::pem;
+		kf_fmt = snf::ssl::data_fmt::pem;
+		cf_fmt = snf::ssl::data_fmt::pem;
 	}
 	
 };
@@ -138,9 +138,9 @@ parse_arguments(arguments &args, int argc, const char **argv)
 			if (argv[i + 1]) {
 				std::string type = argv[++i];
 				if (snf::streq("der", type))
-					args.kf_fmt = snf::net::ssl::data_fmt::der;
+					args.kf_fmt = snf::ssl::data_fmt::der;
 				else
-					args.kf_fmt = snf::net::ssl::data_fmt::pem;
+					args.kf_fmt = snf::ssl::data_fmt::pem;
 			} else {
 				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
 				return usage(argv[0]);
@@ -156,9 +156,9 @@ parse_arguments(arguments &args, int argc, const char **argv)
 			if (argv[i + 1]) {
 				std::string type = argv[++i];
 				if (snf::streq("der", type))
-					args.cf_fmt = snf::net::ssl::data_fmt::der;
+					args.cf_fmt = snf::ssl::data_fmt::der;
 				else
-					args.cf_fmt = snf::net::ssl::data_fmt::pem;
+					args.cf_fmt = snf::ssl::data_fmt::pem;
 			} else {
 				std::cerr << "argument to " << argv[i] << " missing" << std::endl;
 				return usage(argv[0]);
@@ -257,22 +257,22 @@ parse_arguments(arguments &args, int argc, const char **argv)
 }
 
 static void
-prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *ctx)
+prepare_context(const arguments &args, bool usealtcert, snf::ssl::context *ctx)
 {
 	if (!args.keyfile.empty()) {
 		const char *passwd = args.kf_password.empty() ? nullptr : args.kf_password.c_str();
-		snf::net::ssl::pkey key { args.kf_fmt, args.keyfile, passwd };
+		snf::ssl::pkey key { args.kf_fmt, args.keyfile, passwd };
 		ctx->use_private_key(key);
 	}
 
 	if (usealtcert) {
 		if (!args.altcertfile.empty()) {
-			snf::net::ssl::x509_certificate cert { args.cf_fmt, args.altcertfile };
+			snf::ssl::x509_certificate cert { args.cf_fmt, args.altcertfile };
 			ctx->use_certificate(cert);
 		}
 	} else {
 		if (!args.certfile.empty()) {
-			snf::net::ssl::x509_certificate cert { args.cf_fmt, args.certfile };
+			snf::ssl::x509_certificate cert { args.cf_fmt, args.certfile };
 			ctx->use_certificate(cert);
 		}
 	}
@@ -280,9 +280,9 @@ prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *
 	if (!args.keyfile.empty() && !args.certfile.empty())
 		ctx->check_private_key();
 
-	snf::net::ssl::truststore store { args.cafile };
+	snf::ssl::truststore store { args.cafile };
 	if (!args.crlfile.empty()) {
-		snf::net::ssl::x509_crl crl { args.crlfile };
+		snf::ssl::x509_crl crl { args.crlfile };
 		store.add_crl(crl);
 	}
 
@@ -299,12 +299,12 @@ prepare_context(const arguments &args, bool usealtcert, snf::net::ssl::context *
 		ctx->set_session_context("server:16781");
 
 	if (args.use_ticket) {
-		ctx->session_ticket(args.cnxn_mode, true);
+		ctx->session_ticket(snf::net::connection_mode::server == args.cnxn_mode, true);
 	}
 }
 
 static int
-client(const arguments &args, snf::net::ssl::context *ctx)
+client(const arguments &args, snf::ssl::context *ctx)
 {
 	int retval = E_ok;
 	snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
@@ -326,7 +326,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 			cnxn->set_sni(args.snihost);
 
 		if (args.restore_session) {
-			snf::net::ssl::session sess { args.session_file };
+			snf::ssl::session sess { args.session_file };
 			cnxn->set_session(sess);
 		}
 
@@ -347,7 +347,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 		else
 			std::cout << "SSL session is not reused" << std::endl;
 
-		std::unique_ptr<snf::net::ssl::x509_certificate> cert
+		std::unique_ptr<snf::ssl::x509_certificate> cert
 			(cnxn->get_peer_certificate());
 		if (cert)
 			std::cout << "Got certificate for " << cert->subject() << std::endl;
@@ -356,7 +356,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 		if (cnxn->is_verification_successful(errstr)) {
 			std::cerr << "Handshake successfull" << std::endl;
 
-			snf::net::ssl::session sess = std::move(cnxn->get_session());
+			snf::ssl::session sess = std::move(cnxn->get_session());
 			std::cout << "session id = " << sess.get_id() << std::endl;
 			if (sess.has_ticket())
 				std::cout << "session has ticket" << std::endl;
@@ -403,7 +403,7 @@ client(const arguments &args, snf::net::ssl::context *ctx)
 }
 
 static void
-worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::socket &&s)
+worker_thread(const arguments &args, snf::ssl::context &ctx, snf::net::socket &&s)
 {
 	int retval = E_ok;
 	std::string buf;
@@ -418,7 +418,7 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 				{ snf::net::connection_mode::server, ctx };
 
 			if (!args.altcertfile.empty()) {
-				snf::net::ssl::context ctx2;
+				snf::ssl::context ctx2;
 				prepare_context(args, true, &ctx2);
 				cnxn->add_context(ctx2);
 				cnxn->enable_sni();
@@ -464,7 +464,7 @@ worker_thread(const arguments &args, snf::net::ssl::context &ctx, snf::net::sock
 }
 
 static int
-server(const arguments &args, snf::net::ssl::context *ctx)
+server(const arguments &args, snf::ssl::context *ctx)
 {
 	int retval, oserr;
 	snf::net::socket sock { AF_INET, snf::net::socket_type::tcp };
@@ -508,9 +508,7 @@ server(const arguments &args, snf::net::ssl::context *ctx)
 }
 
 int
-main(int argc, const char **argv)
-{
-try {
+main(int argc, const char **argv) try {
 	arguments args;
 
 	int retval = parse_arguments(args, argc, argv);
@@ -522,11 +520,11 @@ try {
 			std::signal(SIGPIPE, SIG_IGN);
 #endif
 
-		snf::net::initialize(args.use_ssl);
+		snf::net::initialize();
 
-		snf::net::ssl::context *ctx = nullptr;
+		snf::ssl::context *ctx = nullptr;
 		if (args.use_ssl) {
-			ctx = DBG_NEW snf::net::ssl::context {};
+			ctx = DBG_NEW snf::ssl::context {};
 			prepare_context(args, false, ctx);
 		}
 
@@ -542,7 +540,7 @@ try {
 	return retval;
 } catch (const std::invalid_argument &ex) {
 	std::cerr << ex.what() << std::endl;
-} catch (const snf::net::ssl::exception &ex) {
+} catch (const snf::ssl::exception &ex) {
 	std::cerr << ex.what() << std::endl;
 	for (auto I = ex.begin(); I != ex.end(); ++I)
 		std::cerr << *I << std::endl;
@@ -552,5 +550,4 @@ try {
 } catch (const std::runtime_error &ex) {
 	std::cerr << ex.what() << std::endl;
 } catch (...) {
-}
 }

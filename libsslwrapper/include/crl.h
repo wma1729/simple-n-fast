@@ -6,7 +6,6 @@
 #include "sslfcn.h"
 
 namespace snf {
-namespace net {
 namespace ssl {
 
 /*
@@ -34,7 +33,6 @@ private:
 };
 
 } // namespace ssl
-} // namespace net
 } // namespace snf
 
 #endif // _SNF_CRL_H_

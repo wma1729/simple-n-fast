@@ -1,10 +1,9 @@
 #include "keymgr.h"
-#include "dbg.h"
+#include "random.h"
 #include <time.h>
 #include <string.h>
 
 namespace snf {
-namespace net {
 namespace ssl {
 
 /*
@@ -20,7 +19,7 @@ namespace ssl {
  * @return key record or nullptr if the key could not be
  *         created.
  *
- * @throws snf::net::ssl::exception if the key could not
+ * @throws snf::ssl::exception if the key could not
  *         be created.
  */
 const keyrec *
@@ -38,13 +37,11 @@ basic_keymgr::get()
 	}
 
 	if (!m_cur) {
-		uint8_t buf[KEY_SIZE + AES_SIZE + HMAC_SIZE];
-		if (ssl_library::instance().rand_bytes()
-			(buf, KEY_SIZE + AES_SIZE + HMAC_SIZE) != 1)
-			throw exception("failed to generate random data");
-
+		safestr ss(KEY_SIZE + AES_SIZE + HMAC_SIZE);
+		random r;
+		r.bytes(ss, true);
 		m_cur = DBG_NEW keyrec;
-		uint8_t *ptr = buf;
+		uint8_t *ptr = ss.data();
 		memcpy(m_cur->key_name, ptr, KEY_SIZE); ptr += KEY_SIZE;
 		memcpy(m_cur->aes_key, ptr, AES_SIZE); ptr += AES_SIZE;
 		memcpy(m_cur->hmac_key, ptr, HMAC_SIZE);
@@ -82,5 +79,4 @@ basic_keymgr::find(const uint8_t *name, size_t len)
 }
 
 } // namespace ssl
-} // namespace net
 } // namespace snf

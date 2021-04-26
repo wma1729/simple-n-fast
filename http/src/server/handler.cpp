@@ -44,7 +44,7 @@ process_ssl_handshake(snf::net::socket *s)
 				<< errstr
 				<< snf::log::record::endl;
 		}
-	} catch (snf::net::ssl::exception &ex) {
+	} catch (snf::ssl::exception &ex) {
 		ERROR_STRM(nullptr)
 			<< ex.what()
 			<< snf::log::record::endl;

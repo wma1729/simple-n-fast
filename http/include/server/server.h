@@ -16,7 +16,7 @@ class server
 {
 private:
 	const server_config                 *m_config = nullptr;
-	snf::net::ssl::context              m_ctx;
+	snf::ssl::context                   m_ctx;
 	snf::net::reactor                   m_reactor;
 	std::unique_ptr<snf::thread_pool>   m_thrdpool;
 	bool                                m_started = false;
@@ -45,7 +45,7 @@ public:
 	int start(const server_config *);
 	int stop();
 	void register_path(const std::string &, request_handler_t);
-	snf::net::ssl::context &ssl_context() { return m_ctx; }
+	snf::ssl::context &ssl_context() { return m_ctx; }
 	snf::net::reactor &reactor() { return m_reactor; }
 	snf::thread_pool *thread_pool() { return m_thrdpool.get(); }
 };

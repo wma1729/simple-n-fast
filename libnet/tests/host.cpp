@@ -47,7 +47,7 @@ main(int argc, const char **argv)
 	}
 
 	try {
-		snf::net::initialize(false);
+		snf::net::initialize();
 
 		if (op == lookup) {
 			snf::net::host h { h1 };

@@ -22,7 +22,7 @@ server::setup_context()
 		} else {
 			const char *password = m_config->keyfile_password().empty()
 						? nullptr : m_config->keyfile_password().c_str();
-			snf::net::ssl::pkey key(m_config->keyfile_format(), m_config->keyfile(), password);
+			snf::ssl::pkey key(m_config->keyfile_format(), m_config->keyfile(), password);
 			m_ctx.use_private_key(key);
 		}
 
@@ -32,7 +32,7 @@ server::setup_context()
 				<< snf::log::record::endl;
 			return E_not_found;
 		} else {
-			snf::net::ssl::x509_certificate cert(m_config->certfile_format(), m_config->certfile());
+			snf::ssl::x509_certificate cert(m_config->certfile_format(), m_config->certfile());
 			m_ctx.use_certificate(cert);
 		}
 
@@ -44,7 +44,7 @@ server::setup_context()
 				<< snf::log::record::endl;
 			return E_not_found;
 		} else {
-			snf::net::ssl::truststore store(m_config->cafile());
+			snf::ssl::truststore store(m_config->cafile());
 			m_ctx.use_truststore(store);
 		}
 
@@ -57,7 +57,7 @@ server::setup_context()
 			<< snf::log::record::endl;
 
 		return E_ok;
-	} catch (snf::net::ssl::exception &ex) {
+	} catch (snf::ssl::exception &ex) {
 		ERROR_STRM("server")
 			<< ex.what()
 			<< snf::log::record::endl;

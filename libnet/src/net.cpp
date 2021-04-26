@@ -6,10 +6,8 @@
 namespace snf {
 namespace net {
 
-static bool ssl_inited = false;
-
 void
-do_initialize(bool use_ssl)
+do_initialize()
 {
 #if defined(_WIN32)
 	WSADATA wsa_data;
@@ -21,45 +19,22 @@ do_initialize(bool use_ssl)
 		throw std::runtime_error("failed to find appropriate Winsock DLL version");
 	}
 #endif
-	if (use_ssl) {
-		ssl::ssl_library::instance().library_init()();
-		ssl::ssl_library::instance().load_error_strings()();
-		ssl_inited = true;
-	}
-	std::atexit(finalize);
 	return;
 }
 
 void
-initialize(bool use_ssl)
+initialize()
 {
 	static std::once_flag do_once;
-	std::call_once(do_once, snf::net::do_initialize, use_ssl);
+	std::call_once(do_once, snf::net::do_initialize);
 }
 
 void
 finalize()
 {
-	if (ssl_inited) {
-		ssl::ssl_library::instance().free_error_strings()();
-	}
 #if defined(_WIN32)
 	WSACleanup();
 #endif
-}
-
-/*
- * Get the OpenSSL version.
- *
- * @param [out] ver_str - OpenSSL version string.
- *
- * @return OpenSSL version number.
- */
-unsigned long
-openssl_version(std::string &ver_str)
-{
-	ver_str = ssl::ssl_library::instance().openssl_version_str()(OPENSSL_VERSION);
-	return ssl::ssl_library::instance().openssl_version_num()();
 }
 
 int

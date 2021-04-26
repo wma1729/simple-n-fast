@@ -5,7 +5,6 @@
 #include <mutex>
 
 namespace snf {
-namespace net {
 namespace ssl {
 
 constexpr int KEY_SIZE  = 16;
@@ -75,7 +74,6 @@ public:
 };
 
 } // namespace ssl
-} // namespace net
 } // namespace snf
 
 #endif // _SNF_KEYMGR_H_

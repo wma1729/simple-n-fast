@@ -1,0 +1,12 @@
+include ../Makefile.constants
+
+DIRS = src
+
+all:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done
+
+install:
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix install; done
+
+clean: 
+	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix clean; done

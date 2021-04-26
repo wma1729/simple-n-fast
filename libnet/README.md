@@ -42,20 +42,20 @@ The library provides the following classes for secured networking:
 
 Class Name | Purpose
 ---------- | -------
-`snf::net::ssl::pkey` | Encapsulates OpenSSL key (EVP_PKEY).
-`snf::net::ssl::x509_certificate` | Encapsulates OpenSSL X509 Certificate (X509).
-`snf::net::ssl::x509_crl` | Encapsulates OpenSSL X509 Certificate Revocation List (X509_crl).
-`snf::net::ssl::truststore` | Encapsulates OpenSSL X509 trust store (X509_STORE).
-`snf::net::ssl::session` | Encapsulates OpenSSL session (SSL_SESSION).
-`snf::net::ssl::context` | Encapsulates OpenSSL SSL context (SSL_CTX).
+`snf::ssl::pkey` | Encapsulates OpenSSL key (EVP_PKEY).
+`snf::ssl::x509_certificate` | Encapsulates OpenSSL X509 Certificate (X509).
+`snf::ssl::x509_crl` | Encapsulates OpenSSL X509 Certificate Revocation List (X509_crl).
+`snf::ssl::truststore` | Encapsulates OpenSSL X509 trust store (X509_STORE).
+`snf::ssl::session` | Encapsulates OpenSSL session (SSL_SESSION).
+`snf::ssl::context` | Encapsulates OpenSSL SSL context (SSL_CTX).
 `snf::net::ssl::connection` | Represents secured TLS connection. Manages all aspects of a secured connection.
 
-The commonly thrown exception other than the ones listed above is `snf::net::ssl::exception`. Here is a simple example on how to catch and log the exception:
+The commonly thrown exception other than the ones listed above is `snf::ssl::exception`. Here is a simple example on how to catch and log the exception:
 
 ```C++
 try {
     ...
-} catch (snf::net::ssl::exception &ex) {
+} catch (snf::ssl::exception &ex) {
     std::cerr << ex.what() << std::endl;
     for (auto it = ex.begin(); it != ex.end(); ++it)
         std::cerr << *it << std::endl;
@@ -65,22 +65,22 @@ try {
 ### Prepare SSL context
 ```C++
 // Create context.
-snf::net::ssl::context ctx;
+snf::ssl::context ctx;
 
 // Add private key (from file).
-snf::net::ssl::pkey key { key_format, key_file, key_file_password };
+snf::ssl::pkey key { key_format, key_file, key_file_password };
 ctx.use_private_key(key);
 
 // Add certificate (from file).
-snf::net::ssl::x509_certificate cert { cert_format, cert_file };
+snf::ssl::x509_certificate cert { cert_format, cert_file };
 ctx.use_certificate(cert);
 
 // Check if the private key matches the certificate?
 ctx.check_private_key();
 
 // Add trust store.
-snf::net::ssl::truststore store { cert_chain_file };
-snf::net::ssl::x509_crl crl { crl_file};
+snf::ssl::truststore store { cert_chain_file };
+snf::ssl::x509_crl crl { crl_file};
 store.add_crl(crl);
 ctx.use_truststore(store);
 
@@ -196,14 +196,14 @@ sock.connect(AF_INET, host, port);
 snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
 
 // Assuming that the session state is stored in a file (from last successful handshake).
-snf::net::ssl::session sess { session_file };
+snf::ssl::session sess { session_file };
 cnxn->set_session(sess);
 
 // Perform TLS handshake.
 cnxn.handshake(sock);
 
 // Get session details after the handshake.
-snf::net::ssl::session sess = std::move(cnxn->get_session());
+snf::ssl::session sess = std::move(cnxn->get_session());
 std::cout << "session id = " << sess.get_id() << std::endl;
 
 // Check if the session is reused?
@@ -250,14 +250,14 @@ sock.connect(AF_INET, host, port);
 snf::net::ssl::connection cnxn { snf::net::connection_mode::client, ctx };
 
 // Assuming that the session state is stored in a file (from last successful handshake).
-snf::net::ssl::session sess { session_file };
+snf::ssl::session sess { session_file };
 cnxn->set_session(sess);
 
 // Perform TLS handshake.
 cnxn.handshake(sock);
 
 // Get session details after the handshake.
-snf::net::ssl::session sess = std::move(cnxn->get_session());
+snf::ssl::session sess = std::move(cnxn->get_session());
 std::cout << "session id = " << sess.get_id() << std::endl;
 
 // Check if the session is reused?
@@ -285,7 +285,7 @@ ctx.session_ticket(snf::net::connection_mode::server, true);
  * By default, the TLS server implementation uses a default key manager. A customized
  * key manager can be deployed at this time. More details can be found in the source
  * code: ctx.h and keymgr.h
- * snf::net::ssl::context::set_keymgr(custom_keymgr);
+ * snf::ssl::context::set_keymgr(custom_keymgr);
  */
 
 // The rest of the code remains the same.

@@ -1,0 +1,28 @@
+include ..\..\Makefile.constants
+
+!IFNDEF P
+!ERROR P is not set
+!ENDIF
+
+OBJS =  $(P)\safestr.obj $(P)\sslfcn.obj $(P)\pkey.obj $(P)\crt.obj $(P)\crl.obj $(P)\truststore.obj \
+	$(P)\session.obj $(P)\random.obj $(P)\keymgr.obj $(P)\ctx.obj $(P)\tls.obj
+
+INCL = $(INCLCOM) $(INCLSSLWRAPPER) $(INCLSSL)
+
+LIBSSLWRAPPERPDB = $(P)\libsslwrapper.pdb
+
+all: platform $(P)\sslwrapper.lib
+
+platform:
+	@if not exist $(P) mkdir $(P)
+
+$(P)\sslwrapper.lib: $(OBJS)
+	$(AR) $(ARFLAGS) $** /OUT:$@
+
+$(OBJS): $(*B).cpp
+	$(CC) $(CFLAGS) $(DBG) $(DEFINES) $(INCL) /Fd$(LIBSSLWRAPPERPDB) $(*B).cpp /Fo$@
+
+install:
+
+clean:
+	@del /q $(OBJS) $(P)\sslwrapper.lib $(LIBSSLWRAPPERPDB)

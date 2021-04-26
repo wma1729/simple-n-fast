@@ -69,7 +69,6 @@ public:
 	const std::string &description() const { return m_desc; }
 	void desciption(const std::string &desc) { m_desc = desc; }
 
-	void subcommand(const command &cmd) { m_subcmds.push_back(cmd); }
 	const std::vector<command> &subcommands() const { return m_subcmds; }
 	const command &subcommand() const
 	{
@@ -79,6 +78,10 @@ public:
 		help();
 		throw std::out_of_range("no sub command is specified");
 	}
+
+	void subcommand(const command &cmd) { m_subcmds.push_back(cmd); }
+	void subcommands(const std::vector<command> &cmds) { for (auto cmd : cmds) m_subcmds.push_back(cmd); }
+	void subcommands(std::vector<command> &&cmds) { m_subcmds = std::move(cmds); }
 
 	const std::vector<cl_opt> &options() const { return m_options; }
 	void options(const std::vector<cl_opt> &opts) { m_options = opts; }

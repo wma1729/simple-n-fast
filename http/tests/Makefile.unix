@@ -15,10 +15,10 @@ all: platform ${P}/httpts ${P}/httpsrvr
 platform:
 	@test -d ${P} || mkdir ${P}
 
-${P}/httpts: ${OBJS} ${LIBHTTPSRVR} ${LIBHTTPCMN} ${LIBNET} ${LIBLOG} ${LIBJSON} ${LIBCOM}
+${P}/httpts: ${OBJS} ${LIBHTTPSRVR} ${LIBHTTPCMN} ${LIBNET} ${LIBSSLWRAPPER} ${LIBLOG} ${LIBJSON} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
-${P}/httpsrvr: ${HTTPSRVR_OBJS} ${LIBHTTPSRVR} ${LIBHTTPCMN} ${LIBNET} ${LIBLOG} ${LIBJSON} ${LIBCOM} 
+${P}/httpsrvr: ${HTTPSRVR_OBJS} ${LIBHTTPSRVR} ${LIBHTTPCMN} ${LIBNET} ${LIBSSLWRAPPER} ${LIBLOG} ${LIBJSON} ${LIBCOM} 
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp
@@ -34,4 +34,4 @@ endif
 install:
 
 clean:
-	@/bin/rm -rf ${OBJS} ${P}/httpts
+	@/bin/rm -rf ${OBJS} ${HTTPSRVR_OBJS}  ${P}/httpts

@@ -24,10 +24,10 @@ public:
 		bool exception_caught = false;
 
 		try {
-			snf::net::initialize(true);
-			snf::net::ssl::context ctx1;
+			snf::net::initialize();
+			snf::ssl::context ctx1;
 			ASSERT_EQ(bool, true, true, "ssl context creation passed");
-		} catch (const snf::net::ssl::exception &ex) {
+		} catch (const snf::ssl::exception &ex) {
 			std::cerr << ex.what() << std::endl;
 			for (auto I = ex.begin(); I != ex.end(); ++I)
 				std::cerr << *I << std::endl;

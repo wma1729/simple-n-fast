@@ -1,6 +1,6 @@
 include Makefile.constants
 
-DIRS = libcom libjson liblog librdb libnet http
+DIRS = libcom libjson liblog librdb libsslwrapper libnet http
 
 all:
 	@for I in ${DIRS}; do make -C $${I} -f Makefile.unix all; done

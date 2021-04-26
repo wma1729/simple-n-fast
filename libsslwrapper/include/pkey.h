@@ -5,7 +5,6 @@
 #include "sslfcn.h"
 
 namespace snf {
-namespace net {
 namespace ssl {
 
 /*
@@ -32,7 +31,7 @@ public:
 	operator EVP_PKEY* () { return m_pkey; }
 
 private:
-	EVP_PKEY        *m_pkey = nullptr;
+	EVP_PKEY *m_pkey = nullptr;
 
 	void init_der(snf::file_ptr &);
 	void init_der(const uint8_t *, size_t);
@@ -44,7 +43,6 @@ private:
 };
 
 } // namespace ssl
-} // namespace net
 } // namespace snf
 
 #endif // _SNF_PKEY_H_

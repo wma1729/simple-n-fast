@@ -2,7 +2,6 @@
 #define _SNF_CTX_H_
 
 #include "sslfcn.h"
-#include "net.h"
 #include "pkey.h"
 #include "crt.h"
 #include "crl.h"
@@ -10,7 +9,6 @@
 #include "keymgr.h"
 
 namespace snf {
-namespace net {
 namespace ssl {
 
 #define DEFAULT_CIPHER_LIST \
@@ -31,7 +29,6 @@ private:
 	long clr_options(unsigned long);
 	long set_options(unsigned long);
 	void disable_session_caching();
-	x509_certificate get_certificate();
 
 public:
 	/*
@@ -65,13 +62,14 @@ public:
 	~context();
 
 	operator SSL_CTX * () { return m_ctx; }
+	x509_certificate get_certificate();
 
 	void prefer_server_cipher();
 	void prefer_client_cipher();
 	time_t session_timeout();
 	time_t session_timeout(time_t);
 	void set_session_context(const std::string &);
-	void session_ticket(connection_mode, bool);
+	void session_ticket(bool, bool);
 	void set_ciphers(const std::string &ciphers = DEFAULT_CIPHER_LIST);
 	void use_private_key(pkey &);
 	void use_certificate(x509_certificate &);
@@ -80,12 +78,10 @@ public:
 	void check_private_key();
 	void verify_peer(bool require_certificate = false, bool do_it_once = false);
 	void limit_certificate_chain_depth(int);
-
-	friend class connection;
+	void set_sni_callback(void (*)(void), void *);
 };
 
 } // namespace ssl
-} // namespace net
 } // namespace snf
 
 #endif // _SNF_CTX_H_

@@ -1,6 +1,10 @@
 #include "ctx.h"
+#include "keymgr.h"
 #include <time.h>
 #include <sstream>
+
+namespace snf {
+namespace ssl {
 
 static const int NEW_SESSION_KEY = 1;
 static const int RETRIEVE_SESSION_KEY = !NEW_SESSION_KEY;
@@ -42,8 +46,8 @@ ssl_session_ticket_key_cb(
 	HMAC_CTX *hmac_ctx,
 	int mode)
 {
-	const snf::net::ssl::keyrec *krec = nullptr;
-	snf::net::ssl::keymgr *km = snf::net::ssl::context::get_keymgr();
+	const keyrec *krec = nullptr;
+	keymgr *km = context::get_keymgr();
 	if (km == nullptr)
 		return -1;
 
@@ -52,43 +56,42 @@ ssl_session_ticket_key_cb(
 		if (krec == nullptr)
 			return -1;
 
-		memcpy(key_name, krec->key_name, snf::net::ssl::KEY_SIZE);
-		if (snf::net::ssl::ssl_library::instance().rand_bytes()
-			(iv, EVP_MAX_IV_LENGTH) != 1)
+		memcpy(key_name, krec->key_name, KEY_SIZE);
+		if (CRYPTO_FCN<p_rand_bytes>("RAND_bytes")(iv, EVP_MAX_IV_LENGTH) != 1)
 			return -1;
 
-		snf::net::ssl::ssl_library::instance().evp_encrypt_init_ex()(
+		CRYPTO_FCN<p_evp_encrypt_init_ex>("EVP_EncryptInit_ex")(
 			cipher_ctx,
-			snf::net::ssl::ssl_library::instance().evp_aes_256_cbc()(),
+			CRYPTO_FCN<p_evp_aes_256_cbc>("EVP_aes_256_cbc")(),
 			nullptr,
 			krec->aes_key,
 			iv);
 
-		snf::net::ssl::ssl_library::instance().hmac_init_ex()(
+		CRYPTO_FCN<p_hmac_init_ex>("HMAC_Init_ex")(
 			hmac_ctx,
 			krec->hmac_key,
-			snf::net::ssl::HMAC_SIZE,
-			snf::net::ssl::ssl_library::instance().evp_sha256()(),
+			HMAC_SIZE,
+			CRYPTO_FCN<p_evp_sha256>("EVP_sha256")(),
 			nullptr);
 
 		return 1;
 	} else {
-		krec = km->find(key_name, snf::net::ssl::KEY_SIZE);
+		krec = km->find(key_name, KEY_SIZE);
 		if (krec == nullptr)
 			return 0;
 
-		snf::net::ssl::ssl_library::instance().evp_decrypt_init_ex()(
+		CRYPTO_FCN<p_evp_decrypt_init_ex>("EVP_DecryptInit_ex")(
 			cipher_ctx,
-			snf::net::ssl::ssl_library::instance().evp_aes_256_cbc()(),
+			CRYPTO_FCN<p_evp_aes_256_cbc>("EVP_aes_256_cbc")(),
 			nullptr,
 			krec->aes_key,
 			iv);
 
-		snf::net::ssl::ssl_library::instance().hmac_init_ex()(
+		CRYPTO_FCN<p_hmac_init_ex>("HMAC_Init_ex")(
 			hmac_ctx,
 			krec->hmac_key,
-			snf::net::ssl::HMAC_SIZE,
-			snf::net::ssl::ssl_library::instance().evp_sha256()(),
+			HMAC_SIZE,
+			CRYPTO_FCN<p_evp_sha256>("EVP_sha256")(),
 			nullptr);
 
 		time_t now = time(0);
@@ -98,10 +101,6 @@ ssl_session_ticket_key_cb(
 		return 1;
 	}
 }
-
-namespace snf {
-namespace net {
-namespace ssl {
 
 keymgr *context::s_km = nullptr;
 
@@ -113,13 +112,12 @@ keymgr *context::s_km = nullptr;
 long
 context::get_options()
 {
-	p_ssl_ctx_get_options pgetopt = ssl_library::instance().ssl_ctx_get_options();
+	p_ssl_ctx_get_options pgetopt = SSL_FCN<p_ssl_ctx_get_options>("SSL_CTX_get_options", false);
 	if (pgetopt != nullptr) {
 		return pgetopt(m_ctx);
 	} else {
 #if defined(SSL_CTRL_OPTIONS)
-		return ssl_library::instance().ssl_ctx_ctrl()
-			(m_ctx, SSL_CTRL_OPTIONS, 0, nullptr);
+		return SSL_FCN<p_ssl_ctx_ctrl>("SSL_CTX_ctrl")(m_ctx, SSL_CTRL_OPTIONS, 0, nullptr);
 #else
 		return -1;
 #endif
@@ -136,13 +134,12 @@ context::get_options()
 long
 context::clr_options(unsigned long opt)
 {
-	p_ssl_ctx_clr_options pclropt = ssl_library::instance().ssl_ctx_clr_options();
+	p_ssl_ctx_clr_options pclropt = SSL_FCN<p_ssl_ctx_clr_options>("SSL_CTX_clear_options", false);
 	if (pclropt != nullptr) {
 		return pclropt(m_ctx, opt);
 	} else {
 #if defined(SSL_CTRL_CLEAR_OPTIONS)
-		return ssl_library::instance().ssl_ctx_ctrl()
-			(m_ctx, SSL_CTRL_CLEAR_OPTIONS, opt, nullptr);
+		return SSL_FCN<p_ssl_ctx_ctrl>("SSL_CTX_ctrl")(m_ctx, SSL_CTRL_CLEAR_OPTIONS, opt, nullptr);
 #else
 		return -1;
 #endif
@@ -159,13 +156,12 @@ context::clr_options(unsigned long opt)
 long
 context::set_options(unsigned long opt)
 {
-	p_ssl_ctx_set_options psetopt = ssl_library::instance().ssl_ctx_set_options();
+	p_ssl_ctx_set_options psetopt = SSL_FCN<p_ssl_ctx_set_options>("SSL_CTX_set_options", false);
 	if (psetopt != nullptr) {
 		return psetopt(m_ctx, opt);
 	} else {
 #if defined(SSL_CTRL_OPTIONS)
-		return ssl_library::instance().ssl_ctx_ctrl()
-			(m_ctx, SSL_CTRL_OPTIONS, opt, nullptr);
+		return SSL_FCN<p_ssl_ctx_ctrl>("SSL_CTX_ctrl")(m_ctx, SSL_CTRL_OPTIONS, opt, nullptr);
 #else
 		return -1;
 #endif
@@ -178,19 +174,19 @@ context::set_options(unsigned long opt)
 void
 context::disable_session_caching()
 {
-	ssl_library::instance().ssl_ctx_ctrl() 
+	SSL_FCN<p_ssl_ctx_ctrl>("SSL_CTX_ctrl")
 		(m_ctx, SSL_CTRL_SET_SESS_CACHE_MODE, SSL_SESS_CACHE_OFF, nullptr); 
 }
 
 /*
  * Gets the X509 certificate stored in the SSL context.
  *
- * @throws snf::net::ssl::exception if failed to fetch the certificate.
+ * @throws snf::ssl::exception if failed to fetch the certificate.
  */
 x509_certificate
 context::get_certificate()
 {
-	X509 *c = ssl_library::instance().ssl_ctx_get0_cert()(m_ctx);
+	X509 *c = SSL_FCN<p_ssl_ctx_get0_cert>("SSL_CTX_get0_certificate")(m_ctx);
 	if (c == nullptr)
 		throw exception("failed to get certificate from SSL context");
 
@@ -208,23 +204,23 @@ context::get_certificate()
  * - SSL context option is set to:
  *       SSL_OP_NO_TICKET
  *
- * @throws snf::net::ssl::exception if the SSL context could not
+ * @throws snf::ssl::exception if the SSL context could not
  *         be created or the mode/options could not be applied.
  */
 context::context()
 {
-	m_ctx = ssl_library::instance().ssl_ctx_new()
-			(ssl_library::instance().tls_method()());
+	m_ctx = SSL_FCN<p_ssl_ctx_new>("SSL_CTX_new")
+			(SSL_FCN<p_tls_method>("TLS_method")());
 	if (m_ctx == nullptr)
 		throw exception("failed to create ssl context");
 
-	if (ssl_library::instance().ssl_ctx_set_min_ver()(m_ctx, TLS1_VERSION) != 1) {
-		ssl_library::instance().ssl_ctx_free()(m_ctx);
+	if (SSL_FCN<p_ssl_ctx_set_min_ver>("SSL_CTX_set_min_proto_version")(m_ctx, TLS1_VERSION) != 1) {
+		SSL_FCN<p_ssl_ctx_free>("SSL_CTX_free")(m_ctx);
 		throw exception("failed to set minimum protocol version");
 	}
 
-	if (ssl_library::instance().ssl_ctx_set_max_ver()(m_ctx, 0) != 1) {
-		ssl_library::instance().ssl_ctx_free()(m_ctx);
+	if (SSL_FCN<p_ssl_ctx_set_max_ver>("SSL_CTX_set_max_proto_version")(m_ctx, 0) != 1) {
+		SSL_FCN<p_ssl_ctx_free>("SSL_CTX_free")(m_ctx);
 		throw exception("failed to set maximum protocol version");
 	}
 
@@ -232,8 +228,7 @@ context::context()
 	long mode = SSL_MODE_ENABLE_PARTIAL_WRITE |
 			SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER |
 			SSL_MODE_AUTO_RETRY;
-	ssl_library::instance().ssl_ctx_ctrl()
-		(m_ctx, SSL_CTRL_MODE, mode, nullptr);
+	SSL_FCN<p_ssl_ctx_ctrl>("SSL_CTX_ctrl")(m_ctx, SSL_CTRL_MODE, mode, nullptr);
 
 	set_options(SSL_OP_NO_TICKET);
 }
@@ -244,11 +239,11 @@ context::context()
  *
  * @param [in] ctx - SSL context.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @throws snf::ssl::exception if the reference count could not be incremented.
  */
 context::context(const context &ctx)
 {
-	if (ssl_library::instance().ssl_ctx_up_ref()(ctx.m_ctx) != 1)
+	if (SSL_FCN<p_ssl_ctx_up_ref>("SSL_CTX_up_ref")(ctx.m_ctx) != 1)
 		throw exception("failed to increment the ssl context reference count");
 	m_ctx = ctx.m_ctx;
 }
@@ -269,7 +264,7 @@ context::context(context &&ctx)
 context::~context()
 {
 	if (m_ctx) {
-		ssl_library::instance().ssl_ctx_free()(m_ctx);
+		SSL_FCN<p_ssl_ctx_free>("SSL_CTX_free")(m_ctx);
 		m_ctx = nullptr;
 	}
 }
@@ -278,16 +273,16 @@ context::~context()
  * Copy operator. No copy is done, the class simply points to the same
  * raw SSL context and the reference count in bumped up.
  *
- * @throws snf::net::ssl::exception if the reference count could not be incremented.
+ * @throws snf::ssl::exception if the reference count could not be incremented.
  */
 const context &
 context::operator=(const context &ctx)
 {
 	if (this != &ctx) {
-		if (ssl_library::instance().ssl_ctx_up_ref()(ctx.m_ctx) != 1)
+		if (SSL_FCN<p_ssl_ctx_up_ref>("SSL_CTX_up_ref")(ctx.m_ctx) != 1)
 			throw exception("failed to increment the ssl context reference count");
 		if (m_ctx)
-			ssl_library::instance().ssl_ctx_free()(m_ctx);
+			SSL_FCN<p_ssl_ctx_free>("SSL_CTX_free")(m_ctx);
 		m_ctx = ctx.m_ctx;
 	}
 	return *this;
@@ -301,7 +296,7 @@ context::operator=(context &&ctx)
 {
 	if (this != &ctx) {
 		if (m_ctx)
-			ssl_library::instance().ssl_ctx_free()(m_ctx);
+			SSL_FCN<p_ssl_ctx_free>("SSL_CTX_free")(m_ctx);
 		m_ctx = ctx.m_ctx;
 		ctx.m_ctx = nullptr;		
 	}
@@ -337,7 +332,7 @@ context::prefer_client_cipher()
 time_t
 context::session_timeout()
 {
-	return static_cast<time_t>(ssl_library::instance().ssl_ctx_get_timeout()(m_ctx));
+	return static_cast<time_t>(SSL_FCN<p_ssl_ctx_get_timeout>("SSL_CTX_get_timeout")(m_ctx));
 }
 
 /*
@@ -351,7 +346,7 @@ time_t
 context::session_timeout(time_t to)
 {
 	long lto = static_cast<long>(to);
-	return static_cast<time_t>(ssl_library::instance().ssl_ctx_set_timeout()(m_ctx, lto));
+	return static_cast<time_t>(SSL_FCN<p_ssl_ctx_set_timeout>("SSL_CTX_set_timeout")(m_ctx, lto));
 }
 
 /*
@@ -360,7 +355,7 @@ context::session_timeout(time_t to)
  *
  * @param [in] ctx - session ID context.
  *
- * @throws snf::net::ssl::exception if the session ID context is too
+ * @throws snf::ssl::exception if the session ID context is too
  *         large or if the session ID context could not be set.
  */
 void
@@ -372,25 +367,25 @@ context::set_session_context(const std::string &ctx)
 	unsigned int ctxlen = static_cast<unsigned int>(ctx.size());
 	const unsigned char *pctx = reinterpret_cast<const unsigned char *>(ctx.c_str());
 
-	if (ssl_library::instance().ssl_ctx_set_sid_ctx()(m_ctx, pctx, ctxlen) != 1)
+	if (SSL_FCN<p_ssl_ctx_set_sid_ctx>("SSL_CTX_set_session_id_context")(m_ctx, pctx, ctxlen) != 1)
 		throw exception("failed to set session ID context");
 }
 
 /*
  * Enables/disables SSL session resumption using session ticket.
  *
- * @param [in] mode   - connection mode: server or client.
+ * @param [in] server - true if server, false for client.
  * @param [in] enable - If true, SSL resumption using session ticket
  *                      is enabled. A callback function is registered
  *                      for handling session tickets. If false, SSL
  *                      resumption using session ticket is disabled.
  *                      The callback function is un-registered.
  *
- * @throws snf::net::ssl::exception if the callback handler could
+ * @throws snf::ssl::exception if the callback handler could
  *         not be registered or un-registered.
  */
 void
-context::session_ticket(connection_mode mode, bool enable)
+context::session_ticket(bool server, bool enable)
 {
 	if (enable) {
 		clr_options(SSL_OP_NO_TICKET);
@@ -398,12 +393,12 @@ context::session_ticket(connection_mode mode, bool enable)
 		set_options(SSL_OP_NO_TICKET);
 	}
 
-	if (connection_mode::server == mode) {
+	if (server) {
 		p_ssl_ctx_tlsext_ticket_key_cb cb = nullptr;
 		if (enable)
 			cb = ssl_session_ticket_key_cb;
 
-		if (ssl_library::instance().ssl_ctx_cb_ctrl()
+		if (SSL_FCN<p_ssl_ctx_cb_ctrl>("SSL_CTX_callback_ctrl")
 			(m_ctx,
 			SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB,
 			reinterpret_cast<void (*)(void)>(cb)) != 1)
@@ -418,12 +413,12 @@ context::session_ticket(connection_mode mode, bool enable)
  *
  * @param [in] ciphers - cipher list to use.
  *
- * @throws snf::net::ssl::exception if the cipher list could not be set.
+ * @throws snf::ssl::exception if the cipher list could not be set.
  */
 void
 context::set_ciphers(const std::string &ciphers)
 {
-	if (ssl_library::instance().ssl_ctx_set_ciphers()(m_ctx, ciphers.c_str()) != 1) {
+	if (SSL_FCN<p_ssl_ctx_set_ciphers>("SSL_CTX_set_cipher_list")(m_ctx, ciphers.c_str()) != 1) {
 		std::ostringstream oss;
 		oss << "failed to set cipher list using " << ciphers;
 		throw exception(oss.str());
@@ -435,12 +430,12 @@ context::set_ciphers(const std::string &ciphers)
  *
  * @param [in] key - private key.
  *
- * @throws snf::net::ssl::exception if the private key could not be used.
+ * @throws snf::ssl::exception if the private key could not be used.
  */
 void
 context::use_private_key(pkey &key)
 {
-	if (ssl_library::instance().ssl_ctx_use_private_key()(m_ctx, key) != 1)
+	if (SSL_FCN<p_ssl_ctx_use_private_key>("SSL_CTX_use_PrivateKey")(m_ctx, key) != 1)
 		throw exception("failed to use private key");
 }
 
@@ -449,12 +444,12 @@ context::use_private_key(pkey &key)
  *
  * @param [in] crt - X509 certificate.
  *
- * @throws snf::net::ssl::exception if the X509 certificate could not be used.
+ * @throws snf::ssl::exception if the X509 certificate could not be used.
  */
 void
 context::use_certificate(x509_certificate &crt)
 {
-	if (ssl_library::instance().ssl_ctx_use_certificate()(m_ctx, crt) != 1)
+	if (SSL_FCN<p_ssl_ctx_use_certificate>("SSL_CTX_use_certificate")(m_ctx, crt) != 1)
 		throw exception("failed to use X509 certificate");
 }
 
@@ -463,16 +458,16 @@ context::use_certificate(x509_certificate &crt)
  *
  * @param [in] store - trust store.
  *
- * @throws snf::net::ssl::exception if the trust store could not be used.
+ * @throws snf::ssl::exception if the trust store could not be used.
  */
 void
 context::use_truststore(truststore &store)
 {
 	X509_STORE *s = store;
-	if (ssl_library::instance().x509_store_up_ref()(s) != 1)
+	if (CRYPTO_FCN<p_x509_store_up_ref>("X509_STORE_up_ref")(s) != 1)
 		throw exception("failed to increment the X509 trust store reference count");
 
-	ssl_library::instance().ssl_ctx_use_truststore()(m_ctx, s);
+	SSL_FCN<p_ssl_ctx_use_truststore>("SSL_CTX_set_cert_store")(m_ctx, s);
 }
 
 /*
@@ -480,32 +475,32 @@ context::use_truststore(truststore &store)
  *
  * @param [in] crl - CRL.
  *
- * @throws snf::net::ssl::exception if the CRL could not be used.
+ * @throws snf::ssl::exception if the CRL could not be used.
  */
 void
 context::use_crl(x509_crl &crl)
 {
-	X509_STORE *store = ssl_library::instance().ssl_ctx_get_cert_store()(m_ctx);
+	X509_STORE *store = SSL_FCN<p_ssl_ctx_get_cert_store>("SSL_CTX_get_cert_store")(m_ctx);
 	if (store == nullptr)
 		throw exception("failed to get X509 trust store for the current context");
 
-	if (ssl_library::instance().x509_store_add_crl()(store, crl) != 1)
+	if (CRYPTO_FCN<p_x509_store_add_crl>("X509_STORE_add_crl")(store, crl) != 1)
 		throw exception("failed to add CRL to the X509 trust store");
 
 	unsigned long flags = X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
-	if (ssl_library::instance().x509_store_set_flags()(store, flags) != 1)
+	if (CRYPTO_FCN<p_x509_store_set_flags>("X509_STORE_set_flags")(store, flags) != 1)
 		throw exception("failed to set flags for the X509 trust store");
 }
 
 /*
  * Checks if the private key and the certificate matches.
  *
- * @throws snf::net::ssl::exception if the private key and the certificate do not match.
+ * @throws snf::ssl::exception if the private key and the certificate do not match.
  */
 void
 context::check_private_key()
 {
-	if (ssl_library::instance().ssl_ctx_check_private_key()(m_ctx) != 1)
+	if (SSL_FCN<p_ssl_ctx_check_private_key>("SSL_CTX_check_private_key")(m_ctx) != 1)
 		throw exception("private key and X509 certificate do not match");
 }
 
@@ -526,7 +521,7 @@ context::verify_peer(bool require_certificate, bool do_it_once)
 	if (do_it_once)
 		mode |= SSL_VERIFY_CLIENT_ONCE;
 
-	ssl_library::instance().ssl_ctx_set_verify()(m_ctx, mode, nullptr);
+	SSL_FCN<p_ssl_ctx_set_verify>("SSL_CTX_set_verify")(m_ctx, mode, nullptr);
 }
 
 /*
@@ -537,9 +532,20 @@ context::verify_peer(bool require_certificate, bool do_it_once)
 void
 context::limit_certificate_chain_depth(int depth)
 {
-	ssl_library::instance().ssl_ctx_set_verify_depth()(m_ctx, depth);
+	SSL_FCN<p_ssl_ctx_set_verify_depth>("SSL_CTX_set_verify_depth")(m_ctx, depth);
+}
+
+void
+context::set_sni_callback(void (*cb)(void), void *arg)
+{
+	if (SSL_FCN<p_ssl_ctx_cb_ctrl>("SSL_CTX_callback_ctrl")(m_ctx, SSL_CTRL_SET_TLSEXT_SERVERNAME_CB, cb) != 1)
+		throw exception("failed to set SNI callback function");
+
+	if (SSL_FCN<p_ssl_ctx_ctrl>("SSL_CTX_ctrl")(m_ctx, SSL_CTRL_SET_TLSEXT_SERVERNAME_ARG, 0, arg) != 1) {
+		SSL_FCN<p_ssl_ctx_cb_ctrl>("SSL_CTX_callback_ctrl")(m_ctx, SSL_CTRL_SET_TLSEXT_SERVERNAME_CB, 0);
+		throw exception("failed to set SNI callback argument");
+	}
 }
 
 } // namespace ssl
-} // namespace net
 } // namespace snf

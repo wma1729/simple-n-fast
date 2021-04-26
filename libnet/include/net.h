@@ -37,7 +37,7 @@ error(int e)
  * initialized as well. This function can be
  * called multiple times.
  */
-void initialize(bool use_ssl = false);
+void initialize();
 
 /* Finalizes (cleans up) the networking library. */
 void finalize();

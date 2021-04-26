@@ -10,7 +10,7 @@ namespace snf {
  * Initialize file attribute using the specified file path.
  */
 void
-file_attr::init(const std::string &path)
+file_attr::init(const std::string &path, bool use_lstat)
 {
 #if defined(_WIN32)
 
@@ -37,7 +37,13 @@ file_attr::init(const std::string &path)
 #else // !_WIN32
 
 	struct stat st;
-	if (stat(path.c_str(), &st) < 0) {
+	int r;
+	if (use_lstat) {
+		r = lstat(path.c_str(), &st);
+	} else {
+		r = stat(path.c_str(), &st);
+	}
+	if (r < 0) {
 		std::ostringstream oss;
 		oss << "failed to get attributes of path " << path;
 		throw std::system_error(

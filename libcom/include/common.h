@@ -55,6 +55,22 @@
 
 #define CALL_MACRO(MACRO, ...)      EXPAND_MACRO(MACRO, VA_ARGS_CNT(__VA_ARGS__))(__VA_ARGS__)
 
+/* Enable the template for boolean types. */
+template<typename T1, typename T2 = void>
+using EnableIfBoolean = typename std::enable_if_t<std::is_same<T1, bool>::value, T2>;
+
+/* Enable the template for integral types, excluding booleans. */
+template<typename T1, typename T2 = void>
+using EnableIfIntegral = typename std::enable_if_t<std::is_integral<T1>::value && !std::is_same<T1, bool>::value, T2>;
+
+/* Enable the template for real types. */
+template<typename T1, typename T2 = void>
+using EnableIfReal = typename std::enable_if_t<std::is_floating_point<T1>::value, T2>;
+
+/* Enable the template for string types. */
+template<typename T1, typename T2 = void>
+using EnableIfString = typename std::enable_if_t<std::is_convertible<T1, std::string>::value, T2>;
+
 namespace snf {
 
 template<typename T>

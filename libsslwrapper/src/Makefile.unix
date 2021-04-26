@@ -1,0 +1,26 @@
+include ../../Makefile.constants
+
+ifndef P
+$(error P is not set)
+endif
+
+OBJS =  ${P}/safestr.o ${P}/sslfcn.o ${P}/pkey.o ${P}/crt.o ${P}/crl.o ${P}/truststore.o \
+	${P}/session.o ${P}/random.o ${P}/keymgr.o ${P}/ctx.o ${P}/tls.o
+
+INCL = ${INCLCOM} ${INCLSSL}
+
+all: platform ${P}/libsslwrapper.a
+
+platform:
+	@test -d ${P} || mkdir ${P}
+
+${P}/libsslwrapper.a: ${OBJS}
+	${AR} ${ARFLAGS} $@ $^
+
+${P}/%.o: %.cpp
+	${CC} ${CFLAGS} ${LDFLAGS} ${DBG} ${DEFINES} ${INCL} $^ -o $@
+
+install:
+
+clean:
+	@/bin/rm -rf ${OBJS} ${P}/libsslwrapper.a

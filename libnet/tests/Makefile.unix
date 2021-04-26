@@ -19,10 +19,10 @@ platform:
 ${P}/host: ${HOST_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
-${P}/netts: ${NETTS_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
+${P}/netts: ${NETTS_OBJS} ${LIBLOG} ${LIBNET} ${LIBSSLWRAPPER} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
-${P}/echo: ${ECHO_OBJS} ${LIBLOG} ${LIBNET} ${LIBCOM}
+${P}/echo: ${ECHO_OBJS} ${LIBLOG} ${LIBNET} ${LIBSSLWRAPPER} ${LIBCOM}
 	${CC} ${DBG} $^ ${LIBS} -o $@
 
 ${P}/%.o: %.cpp

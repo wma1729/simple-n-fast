@@ -19,11 +19,11 @@ private:
 
 	std::string             m_keyfile;              // private key file
 	std::string             m_kf_pwd;               // private key file password
-	snf::net::ssl::data_fmt m_kf_fmt = snf::net::ssl::data_fmt::pem;
+	snf::ssl::data_fmt      m_kf_fmt = snf::ssl::data_fmt::pem;
 	                                                // private key file format
 
 	std::string             m_certfile;             // certificate file
-	snf::net::ssl::data_fmt m_cf_fmt = snf::net::ssl::data_fmt::pem;
+	snf::ssl::data_fmt      m_cf_fmt = snf::ssl::data_fmt::pem;
 	                                                // certificate file format
 
 	std::string             m_cafile;               // certificate authority file
@@ -48,15 +48,15 @@ public:
 	void keyfile_password(const std::string &kf_pwd) { m_kf_pwd = kf_pwd; }
 	void keyfile_password(std::string &&kf_pwd) { m_kf_pwd = std::move(kf_pwd); }
 
-	snf::net::ssl::data_fmt keyfile_format() const { return m_kf_fmt; }
-	void keyfile_format(snf::net::ssl::data_fmt kf_fmt) { m_kf_fmt = kf_fmt; }
+	snf::ssl::data_fmt keyfile_format() const { return m_kf_fmt; }
+	void keyfile_format(snf::ssl::data_fmt kf_fmt) { m_kf_fmt = kf_fmt; }
 
 	const std::string &certfile() const { return m_certfile; }
 	void certfile(const std::string & certfile) { m_certfile = certfile; }
 	void certfile(std::string && certfile) { m_certfile = std::move(certfile); }
 
-	snf::net::ssl::data_fmt certfile_format() const { return m_cf_fmt; }
-	void certfile_format(snf::net::ssl::data_fmt cf_fmt) { m_cf_fmt = cf_fmt; }
+	snf::ssl::data_fmt certfile_format() const { return m_cf_fmt; }
+	void certfile_format(snf::ssl::data_fmt cf_fmt) { m_cf_fmt = cf_fmt; }
 
 	const std::string &cafile() const { return m_cafile; }
 	void cafile(const std::string &cafile) { m_cafile = cafile; }

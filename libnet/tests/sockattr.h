@@ -125,7 +125,7 @@ public:
 
 	virtual bool execute(const snf::config *conf)
 	{
-		snf::net::initialize(false);
+		snf::net::initialize();
 
 		try {
 			snf::net::socket s(AF_INET, snf::net::socket_type::tcp);
