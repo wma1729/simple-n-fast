@@ -5,7 +5,7 @@ include ..\..\Makefile.constants
 !ENDIF
 
 OBJS =  $(P)\safestr.obj $(P)\sslfcn.obj $(P)\pkey.obj $(P)\crt.obj $(P)\crl.obj $(P)\truststore.obj \
-	$(P)\session.obj $(P)\random.obj $(P)\keymgr.obj $(P)\ctx.obj $(P)\tls.obj
+	$(P)\session.obj $(P)\random.obj $(P)\keymgr.obj $(P)\ctx.obj $(P)\tls.obj $(P)\translator.obj
 
 INCL = $(INCLCOM) $(INCLSSLWRAPPER) $(INCLSSL)
 

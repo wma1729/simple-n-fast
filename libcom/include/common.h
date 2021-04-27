@@ -57,19 +57,19 @@
 
 /* Enable the template for boolean types. */
 template<typename T1, typename T2 = void>
-using EnableIfBoolean = typename std::enable_if_t<std::is_same<T1, bool>::value, T2>;
+using EnableIfBoolean = typename std::enable_if_t<std::is_same_v<T1, bool>, T2>;
 
 /* Enable the template for integral types, excluding booleans. */
 template<typename T1, typename T2 = void>
-using EnableIfIntegral = typename std::enable_if_t<std::is_integral<T1>::value && !std::is_same<T1, bool>::value, T2>;
+using EnableIfIntegral = typename std::enable_if_t<std::is_integral_v<T1> && !std::is_same_v<T1, bool>, T2>;
 
 /* Enable the template for real types. */
 template<typename T1, typename T2 = void>
-using EnableIfReal = typename std::enable_if_t<std::is_floating_point<T1>::value, T2>;
+using EnableIfReal = typename std::enable_if_t<std::is_floating_point_v<T1>, T2>;
 
 /* Enable the template for string types. */
 template<typename T1, typename T2 = void>
-using EnableIfString = typename std::enable_if_t<std::is_convertible<T1, std::string>::value, T2>;
+using EnableIfString = typename std::enable_if_t<std::is_convertible_v<T1, std::string>, T2>;
 
 namespace snf {
 
@@ -185,7 +185,6 @@ is_big_endian()
 const char *syserr(char *, size_t, int);
 const char *basename(char *, size_t, const char *, bool stripExt = false);
 std::string trim(const std::string &);
-std::string bin2hex(const uint8_t *, size_t);
 
 } // namespace snf
 

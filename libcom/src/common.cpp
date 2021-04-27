@@ -2,13 +2,6 @@
 
 namespace snf {
 
-constexpr char s_hex_table[] = {
-	'0', '1', '2', '3',
-	'4', '5', '6', '7',
-	'8', '9', 'a', 'b',
-	'c', 'd', 'e', 'f'
-};
-
 /*
  * Get the system error string.
  *
@@ -129,22 +122,6 @@ trim(const std::string &str)
 		e = str.size();
 
 	return str.substr(b, e - b + 1);
-}
-
-std::string
-bin2hex(const uint8_t *buf, size_t len)
-{
-	if ((buf == nullptr) || (len == 0))
-		return std::string();
-
-	std::string s(len * 2, ' ');
-
-	for (size_t i = 0; i < len; ++i) {
-		s[2 * i]     = s_hex_table[(buf[i] & 0xF0) >> 4];
-		s[2 * i + 1] = s_hex_table[(buf[i] & 0x0F)];
-	}
-
-	return s;
 }
 
 } // namespace snf

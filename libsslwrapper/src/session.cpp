@@ -1,4 +1,5 @@
 #include "session.h"
+#include "translator.h"
 #include "dbg.h"
 #include "file.h"
 #include "error.h"
@@ -282,7 +283,7 @@ session::get_id()
 	size_t idlen = 0;
 	uint8_t *id = get_id(&idlen);
 	if (id && idlen) {
-		std::string sid = std::move(snf::bin2hex(id, idlen));
+		std::string sid = std::move(snf::ssl::translator::bin2hex(id, idlen));
 		delete [] id;
 		return sid;
 	} else {

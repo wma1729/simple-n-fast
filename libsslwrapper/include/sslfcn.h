@@ -186,6 +186,8 @@ using p_x509_verify_param_set1_ip_asc = int (*)(X509_VERIFY_PARAM *, const char 
 using p_x509_verify_cert_error_string = const char * (*)(long);
 
 using p_rand_bytes = int (*)(unsigned char *, int);
+using p_evp_encode_block = int (*)(unsigned char *, const unsigned char *, int);
+using p_evp_decode_block = int (*)(unsigned char *, const unsigned char *, int);
 using p_evp_sha256 = const EVP_MD * (*)(void);
 using p_hmac_init_ex = int (*)(HMAC_CTX *, const void *, int, const EVP_MD *, ENGINE *);
 using p_evp_aes_256_cbc = const EVP_CIPHER * (*)(void);

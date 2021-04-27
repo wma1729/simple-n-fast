@@ -11,9 +11,9 @@ class safestr
 private:
 	static const int STACK_BYTES = 64;
 
-	uint8_t		m_bytes[STACK_BYTES];
-	uint8_t         *m_data = nullptr;
-	int             m_len = 0;
+	uint8_t	    m_bytes[STACK_BYTES];
+	uint8_t     *m_data = nullptr;
+	int         m_len = 0;
 
 	bool use_stack_data() const
 	{
@@ -40,10 +40,8 @@ public:
 	safestr & operator=(const safestr &);
 	safestr & operator=(safestr &&);
 
-	uint8_t *data() { return m_data; }
-	int length() { return m_len; }
-	std::string hexstr() const { return snf::bin2hex(m_data, m_len); }
-
+	uint8_t *data() const { return m_data; }
+	int length() const { return m_len; }
 };
 
 } // namespace ssl
