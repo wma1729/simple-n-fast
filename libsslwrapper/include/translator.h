@@ -1,5 +1,5 @@
-#ifndef _SNF_TRANSLATER_H_
-#define _SNF_TRANSLATER_H_
+#ifndef _SNF_TRANSLATOR_H_
+#define _SNF_TRANSLATOR_H_
 
 #include "safestr.h"
 #include <string>
@@ -21,4 +21,4 @@ public:
 } // namespace ssl
 } // namespace snf
 
-#endif // _SNF_TRANSLATER_H_
+#endif // _SNF_TRANSLATOR_H_
