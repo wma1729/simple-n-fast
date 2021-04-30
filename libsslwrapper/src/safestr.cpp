@@ -4,7 +4,7 @@ namespace snf {
 namespace ssl {
 
 
-safestr::safestr(int len)
+safestr::safestr(size_t len)
 	: m_len(len)
 {
 	memset(m_bytes, 0, sizeof(m_bytes));

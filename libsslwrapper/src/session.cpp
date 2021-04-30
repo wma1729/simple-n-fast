@@ -1,10 +1,8 @@
 #include "session.h"
-#include "translator.h"
-#include "dbg.h"
+#include "coder.h"
 #include "file.h"
 #include "error.h"
-#include <ostream>
-#include <sstream>
+#include <memory>
 
 namespace snf {
 namespace ssl {
@@ -283,7 +281,8 @@ session::get_id()
 	size_t idlen = 0;
 	uint8_t *id = get_id(&idlen);
 	if (id && idlen) {
-		std::string sid = std::move(snf::ssl::translator::bin2hex(id, idlen));
+		std::unique_ptr<coder> codec(snf::ssl::coder::type("hex"));
+		std::string sid = std::move(codec->encode(id, idlen));
 		delete [] id;
 		return sid;
 	} else {

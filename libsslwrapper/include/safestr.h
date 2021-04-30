@@ -13,7 +13,7 @@ private:
 
 	uint8_t	    m_bytes[STACK_BYTES];
 	uint8_t     *m_data = nullptr;
-	int         m_len = 0;
+	size_t      m_len = 0;
 
 	bool use_stack_data() const
 	{
@@ -32,7 +32,7 @@ private:
 	}
 
 public:
-	safestr(int);
+	safestr(size_t);
 	safestr(const safestr &);
 	safestr(safestr &&);
 	~safestr() { cleanup(); }
@@ -41,7 +41,7 @@ public:
 	safestr & operator=(safestr &&);
 
 	uint8_t *data() const { return m_data; }
-	int length() const { return m_len; }
+	size_t length() const { return m_len; }
 };
 
 } // namespace ssl

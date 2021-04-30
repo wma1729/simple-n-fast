@@ -185,14 +185,35 @@ using p_x509_verify_param_add1_host = int (*)(X509_VERIFY_PARAM *, const char *,
 using p_x509_verify_param_set1_ip_asc = int (*)(X509_VERIFY_PARAM *, const char *);
 using p_x509_verify_cert_error_string = const char * (*)(long);
 
+using p_hmac_init_ex = int (*)(HMAC_CTX *, const void *, int, const EVP_MD *, ENGINE *);
 using p_rand_bytes = int (*)(unsigned char *, int);
+
 using p_evp_encode_block = int (*)(unsigned char *, const unsigned char *, int);
 using p_evp_decode_block = int (*)(unsigned char *, const unsigned char *, int);
+
+using p_evp_md_digestbyname = const EVP_MD * (*)(const char *);
+using p_evp_md_size = int (*)(const EVP_MD *);
+using p_evp_md_ctx_new = EVP_MD_CTX * (*)(void);
+using p_evp_md_ctx_copy = int (*)(EVP_MD_CTX *, const EVP_MD_CTX *);
+using p_evp_md_ctx_free = void (*)(EVP_MD_CTX *);
+using p_evp_md_dgst_init = int (*)(EVP_MD_CTX *, const EVP_MD *, ENGINE *);
+using p_evp_md_dgst_update = int (*)(EVP_MD_CTX *, const void *, size_t);
+using p_evp_md_dgst_final = int (*)(EVP_MD_CTX *, unsigned char *, unsigned int *);
 using p_evp_sha256 = const EVP_MD * (*)(void);
-using p_hmac_init_ex = int (*)(HMAC_CTX *, const void *, int, const EVP_MD *, ENGINE *);
+
+using p_evp_cipher_byname = const EVP_CIPHER * (*)(const char *);
+using p_evp_cipher_blksize = int (*)(const EVP_CIPHER *);
+using p_evp_cipher_keylen = int (*)(const EVP_CIPHER *);
+using p_evp_cipher_ivlen = int (*)(const EVP_CIPHER *);
 using p_evp_aes_256_cbc = const EVP_CIPHER * (*)(void);
+using p_evp_cipher_ctx_new = EVP_CIPHER_CTX * (*)(void);
+using p_evp_cipher_ctx_free = void (*)(EVP_CIPHER_CTX *);
 using p_evp_encrypt_init_ex = int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, ENGINE *, const unsigned char *, const unsigned char *);
+using p_evp_encrypt_update = int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int);
+using p_evp_encrypt_final_ex = int (*)(EVP_CIPHER_CTX *, unsigned char *, int *);
 using p_evp_decrypt_init_ex = int (*)(EVP_CIPHER_CTX *, const EVP_CIPHER *, ENGINE *, const unsigned char *, const unsigned char *);
+using p_evp_decrypt_update = int (*)(EVP_CIPHER_CTX *, unsigned char *, int *, const unsigned char *, int);
+using p_evp_decrypt_final_ex = int (*)(EVP_CIPHER_CTX *, unsigned char *, int *);
 
 namespace snf {
 namespace ssl {

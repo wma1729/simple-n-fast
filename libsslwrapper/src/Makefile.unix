@@ -5,7 +5,8 @@ $(error P is not set)
 endif
 
 OBJS =  ${P}/safestr.o ${P}/sslfcn.o ${P}/pkey.o ${P}/crt.o ${P}/crl.o ${P}/truststore.o \
-	${P}/session.o ${P}/random.o ${P}/keymgr.o ${P}/ctx.o ${P}/tls.o ${P}/translator.o
+	${P}/session.o ${P}/random.o ${P}/keymgr.o ${P}/ctx.o ${P}/tls.o ${P}/coder.o \
+	${P}/digest.o ${P}/cipher.o ${P}/crypt.o
 
 INCL = ${INCLCOM} ${INCLSSL}
 
