@@ -15,14 +15,15 @@ random::bytes(safestr &ss, bool private_prng_instance)
 }
 
 void
-random::bytes(uint8_t *buf, int num, bool private_prng_instance)
+random::bytes(uint8_t *buf, size_t num, bool private_prng_instance)
 {
 	int r;
+	int n = static_cast<int>(num);
 
 	if (private_prng_instance) {
-		r = CRYPTO_FCN<p_rand_bytes>("RAND_priv_bytes")(buf, num);
+		r = CRYPTO_FCN<p_rand_bytes>("RAND_priv_bytes")(buf, n);
 	} else {
-		r = CRYPTO_FCN<p_rand_bytes>("RAND_bytes")(buf, num);
+		r = CRYPTO_FCN<p_rand_bytes>("RAND_bytes")(buf, n);
 	}
 
 	if (r != 1)

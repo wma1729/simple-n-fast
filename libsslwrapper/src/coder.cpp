@@ -91,7 +91,7 @@ public:
 
 		safestr ss { expected_len };
 
-		int n = CRYPTO_FCN<p_evp_encode_block>("EVP_EncodeBlock")(ss.data(), bstr, len);
+		int n = CRYPTO_FCN<p_evp_encode_block>("EVP_EncodeBlock")(ss.data(), bstr, static_cast<int>(len));
 		if (n != static_cast<int>(expected_len)) {
 			std::ostringstream oss;
 			oss << "expected " << expected_len << " bytes; got " << n << " bytes";

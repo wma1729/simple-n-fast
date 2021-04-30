@@ -32,7 +32,7 @@ public:
 	}
 
 	void bytes(safestr &, bool private_prng_instance = false);
-	void bytes(uint8_t *, int, bool private_prng_instance = false);
+	void bytes(uint8_t *, size_t, bool private_prng_instance = false);
 };
 
 } // namespace ssl
